@@ -1,0 +1,7 @@
+cradle:
+  cabal:
+    - path: "./src"
+      component: "lib:run-calc"
+
+    - path: "./app/Main.hs"
+      component: "run-calc:exe:run-calc"

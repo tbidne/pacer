@@ -1,0 +1,83 @@
+cabal-version:      2.4
+name:               run-calc
+version:            0.1
+license:            MIT
+license-file:       LICENSE
+tested-with:
+  GHC ==8.10.7
+   || ==9.0.2
+   || ==9.2.8
+   || ==9.4.8
+   || ==9.6.5
+   || ==9.8.2
+   || ==9.10.1
+
+copyright:          2022-2024 Thomas Bidne
+author:             Thomas Bidne
+maintainer:         tbidne@protonmail.com
+homepage:           https://github.com/tbidne/run-calc/
+bug-reports:        https://github.com/tbidne/run-calc/issues
+synopsis:           Template
+description:        Template
+category:           Template
+extra-source-files:
+  .gitignore
+  cabal.project
+  CHANGELOG.md
+  README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/tbidne/run-calc
+
+common common-lang
+  default-extensions:
+    BangPatterns
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveFunctor
+    DeriveGeneric
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    InstanceSigs
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    NumericUnderscores
+    OverloadedStrings
+    PatternSynonyms
+    RankNTypes
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TupleSections
+    TypeApplications
+    TypeFamilyDependencies
+    TypeOperators
+
+  default-language:   Haskell2010
+
+library
+  import:          common-lang
+  exposed-modules: Lib
+  build-depends:   base >=4.14.0.0 && <4.21
+  hs-source-dirs:  src
+
+executable run-calc
+  import:         common-lang
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , run-calc
+
+  hs-source-dirs: app
+  ghc-options:    -threaded -with-rtsopts=-N
