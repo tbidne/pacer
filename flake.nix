@@ -1,14 +1,26 @@
 {
   description = "A Template for Haskell Packages";
-  inputs.flake-parts.url = "github:hercules-ci/flake-parts";
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  inputs.nix-hs-utils.url = "github:tbidne/nix-hs-utils";
+  inputs = {
+    # ni
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nix-hs-utils.url = "github:tbidne/nix-hs-utils";
+
+    # haskell
+    algebra-simple = {
+      url = "github:tbidne/algebra-simple";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
   outputs =
     inputs@{
       flake-parts,
       nixpkgs,
       nix-hs-utils,
       self,
+      ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       perSystem =
@@ -16,7 +28,14 @@
         let
           hlib = pkgs.haskell.lib;
           ghc-version = "ghc982";
-          compiler = pkgs.haskell.packages."${ghc-version}";
+          compiler = pkgs.haskell.packages."${ghc-version}".override {
+            overrides =
+              final: prev:
+              { }
+              // nix-hs-utils.mkLibs inputs final [
+                "algebra-simple"
+              ];
+          };
           compilerPkgs = {
             inherit compiler pkgs;
           };

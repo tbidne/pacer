@@ -1,5 +1,31 @@
 {
   "nodes": {
+    "algebra-simple": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nix-hs-utils": [
+          "nix-hs-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1716375788,
+        "narHash": "sha256-Np/Zk1CRUpWcwN7nwh414/689mGSNTXldHcjTWj+YzA=",
+        "owner": "tbidne",
+        "repo": "algebra-simple",
+        "rev": "f8590486ec0fc66acf7db20308e1ed6993a52151",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "repo": "algebra-simple",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib"
@@ -63,6 +89,7 @@
     },
     "root": {
       "inputs": {
+        "algebra-simple": "algebra-simple",
         "flake-parts": "flake-parts",
         "nix-hs-utils": "nix-hs-utils",
         "nixpkgs": "nixpkgs"
