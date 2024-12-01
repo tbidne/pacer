@@ -1,6 +1,6 @@
 packages: .
 
-package run-calc
+package running
   ghc-options:
     -Wall -Wcompat
     -Widentities

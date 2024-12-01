@@ -48,7 +48,7 @@
             returnShellEnv:
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
-              name = "run-calc";
+              name = "running";
               root = ./.;
             };
         in

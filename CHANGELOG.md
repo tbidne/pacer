@@ -1,4 +1,4 @@
-# Revision history for run-calc
+# Revision history for running
 
 ## 0.1 -- YYYY-mm-dd
 

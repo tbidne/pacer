@@ -1,5 +1,5 @@
 cabal-version:      2.4
-name:               run-calc
+name:               running
 version:            0.1
 license:            MIT
 license-file:       LICENSE
@@ -12,11 +12,11 @@ tested-with:
    || ==9.8.2
    || ==9.10.1
 
-copyright:          2022-2024 Thomas Bidne
+copyright:          2024 Thomas Bidne
 author:             Thomas Bidne
 maintainer:         tbidne@protonmail.com
-homepage:           https://github.com/tbidne/run-calc/
-bug-reports:        https://github.com/tbidne/run-calc/issues
+homepage:           https://github.com/tbidne/running/
+bug-reports:        https://github.com/tbidne/running/issues
 synopsis:           Template
 description:        Template
 category:           Template
@@ -28,7 +28,7 @@ extra-source-files:
 
 source-repository head
   type:     git
-  location: https://github.com/tbidne/run-calc
+  location: https://github.com/tbidne/running
 
 common common-lang
   default-extensions:
@@ -59,12 +59,12 @@ library
 
   hs-source-dirs:  src
 
-executable run-calc
+executable running
   import:         common-lang
   main-is:        Main.hs
   build-depends:
     , base
-    , run-calc
+    , running
 
   hs-source-dirs: app
   ghc-options:    -threaded -with-rtsopts=-N
