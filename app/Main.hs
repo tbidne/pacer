@@ -3,10 +3,11 @@
 -- @since 0.1
 module Main (main) where
 
-import Lib qualified
+import Running.Prelude hiding (IO)
+import System.IO (IO)
 
 -- | Executable entry-point.
 --
 -- @since 0.1
 main :: IO ()
-main = putStrLn Lib.hello
+main = putStrLn "hi"

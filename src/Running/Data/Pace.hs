@@ -1,37 +1,65 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Running.Data.Pace
-  ( Pace (..),
+  ( Pace,
+    AllowedDist,
 
     -- ** Creation
-    fromMinSec,
-    fromMinSecRaw,
+    mkPace,
 
     -- ** Elimination
-    toMinSec,
-    toMinSecRaw,
+    unPace,
   )
 where
 
-import Data.Kind (Type)
-import Data.Text.Display (Display (displayBuilder))
-import GHC.Show (showSpace)
-import Numeric.Algebra.Space (MSemiSpace ((.*)), MSpace ((.%)))
-import Numeric.Literal.Integer (FromInteger (afromInteger))
-import Numeric.Literal.Rational (FromRational (afromRational))
-import Running.Data.Distance (DistanceUnit)
-import Running.Data.Distance.Units (SingDistanceUnit)
-import Running.Data.Distance.Units qualified as DUnit
-import Running.Data.Duration (Duration (MkDuration), TimeUnit (Minute, Second))
+import GHC.TypeError (Unsatisfiable)
+import GHC.TypeError qualified as TE
+import Running.Class.Singleton (SingI, fromSingI)
+import Running.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
+import Running.Data.Duration (Duration, TimeUnit (Second))
 import Running.Data.Duration qualified as D
-import Running.Data.Duration.Units (SingTimeUnit)
+import Running.Prelude
 
--- 1. Should we let underlying value be a? Probably
--- 2. Should pace hide time variable? Also probably
+-- | Represents a duration per distance e.g. 4'30" per kilometer. We only
+-- allow the distance to be kilometers or miles. Meters are disallowed as
+-- they chance for mistakes are high (i.e. almost all paces per meter are
+-- zero since they are so low).
+type Pace :: DistanceUnit -> Type -> Type
+data Pace d a where
+  MkPace :: (AllowedDist d) => Duration Second a -> Pace d a
 
-type Pace :: TimeUnit -> DistanceUnit -> Type
-newtype Pace t d = MkPace {unPace :: Duration t}
-  deriving stock (Eq)
+-- | Creates a pace from a duration.
+mkPace ::
+  ( AllowedDist d,
+    FromInteger a,
+    MSemigroup a,
+    SingI t
+  ) =>
+  Duration t a ->
+  Pace d a
+mkPace = MkPace . D.toSeconds
 
-instance (SingDistanceUnit d, SingTimeUnit t) => Show (Pace t d) where
+-- | Eliminates a pace to the underlying duration.
+unPace :: Pace d a -> Duration Second a
+unPace (MkPace d) = d
+
+instance HasField "unPace" (Pace d a) (Duration Second a) where
+  getField = unPace
+
+-- NOTE:
+--
+-- - Duration is monomorphized to Second. There is no technical requirement
+--   for this (indeed, a previous iteration had the type param exposed).
+--   But this is both simpler internally and, more importantly, there does
+--   not appear to be any reason why we would want to support time units.
+
+type AllowedDist :: DistanceUnit -> Constraint
+type family AllowedDist d where
+  AllowedDist Meter = Unsatisfiable (TE.Text "Meters are disallowed in Pace; use km or mi.")
+  AllowedDist Kilometer = ()
+  AllowedDist Mile = ()
+
+instance (Show a, SingI d) => Show (Pace d a) where
   showsPrec i (MkPace p) =
     showParen
       (i >= 11)
@@ -41,60 +69,34 @@ instance (SingDistanceUnit d, SingTimeUnit t) => Show (Pace t d) where
           . showsPrec 11 d
       )
     where
-      d = DUnit.fromSingleton' @d
+      d = fromSingI @_ @d
 
-instance (SingDistanceUnit d, SingTimeUnit t) => Display (Pace t d) where
+instance
+  ( Display a,
+    FromInteger a,
+    MSemigroup a,
+    SingI d,
+    ToRational a
+  ) =>
+  Display (Pace d a)
+  where
   displayBuilder (MkPace x) =
     mconcat
-      [ displayBuilder (toInt m),
-        "'",
-        displayBuilder (toInt s),
-        "\"",
+      [ displayBuilder x,
         " /",
         displayBuilder d
       ]
     where
-      (MkDuration m, MkDuration s) = D.toMinSec x
-      d = DUnit.fromSingleton' @d
+      d = fromSingI @_ @d
 
-      toInt = floor @Double @Int
-
-instance MSemiSpace (Pace t d) Double where
+instance (MSemigroup a) => MSemiSpace (Pace d a) a where
   MkPace x .* k = MkPace (x .* k)
 
-instance MSpace (Pace t d) Double where
+instance (MGroup a) => MSpace (Pace d a) a where
   MkPace x .% k = MkPace (x .% k)
 
-instance FromRational (Pace t d) where
-  afromRational = MkPace . afromRational
+instance (AllowedDist d, FromRational a) => FromRational (Pace d a) where
+  fromQ = MkPace . (fromQ @(Duration Second a))
 
-instance FromInteger (Pace t d) where
-  afromInteger = MkPace . afromInteger
-
-fromMinSec ::
-  forall t d.
-  (SingTimeUnit t) =>
-  (Duration Minute, Duration Second) ->
-  Pace t d
-fromMinSec = MkPace . D.fromMinSec
-
-fromMinSecRaw ::
-  forall t d.
-  (SingTimeUnit t) =>
-  (Double, Double) ->
-  Pace t d
-fromMinSecRaw = MkPace . D.fromMinSecRaw
-
-toMinSec ::
-  forall t d.
-  (SingTimeUnit t) =>
-  Pace t d ->
-  (Duration Minute, Duration Second)
-toMinSec = D.toMinSec . (.unPace)
-
-toMinSecRaw ::
-  forall t d a.
-  (Integral a, SingTimeUnit t) =>
-  Pace t d ->
-  (a, a)
-toMinSecRaw = D.toMinSecRaw . (.unPace)
+instance (AllowedDist d, FromInteger a) => FromInteger (Pace d a) where
+  fromZ = MkPace . (fromZ @(Duration Second a))

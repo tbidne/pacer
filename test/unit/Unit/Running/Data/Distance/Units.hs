@@ -1,0 +1,132 @@
+module Unit.Running.Data.Distance.Units
+  ( -- * Tests
+    tests,
+
+    -- * Generators
+    genDistanceUnit,
+    genDistanceUnitText,
+    genTimeUnit,
+
+    -- * Misc
+    shortDistanceUnitText,
+    longDistanceUnitText,
+  )
+where
+
+import Hedgehog.Gen qualified as G
+import Running.Class.Parser qualified as Parser
+import Running.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
+import Running.Data.Duration (TimeUnit)
+import Unit.Prelude
+
+tests :: TestTree
+tests =
+  testGroup
+    "Running.Data.Distance.Units"
+    [ parseTests
+    ]
+
+parseTests :: TestTree
+parseTests =
+  testGroup
+    "Parsing"
+    [ testParseText,
+      testParseInjectiveShort,
+      testParseInjectiveLong,
+      testDisplayParseRoundtrip,
+      testParseDisplayRoundtrip,
+      testParseExpected
+    ]
+
+testParseText :: TestTree
+testParseText = testPropertyNamed "testParseText" desc $ property $ do
+  t <- forAll genDistanceUnitText
+
+  void $ parseOrDieM @DistanceUnit t
+  where
+    desc = "Parses text to units"
+
+testParseInjectiveShort :: TestTree
+testParseInjectiveShort = testPropertyNamed name desc $ property $ do
+  t1 <- forAll $ G.element shortDistanceUnitText
+  t2 <- forAll $ G.element shortDistanceUnitText
+
+  r1 <- parseOrDieM @DistanceUnit t1
+  r2 <- parseOrDieM @DistanceUnit t2
+
+  annotateShow r1
+  annotateShow r2
+
+  when (r1 == r2) $ t1 === t2
+  where
+    name = "testParseInjectiveShort"
+    desc = "Parsing short units is injective"
+
+testParseInjectiveLong :: TestTree
+testParseInjectiveLong = testPropertyNamed name desc $ property $ do
+  t1 <- forAll $ G.element longDistanceUnitText
+  t2 <- forAll $ G.element longDistanceUnitText
+
+  r1 <- parseOrDieM @DistanceUnit t1
+  r2 <- parseOrDieM @DistanceUnit t2
+
+  annotateShow r1
+  annotateShow r2
+
+  when (r1 == r2) $ t1 === t2
+  where
+    name = "testParseInjectiveLong"
+    desc = "Parsing long units is injective"
+
+testDisplayParseRoundtrip :: TestTree
+testDisplayParseRoundtrip = testPropertyNamed name desc $ property $ do
+  t <- forAll $ G.element shortDistanceUnitText
+
+  r <- parseOrDieM @DistanceUnit t
+  annotateShow r
+
+  t === display r
+  where
+    name = "testDisplayParseRoundtrip"
+    desc = "display . parse (short) is a round trip"
+
+testParseDisplayRoundtrip :: TestTree
+testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
+  r <- forAll genDistanceUnit
+
+  let t = display r
+
+  r2 <- parseOrDieM @DistanceUnit t
+  annotateShow r
+
+  r === r2
+  where
+    name = "testParseDisplayRoundtrip"
+    desc = "parse . display is a round trip"
+
+testParseExpected :: TestTree
+testParseExpected = testCase "Parses expected text" $ do
+  Right Meter @=? Parser.parse "m"
+  Right Meter @=? Parser.parse "meters"
+  Right Kilometer @=? Parser.parse "km"
+  Right Kilometer @=? Parser.parse "kilometers"
+  Right Mile @=? Parser.parse "mi"
+  Right Mile @=? Parser.parse "miles"
+
+genDistanceUnit :: Gen DistanceUnit
+genDistanceUnit = G.enumBounded
+
+genTimeUnit :: Gen TimeUnit
+genTimeUnit = G.enumBounded
+
+genDistanceUnitText :: Gen Text
+genDistanceUnitText =
+  G.element
+    $ shortDistanceUnitText
+    <> longDistanceUnitText
+
+shortDistanceUnitText :: List Text
+shortDistanceUnitText = ["m", "km", "mi"]
+
+longDistanceUnitText :: List Text
+longDistanceUnitText = ["meters", "kilometers", "miles"]

@@ -1,66 +1,64 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
+-- | Units for time.
 module Running.Data.Duration.Units
   ( TimeUnit (..),
-    baseFactor,
 
     -- * Singletons
     STimeUnit (..),
-    withSingleton,
-    fromSingleton,
-    fromSingleton',
-    SingTimeUnit (..),
   )
 where
 
-import Data.Kind (Constraint)
-import Data.Text.Display (Display (displayBuilder))
+import Running.Class.Singleton
+  ( Sing,
+    SingI (sing),
+    SingKind (Demote, fromSing, toSing),
+    SomeSing (MkSomeSing),
+  )
+import Running.Class.Units (Units (baseFactor))
+import Running.Prelude
 
+-- | Time unit.
 data TimeUnit
   = Second
   | Minute
   | Hour
-  deriving stock (Eq, Show)
+  deriving stock (Bounded, Enum, Eq, Ord, Show)
 
 instance Display TimeUnit where
   displayBuilder Second = "s"
   displayBuilder Minute = "m"
   displayBuilder Hour = "h"
 
--- | Ratio of unit/second.
-baseFactor :: (Fractional a) => TimeUnit -> a
-baseFactor Second = 1
-baseFactor Minute = 60
-baseFactor Hour = 3_600
+instance Units TimeUnit where
+  baseFactor Second = fromZ 1
+  baseFactor Minute = fromZ 60
+  baseFactor Hour = fromZ 3_600
 
+-- | Singleton for 'TimeUnit'.
 data STimeUnit (t :: TimeUnit) where
   SSecond :: STimeUnit Second
   SMinute :: STimeUnit Minute
   SHour :: STimeUnit Hour
 
-type SingTimeUnit :: TimeUnit -> Constraint
-class SingTimeUnit (t :: TimeUnit) where
-  singTimeUnit :: STimeUnit t
+deriving stock instance Show (STimeUnit t)
 
-instance SingTimeUnit Second where
-  singTimeUnit = SSecond
+type instance Sing = STimeUnit
 
-instance SingTimeUnit Minute where
-  singTimeUnit = SMinute
+instance SingI Second where
+  sing = SSecond
 
-instance SingTimeUnit Hour where
-  singTimeUnit = SHour
+instance SingI Minute where
+  sing = SMinute
 
-withSingleton :: STimeUnit t -> ((SingTimeUnit t) => r) -> r
-withSingleton t x = case t of
-  SSecond -> x
-  SMinute -> x
-  SHour -> x
+instance SingI Hour where
+  sing = SHour
 
-fromSingleton :: STimeUnit t -> TimeUnit
-fromSingleton SSecond = Second
-fromSingleton SMinute = Minute
-fromSingleton SHour = Hour
+instance SingKind TimeUnit where
+  type Demote TimeUnit = TimeUnit
 
-fromSingleton' :: forall t. (SingTimeUnit t) => TimeUnit
-fromSingleton' = fromSingleton $ singTimeUnit @t
+  fromSing SSecond = Second
+  fromSing SMinute = Minute
+  fromSing SHour = Hour
+
+  toSing Second = MkSomeSing SSecond
+  toSing Minute = MkSomeSing SMinute
+  toSing Hour = MkSomeSing SHour

@@ -10,20 +10,34 @@ package running
     -Wmissing-export-lists
     -Wmissing-exported-signatures
     -Wmissing-home-modules
-    -Wmissing-import-lists
     -Wpartial-fields
     -Wprepositive-qualified-module
     -Wredundant-constraints
     -Wunused-binds
     -Wunused-packages
     -Wunused-type-patterns
+    -Wno-missing-import-lists
     -Wno-unticked-promoted-constructors
-
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/algebra-simple.git
-    tag: f8590486ec0fc66acf7db20308e1ed6993a5215
+    tag: 005db7858f5ad39420565b256d92c593f4df9b2b
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/bounds.git
+    tag: fb05a7288020d2bca0dbe45cd43d2c030f5a238c
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/smart-math.git
+    tag: a7c8a2a13666871b627ed15220aedafa4442ee86
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/relative-time.git
+    tag: def4e4dfdefab70bd328ef05948ca66c6ffec73f
 
 optimization: 2
 test-show-details: direct

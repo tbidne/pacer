@@ -5,3 +5,6 @@ cradle:
 
     - path: "./app/Main.hs"
       component: "running:exe:running"
+
+    - path: "./test/unit"
+      component: "running:test:unit"

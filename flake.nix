@@ -8,10 +8,37 @@
 
     # haskell
     algebra-simple = {
-      url = "github:tbidne/algebra-simple";
+      url = "github:tbidne/algebra-simple/metric";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    bounds = {
+      url = "github:tbidne/bounds";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    smart-math = {
+      url = "github:tbidne/smart-math/metric";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
+    };
+
+    relative-time = {
+      url = "github:tbidne/relative-time/metric";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
     };
   };
   outputs =
@@ -34,6 +61,9 @@
               { }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
+                "bounds"
+                "smart-math"
+                "relative-time"
               ];
           };
           compilerPkgs = {

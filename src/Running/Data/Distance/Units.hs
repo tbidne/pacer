@@ -1,63 +1,87 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
+-- | Units for distance.
 module Running.Data.Distance.Units
   ( DistanceUnit (..),
-    toFactor,
 
     -- * Singletons
     SDistanceUnit (..),
-    withSingleton,
-    fromSingleton,
-    fromSingleton',
-    SingDistanceUnit (..),
   )
 where
 
-import Data.Kind (Constraint)
-import Data.Text.Display (Display (displayBuilder))
-import Running.Data.SI
-  ( SI,
-    SSI,
-    SingSI (singSI),
-    ssiToSI,
+import Running.Class.Parser (Parser (parser))
+import Running.Class.Singleton
+  ( Sing,
+    SingI (sing),
+    SingKind (Demote, fromSing, toSing),
+    SomeSing (MkSomeSing),
   )
-import Running.Data.SI qualified as SI
+import Running.Class.Units (Units (baseFactor))
+import Running.Prelude
+import Text.Megaparsec qualified as MP
+import Text.Megaparsec.Char qualified as MPC
 
+-- | Distance unit.
 data DistanceUnit
-  = Meter SI
+  = Meter
+  | Kilometer
   | Mile
-  deriving stock (Eq, Show)
+  deriving stock (Bounded, Enum, Eq, Show)
 
 instance Display DistanceUnit where
-  displayBuilder (Meter si) = displayBuilder si <> "m"
+  displayBuilder Meter = "m"
+  displayBuilder Kilometer = "km"
   displayBuilder Mile = "mi"
 
-toFactor :: (Fractional a) => DistanceUnit -> a
-toFactor (Meter si) = SI.baseFactor si
-toFactor Mile = 1609
+instance Parser DistanceUnit where
+  -- NOTE: [Parsing Common prefixes]
+  --
+  -- Say s1 is a prefix of s2. In that case, we need to ensure s2 is attempted
+  -- first because otherwise s1 will succeed and we will never try s2. This
+  -- also means s2 sill fail because the remaining s2 chars will not be
+  -- parsed.
+  --
+  -- Alternatively, we could check that the parse ends after s1
+  -- (e.g. whitespace), but we leave that to "upstream" parsers, for now.
+  parser =
+    MP.choice
+      [ MPC.string "meters" $> Meter,
+        MPC.string "km" $> Kilometer,
+        MPC.string "kilometers" $> Kilometer,
+        MPC.string "miles" $> Mile,
+        MPC.string "mi" $> Mile,
+        MPC.char 'm' $> Meter
+      ]
 
+instance Units DistanceUnit where
+  baseFactor Meter = fromZ 1
+  baseFactor Kilometer = fromZ 1_000
+  baseFactor Mile = fromZ 1_609
+
+-- | Singleton for 'DistanceUnit'.
 data SDistanceUnit (d :: DistanceUnit) where
-  SMeter :: (SingSI s) => SSI s -> SDistanceUnit (Meter s)
+  SMeter :: SDistanceUnit Meter
+  SKilometer :: SDistanceUnit Kilometer
   SMile :: SDistanceUnit Mile
 
-type SingDistanceUnit :: DistanceUnit -> Constraint
-class SingDistanceUnit (d :: DistanceUnit) where
-  singDistanceUnit :: SDistanceUnit d
+deriving stock instance Show (SDistanceUnit d)
 
-instance (SingSI s) => SingDistanceUnit (Meter s) where
-  singDistanceUnit = SMeter (singSI @s)
+type instance Sing = SDistanceUnit
 
-instance SingDistanceUnit Mile where
-  singDistanceUnit = SMile
+instance SingI Meter where
+  sing = SMeter
 
-withSingleton :: SDistanceUnit d -> ((SingDistanceUnit d) => r) -> r
-withSingleton d x = case d of
-  SMeter _ -> x
-  SMile -> x
+instance SingI Kilometer where
+  sing = SKilometer
 
-fromSingleton :: SDistanceUnit d -> DistanceUnit
-fromSingleton (SMeter si) = Meter (ssiToSI si)
-fromSingleton SMile = Mile
+instance SingI Mile where
+  sing = SMile
 
-fromSingleton' :: forall d. (SingDistanceUnit d) => DistanceUnit
-fromSingleton' = fromSingleton $ singDistanceUnit @d
+instance SingKind DistanceUnit where
+  type Demote DistanceUnit = DistanceUnit
+
+  fromSing SMeter = Meter
+  fromSing SKilometer = Kilometer
+  fromSing SMile = Mile
+
+  toSing Meter = MkSomeSing SMeter
+  toSing Kilometer = MkSomeSing SKilometer
+  toSing Mile = MkSomeSing SMile
