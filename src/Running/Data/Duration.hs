@@ -197,7 +197,6 @@ convertDuration = MkDuration . (.%. fromBase) . (.*. toBase) . (.unDuration)
     toBase = singFactor @_ @t1
     fromBase = singFactor @_ @t2
 
--- |
 toHrMinSec ::
   forall t a.
   ( FromInteger a,

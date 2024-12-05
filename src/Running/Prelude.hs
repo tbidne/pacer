@@ -35,11 +35,9 @@ module Running.Prelude
 #endif
 
     -- * Numeric
-    Ratioℕ,
 
     -- ** Positive
     PDouble,
-    pone,
 
     -- ** Floating
     ɛEq,
@@ -152,7 +150,12 @@ import GHC.Real as X
     truncate,
   )
 import GHC.Records as X (HasField (getField))
-import GHC.Show as X (Show (show, showsPrec), showParen, showSpace, showString)
+import GHC.Show as X
+  ( Show (show, showsPrec),
+    showParen,
+    showSpace,
+    showString,
+  )
 import GHC.Stack as X (HasCallStack)
 import Numeric.Algebra as X
   ( AGroup ((.-.)),
@@ -176,8 +179,12 @@ import Numeric.Algebra as X
 import Numeric.Algebra.MetricSpace as X (MetricSpace (diff))
 import Numeric.Class.Division as X (Division)
 import Numeric.Data.Positive as X (mkPositive, unsafePositive, (+!))
-import Numeric.Data.Positive.Internal as X (Positive (MkPositive, UnsafePositive))
-import Numeric.Data.Positive.Internal qualified as PosI
+import Numeric.Data.Positive.Internal as X
+  ( Positive
+      ( MkPositive,
+        UnsafePositive
+      ),
+  )
 import Numeric.Literal.Integer as X (FromInteger (fromZ), ToInteger (toZ))
 import Numeric.Literal.Rational as X (FromRational (fromQ), ToRational (toQ))
 import System.IO as X (IO, putStrLn)
@@ -239,12 +246,9 @@ todo :: forall {r :: RuntimeRep} (a :: TYPE r). (HasCallStack) => a
 todo = raise# (errorCallWithCallStackException "Prelude.todo: not yet implemented" ?callStack)
 {-# WARNING todo "todo remains in code" #-}
 
-type Ratioℕ = Ratio Natural
-
+-- | Positive Double.
 type PDouble = Positive Double
 
-pone :: PDouble
-pone = PosI.UnsafePositive 1
-
+-- | Equality with epsilon check for floating points.
 ɛEq :: (MetricSpace a) => Double -> a -> a -> Bool
 ɛEq e x y = diff x y < e

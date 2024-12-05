@@ -120,10 +120,11 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
       Duration Second PDouble
     calcPace duration (MkSomeDistance s d) = case s of
       SMeter ->
-        withSingI s
-          (Running.calculatePace
-            (convertDistance @Kilometer d)
-            duration
+        withSingI
+          s
+          ( Running.calculatePace
+              (convertDistance @Kilometer d)
+              duration
           ).unPace
       SKilometer ->
         withSingI s (Running.calculatePace d duration).unPace

@@ -2,7 +2,7 @@
 
 module Running.Data.Pace
   ( Pace,
-    AllowedDist,
+    PaceDistF,
 
     -- ** Creation
     mkPace,
@@ -26,11 +26,11 @@ import Running.Prelude
 -- zero since they are so low).
 type Pace :: DistanceUnit -> Type -> Type
 data Pace d a where
-  MkPace :: (AllowedDist d) => Duration Second a -> Pace d a
+  MkPace :: (PaceDistF d) => Duration Second a -> Pace d a
 
 -- | Creates a pace from a duration.
 mkPace ::
-  ( AllowedDist d,
+  ( PaceDistF d,
     FromInteger a,
     MSemigroup a,
     SingI t
@@ -53,11 +53,11 @@ instance HasField "unPace" (Pace d a) (Duration Second a) where
 --   But this is both simpler internally and, more importantly, there does
 --   not appear to be any reason why we would want to support time units.
 
-type AllowedDist :: DistanceUnit -> Constraint
-type family AllowedDist d where
-  AllowedDist Meter = Unsatisfiable (TE.Text "Meters are disallowed in Pace; use km or mi.")
-  AllowedDist Kilometer = ()
-  AllowedDist Mile = ()
+type PaceDistF :: DistanceUnit -> Constraint
+type family PaceDistF d where
+  PaceDistF Meter = Unsatisfiable (TE.Text "Meters are disallowed in Pace; use km or mi.")
+  PaceDistF Kilometer = ()
+  PaceDistF Mile = ()
 
 instance (Show a, SingI d) => Show (Pace d a) where
   showsPrec i (MkPace p) =
@@ -95,8 +95,8 @@ instance (MSemigroup a) => MSemiSpace (Pace d a) a where
 instance (MGroup a) => MSpace (Pace d a) a where
   MkPace x .% k = MkPace (x .% k)
 
-instance (AllowedDist d, FromRational a) => FromRational (Pace d a) where
+instance (FromRational a, PaceDistF d) => FromRational (Pace d a) where
   fromQ = MkPace . (fromQ @(Duration Second a))
 
-instance (AllowedDist d, FromInteger a) => FromInteger (Pace d a) where
+instance (FromInteger a, PaceDistF d) => FromInteger (Pace d a) where
   fromZ = MkPace . (fromZ @(Duration Second a))

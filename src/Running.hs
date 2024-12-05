@@ -10,13 +10,22 @@ where
 
 import Running.Class.Singleton (SingI)
 import Running.Data.Distance
-import Running.Data.Distance.Units (SDistanceUnit (..))
-import Running.Data.Duration
-import Running.Data.Pace
+  ( Distance (unDistance),
+    DistanceUnit (Kilometer),
+    SomeDistance (MkSomeDistance),
+    convertDistance,
+  )
+import Running.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
+import Running.Data.Duration (Duration, TimeUnit (Second))
+import Running.Data.Pace (Pace, PaceDistF, mkPace)
 import Running.Prelude
 
 -- | Given some distance and duration, displays the calculated pace.
-displaySomePace :: (SingI t) => SomeDistance PDouble -> Duration t PDouble -> Text
+displaySomePace ::
+  (SingI t) =>
+  SomeDistance PDouble ->
+  Duration t PDouble ->
+  Text
 displaySomePace someDistance duration = case someDistance of
   MkSomeDistance s d -> case s of
     SMeter -> displayPace (convertDistance @Kilometer d) duration
@@ -26,7 +35,7 @@ displaySomePace someDistance duration = case someDistance of
 -- | Given a distance and duration, displays the calculated pace.
 displayPace ::
   forall t d.
-  (AllowedDist d, SingI d, SingI t) =>
+  (PaceDistF d, SingI d, SingI t) =>
   Distance d PDouble ->
   Duration t PDouble ->
   Text
@@ -35,7 +44,7 @@ displayPace distance = display . calculatePace distance
 -- | Given a distance and duration, calculate the pace.
 calculatePace ::
   forall t d.
-  ( AllowedDist d,
+  ( PaceDistF d,
     SingI t
   ) =>
   Distance d PDouble ->
