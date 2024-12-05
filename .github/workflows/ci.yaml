@@ -45,6 +45,9 @@ jobs:
 
       - name: Compile
         run: cabal build
+
+      - name: Unit tests
+        run: cabal test unit --test-options '--hedgehog-tests 1000000'
   nix:
     strategy:
       fail-fast: false
