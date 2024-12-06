@@ -30,7 +30,8 @@ tests =
   testGroup
     "Running.Data.Distance"
     [ parseTests,
-      equalityTests
+      equalityTests,
+      displayTests
     ]
 
 parseTests :: TestTree
@@ -127,6 +128,19 @@ testEqualityCases = testCase "Tests expected equality cases" $ do
       mkDistanceD @d 10_000 @/=? mkDistanceD 10_001.1
       mkDistanceD @d 10_000 @/=? mkDistanceD 9_999.1
       mkDistanceD @d 10_000 @/=? mkDistanceD 9_998.9
+
+displayTests :: TestTree
+displayTests =
+  testGroup
+    "Display"
+    [ testDisplayCases
+    ]
+
+testDisplayCases :: TestTree
+testDisplayCases = testCase "Displays expected" $ do
+  "10000.9 m" @=? display (mkDistanceD @Meter 10_000.9)
+  "10000.9 km" @=? display (mkDistanceD @Kilometer 10_000.9)
+  "10000.9 mi" @=? display (mkDistanceD @Mile 10_000.9)
 
 genDistance :: Gen (SomeDistance Double)
 genDistance = do
