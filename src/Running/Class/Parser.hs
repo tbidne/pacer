@@ -8,13 +8,22 @@ module Running.Class.Parser
     parseDigits,
     parseDigitText,
     readDigits,
+
+    -- * TimeString
+    parseTimeString,
+
+    -- * Misc
+    failNonSpace,
+    nonSpace,
+    optionalTry,
   )
 where
 
 import Data.Char qualified as Ch
 import Data.Text qualified as T
+import Data.Time.Relative qualified as Rel
 import Running.Prelude
-import Text.Megaparsec (Parsec)
+import Text.Megaparsec (Parsec, (<?>))
 import Text.Megaparsec qualified as MP
 import Text.Read qualified as TR
 
@@ -37,17 +46,29 @@ instance Parser PDouble where
       Just x -> pure x
 
 -- | Parser combinator for digits with a 'Read' instance.
---
--- @since 0.1
 parseDigits :: (Read n) => Parsec Void Text n
 parseDigits = parseDigitText >>= readDigits
 
 -- | Parser combinator for digits.
---
--- @since 0.1
 parseDigitText :: Parsec Void Text Text
 parseDigitText =
   MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '.')
+
+-- | Read text like "1d2h3m4s", parse w/ relative time into Fractional
+-- seconds.
+parseTimeString :: forall a. (Fractional a) => MParser a
+parseTimeString = do
+  t <- MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c `T.elem` chars)
+  case Rel.fromString (unpackText t) of
+    Left err -> fail $ "Could not read duration: " ++ err
+    Right rt -> do
+      let secondsNat = Rel.toSeconds rt
+          secondsDouble = fromIntegral @_ @Double secondsNat
+          secondsA = realToFrac @Double @a secondsDouble
+
+      pure secondsA
+  where
+    chars = "hmds"
 
 readDigits :: (Read n) => Text -> Parsec Void Text n
 readDigits b =
@@ -56,6 +77,15 @@ readDigits b =
     Just b' -> pure b'
 
 parse :: (Parser a) => Text -> Either Text a
-parse t = case MP.runParser parser "Running.Class.Parser.parse" t of
+parse t = case MP.runParser (parser <* MP.eof) "Running.Class.Parser.parse" t of
   Left err -> Left . T.pack . MP.errorBundlePretty $ err
   Right v -> Right v
+
+failNonSpace :: MParser ()
+failNonSpace = MP.notFollowedBy nonSpace
+
+nonSpace :: MParser Char
+nonSpace = MP.satisfy (not . Ch.isSpace) <?> "non white space"
+
+optionalTry :: MParser a -> MParser (Maybe a)
+optionalTry = MP.optional . MP.try

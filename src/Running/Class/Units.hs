@@ -7,10 +7,6 @@ module Running.Class.Units
   )
 where
 
-import Running.Class.Singleton
-  ( SingI (..),
-    SingKind (Demote, fromSing),
-  )
 import Running.Prelude
 
 -- | Class for units.

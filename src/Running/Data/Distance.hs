@@ -23,12 +23,6 @@ module Running.Data.Distance
 where
 
 import Running.Class.Parser (Parser (parser))
-import Running.Class.Singleton
-  ( Sing,
-    SingI (sing),
-    fromSingI,
-    withSingI,
-  )
 import Running.Class.Units (singFactor)
 import Running.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
@@ -105,6 +99,7 @@ instance (FromInteger a) => FromInteger (Distance d a) where
 instance (ToInteger a) => ToInteger (Distance d a) where
   toZ (MkDistance x) = toZ x
 
+-- relies on instances defined in Parser.hs
 instance (Parser a) => Parser (Distance d a) where
   parser = MkDistance <$> parser
 

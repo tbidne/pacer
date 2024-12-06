@@ -5,7 +5,6 @@ module Unit.Running
 where
 
 import Running qualified
-import Running.Class.Singleton (SingI, withSingI)
 import Running.Data.Distance
   ( SomeDistance (MkSomeDistance),
     convertDistance,

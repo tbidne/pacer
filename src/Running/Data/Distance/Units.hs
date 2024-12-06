@@ -8,12 +8,6 @@ module Running.Data.Distance.Units
 where
 
 import Running.Class.Parser (Parser (parser))
-import Running.Class.Singleton
-  ( Sing,
-    SingI (sing),
-    SingKind (Demote, fromSing, toSing),
-    SomeSing (MkSomeSing),
-  )
 import Running.Class.Units (Units (baseFactor))
 import Running.Prelude
 import Text.Megaparsec qualified as MP
@@ -82,6 +76,6 @@ instance SingKind DistanceUnit where
   fromSing SKilometer = Kilometer
   fromSing SMile = Mile
 
-  toSing Meter = MkSomeSing SMeter
-  toSing Kilometer = MkSomeSing SKilometer
-  toSing Mile = MkSomeSing SMile
+  toSing Meter = SomeSing SMeter
+  toSing Kilometer = SomeSing SKilometer
+  toSing Mile = SomeSing SMile

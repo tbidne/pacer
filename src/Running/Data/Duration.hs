@@ -20,18 +20,14 @@ module Running.Data.Duration
   )
 where
 
-import Data.Char qualified as Ch
-import Data.Text qualified as T
-import Data.Time.Relative qualified as Rel
 import Running.Class.Parser (Parser (parser))
-import Running.Class.Singleton (Sing, SingI, fromSingI, withSingI)
+import Running.Class.Parser qualified as P
 import Running.Class.Units (Units (baseFactor), singFactor)
 import Running.Data.Duration.Units
   ( STimeUnit (SSecond),
     TimeUnit (Hour, Minute, Second),
   )
 import Running.Prelude
-import Text.Megaparsec qualified as MP
 
 -- | Units for time.
 type Duration :: TimeUnit -> Type -> Type
@@ -86,13 +82,13 @@ instance
         | otherwise = ""
 
 instance (ASemigroup a) => ASemigroup (Duration t a) where
-  (.+.) = liftBinOp (.+.)
+  (.+.) = liftDuration2 (.+.)
 
 instance (AMonoid a) => AMonoid (Duration t a) where
   zero = MkDuration zero
 
 instance (AGroup a) => AGroup (Duration t a) where
-  (.-.) = liftBinOp (.-.)
+  (.-.) = liftDuration2 (.-.)
 
 instance (MSemigroup a) => MSemiSpace (Duration t a) a where
   MkDuration x .* k = MkDuration (x .*. k)
@@ -130,23 +126,16 @@ instance
   Parser (Duration t a)
   where
   parser = do
-    -- Read text like "1d2h3m4s", parse w/ relative time into Double seconds.
-    t <- MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c `T.elem` chars)
-    case Rel.fromString (unpackText t) of
-      Left err -> fail $ "Could not read duration: " ++ err
-      Right rt -> do
-        let secondsNat = Rel.toSeconds rt
-            secondsDouble = fromIntegral @_ @Double secondsNat
-            secondsA = realToFrac @Double @a secondsDouble
-
-        pure $ MkDuration secondsA .% singFactor @_ @t
-    where
-      chars = "hmds"
+    -- read text like "1d2h3m4s", parse w/ relative time into seconds.
+    seconds <- P.parseTimeString
+    -- convert to requested units
+    pure $ MkDuration seconds .% singFactor @_ @t
 
 instance
   {-# OVERLAPPING #-}
-  ( Division a,
-    Fractional a,
+  ( Fractional a,
+    FromInteger a,
+    MGroup a,
     Ord a,
     Show a,
     SingI t
@@ -154,20 +143,18 @@ instance
   Parser (Duration t (Positive a))
   where
   parser = do
-    -- Read text like "1d2h3m4s", parse w/ relative time into Double seconds.
-    t <- MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c `T.elem` chars)
-    case Rel.fromString (unpackText t) of
-      Left err -> fail $ "Could not read duration: " ++ err
-      Right rt -> do
-        let secondsNat = Rel.toSeconds rt
-            secondsDouble = fromIntegral @_ @Double secondsNat
-            secondsA = realToFrac @Double @a secondsDouble
+    seconds <- P.parseTimeString
+    -- Coverting before saves us a Division constraint.
+    let converted = seconds .%. singFactor @_ @t
+    posConverted <- mkPositiveFailZ converted
+    pure $ MkDuration posConverted
 
-        case mkPositive secondsA of
-          Nothing -> fail ""
-          Just secondsAPos -> pure $ MkDuration (secondsAPos .%. singFactor @_ @t)
-    where
-      chars = "hmds"
+liftDuration2 ::
+  (a -> a -> a) ->
+  Duration t a ->
+  Duration t a ->
+  Duration t a
+liftDuration2 f (MkDuration x) (MkDuration y) = MkDuration (f x y)
 
 -- | Convert to seconds.
 toSeconds ::
@@ -342,13 +329,7 @@ instance (FromInteger a) => FromInteger (SomeDuration a) where
 instance (ToInteger a) => ToInteger (SomeDuration a) where
   toZ (MkSomeDuration _ x) = toZ x
 
-instance
-  ( Fractional a,
-    FromInteger a,
-    MGroup a
-  ) =>
-  Parser (SomeDuration a)
-  where
+instance (Fractional a, FromInteger a, MGroup a) => Parser (SomeDuration a) where
   -- This might seem odd since the Duration/SomeDuration parsing is different
   -- from Distance/SomeDistance. To recap, the latter is:
   --
@@ -369,7 +350,7 @@ instance
   --   for better usability, as strings like "4m15s" are easier than
   --   "4.25" :: Duration Second a. The requested unit type, t, only affects
   --   how the type is stored after conversion e.g. "4m15s" becomes
-  --   becomes 255 :: Duration Second a.
+  --   255 :: Duration Second a.
   --
   -- SomeDuration: "1d2h3m4s" :: SomeDuration
   --
@@ -384,13 +365,6 @@ instance
   --   unit for SomeDuration. Thus we can choose whatever we want, so we go
   --   with seconds.
   parser = MkSomeDuration SSecond <$> parser
-
-liftBinOp ::
-  (a -> a -> a) ->
-  Duration t a ->
-  Duration t a ->
-  Duration t a
-liftBinOp f (MkDuration x) (MkDuration y) = MkDuration (f x y)
 
 liftSomeDuration2 ::
   (FromInteger a, MSemigroup a) =>

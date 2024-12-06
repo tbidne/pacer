@@ -17,12 +17,6 @@ import Data.List (sort, take)
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Running.Class.Parser qualified as Parser
-import Running.Class.Singleton
-  ( SingI,
-    SingKind (toSing),
-    SomeSing (MkSomeSing),
-    withSingI,
-  )
 import Running.Data.Duration
   ( Duration (MkDuration),
     SomeDuration (MkSomeDuration),
@@ -233,7 +227,7 @@ genDuration = do
   u <- Units.genTimeUnit
 
   pure $ case toSing u of
-    MkSomeSing su -> MkSomeDuration su (MkDuration t)
+    SomeSing su -> MkSomeDuration su (MkDuration t)
 
 genDurationPos :: Gen (SomeDuration PDouble)
 genDurationPos = do
@@ -241,7 +235,7 @@ genDurationPos = do
   u <- Units.genTimeUnit
 
   pure $ case toSing u of
-    MkSomeSing su -> MkSomeDuration su (MkDuration t)
+    SomeSing su -> MkSomeDuration su (MkDuration t)
 
 -- Generates a time string like "1d2h3m4s", where we have between 1 and 4
 -- units.

@@ -6,6 +6,7 @@ import Unit.Running qualified
 import Unit.Running.Data.Distance qualified
 import Unit.Running.Data.Distance.Units qualified
 import Unit.Running.Data.Duration qualified
+import Unit.Running.Data.Pace qualified
 
 main :: IO ()
 main =
@@ -15,5 +16,6 @@ main =
       [ Unit.Running.tests,
         Unit.Running.Data.Distance.tests,
         Unit.Running.Data.Distance.Units.tests,
-        Unit.Running.Data.Duration.tests
+        Unit.Running.Data.Duration.tests,
+        Unit.Running.Data.Pace.tests
       ]

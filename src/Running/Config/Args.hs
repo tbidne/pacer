@@ -20,6 +20,9 @@ import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Running
+import Running.Data.Distance (SomeDistance)
+import Running.Data.Duration (SomeDuration)
+import Running.Data.Pace (Pace)
 import Running.Prelude
 
 -- 1. Given pace (min sec), calculate percentages (percent optional, have defaults)
@@ -42,12 +45,16 @@ import Running.Prelude
 --
 -- - units? ugh
 
+newtype Args = MkArgs
+  { cmd :: Command
+  }
+  deriving stock (Eq, Show)
+
 data Command
   = Convert
   | Scale
   deriving stock (Eq, Show)
 
-data Args = MkArgs
-  { cmd :: Command
-  }
-  deriving stock (Eq, Show)
+data ConvertArgs
+  = ConvertToPace (SomeDistance PDouble) (SomeDuration Double)
+  | ConvertToDuration (SomeDistance PDouble) (forall d. Pace d Double)

@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE MagicHash #-}
@@ -24,6 +25,9 @@ module Running.Prelude
     TextBuilder,
     builderToLazyText,
 
+    -- * Singletons
+    fromSingI,
+
 #if !MIN_VERSION_base(4, 20, 0)
 
     -- * Anti-punning aliases
@@ -38,6 +42,8 @@ module Running.Prelude
 
     -- ** Positive
     PDouble,
+    mkPositiveFailZ,
+    mkPositiveFailA,
 
     -- ** Floating
     ɛEq,
@@ -58,7 +64,7 @@ where
 
 import Control.Applicative as X
   ( Alternative (empty, (<|>)),
-    Applicative (liftA2, pure, (*>), (<*>)),
+    Applicative (liftA2, pure, (*>), (<*), (<*>)),
     (<**>),
   )
 import Control.Category as X (Category ((.)), (<<<), (>>>))
@@ -114,6 +120,13 @@ import Data.Ord as X
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Ratio as X (Ratio, Rational, denominator, numerator, (%))
 import Data.Semigroup as X (Semigroup ((<>)))
+import Data.Singletons as X
+  ( Sing,
+    SingI (sing),
+    SingKind (Demote, fromSing, toSing),
+    SomeSing (SomeSing),
+    withSingI,
+  )
 import Data.String as X (IsString, String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
@@ -188,6 +201,7 @@ import Numeric.Data.Positive.Internal as X
 import Numeric.Literal.Integer as X (FromInteger (fromZ), ToInteger (toZ))
 import Numeric.Literal.Rational as X (FromRational (fromQ), ToRational (toQ))
 import System.IO as X (IO, putStrLn)
+import Text.Read as X (readMaybe)
 
 errorMapLeft :: (HasCallStack) => (a -> String) -> Either a c -> c
 errorMapLeft f = errorLeft . first f
@@ -252,3 +266,34 @@ type PDouble = Positive Double
 -- | Equality with epsilon check for floating points.
 ɛEq :: (MetricSpace a) => Double -> a -> a -> Bool
 ɛEq e x y = diff x y < e
+
+mkPositiveFailZ ::
+  forall m a.
+  ( FromInteger a,
+    Ord a,
+    MonadFail m,
+    Show a
+  ) =>
+  a ->
+  m (Positive a)
+mkPositiveFailZ x
+  | x > fromZ 0 = pure $ UnsafePositive x
+  | otherwise = fail $ "Received non-positive: " ++ show x
+
+mkPositiveFailA ::
+  forall m a.
+  ( AMonoid a,
+    MonadFail m,
+    Ord a,
+    Show a
+  ) =>
+  a ->
+  m (Positive a)
+mkPositiveFailA x
+  | x > zero = pure $ UnsafePositive x
+  | otherwise = fail $ "Received non-positive: " ++ show x
+
+-- | Convenience function for retrieving the demoted value from a type
+-- parameter.
+fromSingI :: forall k (a :: k). (SingI a, SingKind k) => Demote k
+fromSingI = fromSing @k (sing @a)

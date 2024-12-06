@@ -43,7 +43,6 @@ library
   exposed-modules:
     Running
     Running.Class.Parser
-    Running.Class.Singleton
     Running.Class.Units
     Running.Config.Args
     Running.Data.Distance
@@ -61,6 +60,7 @@ library
     , megaparsec            >=7.0.5    && <9.7
     , optparse-applicative  >=0.15     && <0.19
     , relative-time         ^>=0.1
+    , singletons            ^>=3.0.3
     , smart-math            ^>=0.1
     , text                  >=1.2.3.2  && <2.2
     , text-display          >=0.0.3.0  && <0.6
@@ -91,6 +91,7 @@ test-suite unit
     Unit.Running.Data.Distance
     Unit.Running.Data.Distance.Units
     Unit.Running.Data.Duration
+    Unit.Running.Data.Pace
     Unit.Utils
 
   build-depends:

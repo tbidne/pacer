@@ -5,10 +5,12 @@ module Running
     displaySomePace,
     displayPace,
     calculatePace,
+
+    -- * From Pace
+    calculateDuration,
   )
 where
 
-import Running.Class.Singleton (SingI)
 import Running.Data.Distance
   ( Distance (unDistance),
     DistanceUnit (Kilometer),
@@ -52,7 +54,10 @@ calculatePace ::
   Pace d PDouble
 calculatePace distance duration = mkPace $ duration .% distance.unDistance
 
--- 3. --pace "5m30s km" --distance marathon
---    Pace Second KM Natural -> Distance Meter Natural -> Duration Second Natural
-paceToTime :: Pace d1 a -> Distance d2 a -> Duration Second a
-paceToTime = todo
+-- | Given a pace and distance, calculates the duration.
+calculateDuration ::
+  (MSemigroup a) =>
+  Distance d a ->
+  Pace d a ->
+  Duration Second a
+calculateDuration distance pace = pace.unPace .* distance.unDistance

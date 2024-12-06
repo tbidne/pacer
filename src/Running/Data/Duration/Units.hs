@@ -7,12 +7,6 @@ module Running.Data.Duration.Units
   )
 where
 
-import Running.Class.Singleton
-  ( Sing,
-    SingI (sing),
-    SingKind (Demote, fromSing, toSing),
-    SomeSing (MkSomeSing),
-  )
 import Running.Class.Units (Units (baseFactor))
 import Running.Prelude
 
@@ -59,6 +53,6 @@ instance SingKind TimeUnit where
   fromSing SMinute = Minute
   fromSing SHour = Hour
 
-  toSing Second = MkSomeSing SSecond
-  toSing Minute = MkSomeSing SMinute
-  toSing Hour = MkSomeSing SHour
+  toSing Second = SomeSing SSecond
+  toSing Minute = SomeSing SMinute
+  toSing Hour = SomeSing SHour

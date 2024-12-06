@@ -13,11 +13,6 @@ module Unit.Running.Data.Distance
 where
 
 import Running.Class.Parser qualified as Parser
-import Running.Class.Singleton
-  ( SingI,
-    SingKind (toSing),
-    SomeSing (MkSomeSing),
-  )
 import Running.Data.Distance
   ( Distance (MkDistance),
     SomeDistance (MkSomeDistance),
@@ -139,7 +134,7 @@ genDistance = do
   u <- Units.genDistanceUnit
 
   pure $ case toSing u of
-    MkSomeSing su -> MkSomeDistance su (MkDistance d)
+    SomeSing su -> MkSomeDistance su (MkDistance d)
 
 genDistancePos :: Gen (SomeDistance PDouble)
 genDistancePos = do
@@ -147,7 +142,7 @@ genDistancePos = do
   u <- Units.genDistanceUnit
 
   pure $ case toSing u of
-    MkSomeSing su -> MkSomeDistance su (MkDistance d)
+    SomeSing su -> MkSomeDistance su (MkDistance d)
 
 genDistanceText :: Gen Text
 genDistanceText = do
