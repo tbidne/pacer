@@ -2,7 +2,7 @@ module Main (main) where
 
 import Data.Word (Word8)
 import Functional.Prelude
-import Running.Config.Args (runAppWith)
+import Running.Driver (runAppWith)
 import System.Environment (withArgs)
 import Test.Tasty (defaultMain)
 

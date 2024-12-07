@@ -47,11 +47,15 @@ library
     Running.Class.Parser
     Running.Class.Units
     Running.Config.Args
+    Running.Config.Args.Command
+    Running.Config.Args.Utils
+    Running.Config.Data
     Running.Data.Distance
     Running.Data.Distance.Units
     Running.Data.Duration
     Running.Data.Duration.Units
     Running.Data.Pace
+    Running.Driver
     Running.Prelude
 
   build-depends:

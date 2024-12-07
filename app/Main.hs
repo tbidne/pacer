@@ -3,7 +3,7 @@
 -- @since 0.1
 module Main (main) where
 
-import Running.Config.Args (runApp)
+import Running.Driver (runApp)
 import System.IO (IO)
 
 -- | Executable entry-point.
