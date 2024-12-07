@@ -12,6 +12,7 @@ module Unit.Running.Data.Distance
   )
 where
 
+import Hedgehog.Gen qualified as G
 import Running.Class.Parser qualified as Parser
 import Running.Data.Distance
   ( Distance (MkDistance),
@@ -19,7 +20,7 @@ import Running.Data.Distance
   )
 import Running.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
-    SDistanceUnit (SKilometer, SMeter, SMile),
+    SDistanceUnit (SMeter),
   )
 import Unit.Prelude
 import Unit.Running.Data.Distance.Units qualified as Units
@@ -84,52 +85,77 @@ testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
     desc = "parse . display is a round trip"
 
 testParseDistanceCases :: TestTree
-testParseDistanceCases = testCase "Parses expected text" $ do
-  Right (mkDistanceD @Meter 7) @=? Parser.parse "7"
-  Right (mkDistancePD @Meter 7) @=? Parser.parse "7"
-  Right (mkDistanceD @Kilometer 4.83) @=? Parser.parse "4.83"
-  Right (mkDistancePD @Kilometer 4.83) @=? Parser.parse "4.83"
-  Right (mkDistanceD @Mile 452.5301) @=? Parser.parse "452.5301"
-  Right (mkDistancePD @Mile 452.5301) @=? Parser.parse "452.5301"
+testParseDistanceCases = testCase "Parses Distance" $ do
+  for_ [(v, u) | v <- vals, u <- units] $ \(val, dunit) -> do
+    case toSing dunit of
+      SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
+        Right (mkDistanceD @d val) @=? Parser.parse (showt val)
+        Right (mkDistancePD @d val) @=? Parser.parse (showt val)
 
-  Right (mkDistanceD @Meter 0) @=? Parser.parse "0"
-  assertLeft "PDouble zero" $ Parser.parse @(Distance Meter PDouble) "0"
-  Right (mkDistanceD @Meter 0) @=? Parser.parse "0"
-  assertLeft "PDouble zero" $ Parser.parse @(Distance Kilometer PDouble) "0"
-  Right (mkDistanceD @Meter 0) @=? Parser.parse "0"
-  assertLeft "PDouble zero" $ Parser.parse @(Distance Mile PDouble) "0"
+  for_ hvals $ \(val, dunit, txt) -> do
+    case toSing dunit of
+      SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
+        Right (mkDistanceD @d val) @=? Parser.parse txt
+        Right (mkDistancePD @d val) @=? Parser.parse txt
+
+  for_ units $ \dunit -> do
+    case toSing dunit of
+      SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
+        Right (mkDistanceD @d 0) @=? Parser.parse "0"
+        assertLeft "PDouble zero" $ Parser.parse @(Distance d PDouble) "0"
+  where
+    vals = [7, 4.83, 452.5301]
+
+    units = [Meter, Kilometer, Mile]
+
+    hvals =
+      [ (42_195, Meter, "marathon"),
+        (42.195, Kilometer, "marathon"),
+        (26.2188, Mile, "marathon"),
+        (21_097.5, Meter, "half-marathon"),
+        (21.0975, Kilometer, "half-marathon"),
+        (13.1094, Mile, "half-marathon"),
+        (21_097.5, Meter, "hmarathon"),
+        (21.0975, Kilometer, "hmarathon"),
+        (13.1094, Mile, "hmarathon")
+      ]
 
 testParseSomeDistanceCases :: TestTree
-testParseSomeDistanceCases = testCase "Parses expected text" $ do
-  Right (mkSomeDistanceD SMeter 7) @=? Parser.parse "7 m"
-  Right (mkSomeDistanceD SMeter 7) @=? Parser.parse "7 meters"
-  Right (mkSomeDistancePD SMeter 7) @=? Parser.parse "7 m"
-  Right (mkSomeDistancePD SMeter 7) @=? Parser.parse "7 meters"
+testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
+  for_ [(v, u) | v <- vals, u <- units] $ \(val, (dist, unitTxt)) -> do
+    case toSing dist of
+      SomeSing sdist -> do
+        Right (mkSomeDistanceD sdist val) @=? Parser.parse (showt val <> unitTxt)
+        Right (mkSomeDistancePD sdist val) @=? Parser.parse (showt val <> unitTxt)
 
-  Right (mkSomeDistanceD SKilometer 4.83) @=? Parser.parse "4.83 km"
-  Right (mkSomeDistanceD SKilometer 4.83) @=? Parser.parse "4.83 kilometers"
-  Right (mkSomeDistancePD SKilometer 4.83) @=? Parser.parse "4.83 km"
-  Right (mkSomeDistancePD SKilometer 4.83) @=? Parser.parse "4.83 kilometers"
+  for_ hvals $ \(dist, val, txt) -> do
+    case toSing dist of
+      SomeSing sdist -> do
+        Right (mkSomeDistanceD sdist val) @=? Parser.parse txt
+        Right (mkSomeDistancePD sdist val) @=? Parser.parse txt
 
-  Right (mkSomeDistanceD SMile 452.5301) @=? Parser.parse "452.5301 mi"
-  Right (mkSomeDistanceD SMile 452.5301) @=? Parser.parse "452.5301 miles"
-  Right (mkSomeDistancePD SMile 452.5301) @=? Parser.parse "452.5301 mi"
-  Right (mkSomeDistancePD SMile 452.5301) @=? Parser.parse "452.5301 miles"
+  for_ units $ \(dist, unitTxt) -> do
+    case toSing dist of
+      SomeSing sdist -> do
+        Right (mkSomeDistanceD sdist 0) @=? Parser.parse ("0" <> unitTxt)
+        assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) ("0" <> unitTxt)
+  where
+    vals = [7, 4.83, 452.5301]
 
-  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 m"
-  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 meters"
-  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 m"
-  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 meters"
+    units =
+      [ (Meter, " m"),
+        (Meter, " meters"),
+        (Kilometer, " km"),
+        (Kilometer, " kilometers"),
+        (Mile, " mi"),
+        (Mile, " miles")
+      ]
 
-  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 km"
-  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 kilometers"
-  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 km"
-  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 kilometers"
-
-  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 mi"
-  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 miles"
-  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 mi"
-  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 miles"
+    hvals =
+      [ (Kilometer, 42.195, "marathon"),
+        (Kilometer, 21.0975, "half-marathon"),
+        (Kilometer, 21.0975, "hmarathon")
+      ]
 
 testParseDistanceFailureCases :: TestTree
 testParseDistanceFailureCases = testCase "Parse failures" $ do
@@ -230,19 +256,31 @@ genSomeDistancePos = do
     SomeSing su -> MkSomeDistance su (MkDistance d)
 
 genDistanceText :: Gen Text
-genDistanceText = Utils.genTextDouble
+genDistanceText =
+  G.choice
+    [ Utils.genTextDouble,
+      pure "marathon",
+      pure "half-marathon",
+      pure "hmarathon"
+    ]
 
 genSomeDistanceText :: Gen Text
 genSomeDistanceText = do
-  d <- Utils.genTextDouble
-  t <- Units.genDistanceUnitText
+  G.choice
+    [ do
+        d <- Utils.genTextDouble
+        t <- Units.genDistanceUnitText
 
-  pure
-    $ mconcat
-      [ d,
-        " ",
-        t
-      ]
+        pure
+          $ mconcat
+            [ d,
+              " ",
+              t
+            ],
+      pure "marathon",
+      pure "half-marathon",
+      pure "hmarathon"
+    ]
 
 genSomeDistancePosText :: Gen Text
 genSomeDistancePosText = do

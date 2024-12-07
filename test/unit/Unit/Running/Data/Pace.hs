@@ -52,6 +52,10 @@ testParseSomePaceGenText = testPropertyNamed "testParseSomePaceGenText" desc $ p
 
 testParsePaceCases :: TestTree
 testParsePaceCases = testCase "Parses text to expected SomePace" $ do
+  -- NOTE: [Unit Loop]
+  --
+  -- Cannot (easily) loop over the units like in Duration and Distance
+  -- because of the PaceDistF constraint.
   for_ vals $ \(e, t) -> do
     Right (mkPaceD @Kilometer e) @=? Parser.parse t
     Right (mkPacePD @Kilometer e) @=? Parser.parse t
@@ -98,6 +102,7 @@ testParsePaceCases = testCase "Parses text to expected SomePace" $ do
 
 testParsePaceFailureCases :: TestTree
 testParsePaceFailureCases = testCase "Parse failures" $ do
+  -- see NOTE: [Unit Loop]
   for_ bothVals $ \(d, t) -> do
     assertLeft d $ Parser.parse @(Pace Kilometer Double) t
     assertLeft d $ Parser.parse @(Pace Mile Double) t

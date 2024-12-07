@@ -10,6 +10,7 @@ module Running.Data.Distance
     -- * Some Distance
     SomeDistance (..),
     someToMeters,
+    convertSomeDistance,
 
     -- * Units
     DistanceUnit (..),
@@ -22,13 +23,14 @@ module Running.Data.Distance
   )
 where
 
-import Running.Class.Parser (Parser (parser))
+import Running.Class.Parser (MParser, Parser (parser))
 import Running.Class.Units (singFactor)
 import Running.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Running.Prelude
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
 -- | Represents a numeric distance with units.
@@ -103,10 +105,24 @@ instance (ToInteger a) => ToInteger (Distance d a) where
 --
 -- No units, simply reuses Double's instances in Parser.hs.
 --
+-- Normally this is just a wrapper over Double's instance in Parser.hs i.e.
+-- a number with no units. However, we also parse some hardcoded strings
+-- e.g. marathon.
+--
 -- See NOTE: [SomeDistance Parsing]
 
-instance (Parser a) => Parser (Distance d a) where
-  parser = MkDistance <$> parser
+instance
+  ( FromRational a,
+    SingI d,
+    Parser a
+  ) =>
+  Parser (Distance d a)
+  where
+  parser =
+    distanceParser <&> \case
+      DistParseMarathon -> marathon
+      DistParseHalfMarathon -> halfMarathon
+      DistParseNumeric x -> MkDistance x
 
 liftDist2 ::
   (a -> a -> a) ->
@@ -155,6 +171,16 @@ someToMeters ::
   Distance Meter a
 someToMeters (MkSomeDistance u x) = withSingI u toMeters x
 
+convertSomeDistance ::
+  forall d a.
+  ( FromInteger a,
+    MGroup a,
+    SingI d
+  ) =>
+  SomeDistance a ->
+  Distance d a
+convertSomeDistance (MkSomeDistance s x) = withSingI s convertDistance x
+
 -- | Distance, existentially quantifying the units.
 type SomeDistance :: Type -> Type
 data SomeDistance a where
@@ -163,7 +189,14 @@ data SomeDistance a where
 instance (FromInteger a, MetricSpace a, MGroup a) => Eq (SomeDistance a) where
   t1 == t2 = someToMeters t1 == someToMeters t2
 
-instance (FromInteger a, MetricSpace a, MGroup a, Ord a) => Ord (SomeDistance a) where
+instance
+  ( FromInteger a,
+    MetricSpace a,
+    MGroup a,
+    Ord a
+  ) =>
+  Ord (SomeDistance a)
+  where
   t1 <= t2 = someToMeters t1 <= someToMeters t2
 
 instance HasField "unSomeDistance" (SomeDistance a) a where
@@ -182,7 +215,13 @@ instance (Show a) => Show (SomeDistance a) where
 instance (Display a) => Display (SomeDistance a) where
   displayBuilder (MkSomeDistance u x) = withSingI u displayBuilder x
 
-instance (ASemigroup a, FromInteger a, MGroup a) => ASemigroup (SomeDistance a) where
+instance
+  ( ASemigroup a,
+    FromInteger a,
+    MGroup a
+  ) =>
+  ASemigroup (SomeDistance a)
+  where
   (.+.) = liftSomeDist2 (.+.)
 
 instance (FromInteger a, Semifield a) => AMonoid (SomeDistance a) where
@@ -221,18 +260,19 @@ instance (ToInteger a) => ToInteger (SomeDistance a) where
 --
 -- Uses Distance's instance and adds units e.g. '4 km'.
 -- See NOTE: [Distance Parsing]
-instance (Parser a) => Parser (SomeDistance a) where
-  parser = do
-    x <- parser
+instance (FromRational a, Parser a) => Parser (SomeDistance a) where
+  parser =
+    distanceParser >>= \case
+      DistParseMarathon -> pure $ MkSomeDistance SKilometer marathon
+      DistParseHalfMarathon -> pure $ MkSomeDistance SKilometer halfMarathon
+      DistParseNumeric x -> do
+        _ <- MPC.char ' '
+        unit <- parser
 
-    MPC.char ' '
-
-    u <- parser
-
-    pure $ case u of
-      Meter -> MkSomeDistance SMeter (MkDistance x)
-      Kilometer -> MkSomeDistance SKilometer (MkDistance x)
-      Mile -> MkSomeDistance SMile (MkDistance x)
+        pure $ case unit of
+          Meter -> MkSomeDistance SMeter (MkDistance x)
+          Kilometer -> MkSomeDistance SKilometer (MkDistance x)
+          Mile -> MkSomeDistance SMile (MkDistance x)
 
 liftSomeDist2 ::
   (FromInteger a, MGroup a) =>
@@ -273,3 +313,18 @@ k_5 = case sing @d of
   SMeter -> MkDistance $ fromQ 5_000
   SKilometer -> MkDistance $ fromQ 5
   SMile -> MkDistance $ fromQ 3.10686
+
+data DistParse a
+  = DistParseMarathon
+  | DistParseHalfMarathon
+  | DistParseNumeric a
+
+-- | Normal parsing w/ special cases
+distanceParser :: (Parser a) => MParser (DistParse a)
+distanceParser = do
+  MP.choice
+    [ MP.try $ MPC.string "marathon" $> DistParseMarathon,
+      MP.try $ MPC.string "half-marathon" $> DistParseHalfMarathon,
+      MP.try $ MPC.string "hmarathon" $> DistParseHalfMarathon,
+      DistParseNumeric <$> parser
+    ]

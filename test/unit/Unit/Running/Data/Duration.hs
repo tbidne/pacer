@@ -68,23 +68,17 @@ testParseProps = testPropertyNamed "testParseProps" desc $ property $ do
 
 testParseDurationCases :: TestTree
 testParseDurationCases = testCase "Parses Duration" $ do
-  for_ strs $ \s -> do
-    Right (mkDurationD @Second 12600) @=? Parser.parse s
-    Right (mkDurationD @Minute 210) @=? Parser.parse s
-    Right (mkDurationD @Hour 3.5) @=? Parser.parse s
+  for_ [(s, uv) | s <- strs, uv <- unitVals] $ \(s, (v, dunit)) -> do
+    case toSing dunit of
+      SomeSing @TimeUnit @d stime -> withSingI stime $ do
+        Right (mkDurationD @d v) @=? Parser.parse s
+        Right (mkDurationPD @d v) @=? Parser.parse s
 
-    Right (mkDurationPD @Second 12600) @=? Parser.parse s
-    Right (mkDurationPD @Minute 210) @=? Parser.parse s
-    Right (mkDurationPD @Hour 3.5) @=? Parser.parse s
-
-  for_ zstrs $ \s -> do
-    Right (mkDurationD @Second 0) @=? Parser.parse s
-    Right (mkDurationD @Minute 0) @=? Parser.parse s
-    Right (mkDurationD @Hour 0) @=? Parser.parse s
-
-    assertLeft "PDouble zero" $ Parser.parse @(Duration Second PDouble) s
-    assertLeft "PDouble zero" $ Parser.parse @(Duration Hour PDouble) s
-    assertLeft "PDouble zero" $ Parser.parse @(Duration Minute PDouble) s
+  for_ [(s, u) | s <- zstrs, u <- units] $ \(s, dunit) -> do
+    case toSing dunit of
+      SomeSing @TimeUnit @d stime -> withSingI stime $ do
+        Right (mkDurationD @d 0) @=? Parser.parse s
+        assertLeft "PDouble zero" $ Parser.parse @(Duration d PDouble) s
   where
     -- All the same time value
     strs =
@@ -96,6 +90,9 @@ testParseDurationCases = testCase "Parses Duration" $ do
         "3h30m0s",
         "2h15m4500s"
       ]
+
+    units = [Second, Minute, Hour]
+    unitVals = zip [12_600, 210, 3.5] units
 
     zstrs =
       [ "0h",
