@@ -105,9 +105,10 @@ import Data.Functor as X
   )
 import Data.Int as X (Int)
 #if MIN_VERSION_base(4, 20, 0)
-import Data.List as X (List, elem, filter, replicate, zip, (++))
+import Data.List as X (List, elem, filter, replicate, sortOn, zip, zipWith,
+  (++))
 #else
-import Data.List as X (elem, filter, replicate, zip, (++))
+import Data.List as X (elem, filter, replicate, sortOn, zip, zipWith, (++))
 #endif
 import Data.Kind as X (Constraint, Type)
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
@@ -134,6 +135,7 @@ import Data.Text.Display as X (Display (displayBuilder), display)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder qualified as TLB
 import Data.Traversable as X (Traversable (sequenceA, traverse))
+import Data.Tuple as X (fst, snd)
 #if MIN_VERSION_base(4, 20, 0)
 import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
 #endif

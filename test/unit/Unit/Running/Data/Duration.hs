@@ -13,7 +13,8 @@ module Unit.Running.Data.Duration
   )
 where
 
-import Data.List (sort, take)
+import Data.List (take)
+import Data.Word (Word8)
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Running.Class.Parser qualified as Parser
@@ -312,58 +313,37 @@ genDurationText :: Gen Text
 genDurationText = do
   toTake <- G.integral (R.linear 1 4)
   fullStrShuffled <- genAllUnitsShuffled
-  let someUnits = sort $ take toTake fullStrShuffled
+  let someUnits = snd <$> sortOn fst (take toTake fullStrShuffled)
 
-  pure $ mconcat $ unitToTxt <$> someUnits
+  pure $ mconcat someUnits
 
 genDurationPosText :: Gen Text
 genDurationPosText = do
   toTake <- G.integral (R.linear 0 3)
   (nonZero, maybeZeroes) <- genAllUnitsShuffledPos
-  let someUnits = sort $ nonZero : take toTake maybeZeroes
+  let someUnits = snd <$> sortOn fst (nonZero : take toTake maybeZeroes)
 
-  pure $ mconcat $ unitToTxt <$> someUnits
+  pure $ mconcat someUnits
 
-data TimeStrUnit
-  = Days Natural
-  | Hours Natural
-  | Minutes Natural
-  | Seconds Natural
-  deriving stock (Eq, Show)
+-- Because unit order matters, we need to pair time strings w/ an index for
+-- sorting after shuffling.
+type TimeUnitIndexed = Tuple2 Word8 Text
 
-instance Ord TimeStrUnit where
-  Days _ `compare` Days _ = EQ
-  Days _ `compare` _ = LT
-  _ `compare` Days _ = GT
-  Hours _ `compare` Hours _ = EQ
-  Hours _ `compare` _ = LT
-  _ `compare` Hours _ = GT
-  Minutes _ `compare` Minutes _ = EQ
-  Minutes _ `compare` _ = LT
-  _ `compare` Minutes _ = GT
-  Seconds _ `compare` Seconds _ = EQ
-
-genAllUnitsShuffled :: Gen [TimeStrUnit]
+genAllUnitsShuffled :: Gen (List TimeUnitIndexed)
 genAllUnitsShuffled = do
-  d <- Utils.genℕ
-  h <- Utils.genℕ
-  m <- Utils.genℕ
-  s <- Utils.genℕ
-  G.shuffle [Days d, Hours h, Minutes m, Seconds s]
+  d <- (<> "d") <$> Utils.genTextℕ
+  h <- (<> "h") <$> Utils.genTextℕ
+  m <- (<> "m") <$> Utils.genTextℕ
+  s <- (<> "s") <$> Utils.genTextℕ
+  G.shuffle $ zip [0 ..] [d, h, m, s]
 
-genAllUnitsShuffledPos :: Gen (TimeStrUnit, [TimeStrUnit])
+genAllUnitsShuffledPos :: Gen (Tuple2 TimeUnitIndexed (List TimeUnitIndexed))
 genAllUnitsShuffledPos = do
-  n1 <- Utils.genℕ
-  n2 <- Utils.genℕ
-  n3 <- Utils.genℕ
-  p <- Utils.genℕ1
+  n1 <- Utils.genTextℕ
+  n2 <- Utils.genTextℕ
+  n3 <- Utils.genTextℕ
+  p <- Utils.genTextℕ1
 
-  (d : [c1, c2, c3]) <- G.shuffle [Days, Hours, Minutes, Seconds]
+  (y : xs) <- G.shuffle $ zip [0 ..] ["d", "h", "m", "s"]
 
-  pure (d p, [c1 n1, c2 n2, c3 n3])
-
-unitToTxt :: TimeStrUnit -> Text
-unitToTxt (Days d) = showt d <> "d"
-unitToTxt (Hours h) = showt h <> "h"
-unitToTxt (Minutes m) = showt m <> "m"
-unitToTxt (Seconds m) = showt m <> "s"
+  pure (second (p <>) y, zipWith (\t -> second (t <>)) [n1, n2, n3] xs)

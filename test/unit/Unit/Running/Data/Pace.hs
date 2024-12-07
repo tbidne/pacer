@@ -3,17 +3,14 @@ module Unit.Running.Data.Pace
   )
 where
 
-import Data.List (sortOn, take)
-import Data.Tuple (fst, snd)
 import Hedgehog.Gen qualified as G
-import Hedgehog.Range qualified as R
 import Running.Class.Parser qualified as Parser
 import Running.Data.Distance (DistanceUnit (Kilometer, Mile))
 import Running.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
 import Running.Data.Duration (Duration (MkDuration))
 import Running.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
 import Unit.Prelude
-import Unit.Utils qualified as Utils
+import Unit.Running.Data.Duration qualified as D
 
 tests :: TestTree
 tests =
@@ -84,20 +81,22 @@ testParsePaceCases = testCase "Parses text to expected SomePace" $ do
   where
     vals =
       [ (3_600, "1h"),
-        (3_840, "1h 4'"),
-        (3_870, "1h 4'30\""),
-        (240, "4'"),
-        (270, "4'30\""),
-        (30, "30\"")
+        (3_840, "1h4m"),
+        (3_870, "1h4m30s"),
+        (240, "4m"),
+        (270, "4m30s"),
+        (30, "30s"),
+        (30, "30")
       ]
 
     zVals =
       [ (0, "0h"),
-        (0, "0h 0'"),
-        (0, "0h 0'00\""),
-        (0, "0'"),
-        (0, "0'0\""),
-        (0, "0\"")
+        (0, "0h0m"),
+        (0, "0h0m00s"),
+        (0, "0m"),
+        (0, "0m0s"),
+        (0, "0s"),
+        (0, "0")
       ]
 
 testParsePaceFailureCases :: TestTree
@@ -151,19 +150,20 @@ testDisplayCases = testCase "Displays expected" $ do
   "5'20\" /mi" @=? display (MkSomePace @_ @Double SMile (MkPace $ MkDuration 320))
 
 genPaceText :: Gen Text
-genPaceText = do
-  toTake <- G.integral (R.linear 1 3)
+genPaceText = D.genDurationText
 
-  h <- genHours
-  m <- genMinutes
-  s <- genSeconds
+{-toTake <- G.integral (R.linear 1 3)
 
-  mconcat . fmap snd . sortOn fst . take toTake <$> G.shuffle [h, m, s]
-  where
-    genHours :: Gen (Int, Text)
-    genHours = (0,) . (<> "h") <$> Utils.genTextℕ
-    genMinutes = (1,) . (<> "'") <$> Utils.genTextℕ
-    genSeconds = (2,) . (<> "\"") <$> Utils.genTextℕ
+h <- genHours
+m <- genMinutes
+s <- genSeconds
+
+mconcat . fmap snd . sortOn fst . take toTake <$> G.shuffle [h, m, s]
+where
+  genHours :: Gen (Int, Text)
+  genHours = (0,) . (<> "h") <$> Utils.genTextℕ
+  genMinutes = (1,) . (<> "'") <$> Utils.genTextℕ
+  genSeconds = (2,) . (<> "\"") <$> Utils.genTextℕ-}
 
 genSomePaceText :: Gen Text
 genSomePaceText = do

@@ -65,7 +65,7 @@ newtype Args = MkArgs
 data Command
   = -- NOTE: We include units on the distance __and__ the Pace. This seems
     -- mildly weird, since it means the units could be different e.g.
-    -- --distance "42 mi" --pace "4'50\" /km". There are two reasons for this.
+    -- --distance "42 mi" --pace "4m50s /km". There are two reasons for this.
     --
     -- 1. The technical reason is that it's easier. SomePace hides the type
     --    variable, and it requires units. The easiest alternative is to
@@ -73,7 +73,7 @@ data Command
     --    note why. This works, but it's arguably clunky.
     --
     -- 2. Arguably mixing units _does_ make sense in some situations e.g.
-    --    --distance "10000 m" --pace "4'50\" /km". Thus we leave it.
+    --    --distance "10000 m" --pace "4m50s /km". Thus we leave it.
     ConvertToDuration (SomeDistance PDouble) (SomePace PDouble)
   | ConvertToPace (SomeDistance PDouble) (Duration Second PDouble)
   | Scale
@@ -166,8 +166,8 @@ paceParser =
     read
     ( mconcat
         [ OA.long "pace",
-          OA.metavar "PACE_STR",
-          mkHelp "A pace e.g. 4'30\" /km or 1h 5' /mi."
+          OA.metavar "TIME_STR",
+          mkHelp "A pace e.g. '4m30s /km' or '1h5m /mi'."
         ]
     )
   where

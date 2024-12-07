@@ -9,6 +9,7 @@ module Unit.Utils
     genTextDouble,
     genTextDoublePos,
     genTextℕ,
+    genTextℕ1,
     genAffineSpace,
   )
 where
@@ -63,6 +64,9 @@ genDoubleMax max = do
 
 genTextℕ :: Gen Text
 genTextℕ = showt <$> genℕ
+
+genTextℕ1 :: Gen Text
+genTextℕ1 = showt <$> genℕ1
 
 -- | Generate double text like "25.349".
 genTextDouble :: Gen Text

@@ -26,20 +26,16 @@ module Running.Data.Pace
   )
 where
 
-import Data.Char qualified as Ch
 import GHC.TypeError (Unsatisfiable)
 import GHC.TypeError qualified as TE
-import Running.Class.Parser (MParser, Parser (parser))
-import Running.Class.Parser qualified as Parser
+import Running.Class.Parser (Parser (parser))
 import Running.Class.Units (singFactor)
 import Running.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
 import Running.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
 import Running.Data.Duration
   ( Duration (MkDuration),
     TimeUnit
-      ( Hour,
-        Minute,
-        Second
+      ( Second
       ),
   )
 import Running.Data.Duration qualified as Duration
@@ -152,37 +148,27 @@ instance (ToInteger a) => ToInteger (Pace d a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( FromInteger a,
-    PaceDistF d,
-    Read a,
-    Semifield a
+  ( Fractional a,
+    FromInteger a,
+    MGroup a,
+    PaceDistF d
   ) =>
   Parser (Pace d a)
   where
-  parser =
-    -- TODO: Consider using Duration's parser here. As predicted, including
-    -- quotation marks in the format is super annoying since you have to
-    -- escape e.g. --pace "4'30\" /km". Switching to a time string would
-    -- solve this. It would mean we lose the parse <-> display round trip,
-    -- but that seems a small price to pay for better ergonomics.
-    MkPace <$> parsePaceDuration
+  parser = MkPace <$> parser
 
 instance
   {-# OVERLAPPING #-}
-  ( FromInteger a,
+  ( Fractional a,
+    FromInteger a,
+    MGroup a,
     Ord a,
     PaceDistF d,
-    Read a,
-    Semifield a,
     Show a
   ) =>
   Parser (Pace d (Positive a))
   where
-  parser = do
-    -- reuse non-positive parser
-    MkPace (MkDuration x) <- parser @(Pace d a)
-    y <- mkPositiveFailZ x
-    pure (MkPace (MkDuration y))
+  parser = MkPace <$> parser
 
 -- | Creates a pace from a duration.
 mkPace ::
@@ -305,14 +291,14 @@ instance (ToInteger a) => ToInteger (SomePace a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( FromInteger a,
-    Read a,
-    Semifield a
+  ( Fractional a,
+    FromInteger a,
+    MGroup a
   ) =>
   Parser (SomePace a)
   where
   parser = do
-    x <- parsePaceDuration
+    MkDuration x <- parser @(Duration Second a)
     MPC.space
     MPC.char '/'
 
@@ -334,15 +320,15 @@ instance
       Left "meters" -> fail "Meters are disallowed in Pace; use km or mi."
       Left d -> fail $ "Pace unit " ++ d ++ " should be singular"
       Right Meter -> fail "Meters are disallowed in Pace; use km or mi."
-      Right Kilometer -> pure $ MkSomePace SKilometer $ MkPace x
-      Right Mile -> pure $ MkSomePace SMile $ MkPace x
+      Right Kilometer -> pure $ MkSomePace SKilometer $ MkPace (MkDuration x)
+      Right Mile -> pure $ MkSomePace SMile $ MkPace (MkDuration x)
 
 instance
   {-# OVERLAPPING #-}
-  ( FromInteger a,
+  ( Fractional a,
+    FromInteger a,
+    MGroup a,
     Ord a,
-    Read a,
-    Semifield a,
     Show a
   ) =>
   Parser (SomePace (Positive a))
@@ -360,63 +346,3 @@ unSomePace (MkSomePace _ (MkPace x)) = x
 -- | Hides the distance.
 mkSomePace :: forall d a. (SingI d) => Pace d a -> SomePace a
 mkSomePace = MkSomePace (sing @d)
-
--- | Parser for duration second. Reads strings like
---
--- @
---   "1h 5'30\\""
--- @
---
--- where each (h, m, s) component is optional, though there must be at least
--- __one__.
-parsePaceDuration ::
-  forall a.
-  ( FromInteger a,
-    Read a,
-    Semifield a
-  ) =>
-  MParser (Duration Second a)
-parsePaceDuration = do
-  hours <- Parser.optionalTry parseHours
-  minutes <- Parser.optionalTry parseMinutes
-  seconds <- Parser.optionalTry parseSeconds
-
-  sumDurations hours minutes seconds
-  where
-    parseHours :: MParser (Duration Hour a)
-    parseHours = do
-      txt <- MP.takeWhile1P Nothing Ch.isDigit
-      MPC.char 'h'
-      MPC.space
-      case readMaybe (unpackText txt) of
-        Just x -> pure $ MkDuration x
-        Nothing -> fail $ "Could not read hours: " ++ unpackText txt
-
-    parseMinutes :: MParser (Duration Minute a)
-    parseMinutes = do
-      txt <- MP.takeWhile1P Nothing Ch.isDigit
-      MPC.char '\''
-      case readMaybe (unpackText txt) of
-        Just x -> pure $ MkDuration x
-        Nothing -> fail $ "Could not read minutes: " ++ unpackText txt
-
-    parseSeconds :: MParser (Duration Second a)
-    parseSeconds = do
-      txt <- MP.takeWhile1P Nothing Ch.isDigit
-      MPC.char '\"'
-      case readMaybe (unpackText txt) of
-        Just x -> pure $ MkDuration x
-        Nothing -> fail $ "Could not read minutes: " ++ unpackText txt
-
-    sumDurations ::
-      Maybe (Duration Hour a) ->
-      Maybe (Duration Minute a) ->
-      Maybe (Duration Second a) ->
-      MParser (Duration Second a)
-    sumDurations mHours mMinutes mSeconds =
-      case catMaybes [mHours', mMinutes', mSeconds] of
-        [] -> fail "Received empty pace"
-        xs -> pure $ foldl' (.+.) zero xs
-      where
-        mHours' = Duration.convertDuration <$> mHours
-        mMinutes' = Duration.convertDuration <$> mMinutes
