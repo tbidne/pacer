@@ -3,6 +3,7 @@ module Running.Class.Parser
   ( Parser (..),
     MParser,
     parse,
+    parseWith,
 
     -- * Digits
     parseDigits,
@@ -77,7 +78,10 @@ readDigits b =
     Just b' -> pure b'
 
 parse :: (Parser a) => Text -> Either Text a
-parse t = case MP.runParser (parser <* MP.eof) "Running.Class.Parser.parse" t of
+parse = parseWith parser
+
+parseWith :: MParser a -> Text -> Either Text a
+parseWith p t = case MP.runParser (p <* MP.eof) "Running.Class.Parser.parseWith" t of
   Left err -> Left . T.pack . MP.errorBundlePretty $ err
   Right v -> Right v
 

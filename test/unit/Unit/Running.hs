@@ -67,9 +67,9 @@ testCalculatePace =
           tMin = parseOrDie @(Duration Minute PDouble) durationTxt
           tHr = parseOrDie @(Duration Hour PDouble) durationTxt
 
-      let rSec = Running.displaySomePace dist tSec
-          rMin = Running.displaySomePace dist tMin
-          rHr = Running.displaySomePace dist tHr
+      let rSec = displaySomePace dist tSec
+          rMin = displaySomePace dist tMin
+          rHr = displaySomePace dist tHr
 
       expected @=? rSec
       expected @=? rMin
@@ -85,6 +85,9 @@ testCalculatePace =
                 "' -> ",
                 expected
               ]
+
+displaySomePace :: (SingI t) => SomeDistance PDouble -> Duration t PDouble -> Text
+displaySomePace dist = display . Running.calculateSomePace dist
 
 testPaceTimeInvariance :: TestTree
 testPaceTimeInvariance = testPropertyNamed name desc $ property $ do

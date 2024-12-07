@@ -159,7 +159,13 @@ instance
   ) =>
   Parser (Pace d a)
   where
-  parser = MkPace <$> parsePaceDuration
+  parser =
+    -- TODO: Consider using Duration's parser here. As predicted, including
+    -- quotation marks in the format is super annoying since you have to
+    -- escape e.g. --pace "4'30\" /km". Switching to a time string would
+    -- solve this. It would mean we lose the parse <-> display round trip,
+    -- but that seems a small price to pay for better ergonomics.
+    MkPace <$> parsePaceDuration
 
 instance
   {-# OVERLAPPING #-}

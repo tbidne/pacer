@@ -40,6 +40,8 @@ common common-lang
 
 library
   import:          common-lang
+  other-modules:   Paths_running
+  autogen-modules: Paths_running
   exposed-modules:
     Running
     Running.Class.Parser
@@ -50,7 +52,6 @@ library
     Running.Data.Duration
     Running.Data.Duration.Units
     Running.Data.Pace
-    Running.Data.Run
     Running.Prelude
 
   build-depends:
