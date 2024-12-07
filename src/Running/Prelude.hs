@@ -38,6 +38,9 @@ module Running.Prelude
 
 #endif
 
+    -- * Exception
+    displayExceptiont,
+
     -- * Numeric
 
     -- ** Positive
@@ -68,6 +71,14 @@ import Control.Applicative as X
     (<**>),
   )
 import Control.Category as X (Category ((.)), (<<<), (>>>))
+import Control.Exception as X
+  ( Exception (displayException),
+    SomeException,
+    catch,
+    throwIO,
+    try,
+  )
+import Control.Exception.Utils as X (TextException, throwText)
 import Control.Monad as X
   ( Monad ((>>=)),
     forever,
@@ -105,8 +116,16 @@ import Data.Functor as X
   )
 import Data.Int as X (Int)
 #if MIN_VERSION_base(4, 20, 0)
-import Data.List as X (List, elem, filter, replicate, sortOn, zip, zipWith,
-  (++))
+import Data.List as X
+  ( List,
+    elem,
+    filter,
+    replicate,
+    sortOn,
+    zip,
+    zipWith,
+    (++)
+  )
 #else
 import Data.List as X (elem, filter, replicate, sortOn, zip, zipWith, (++))
 #endif
@@ -299,3 +318,6 @@ mkPositiveFailA x
 -- parameter.
 fromSingI :: forall k (a :: k). (SingI a, SingKind k) => Demote k
 fromSingI = fromSing @k (sing @a)
+
+displayExceptiont :: (Exception e) => e -> Text
+displayExceptiont = packText . displayException

@@ -32,6 +32,7 @@ import Running.Data.Distance.Units
 import Running.Prelude
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
+import Text.Printf (printf)
 
 -- | Represents a numeric distance with units.
 type Distance :: DistanceUnit -> Type -> Type
@@ -58,13 +59,21 @@ instance (Show a, SingI d) => Show (Distance d a) where
     where
       d = fromSingI @_ @d
 
-instance (Display a, SingI d) => Display (Distance d a) where
+instance (Display a, SingI d, ToRational a) => Display (Distance d a) where
   displayBuilder (MkDistance x) =
     mconcat
-      [ displayBuilder x,
+      [ x',
         " ",
-        displayBuilder (fromSingI @_ @d)
+        displayBuilder d
       ]
+    where
+      d = fromSingI @_ @d
+
+      xDouble = realToFrac @_ @Double $ toQ x
+      x' = case d of
+        Meter -> displayBuilder $ round @Double @Int xDouble
+        Kilometer -> displayBuilder @String $ printf "%.2f" xDouble
+        Mile -> displayBuilder @String $ printf "%.2f" xDouble
 
 instance (ASemigroup a) => ASemigroup (Distance d a) where
   (.+.) = liftDist2 (.+.)
@@ -212,7 +221,7 @@ instance (Show a) => Show (SomeDistance a) where
           . withSingI u showsPrec 11 x
       )
 
-instance (Display a) => Display (SomeDistance a) where
+instance (Display a, ToRational a) => Display (SomeDistance a) where
   displayBuilder (MkSomeDistance u x) = withSingI u displayBuilder x
 
 instance

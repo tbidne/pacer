@@ -11,10 +11,53 @@ main =
   defaultMain
     $ testGroup
       "Functional"
-      [ testConvertToDistance,
-        testConvertToDuration,
-        testConvertToPace
+      [ convertTests
       ]
+
+convertTests :: TestTree
+convertTests =
+  testGroup
+    "convert"
+    [ testConvertToDistance,
+      testConvertToDuration,
+      testConvertToPace,
+      testConvertError
+        "Empty args error"
+        "Convert requires exactly 2 options, received 0."
+        [],
+      testConvertError
+        "Distance only error"
+        singleArgErr
+        ["--distance", "marathon"],
+      testConvertError
+        "Duration only error"
+        singleArgErr
+        ["--duration", "3h"],
+      testConvertError
+        "Pace only error"
+        singleArgErr
+        ["--pace", "4m30s"],
+      testConvertError
+        "Convert distance requires pace units"
+        "Converting duration and pace to distance requires that pace has units."
+        ["--duration", "3h", "--pace", "4m30s"],
+      testConvertError
+        "3 args error"
+        "Convert requires exactly 2 options, received 3."
+        ["--distance", "marathon", "--duration", "3h", "--pace", "4m30s"]
+    ]
+  where
+    singleArgErr = "Convert requires exactly 2 options, received 1."
+
+    testConvertError :: TestName -> Text -> List String -> TestTree
+    testConvertError desc expected args = testCase desc $ do
+      eResult <- try @TextException $ withArgs args' $ runAppWith pure
+
+      case eResult of
+        Right r -> assertFailure $ unpackText $ "Expected exception, received: " <> r
+        Left ex -> expected @=? displayExceptiont ex
+      where
+        args' = "convert" : args
 
 testConvertToDistance :: TestTree
 testConvertToDistance = testCase "Converts to Distance" $ do
@@ -24,10 +67,11 @@ testConvertToDistance = testCase "Converts to Distance" $ do
     vals =
       zip
         [1 ..]
-        [ ("3h", "4m30s /km", "40.0 km"),
-          ("20m", "4m /kilometer", "5.0 km"),
-          ("2h30m", "5m /mi", "30.0 mi"),
-          ("3h", "5m /mile", "36.0 mi")
+        [ ("3h", "4m30s /km", "40.00 km"),
+          ("2h20s", "4m10s /km", "28.88 km"),
+          ("20m", "4m /kilometer", "5.00 km"),
+          ("2h30m", "5m /mi", "30.00 mi"),
+          ("3h", "5m /mile", "36.00 mi")
         ]
 
 testConvertToDuration :: TestTree

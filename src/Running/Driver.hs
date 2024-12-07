@@ -10,9 +10,9 @@ import Running qualified
 import Running.Config.Args (Args (command), parserInfo)
 import Running.Config.Args.Command
   ( Command (Convert, Scale),
+    ConvertFinal (ConvertDistance, ConvertDuration, ConvertPace),
     fromConvertArgs,
   )
-import Running.Config.Data (Either3 (Either1, Either2, Either3))
 import Running.Data.Distance (SomeDistance (MkSomeDistance))
 import Running.Data.Distance qualified as Dist
 import Running.Data.Distance.Units
@@ -33,11 +33,11 @@ runAppWith handler = do
     Convert convertArgs -> do
       finalConvertArgs <- fromConvertArgs convertArgs
       case finalConvertArgs of
-        Either1 (duration, pace) -> do
+        ConvertDistance duration pace -> do
           let dist = Running.calculateSomeDistance duration pace
           handler $ display dist
-        Either2 (paceOrDuration, dist) -> do
-          let duration = case paceOrDuration of
+        ConvertDuration paceOptUnits dist -> do
+          let duration = case paceOptUnits of
                 Left pace -> Running.calculateSomeDuration dist pace
                 Right paceDuration -> case dist of
                   MkSomeDistance sdist distx ->
@@ -48,7 +48,7 @@ runAppWith handler = do
                       SKilometer -> Running.calculateDuration distx (MkPace paceDuration)
                       SMile -> Running.calculateDuration distx (MkPace paceDuration)
           handler $ display duration
-        Either3 (duration, dist) -> do
+        ConvertPace duration dist -> do
           let pace = Running.calculateSomePace dist duration
           handler $ display pace
     Scale -> die "Not yet implemented"

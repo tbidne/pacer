@@ -31,6 +31,11 @@ source-repository-package
 
 source-repository-package
     type: git
+    location: https://github.com/tbidne/exception-utils.git
+    tag: 9ecb81e4a16f62736dbe7f90cb1983e7212b0c0f
+
+source-repository-package
+    type: git
     location: https://github.com/tbidne/smart-math.git
     tag: a7c8a2a13666871b627ed15220aedafa4442ee86
 

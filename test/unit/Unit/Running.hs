@@ -9,6 +9,7 @@ import Running.Data.Distance
   ( SomeDistance (MkSomeDistance),
     convertDistance,
   )
+import Running.Data.Distance qualified as Dist
 import Running.Data.Distance.Units
   ( DistanceUnit (Kilometer),
     SDistanceUnit
@@ -21,6 +22,7 @@ import Running.Data.Duration
   ( Duration,
     TimeUnit (Hour, Minute, Second),
   )
+import Running.Data.Pace (SomePace)
 import Unit.Prelude
 import Unit.Running.Data.Distance qualified as Unit.Distance
 import Unit.Running.Data.Duration qualified as Unit.Duration
@@ -29,39 +31,105 @@ tests :: TestTree
 tests =
   testGroup
     "Running"
-    [ calculatePaceTests
+    [ calculateTests
     ]
 
-calculatePaceTests :: TestTree
-calculatePaceTests =
+calculateTests :: TestTree
+calculateTests =
   testGroup
-    "calculatePace"
-    [ testCalculatePace,
+    "calculate"
+    [ testCalculateDistance,
+      testCalculateDuration,
+      testCalculatePace,
       testPaceTimeInvariance
     ]
+
+testCalculateDistance :: TestTree
+testCalculateDistance =
+  testGroup
+    "Expected distances"
+    (go <$> quantities)
+  where
+    go (paceTxt, distTxt, durationTxt) = testCase desc $ do
+      let pace :: SomePace PDouble
+          pace = parseOrDie paceTxt
+
+          -- When calculating distance, pace must be given units, and the
+          -- only allowed units are kilometers or miles. Hence, while one of
+          -- our arguments in quantities may be given in meters (for other
+          -- testing), here it must be km. We therefore convert meters to
+          -- kilometers.
+          distOut = parseOrDie @(SomeDistance PDouble) distTxt
+          distOut' = case distOut of
+            MkSomeDistance s dist -> case s of
+              SMeter ->
+                MkSomeDistance SKilometer
+                  $ Dist.convertDistance @Kilometer dist
+              _ -> MkSomeDistance s dist
+
+          distDispTxt = display distOut'
+
+          tSec = parseOrDie @(Duration Second PDouble) durationTxt
+          tMin = parseOrDie @(Duration Minute PDouble) durationTxt
+          tHr = parseOrDie @(Duration Hour PDouble) durationTxt
+
+      let rSec = displaySomeDistance tSec pace
+          rMin = displaySomeDistance tMin pace
+          rHr = displaySomeDistance tHr pace
+
+      distDispTxt @=? rSec
+      distDispTxt @=? rMin
+      distDispTxt @=? rHr
+      where
+        desc =
+          unpackText
+            $ mconcat
+              [ "'",
+                paceTxt,
+                "' for '",
+                durationTxt,
+                "' -> ",
+                distTxt
+              ]
+
+testCalculateDuration :: TestTree
+testCalculateDuration =
+  testGroup
+    "Expected durations"
+    (go <$> quantities)
+  where
+    go (paceTxt, distTxt, durationTxt) = testCase desc $ do
+      let pace = parseOrDie @(SomePace PDouble) paceTxt
+          dist = parseOrDie @(SomeDistance PDouble) distTxt
+
+          durationDispTxt = display $ parseOrDie @(Duration Second PDouble) durationTxt
+
+      let r = displaySomeDuration dist pace
+
+      durationDispTxt @=? r
+      where
+        desc =
+          unpackText
+            $ mconcat
+              [ "'",
+                paceTxt,
+                "' for '",
+                durationTxt,
+                "' -> ",
+                distTxt
+              ]
 
 testCalculatePace :: TestTree
 testCalculatePace =
   testGroup
     "Expected paces"
-    (go <$> vals)
+    (go <$> quantities)
   where
-    vals =
-      [ ("4'50\" /km", "42.195 km", "3h23m57s"),
-        ("5'00\" /km", "42.195 km", "3h30m59s"),
-        ("5'00\" /km", "42195 m", "3h30m59s"),
-        ("8'03\" /mi", "26.2188 mi", "3h30m59s"),
-        ("5'30\" /km", "42.195 km", "3h52m04s"),
-        ("4'30\" /km", "21.0975 km", "1h34m56s"),
-        ("4'45\" /km", "21.0975 km", "1h40m13s"),
-        ("4'45\" /km", "21097.5 m", "1h40m13s"),
-        ("7'39\" /mi", "13.1094 mi", "1h40m13s"),
-        ("5'00\" /km", "21.0975 km", "1h45m29s")
-      ]
-
-    go (expected, distTxt, durationTxt) = testCase desc $ do
+    go (paceTxt, distTxt, durationTxt) = testCase desc $ do
       let dist :: SomeDistance PDouble
           dist = parseOrDie distTxt
+
+          paceDispTxt = display $ parseOrDie @(SomePace PDouble) paceTxt
 
           tSec = parseOrDie @(Duration Second PDouble) durationTxt
           tMin = parseOrDie @(Duration Minute PDouble) durationTxt
@@ -71,9 +139,9 @@ testCalculatePace =
           rMin = displaySomePace dist tMin
           rHr = displaySomePace dist tHr
 
-      expected @=? rSec
-      expected @=? rMin
-      expected @=? rHr
+      paceDispTxt @=? rSec
+      paceDispTxt @=? rMin
+      paceDispTxt @=? rHr
       where
         desc =
           unpackText
@@ -83,8 +151,14 @@ testCalculatePace =
                 "' in '",
                 durationTxt,
                 "' -> ",
-                expected
+                paceTxt
               ]
+
+displaySomeDistance :: (SingI t) => Duration t PDouble -> SomePace PDouble -> Text
+displaySomeDistance duration = display . Running.calculateSomeDistance duration
+
+displaySomeDuration :: SomeDistance PDouble -> SomePace PDouble -> Text
+displaySomeDuration dist = display . Running.calculateSomeDuration dist
 
 displaySomePace :: (SingI t) => SomeDistance PDouble -> Duration t PDouble -> Text
 displaySomePace dist = display . Running.calculateSomePace dist
@@ -132,3 +206,32 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
         withSingI s (Running.calculatePace d duration).unPace
       SMile ->
         withSingI s (Running.calculatePace d duration).unPace
+
+-- Pace, Distance, Time for testing calculations. In general, these values
+-- are __very__ fragile, in the sense that it is easy for rounding differences
+-- to, say, cause a calculatePace value to differ from calculateDistance.
+--
+-- The inital list (chosen semi-randomly) was massaged into values that
+-- happened to work for all 3 calculateX functions (i.e. no rounding
+-- differences).
+--
+-- This is slightly unsatisfactory, but it comes w/ the territory when
+-- comparing text versions of floating points. It would be nice if we could
+-- come up with a more robust method e.g. parsing the double and doing an
+-- epsilon check.
+--
+-- TODO: Another idea, we should have a propery test that checks
+-- pace x distance === duration.
+quantities :: List (Tuple3 Text Text Text)
+quantities =
+  [ ("4m50s /km", "42.20 km", "3h23m58s"),
+    ("5m00s /km", "42.20 km", "3h31m00s"),
+    ("5m00s /km", "42190 m", "3h30m57s"),
+    ("8m03s /mi", "26.21 mi", "3h30m59s"),
+    ("5m30s /km", "42.19 km", "3h52m03s"),
+    ("4m30s /km", "21.10 km", "1h34m57s"),
+    ("4m30s /km", "21100 m", "1h34m57s"),
+    ("4m45s /km", "21.10 km", "1h40m14s"),
+    ("7m39s /mi", "13.10 mi", "1h40m13s"),
+    ("5m00s /km", "21.10 km", "1h45m30s")
+  ]

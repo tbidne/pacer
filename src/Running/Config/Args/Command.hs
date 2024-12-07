@@ -5,10 +5,11 @@ module Running.Config.Args.Command
 
     -- ** Convert
     ConvertArgs (..),
+    ConvertFinal (..),
     fromConvertArgs,
 
     -- * Misc
-    PaceOrDuration,
+    PaceOptUnits,
   )
 where
 
@@ -19,52 +20,67 @@ import Options.Applicative qualified as OA
 import Options.Applicative.Types (ReadM)
 import Running.Class.Parser qualified as P
 import Running.Config.Args.Utils qualified as Utils
-import Running.Config.Data
 import Running.Data.Distance (SomeDistance)
 import Running.Data.Duration (Duration)
 import Running.Data.Duration.Units (TimeUnit (Second))
 import Running.Data.Pace (SomePace)
 import Running.Prelude
 
+-- | Possible commands
 data Command
-  = Convert ConvertArgs
-  | Scale
+  = -- | Converts between distance, duration, and pace.
+    Convert ConvertArgs
+  | -- | Scales a value.
+    Scale
   deriving stock (Eq, Show)
 
+-- | Args for conversions. All args are optional, though we require exactly
+-- 2 to derive the 3rd.
 data ConvertArgs = MkConvertArgs
-  { mDuration :: Maybe (Duration Second PDouble),
-    mPaceOrDuration :: Maybe PaceOrDuration,
+  { -- | Possible duration.
+    mDuration :: Maybe (Duration Second PDouble),
+    -- | Possible pace.
+    mPaceOptUnits :: Maybe PaceOptUnits,
+    -- | Possible distance.
     mSomeDistance :: Maybe (SomeDistance PDouble)
   }
   deriving stock (Eq, Show)
 
-type FinalConvertArgs =
-  Either3
-    (Tuple2 (Duration Second PDouble) (SomePace PDouble))
-    (Tuple2 PaceOrDuration (SomeDistance PDouble))
-    (Tuple2 (Duration Second PDouble) (SomeDistance PDouble))
+-- | Final args for convert command, after parsing.
+data ConvertFinal
+  = -- | Converts duration and pace to distance.
+    ConvertDistance (Duration Second PDouble) (SomePace PDouble)
+  | -- | Converts pace and distance to duration.
+    ConvertDuration PaceOptUnits (SomeDistance PDouble)
+  | -- | Converts duration and distance to pace.
+    ConvertPace (Duration Second PDouble) (SomeDistance PDouble)
 
-fromConvertArgs :: ConvertArgs -> IO FinalConvertArgs
+-- | Converts CLI args into their final type, suitable for running the
+-- convert.
+fromConvertArgs :: ConvertArgs -> IO ConvertFinal
 fromConvertArgs convertArgs = do
-  case (convertArgs.mDuration, convertArgs.mPaceOrDuration, convertArgs.mSomeDistance) of
+  case ( convertArgs.mDuration,
+         convertArgs.mPaceOptUnits,
+         convertArgs.mSomeDistance
+       ) of
     (Just _, Just _, Just _) ->
-      fail "Convert requires exactly 2 options, received 3."
+      throwText "Convert requires exactly 2 options, received 3."
     (Nothing, Nothing, Nothing) ->
-      fail "Convert requires exactly 2 options, received 0."
+      throwText "Convert requires exactly 2 options, received 0."
     -- Duration x Pace -> Distance
     (Just a, Just b, Nothing) -> case b of
-      Left pace -> pure $ Either1 (a, pace)
+      Left pace -> pure $ ConvertDistance a pace
       Right _ ->
-        fail
+        throwText
           $ mconcat
             [ "Converting duration and pace to distance requires that pace ",
-              "has units"
+              "has units."
             ]
-    -- PaceOrDuration x Distance -> Duration
-    (Nothing, Just b, Just c) -> pure $ Either2 (b, c)
+    -- PaceOptUnits x Distance -> Duration
+    (Nothing, Just b, Just c) -> pure $ ConvertDuration b c
     -- Duration x Distance -> Pace
-    (Just a, Nothing, Just c) -> pure $ Either3 (a, c)
-    _ -> fail "Convert requires exactly 2 options, received 1."
+    (Just a, Nothing, Just c) -> pure $ ConvertPace a c
+    _ -> throwText "Convert requires exactly 2 options, received 1."
 
 cmdParser :: Parser Command
 cmdParser =
@@ -82,13 +98,13 @@ cmdParser =
 convertArgsParser :: Parser ConvertArgs
 convertArgsParser = do
   mDuration <- OA.optional durationParser
-  mPaceOrDuration <- OA.optional somePaceOrDurationParser
+  mPaceOptUnits <- OA.optional somePaceOptUnitsParser
   mSomeDistance <- OA.optional someDistanceParser
 
   pure
     $ MkConvertArgs
       { mDuration,
-        mPaceOrDuration,
+        mPaceOptUnits,
         mSomeDistance
       }
 
@@ -129,10 +145,13 @@ durationParser =
         Right y -> pure y
         Left err -> fail $ unpackText err
 
-type PaceOrDuration = Either (SomePace PDouble) (Duration Second PDouble)
+-- | Represents the pace. For some conversions, the units are optional,
+-- hence we only require the underlying Duration (a Pace is just a duration
+-- with a unit, after all).
+type PaceOptUnits = Either (SomePace PDouble) (Duration Second PDouble)
 
-somePaceOrDurationParser :: Parser PaceOrDuration
-somePaceOrDurationParser =
+somePaceOptUnitsParser :: Parser PaceOptUnits
+somePaceOptUnitsParser =
   OA.option
     read
     ( mconcat
@@ -148,7 +167,7 @@ somePaceOrDurationParser =
           "given, we use the distance's units. Only kilometers and miles are ",
           "allowed."
         ]
-    read :: ReadM PaceOrDuration
+    read :: ReadM PaceOptUnits
     read = do
       s <- OA.str
       case P.parse s of

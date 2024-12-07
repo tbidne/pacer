@@ -21,6 +21,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    exception-utils = {
+      url = "github:tbidne/exception-utils";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     smart-math = {
       url = "github:tbidne/smart-math/metric";
       inputs.flake-parts.follows = "flake-parts";
@@ -62,6 +69,7 @@
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
                 "bounds"
+                "exception-utils"
                 "smart-math"
                 "relative-time"
               ];

@@ -28,8 +28,10 @@ import Paths_running qualified as Paths
 import Running.Config.Args.Command (Command, cmdParser)
 import Running.Prelude
 
+-- | CLI args.
 newtype Args = MkArgs
-  { command :: Command
+  { -- | Command to run.
+    command :: Command
   }
   deriving stock (Eq, Show)
 

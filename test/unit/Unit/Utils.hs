@@ -8,6 +8,7 @@ module Unit.Utils
     genDoubleMax,
     genTextDouble,
     genTextDoublePos,
+    genTextDoublePrecision,
     genTextℕ,
     genTextℕ1,
     genAffineSpace,
@@ -34,7 +35,7 @@ genℕ1 = G.integral (R.exponentialFrom 1 1 1_000_000)
 -- 1234.5678e-300, which we do _not_ support.
 genDoubleNN :: Gen Double
 genDoubleNN = do
-  t <- genTextDouble
+  t <- genTextDoublePrecision True
 
   let t' = unpackText t
 
@@ -85,6 +86,32 @@ genTextDouble = do
     ]
   where
     genInt = G.integral @_ @Int (R.exponentialFrom 0 0 1_000_000)
+
+genTextDoublePrecision :: Bool -> Gen Text
+genTextDoublePrecision shouldGenFrac = do
+  -- If shouldGenFrac is true, then we might generate a text w/ some
+  -- fractional part i.e. non-zero decimal part. If false we generate a
+  -- whole number
+  if shouldGenFrac
+    then
+      G.choice
+        [ showt <$> genInt,
+          do
+            n <- genInt
+            d <- genFrac
+            pure
+              $ mconcat
+                [ showt n,
+                  ".",
+                  showt d
+                ]
+        ]
+    else showt <$> genInt
+  where
+    genInt = G.integral @_ @Int (R.exponentialFrom 0 0 1_000_000)
+
+    -- gen 2 decimal places max
+    genFrac = G.integral @_ @Int (R.exponentialFrom 0 0 99)
 
 genTextDoublePos :: Gen Text
 genTextDoublePos = do

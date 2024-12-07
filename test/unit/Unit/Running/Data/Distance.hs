@@ -237,9 +237,9 @@ displayTests =
 
 testDisplayCases :: TestTree
 testDisplayCases = testCase "Displays expected" $ do
-  "10000.9 m" @=? display (mkDistanceD @Meter 10_000.9)
-  "10000.9 km" @=? display (mkDistanceD @Kilometer 10_000.9)
-  "10000.9 mi" @=? display (mkDistanceD @Mile 10_000.9)
+  "10001 m" @=? display (mkDistanceD @Meter 10_000.9)
+  "10000.90 km" @=? display (mkDistanceD @Kilometer 10_000.9)
+  "10000.90 mi" @=? display (mkDistanceD @Mile 10_000.9)
 
 genSomeDistance :: Gen (SomeDistance Double)
 genSomeDistance = do
@@ -260,7 +260,7 @@ genSomeDistancePos = do
 genDistanceText :: Gen Text
 genDistanceText =
   G.choice
-    [ Utils.genTextDouble,
+    [ Utils.genTextDoublePrecision False,
       pure "marathon",
       pure "half-marathon",
       pure "hmarathon"
