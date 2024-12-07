@@ -116,6 +116,14 @@ instance (FromInteger a) => FromInteger (Duration t a) where
 instance (ToInteger a) => ToInteger (Duration t a) where
   toZ (MkDuration x) = toZ x
 
+-- NOTE: [Duration Parsing]
+--
+-- Parses a time string and converts to the requested units. We have separate
+-- (overlapping) instances for 'a' and 'Positive a', since the latter needs
+-- to perform a positive check.
+--
+-- See NOTE: [SomeDuration Parsing]
+
 instance
   {-# OVERLAPPABLE #-}
   ( Fractional a,
@@ -143,11 +151,10 @@ instance
   Parser (Duration t (Positive a))
   where
   parser = do
-    seconds <- P.parseTimeString
-    -- Coverting before saves us a Division constraint.
-    let converted = seconds .%. singFactor @_ @t
-    posConverted <- mkPositiveFailZ converted
-    pure $ MkDuration posConverted
+    -- reuse non-positive parser
+    MkDuration x <- parser @(Duration t a)
+    y <- mkPositiveFailZ x
+    pure $ MkDuration y
 
 liftDuration2 ::
   (a -> a -> a) ->
@@ -329,42 +336,54 @@ instance (FromInteger a) => FromInteger (SomeDuration a) where
 instance (ToInteger a) => ToInteger (SomeDuration a) where
   toZ (MkSomeDuration _ x) = toZ x
 
-instance (Fractional a, FromInteger a, MGroup a) => Parser (SomeDuration a) where
-  -- This might seem odd since the Duration/SomeDuration parsing is different
-  -- from Distance/SomeDistance. To recap, the latter is:
-  --
-  -- Distance: "2.45" :: Distance t
-  --
-  --   That is, distance is just some numeric w/o units, and the user chooses
-  --   the type after the fact.
-  --
-  -- SomeDistance: "2.45 meters" :: SomeDistance
-  --
-  --   By contrast, the some distance string includes the units, hence we need
-  --   to existentially quantify the units, and the user does __not__ choose
-  --   the type directly (albeit indirectly via the string).
-  --
-  -- Duration: "1d2h3m4s" :: Duration t a
-  --
-  --   The string is a "time string" and __does__ include the units. This is
-  --   for better usability, as strings like "4m15s" are easier than
-  --   "4.25" :: Duration Second a. The requested unit type, t, only affects
-  --   how the type is stored after conversion e.g. "4m15s" becomes
-  --   255 :: Duration Second a.
-  --
-  -- SomeDuration: "1d2h3m4s" :: SomeDuration
-  --
-  --   Because Duration already handled unit parsing, we can simply reuse its
-  --   parser. There is no need to add "extra" parsing functionality, like
-  --   with SomeDistance.
-  --
-  --   Furthermore, notice that with Distance/SomeDistance we had the notion
-  --   of a "requested unit" i.e. either the type or string units. Here, though
-  --   we have no such notion, since we consume all possible unit types
-  --   (days, hours, minutes, seconds) every time, hence there is no requested
-  --   unit for SomeDuration. Thus we can choose whatever we want, so we go
-  --   with seconds.
+-- NOTE: [SomeDuration Parsing]
+--
+-- Reuses the Duration parser, and converts to Second. Interestingly, this is
+-- one of the few cases where the SomeX parser is simpler than the X parser.
+-- Why?
+--
+-- Most of the time, the SomeX parser adds some notion of units e.g.
+-- Distance and SomeDistance are '"2.45" :: Distance t a' and
+-- '"2.45 meters" :: SomeDistance a', respectively. Letting the user choose
+-- the units via the text means the type needs to be existentially quantified,
+-- hence the SomeX type.
+--
+-- In contrast, the time-strings parsed by Duration and SomeDuration allow
+-- the user to include multiple units e.g. "1h2d3m4s". This is for
+-- convenience, as supplying "2h4m15s" is easier than "2.071 hours" or
+-- "7455 seconds". Notice this means there is no notion of a "requested unit",
+-- like with SomeDistance.
+--
+-- Hence the SomeDuration has the same parsing as Duration. We merely choose
+-- the final unit ourselves (Seconds), since it is existentially quantified.
+--
+-- See NOTE: [Duration Parsing]
+
+instance
+  {-# OVERLAPPABLE #-}
+  ( Fractional a,
+    FromInteger a,
+    MGroup a
+  ) =>
+  Parser (SomeDuration a)
+  where
   parser = MkSomeDuration SSecond <$> parser
+
+instance
+  {-# OVERLAPPING #-}
+  ( Fractional a,
+    FromInteger a,
+    MGroup a,
+    Ord a,
+    Show a
+  ) =>
+  Parser (SomeDuration (Positive a))
+  where
+  parser = do
+    -- reuse non-positive parser
+    MkSomeDuration s (MkDuration x) <- parser @(SomeDuration a)
+    y <- mkPositiveFailZ x
+    pure $ MkSomeDuration s (MkDuration y)
 
 liftSomeDuration2 ::
   (FromInteger a, MSemigroup a) =>

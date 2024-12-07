@@ -99,7 +99,12 @@ instance (FromInteger a) => FromInteger (Distance d a) where
 instance (ToInteger a) => ToInteger (Distance d a) where
   toZ (MkDistance x) = toZ x
 
--- relies on instances defined in Parser.hs
+-- NOTE: [Distance Parsing]
+--
+-- No units, simply reuses Double's instances in Parser.hs.
+--
+-- See NOTE: [SomeDistance Parsing]
+
 instance (Parser a) => Parser (Distance d a) where
   parser = MkDistance <$> parser
 
@@ -212,6 +217,10 @@ instance (FromInteger a) => FromInteger (SomeDistance a) where
 instance (ToInteger a) => ToInteger (SomeDistance a) where
   toZ (MkSomeDistance _ x) = toZ x
 
+-- NOTE: [SomeDistance Parsing]
+--
+-- Uses Distance's instance and adds units e.g. '4 km'.
+-- See NOTE: [Distance Parsing]
 instance (Parser a) => Parser (SomeDistance a) where
   parser = do
     x <- parser

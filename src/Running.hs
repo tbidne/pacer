@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wwarn #-}
-
 module Running
   ( -- * To Pace
     displaySomePace,
@@ -56,8 +54,7 @@ calculatePace distance duration = mkPace $ duration .% distance.unDistance
 
 -- | Given a pace and distance, calculates the duration.
 calculateDuration ::
-  (MSemigroup a) =>
-  Distance d a ->
-  Pace d a ->
-  Duration Second a
+  Distance d PDouble ->
+  Pace d PDouble ->
+  Duration Second PDouble
 calculateDuration distance pace = pace.unPace .* distance.unDistance

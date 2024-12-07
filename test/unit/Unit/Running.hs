@@ -88,7 +88,7 @@ testCalculatePace =
 
 testPaceTimeInvariance :: TestTree
 testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
-  distTxt <- forAll Unit.Distance.genDistancePosText
+  distTxt <- forAll Unit.Distance.genSomeDistancePosText
   durationTxt <- forAll Unit.Duration.genDurationPosText
 
   let dist = parseOrDie @(SomeDistance PDouble) distTxt

@@ -44,12 +44,14 @@ parseTests :: TestTree
 parseTests =
   testGroup
     "Parsing"
-    [ testParseText,
-      testParseExpectedDouble
+    [ testParseProps,
+      testParseDurationCases,
+      testParseSomeDurationCases,
+      testParseDurationFailureCases
     ]
 
-testParseText :: TestTree
-testParseText = testPropertyNamed "testParseText" desc $ property $ do
+testParseProps :: TestTree
+testParseProps = testPropertyNamed "testParseProps" desc $ property $ do
   txt <- forAll genDurationText
 
   t1 <- parseOrDieM @(Duration Second Double) txt
@@ -64,12 +66,25 @@ testParseText = testPropertyNamed "testParseText" desc $ property $ do
   where
     desc = "Time string invariant under requested parse type"
 
-testParseExpectedDouble :: TestTree
-testParseExpectedDouble = testCase "Parses expected text" $ do
+testParseDurationCases :: TestTree
+testParseDurationCases = testCase "Parses Duration" $ do
   for_ strs $ \s -> do
     Right (mkDurationD @Second 12600) @=? Parser.parse s
     Right (mkDurationD @Minute 210) @=? Parser.parse s
     Right (mkDurationD @Hour 3.5) @=? Parser.parse s
+
+    Right (mkDurationPD @Second 12600) @=? Parser.parse s
+    Right (mkDurationPD @Minute 210) @=? Parser.parse s
+    Right (mkDurationPD @Hour 3.5) @=? Parser.parse s
+
+  for_ zstrs $ \s -> do
+    Right (mkDurationD @Second 0) @=? Parser.parse s
+    Right (mkDurationD @Minute 0) @=? Parser.parse s
+    Right (mkDurationD @Hour 0) @=? Parser.parse s
+
+    assertLeft "PDouble zero" $ Parser.parse @(Duration Second PDouble) s
+    assertLeft "PDouble zero" $ Parser.parse @(Duration Hour PDouble) s
+    assertLeft "PDouble zero" $ Parser.parse @(Duration Minute PDouble) s
   where
     -- All the same time value
     strs =
@@ -80,6 +95,63 @@ testParseExpectedDouble = testCase "Parses expected text" $ do
         "3h30m",
         "3h30m0s",
         "2h15m4500s"
+      ]
+
+    zstrs =
+      [ "0h",
+        "0h0m",
+        "0h0m0s",
+        "0m",
+        "0m0s",
+        "0s",
+        "0"
+      ]
+
+testParseSomeDurationCases :: TestTree
+testParseSomeDurationCases = testCase "Parses SomeDuration" $ do
+  for_ strs $ \s -> do
+    -- SomeDuration always stores as seconds
+    Right (mkSomeDurationD SSecond 12600) @=? Parser.parse s
+    Right (mkSomeDurationPD SSecond 12600) @=? Parser.parse s
+
+  for_ zstrs $ \s -> do
+    -- SomeDuration always stores as seconds
+    Right (mkSomeDurationD SSecond 0) @=? Parser.parse s
+    assertLeft "PDouble zero" $ Parser.parse @(SomeDuration PDouble) s
+  where
+    -- All the same time value
+    strs =
+      [ "12600",
+        "12600s",
+        "210m",
+        "208m120s",
+        "3h30m",
+        "3h30m0s",
+        "2h15m4500s"
+      ]
+
+    zstrs =
+      [ "0h",
+        "0h0m",
+        "0h0m0s",
+        "0m",
+        "0m0s",
+        "0s",
+        "0"
+      ]
+
+testParseDurationFailureCases :: TestTree
+testParseDurationFailureCases = testCase "Parse failures" $ do
+  for_ vals $ \(d, t) -> do
+    assertLeft d $ Parser.parse @(Duration Second Double) t
+    assertLeft d $ Parser.parse @(Duration Second PDouble) t
+    assertLeft d $ Parser.parse @(SomeDuration Double) t
+    assertLeft d $ Parser.parse @(SomeDuration PDouble) t
+  where
+    vals =
+      [ ("Empty", ""),
+        ("Text 'word'", "word"),
+        ("Wrong order", "2s3m")
       ]
 
 equalityTests :: TestTree

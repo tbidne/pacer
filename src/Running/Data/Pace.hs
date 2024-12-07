@@ -141,7 +141,17 @@ instance (FromInteger a, PaceDistF d) => FromInteger (Pace d a) where
 instance (ToInteger a) => ToInteger (Pace d a) where
   toZ = toZ . (.unPace)
 
+-- NOTE: [Pace Parsing]
+--
+-- Parses a pace like "1h 4'30\"", where each h/m/s component is optional,
+-- but we must have at least one.
+--
+-- Like Duration, we have separate instances for 'a' and 'Positive a'.
+--
+-- See NOTE: [SomePace Parsing]
+
 instance
+  {-# OVERLAPPABLE #-}
   ( FromInteger a,
     PaceDistF d,
     Read a,
@@ -152,6 +162,7 @@ instance
   parser = MkPace <$> parsePaceDuration
 
 instance
+  {-# OVERLAPPING #-}
   ( FromInteger a,
     Ord a,
     PaceDistF d,
@@ -162,9 +173,10 @@ instance
   Parser (Pace d (Positive a))
   where
   parser = do
-    MkPace
-      . MkDuration
-      <$> (mkPositiveFailZ . (.unDuration) =<< parsePaceDuration)
+    -- reuse non-positive parser
+    MkPace (MkDuration x) <- parser @(Pace d a)
+    y <- mkPositiveFailZ x
+    pure (MkPace (MkDuration y))
 
 -- | Creates a pace from a duration.
 mkPace ::
@@ -279,6 +291,12 @@ instance (FromInteger a) => FromInteger (SomePace a) where
 instance (ToInteger a) => ToInteger (SomePace a) where
   toZ = toZ . (.unSomePace)
 
+-- NOTE: [SomePace Parsing]
+--
+-- Adds units to pace e.g. "1h 4'30\" /km".
+--
+-- See NOTE: [Pace Parsing]
+
 instance
   {-# OVERLAPPABLE #-}
   ( FromInteger a,
@@ -291,14 +309,30 @@ instance
     x <- parsePaceDuration
     MPC.space
     MPC.char '/'
-    parser >>= \case
-      Meter ->
-        fail "Meters are disallowed in Pace; use km or mi."
-      Kilometer -> pure $ MkSomePace SKilometer $ MkPace x
-      Mile -> pure $ MkSomePace SMile $ MkPace x
+
+    -- We do not use DistanceUnit's built-in parsing because we want the
+    -- long units here (kilometer and mile) to be __singular__, not plural.
+    eDUnit <-
+      MP.choice
+        [ MPC.string "meters" $> Left "meters",
+          MPC.string "km" $> Right Kilometer,
+          MPC.string "kilometers" $> Left "kilometers",
+          MPC.string "kilometer" $> Right Kilometer,
+          MPC.string "miles" $> Left "miles",
+          MPC.string "mile" $> Right Mile,
+          MPC.string "mi" $> Right Mile,
+          MPC.char 'm' $> Right Meter
+        ]
+
+    case eDUnit of
+      Left "meters" -> fail "Meters are disallowed in Pace; use km or mi."
+      Left d -> fail $ "Pace unit " ++ d ++ " should be singular"
+      Right Meter -> fail "Meters are disallowed in Pace; use km or mi."
+      Right Kilometer -> pure $ MkSomePace SKilometer $ MkPace x
+      Right Mile -> pure $ MkSomePace SMile $ MkPace x
 
 instance
-  {-# OVERLAPPABLE #-}
+  {-# OVERLAPPING #-}
   ( FromInteger a,
     Ord a,
     Read a,
@@ -308,14 +342,10 @@ instance
   Parser (SomePace (Positive a))
   where
   parser = do
-    x <- parsePaceDuration
-    y <- MkDuration <$> mkPositiveFailZ x.unDuration
-    MPC.string " /"
-    parser >>= \case
-      Meter ->
-        fail "Meters are disallowed in Pace; use km or mi."
-      Kilometer -> pure $ MkSomePace SKilometer $ MkPace y
-      Mile -> pure $ MkSomePace SMile $ MkPace y
+    -- reuse non-positive parser
+    MkSomePace s (MkPace (MkDuration x)) <- parser @(SomePace a)
+    y <- mkPositiveFailZ x
+    pure $ MkSomePace s (MkPace (MkDuration y))
 
 -- | Exposes the underlying duration.
 unSomePace :: SomePace a -> Duration Second a

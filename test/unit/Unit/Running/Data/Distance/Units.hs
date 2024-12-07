@@ -42,7 +42,7 @@ testParseText :: TestTree
 testParseText = testPropertyNamed "testParseText" desc $ property $ do
   t <- forAll genDistanceUnitText
 
-  void $ parseOrDieM @DistanceUnit t
+  parseOrDieM_ @DistanceUnit t
   where
     desc = "Parses text to units"
 

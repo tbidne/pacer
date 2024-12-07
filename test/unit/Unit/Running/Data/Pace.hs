@@ -27,47 +27,109 @@ parsingTests :: TestTree
 parsingTests =
   testGroup
     "Parsing"
-    [ testParsePace,
-      testParseSomePace,
-      testParsePaceCases
+    [ testParsePaceGenText,
+      testParseSomePaceGenText,
+      testParsePaceCases,
+      testParsePaceFailureCases
     ]
 
-testParsePace :: TestTree
-testParsePace = testPropertyNamed "testParsePace" desc $ property $ do
+testParsePaceGenText :: TestTree
+testParsePaceGenText = testPropertyNamed "testParsePaceGenText" desc $ property $ do
   t <- forAll genPaceText
 
-  void $ parseOrDieM @(Pace Kilometer Double) t
-  void $ parseOrDieM @(Pace Mile Double) t
+  parseOrDieM_ @(Pace Kilometer Double) t
+  parseOrDieM_ @(Pace Mile Double) t
   where
     desc = "Parses text to Pace"
 
-testParseSomePace :: TestTree
-testParseSomePace = testPropertyNamed "testParseSomePace" desc $ property $ do
+testParseSomePaceGenText :: TestTree
+testParseSomePaceGenText = testPropertyNamed "testParseSomePaceGenText" desc $ property $ do
   t <- forAll genSomePaceText
 
-  void $ parseOrDieM @(SomePace Double) t
+  parseOrDieM_ @(SomePace Double) t
   where
     desc = "Parses text to SomePace"
 
 testParsePaceCases :: TestTree
 testParsePaceCases = testCase "Parses text to expected SomePace" $ do
-  mk 3600 @=? Parser.parse @(Pace Kilometer Double) "1h"
-  mk 3840 @=? Parser.parse @(Pace Kilometer Double) "1h 4'"
-  mk 3870 @=? Parser.parse @(Pace Kilometer Double) "1h 4'30\""
-  mk 240 @=? Parser.parse @(Pace Kilometer Double) "4'"
-  mk 270 @=? Parser.parse @(Pace Kilometer Double) "4'30\""
-  mk 30 @=? Parser.parse @(Pace Kilometer Double) "30\""
+  for_ vals $ \(e, t) -> do
+    Right (mkPaceD @Kilometer e) @=? Parser.parse t
+    Right (mkPacePD @Kilometer e) @=? Parser.parse t
+    Right (mkPaceD @Mile e) @=? Parser.parse t
+    Right (mkPacePD @Mile e) @=? Parser.parse t
 
-  mks SKilometer 3600 @=? Parser.parse @(SomePace Double) "1h /km"
-  mks SKilometer 3840 @=? Parser.parse @(SomePace Double) "1h 4' /km"
-  mks SKilometer 3870 @=? Parser.parse @(SomePace Double) "1h 4'30\" /km"
-  mks SKilometer 240 @=? Parser.parse @(SomePace Double) "4' /km"
-  mks SKilometer 270 @=? Parser.parse @(SomePace Double) "4'30\" /km"
-  mks SKilometer 30 @=? Parser.parse @(SomePace Double) "30\" /km"
-  mks SMile 495 @=? Parser.parse @(SomePace Double) "8'15\" /mi"
+    Right (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
+    Right (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /km")
+    Right (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /kilometer")
+    Right (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /kilometer")
+    Right (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
+    Right (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mi")
+    Right (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mile")
+    Right (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mile")
+
+  for_ zVals $ \(e, t) -> do
+    Right (mkPaceD @Kilometer e) @=? Parser.parse t
+    assertLeft "PDouble zero" $ Parser.parse @(Pace Kilometer PDouble) t
+    Right (mkPaceD @Mile e) @=? Parser.parse t
+    assertLeft "PDouble zero" $ Parser.parse @(Pace Mile PDouble) t
+
+    Right (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
+    assertLeft "PDouble zero" $ Parser.parse @(SomePace PDouble) (t <> " /km")
+    Right (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
+    assertLeft "PDouble zero" $ Parser.parse @(Pace Mile PDouble) (t <> " /mi")
   where
-    mk y = Right $ MkPace (MkDuration y)
-    mks s y = Right $ MkSomePace s (MkPace (MkDuration y))
+    vals =
+      [ (3_600, "1h"),
+        (3_840, "1h 4'"),
+        (3_870, "1h 4'30\""),
+        (240, "4'"),
+        (270, "4'30\""),
+        (30, "30\"")
+      ]
+
+    zVals =
+      [ (0, "0h"),
+        (0, "0h 0'"),
+        (0, "0h 0'00\""),
+        (0, "0'"),
+        (0, "0'0\""),
+        (0, "0\"")
+      ]
+
+testParsePaceFailureCases :: TestTree
+testParsePaceFailureCases = testCase "Parse failures" $ do
+  for_ bothVals $ \(d, t) -> do
+    assertLeft d $ Parser.parse @(Pace Kilometer Double) t
+    assertLeft d $ Parser.parse @(Pace Mile Double) t
+    assertLeft d $ Parser.parse @(Pace Kilometer PDouble) t
+    assertLeft d $ Parser.parse @(Pace Mile PDouble) t
+
+    assertLeft d $ Parser.parse @(SomePace Double) t
+    assertLeft d $ Parser.parse @(SomePace PDouble) t
+
+  for_ vals $ \(d, t) -> do
+    assertLeft d $ Parser.parse @(Pace Kilometer Double) t
+    assertLeft d $ Parser.parse @(Pace Kilometer PDouble) t
+    assertLeft d $ Parser.parse @(Pace Mile Double) t
+    assertLeft d $ Parser.parse @(Pace Mile PDouble) t
+
+  for_ someVals $ \(d, t) -> do
+    assertLeft d $ Parser.parse @(SomePace Double) t
+    assertLeft d $ Parser.parse @(SomePace PDouble) t
+  where
+    bothVals =
+      [ ("Empty", ""),
+        ("Text 'word'", "word"),
+        ("Bad units", "4'30\" /m"), -- not allowed
+        ("Bad units", "4'30\" /meter"), -- not allowed
+        ("Bad units", "4'30\" /meters"), -- not allowed
+        ("Bad units", "4'30\" /kilometers"), -- plural
+        ("Bad units", "4'30\" /miles"), -- plural
+        ("Multiple units", "4'30\" /km /mi"),
+        ("Wrong order", "/km 4'30\"")
+      ]
+    vals = [("With units", "4'30\" /km")]
+    someVals = [("No units", "4'30\"")]
 
 displayTests :: TestTree
 displayTests =
@@ -102,7 +164,7 @@ genSomePaceText :: Gen Text
 genSomePaceText = do
   p <- genPaceText
 
-  u <- G.element ["km", "kilometers", "mi", "miles"]
+  u <- G.element ["km", "kilometer", "mi", "mile"]
 
   pure
     $ mconcat

@@ -5,10 +5,10 @@ module Unit.Running.Data.Distance
     tests,
 
     -- * Generators
-    genDistance,
-    genDistancePos,
-    genDistanceText,
-    genDistancePosText,
+    genSomeDistance,
+    genSomeDistancePos,
+    genSomeDistanceText,
+    genSomeDistancePosText,
   )
 where
 
@@ -38,18 +38,24 @@ parseTests :: TestTree
 parseTests =
   testGroup
     "Parsing"
-    [ testParseText,
+    [ testParseDistanceGenText,
       testParseDisplayRoundtrip,
-      testParseExpectedDouble
+      testParseDistanceCases,
+      testParseSomeDistanceCases,
+      testParseDistanceFailureCases
     ]
 
-testParseText :: TestTree
-testParseText = testPropertyNamed "testParseText" desc $ property $ do
-  t <- forAll genDistanceText
+testParseDistanceGenText :: TestTree
+testParseDistanceGenText = testPropertyNamed "testParseDistanceGenText" desc $ property $ do
+  d <- forAll genDistanceText
+  parseOrDieM_ @(Distance Meter Double) d
+  parseOrDieM_ @(Distance Kilometer Double) d
+  parseOrDieM_ @(Distance Mile Double) d
 
-  void $ parseOrDieM @(SomeDistance Double) t
+  sd <- forAll genSomeDistanceText
+  parseOrDieM_ @(SomeDistance Double) sd
   where
-    desc = "Parses text to distance"
+    desc = "Parses text to (Some)Distance"
 
 -- NOTE:
 --
@@ -62,7 +68,9 @@ testParseText = testPropertyNamed "testParseText" desc $ property $ do
 
 testParseDisplayRoundtrip :: TestTree
 testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
-  r <- forAll genDistance
+  -- NOTE: Distance is __not__ a round trip because the display includes the
+  -- units, but we don't parse units.
+  r <- forAll genSomeDistance
 
   let t = display r
   annotateUnpack t
@@ -75,16 +83,79 @@ testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
     name = "testParseDisplayRoundtrip"
     desc = "parse . display is a round trip"
 
-testParseExpectedDouble :: TestTree
-testParseExpectedDouble = testCase "Parses expected text" $ do
-  Right (MkSomeDistance SMeter (mkDistanceD 7)) @=? Parser.parse "7 m"
-  Right (MkSomeDistance SMeter (mkDistanceD 7)) @=? Parser.parse "7 meters"
+testParseDistanceCases :: TestTree
+testParseDistanceCases = testCase "Parses expected text" $ do
+  Right (mkDistanceD @Meter 7) @=? Parser.parse "7"
+  Right (mkDistancePD @Meter 7) @=? Parser.parse "7"
+  Right (mkDistanceD @Kilometer 4.83) @=? Parser.parse "4.83"
+  Right (mkDistancePD @Kilometer 4.83) @=? Parser.parse "4.83"
+  Right (mkDistanceD @Mile 452.5301) @=? Parser.parse "452.5301"
+  Right (mkDistancePD @Mile 452.5301) @=? Parser.parse "452.5301"
 
-  Right (MkSomeDistance SKilometer (mkDistanceD 4.83)) @=? Parser.parse "4.83 km"
-  Right (MkSomeDistance SKilometer (mkDistanceD 4.83)) @=? Parser.parse "4.83 kilometers"
+  Right (mkDistanceD @Meter 0) @=? Parser.parse "0"
+  assertLeft "PDouble zero" $ Parser.parse @(Distance Meter PDouble) "0"
+  Right (mkDistanceD @Meter 0) @=? Parser.parse "0"
+  assertLeft "PDouble zero" $ Parser.parse @(Distance Kilometer PDouble) "0"
+  Right (mkDistanceD @Meter 0) @=? Parser.parse "0"
+  assertLeft "PDouble zero" $ Parser.parse @(Distance Mile PDouble) "0"
 
-  Right (MkSomeDistance SMile (mkDistanceD 452.5301)) @=? Parser.parse "452.5301 mi"
-  Right (MkSomeDistance SMile (mkDistanceD 452.5301)) @=? Parser.parse "452.5301 miles"
+testParseSomeDistanceCases :: TestTree
+testParseSomeDistanceCases = testCase "Parses expected text" $ do
+  Right (mkSomeDistanceD SMeter 7) @=? Parser.parse "7 m"
+  Right (mkSomeDistanceD SMeter 7) @=? Parser.parse "7 meters"
+  Right (mkSomeDistancePD SMeter 7) @=? Parser.parse "7 m"
+  Right (mkSomeDistancePD SMeter 7) @=? Parser.parse "7 meters"
+
+  Right (mkSomeDistanceD SKilometer 4.83) @=? Parser.parse "4.83 km"
+  Right (mkSomeDistanceD SKilometer 4.83) @=? Parser.parse "4.83 kilometers"
+  Right (mkSomeDistancePD SKilometer 4.83) @=? Parser.parse "4.83 km"
+  Right (mkSomeDistancePD SKilometer 4.83) @=? Parser.parse "4.83 kilometers"
+
+  Right (mkSomeDistanceD SMile 452.5301) @=? Parser.parse "452.5301 mi"
+  Right (mkSomeDistanceD SMile 452.5301) @=? Parser.parse "452.5301 miles"
+  Right (mkSomeDistancePD SMile 452.5301) @=? Parser.parse "452.5301 mi"
+  Right (mkSomeDistancePD SMile 452.5301) @=? Parser.parse "452.5301 miles"
+
+  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 m"
+  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 meters"
+  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 m"
+  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 meters"
+
+  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 km"
+  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 kilometers"
+  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 km"
+  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 kilometers"
+
+  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 mi"
+  Right (mkSomeDistanceD SMeter 0) @=? Parser.parse "0 miles"
+  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 mi"
+  assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) "0 miles"
+
+testParseDistanceFailureCases :: TestTree
+testParseDistanceFailureCases = testCase "Parse failures" $ do
+  for_ bothVals $ \(d, t) -> do
+    assertLeft d $ Parser.parse @(Distance Meter Double) t
+    assertLeft d $ Parser.parse @(Distance Meter PDouble) t
+    assertLeft d $ Parser.parse @(SomeDistance Double) t
+    assertLeft d $ Parser.parse @(SomeDistance PDouble) t
+
+  for_ vals $ \(d, t) -> do
+    assertLeft d $ Parser.parse @(Distance Meter Double) t
+    assertLeft d $ Parser.parse @(Distance Meter PDouble) t
+
+  for_ someVals $ \(d, t) -> do
+    assertLeft d $ Parser.parse @(SomeDistance Double) t
+    assertLeft d $ Parser.parse @(SomeDistance PDouble) t
+  where
+    bothVals =
+      [ ("Empty", ""),
+        ("Text 'word'", "word"),
+        ("Bad units", "2 feet"),
+        ("Multiple units", "2 km meters"),
+        ("Wrong order", "km 2")
+      ]
+    vals = [("With units", "2 km")]
+    someVals = [("No units", "2")]
 
 equalityTests :: TestTree
 equalityTests =
@@ -96,12 +167,12 @@ equalityTests =
 
 testEquivClass :: TestTree
 testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
-  t <- forAll genDistance
+  t <- forAll genSomeDistance
 
-  let tgt = t .+. MkSomeDistance SMeter (MkDistance 1.1)
-      tgte = t .+. MkSomeDistance SMeter (MkDistance 0.9)
-      tlt = t .-. MkSomeDistance SMeter (MkDistance 1.1)
-      tlte = t .-. MkSomeDistance SMeter (MkDistance 0.9)
+  let tgt = t .+. mkSomeDistanceD SMeter 1.1
+      tgte = t .+. mkSomeDistanceD SMeter 0.9
+      tlt = t .-. mkSomeDistanceD SMeter 1.1
+      tlte = t .-. mkSomeDistanceD SMeter 0.9
 
   t === tlte
   t === tgte
@@ -142,16 +213,16 @@ testDisplayCases = testCase "Displays expected" $ do
   "10000.9 km" @=? display (mkDistanceD @Kilometer 10_000.9)
   "10000.9 mi" @=? display (mkDistanceD @Mile 10_000.9)
 
-genDistance :: Gen (SomeDistance Double)
-genDistance = do
+genSomeDistance :: Gen (SomeDistance Double)
+genSomeDistance = do
   d <- Utils.genDoubleNN
   u <- Units.genDistanceUnit
 
   pure $ case toSing u of
     SomeSing su -> MkSomeDistance su (MkDistance d)
 
-genDistancePos :: Gen (SomeDistance PDouble)
-genDistancePos = do
+genSomeDistancePos :: Gen (SomeDistance PDouble)
+genSomeDistancePos = do
   d <- Utils.genDoublePos
   u <- Units.genDistanceUnit
 
@@ -159,7 +230,10 @@ genDistancePos = do
     SomeSing su -> MkSomeDistance su (MkDistance d)
 
 genDistanceText :: Gen Text
-genDistanceText = do
+genDistanceText = Utils.genTextDouble
+
+genSomeDistanceText :: Gen Text
+genSomeDistanceText = do
   d <- Utils.genTextDouble
   t <- Units.genDistanceUnitText
 
@@ -170,8 +244,8 @@ genDistanceText = do
         t
       ]
 
-genDistancePosText :: Gen Text
-genDistancePosText = do
+genSomeDistancePosText :: Gen Text
+genSomeDistancePosText = do
   d <- Utils.genTextDoublePos
   t <- Units.genDistanceUnitText
 
