@@ -105,3 +105,19 @@ test-suite unit
 
   hs-source-dirs: test/unit
   ghc-options:    -threaded -with-rtsopts=-N
+
+test-suite functional
+  import:         common-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  other-modules:  Functional.Prelude
+  build-depends:
+    , base
+    , hedgehog
+    , running
+    , tasty
+    , tasty-hedgehog
+    , tasty-hunit
+
+  hs-source-dirs: test/functional
+  ghc-options:    -threaded

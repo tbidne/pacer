@@ -40,6 +40,9 @@ jobs:
 
       - name: Unit tests
         run: cabal test unit --test-options '--hedgehog-tests 1000000'
+
+      - name: Functional tests
+        run: cabal test functional
   nix:
     strategy:
       fail-fast: false

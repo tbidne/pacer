@@ -9,3 +9,6 @@ cradle:
 
     - path: "./test/unit"
       component: "running:test:unit"
+
+    - path: "./test/functional"
+      component: "running:test:functional"

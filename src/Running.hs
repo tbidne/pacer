@@ -1,24 +1,29 @@
 module Running
   ( -- * Conversions
 
-    -- ** To Pace
-    calculatePace,
-    calculateSomePace,
+    -- ** Distance
+    calculateDistance,
+    calculateSomeDistance,
 
-    -- ** From Pace
+    -- ** Duration
     calculateDuration,
     calculateSomeDuration,
+
+    -- ** Pace
+    calculatePace,
+    calculateSomePace,
   )
 where
 
 import Running.Data.Distance
-  ( Distance (unDistance),
+  ( Distance (MkDistance, unDistance),
     SomeDistance (MkSomeDistance),
   )
 import Running.Data.Distance qualified as Dist
 import Running.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
-import Running.Data.Duration (Duration, TimeUnit (Second))
-import Running.Data.Pace (Pace, PaceDistF, SomePace (MkSomePace), mkPace)
+import Running.Data.Duration (Duration (MkDuration), TimeUnit (Second))
+import Running.Data.Duration qualified as Duration
+import Running.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace), mkPace)
 import Running.Prelude
 
 -- | Given a distance and a duration, calculates the pace.
@@ -84,5 +89,31 @@ calculateSomeDuration
           $ withSingI space
           $ Dist.convertDistance distance
 
--- TODO: sanity check: ensure that converting the pace instead gives
--- the same result
+-- | Given a duration and pace, calculates the distance.
+calculateDistance ::
+  (SingI t) =>
+  -- | Distance.
+  Duration t PDouble ->
+  -- | Pace.
+  Pace d PDouble ->
+  -- | Distance.
+  Distance d PDouble
+calculateDistance duration (MkPace (MkDuration paceDuration)) =
+  MkDistance $ scaleDuration (Duration.toSeconds duration)
+  where
+    -- monomorphic on Second so that we have to use toSeconds
+    scaleDuration :: Duration Second PDouble -> PDouble
+    scaleDuration = (.unDuration) . (.% paceDuration)
+
+-- | Given a duration and existentially-quantified pace, calculates the
+-- distance.
+calculateSomeDistance ::
+  (SingI t) =>
+  -- | Duration.
+  Duration t PDouble ->
+  -- | Existentially-quantified Pace.
+  SomePace PDouble ->
+  -- | Existentially-quantified Distance.
+  SomeDistance PDouble
+calculateSomeDistance duration (MkSomePace space pace) =
+  MkSomeDistance space $ calculateDistance duration pace
