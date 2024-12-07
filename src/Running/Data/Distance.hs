@@ -266,7 +266,7 @@ instance (FromRational a, Parser a) => Parser (SomeDistance a) where
       DistParseMarathon -> pure $ MkSomeDistance SKilometer marathon
       DistParseHalfMarathon -> pure $ MkSomeDistance SKilometer halfMarathon
       DistParseNumeric x -> do
-        _ <- MPC.char ' '
+        _ <- MPC.space
         unit <- parser
 
         pure $ case unit of

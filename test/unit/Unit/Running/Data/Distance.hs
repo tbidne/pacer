@@ -122,11 +122,13 @@ testParseDistanceCases = testCase "Parses Distance" $ do
 
 testParseSomeDistanceCases :: TestTree
 testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
-  for_ [(v, u) | v <- vals, u <- units] $ \(val, (dist, unitTxt)) -> do
+  let args :: List (Tuple4 Double DistanceUnit Text Text)
+      args = [(v, u, utxt, s) | v <- vals, (u, utxt) <- units, s <- ["", " "]]
+  for_ args $ \(val, dist, unitTxt, spc) -> do
     case toSing dist of
       SomeSing sdist -> do
-        Right (mkSomeDistanceD sdist val) @=? Parser.parse (showt val <> unitTxt)
-        Right (mkSomeDistancePD sdist val) @=? Parser.parse (showt val <> unitTxt)
+        Right (mkSomeDistanceD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
+        Right (mkSomeDistancePD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
 
   for_ hvals $ \(dist, val, txt) -> do
     case toSing dist of
@@ -143,12 +145,12 @@ testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
     vals = [7, 4.83, 452.5301]
 
     units =
-      [ (Meter, " m"),
-        (Meter, " meters"),
-        (Kilometer, " km"),
-        (Kilometer, " kilometers"),
-        (Mile, " mi"),
-        (Mile, " miles")
+      [ (Meter, "m"),
+        (Meter, "meters"),
+        (Kilometer, "km"),
+        (Kilometer, "kilometers"),
+        (Mile, "mi"),
+        (Mile, "miles")
       ]
 
     hvals =
@@ -270,11 +272,12 @@ genSomeDistanceText = do
     [ do
         d <- Utils.genTextDouble
         t <- Units.genDistanceUnitText
+        s <- Utils.genAffineSpace
 
         pure
           $ mconcat
             [ d,
-              " ",
+              s,
               t
             ],
       pure "marathon",
@@ -286,10 +289,11 @@ genSomeDistancePosText :: Gen Text
 genSomeDistancePosText = do
   d <- Utils.genTextDoublePos
   t <- Units.genDistanceUnitText
+  s <- Utils.genAffineSpace
 
   pure
     $ mconcat
       [ d,
-        " ",
+        s,
         t
       ]
