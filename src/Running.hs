@@ -45,7 +45,7 @@ calculateSomePace ::
   Duration t PDouble ->
   -- | Pace.
   SomePace PDouble
-calculateSomePace (MkSomeDistance @d sdist distance) duration =
+calculateSomePace (MkSomeDistance sdist distance) duration =
   case sdist of
     SMeter ->
       let distance' = Dist.convertDistance distance
