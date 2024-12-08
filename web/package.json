@@ -1,0 +1,32 @@
+{
+  "name": "running",
+  "version": "0.1",
+  "description": "Generates graphs for runners",
+  "main": "web/main.js",
+  "scripts": {
+    "start": "node web/main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tbidne/running.git"
+  },
+  "author": "Thomas Bidne",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tbidne/running/issues"
+  },
+  "homepage": "https://github.com/tbidne/running#readme",
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "chart.js": "^4.4.7",
+    "html-webpack-plugin": "^5.6.3",
+    "https-browserify": "^1.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.4"
+  },
+  "devDependencies": {
+    "webpack": "^5.97.1",
+    "webpack-cli": "^5.1.4"
+  }
+}

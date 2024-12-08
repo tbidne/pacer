@@ -1,9 +1,13 @@
 # cabal
-dist-newstyle*
+/dist-newstyle
 cabal.project.local
 
 # stack
-.stack-work
+/.stack-work
 
 # nix
-result*
+/result
+
+# web
+/web/dist
+/web/node_modules

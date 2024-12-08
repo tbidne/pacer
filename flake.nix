@@ -94,6 +94,12 @@
           packages.default = mkPkg false;
           devShells = {
             default = mkPkg true;
+
+            nodejs = pkgs.mkShell {
+              buildInputs = [
+                pkgs.nodejs_23
+              ];
+            };
           };
 
           apps = {

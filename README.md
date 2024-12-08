@@ -9,3 +9,27 @@
 </div>
 
 ---
+
+# Dev
+
+## Web
+
+1. Change to `web/` directory.
+
+    ```sh
+    $ cd ./web
+    ```
+
+2. Install deps.
+
+    ```sh
+    $ npm install --save
+    ```
+
+2. Build static assets.
+
+    ```sh
+    $ npx webpack
+    ```
+
+3. Navigate to `dist/index.html` in your browser.
