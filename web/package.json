@@ -1,5 +1,5 @@
 {
-  "name": "running",
+  "name": "pacer",
   "version": "0.1",
   "description": "Generates graphs for runners",
   "main": "web/main.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tbidne/running.git"
+    "url": "git+https://github.com/tbidne/pacer.git"
   },
   "author": "Thomas Bidne",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tbidne/running/issues"
+    "url": "https://github.com/tbidne/pacer/issues"
   },
-  "homepage": "https://github.com/tbidne/running#readme",
+  "homepage": "https://github.com/tbidne/pacer#readme",
   "dependencies": {
     "buffer": "^6.0.3",
     "chart.js": "^4.4.7",
@@ -26,6 +26,8 @@
     "url": "^0.11.4"
   },
   "devDependencies": {
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.7.2",
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4"
   }

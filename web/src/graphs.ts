@@ -1,5 +1,5 @@
 import Chart from 'chart.js/auto'
-import {appendCanvasId, chartOptions} from './utils.js'
+import {appendCanvasId, chartOptions} from './utils'
 
 const data = [
   { year: 2010, count: 10 },
