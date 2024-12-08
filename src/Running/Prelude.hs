@@ -57,6 +57,7 @@ module Running.Prelude
     -- * Misc
     errorLeft,
     errorMapLeft,
+    readFail,
 
     -- Prelude re-exports
     module X
@@ -223,6 +224,7 @@ import Numeric.Literal.Integer as X (FromInteger (fromZ), ToInteger (toZ))
 import Numeric.Literal.Rational as X (FromRational (fromQ), ToRational (toQ))
 import System.IO as X (IO, putStrLn)
 import Text.Read as X (readMaybe)
+import Text.Read qualified as TR
 
 errorMapLeft :: (HasCallStack) => (a -> String) -> Either a c -> c
 errorMapLeft f = errorLeft . first f
@@ -321,3 +323,8 @@ fromSingI = fromSing @k (sing @a)
 
 displayExceptiont :: (Exception e) => e -> Text
 displayExceptiont = packText . displayException
+
+readFail :: forall a m. (MonadFail m, Read a) => String -> String -> m a
+readFail tyStr s = case TR.readMaybe s of
+  Nothing -> fail $ "Could not read " ++ tyStr ++ ": " ++ s
+  Just x -> pure x
