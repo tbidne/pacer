@@ -1,5 +1,5 @@
 -- | Provide distance types.
-module Running.Data.Distance
+module Pacer.Data.Distance
   ( -- * Distance
     Distance (..),
 
@@ -23,13 +23,13 @@ module Running.Data.Distance
   )
 where
 
-import Running.Class.Parser (MParser, Parser (parser))
-import Running.Class.Units (singFactor)
-import Running.Data.Distance.Units
+import Pacer.Class.Parser (MParser, Parser (parser))
+import Pacer.Class.Units (singFactor)
+import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
-import Running.Prelude
+import Pacer.Prelude
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 import Text.Printf (printf)

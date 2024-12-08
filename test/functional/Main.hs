@@ -4,7 +4,7 @@ module Main (main) where
 
 import Data.Word (Word8)
 import Functional.Prelude
-import Running.Driver (runAppWith)
+import Pacer.Driver (runAppWith)
 import System.Environment (withArgs)
 import Test.Tasty (defaultMain)
 

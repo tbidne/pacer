@@ -2,13 +2,13 @@
 cradle:
   cabal:
     - path: "./src"
-      component: "lib:running"
+      component: "lib:pacer"
 
     - path: "./app/Main.hs"
-      component: "running:exe:running"
+      component: "pacer:exe:pacer"
 
     - path: "./test/unit"
-      component: "running:test:unit"
+      component: "pacer:test:unit"
 
     - path: "./test/functional"
-      component: "running:test:functional"
+      component: "pacer:test:functional"

@@ -1,13 +1,13 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 -- | Provides common units functionality.
-module Running.Class.Units
+module Pacer.Class.Units
   ( Units (..),
     singFactor,
   )
 where
 
-import Running.Prelude
+import Pacer.Prelude
 
 -- | Class for units.
 class Units a where

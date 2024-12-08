@@ -1,5 +1,5 @@
 cabal-version:      2.4
-name:               running
+name:               pacer
 version:            0.1
 license:            MIT
 license-file:       LICENSE
@@ -7,8 +7,8 @@ tested-with:        GHC ==9.8.2 || ==9.10.1
 copyright:          2024 Thomas Bidne
 author:             Thomas Bidne
 maintainer:         tbidne@protonmail.com
-homepage:           https://github.com/tbidne/running/
-bug-reports:        https://github.com/tbidne/running/issues
+homepage:           https://github.com/tbidne/pacer/
+bug-reports:        https://github.com/tbidne/pacer/issues
 synopsis:           Template
 description:        Template
 category:           Template
@@ -20,7 +20,7 @@ extra-source-files:
 
 source-repository head
   type:     git
-  location: https://github.com/tbidne/running
+  location: https://github.com/tbidne/pacer
 
 common common-lang
   default-extensions:
@@ -40,23 +40,23 @@ common common-lang
 
 library
   import:          common-lang
-  other-modules:   Paths_running
-  autogen-modules: Paths_running
+  other-modules:   Paths_pacer
+  autogen-modules: Paths_pacer
   exposed-modules:
-    Running
-    Running.Class.Parser
-    Running.Class.Units
-    Running.Config.Args
-    Running.Config.Args.Command
-    Running.Config.Args.Utils
-    Running.Config.Data
-    Running.Data.Distance
-    Running.Data.Distance.Units
-    Running.Data.Duration
-    Running.Data.Duration.Units
-    Running.Data.Pace
-    Running.Driver
-    Running.Prelude
+    Pacer
+    Pacer.Class.Parser
+    Pacer.Class.Units
+    Pacer.Config.Args
+    Pacer.Config.Args.Command
+    Pacer.Config.Args.Utils
+    Pacer.Config.Data
+    Pacer.Data.Distance
+    Pacer.Data.Distance.Units
+    Pacer.Data.Duration
+    Pacer.Data.Duration.Units
+    Pacer.Data.Pace
+    Pacer.Driver
+    Pacer.Prelude
 
   build-depends:
     , algebra-simple        ^>=0.1
@@ -77,12 +77,12 @@ library
 
   hs-source-dirs:  src
 
-executable running
+executable pacer
   import:         common-lang
   main-is:        Main.hs
   build-depends:
     , base
-    , running
+    , pacer
 
   hs-source-dirs: app
   ghc-options:    -threaded -with-rtsopts=-N
@@ -92,18 +92,18 @@ test-suite unit
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:
+    Unit.Pacer
+    Unit.Pacer.Data.Distance
+    Unit.Pacer.Data.Distance.Units
+    Unit.Pacer.Data.Duration
+    Unit.Pacer.Data.Pace
     Unit.Prelude
-    Unit.Running
-    Unit.Running.Data.Distance
-    Unit.Running.Data.Distance.Units
-    Unit.Running.Data.Duration
-    Unit.Running.Data.Pace
     Unit.Utils
 
   build-depends:
     , base
     , hedgehog        >=1.0.2   && <1.5
-    , running
+    , pacer
     , tasty           >=1.1.0.3 && <1.6
     , tasty-hedgehog  >=1.0.0.2 && <1.5
     , tasty-hunit     >=0.9     && <0.11
@@ -119,7 +119,7 @@ test-suite functional
   build-depends:
     , base
     , hedgehog
-    , running
+    , pacer
     , tasty
     , tasty-hedgehog
     , tasty-hunit

@@ -5,7 +5,7 @@
 
 {- ORMOLU_DISABLE -}
 
-module Running.Prelude
+module Pacer.Prelude
   ( -- * ByteString
     LazyByteString,
     toStrictByteString,

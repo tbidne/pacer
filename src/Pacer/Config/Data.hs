@@ -1,9 +1,9 @@
-module Running.Config.Data
+module Pacer.Config.Data
   ( Either3 (..),
   )
 where
 
-import Running.Prelude
+import Pacer.Prelude
 
 data Either3 a b c
   = Either1 a

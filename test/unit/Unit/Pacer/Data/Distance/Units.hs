@@ -1,4 +1,4 @@
-module Unit.Running.Data.Distance.Units
+module Unit.Pacer.Data.Distance.Units
   ( -- * Tests
     tests,
 
@@ -14,15 +14,15 @@ module Unit.Running.Data.Distance.Units
 where
 
 import Hedgehog.Gen qualified as G
-import Running.Class.Parser qualified as Parser
-import Running.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
-import Running.Data.Duration (TimeUnit)
+import Pacer.Class.Parser qualified as Parser
+import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
+import Pacer.Data.Duration (TimeUnit)
 import Unit.Prelude
 
 tests :: TestTree
 tests =
   testGroup
-    "Running.Data.Distance.Units"
+    "Pacer.Data.Distance.Units"
     [ parseTests
     ]
 

@@ -22,7 +22,7 @@ import Hedgehog as X
     (/==),
     (===),
   )
-import Running.Prelude as X hiding (IO)
+import Pacer.Prelude as X hiding (IO)
 import System.IO as X (IO)
 import Test.Tasty as X (TestName, TestTree, testGroup)
 import Test.Tasty.HUnit as X

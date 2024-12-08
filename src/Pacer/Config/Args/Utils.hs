@@ -1,4 +1,4 @@
-module Running.Config.Args.Utils
+module Pacer.Config.Args.Utils
   ( mkCommand,
     mkCommandDesc,
     mkCommandDescChunk,
@@ -16,7 +16,7 @@ import Options.Applicative qualified as OA
 import Options.Applicative.Help (Chunk, Doc)
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Help.Pretty qualified as Pretty
-import Running.Prelude
+import Pacer.Prelude
 
 mkCommand :: String -> Parser a -> InfoMod a -> Mod CommandFields a
 mkCommand cmdTxt parser helpTxt = OA.command cmdTxt (OA.info parser helpTxt)

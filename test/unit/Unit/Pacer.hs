@@ -1,16 +1,16 @@
-module Unit.Running
+module Unit.Pacer
   ( -- * Tests
     tests,
   )
 where
 
-import Running qualified
-import Running.Data.Distance
+import Pacer qualified
+import Pacer.Data.Distance
   ( SomeDistance (MkSomeDistance),
     convertDistance,
   )
-import Running.Data.Distance qualified as Dist
-import Running.Data.Distance.Units
+import Pacer.Data.Distance qualified as Dist
+import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer),
     SDistanceUnit
       ( SKilometer,
@@ -18,19 +18,19 @@ import Running.Data.Distance.Units
         SMile
       ),
   )
-import Running.Data.Duration
+import Pacer.Data.Duration
   ( Duration,
     TimeUnit (Hour, Minute, Second),
   )
-import Running.Data.Pace (SomePace)
+import Pacer.Data.Pace (SomePace)
+import Unit.Pacer.Data.Distance qualified as Unit.Distance
+import Unit.Pacer.Data.Duration qualified as Unit.Duration
 import Unit.Prelude
-import Unit.Running.Data.Distance qualified as Unit.Distance
-import Unit.Running.Data.Duration qualified as Unit.Duration
 
 tests :: TestTree
 tests =
   testGroup
-    "Running"
+    "Pacer"
     [ calculateTests
     ]
 
@@ -155,13 +155,13 @@ testCalculatePace =
               ]
 
 displaySomeDistance :: (SingI t) => Duration t PDouble -> SomePace PDouble -> Text
-displaySomeDistance duration = display . Running.calculateSomeDistance duration
+displaySomeDistance duration = display . Pacer.calculateSomeDistance duration
 
 displaySomeDuration :: SomeDistance PDouble -> SomePace PDouble -> Text
-displaySomeDuration dist = display . Running.calculateSomeDuration dist
+displaySomeDuration dist = display . Pacer.calculateSomeDuration dist
 
 displaySomePace :: (SingI t) => SomeDistance PDouble -> Duration t PDouble -> Text
-displaySomePace dist = display . Running.calculateSomePace dist
+displaySomePace dist = display . Pacer.calculateSomePace dist
 
 testPaceTimeInvariance :: TestTree
 testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
@@ -198,14 +198,14 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
       SMeter ->
         withSingI
           s
-          ( Running.calculatePace
+          ( Pacer.calculatePace
               (convertDistance @Kilometer d)
               duration
           ).unPace
       SKilometer ->
-        withSingI s (Running.calculatePace d duration).unPace
+        withSingI s (Pacer.calculatePace d duration).unPace
       SMile ->
-        withSingI s (Running.calculatePace d duration).unPace
+        withSingI s (Pacer.calculatePace d duration).unPace
 
 -- Pace, Distance, Time for testing calculations. In general, these values
 -- are __very__ fragile, in the sense that it is easy for rounding differences

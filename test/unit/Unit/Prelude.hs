@@ -49,20 +49,20 @@ import Hedgehog as X
     (===),
   )
 import Hedgehog qualified as H
-import Running.Class.Parser (Parser)
-import Running.Class.Parser qualified as Parser
-import Running.Data.Distance
+import Pacer.Class.Parser (Parser)
+import Pacer.Class.Parser qualified as Parser
+import Pacer.Data.Distance
   ( Distance (MkDistance),
     SomeDistance (MkSomeDistance),
   )
-import Running.Data.Distance.Units (SDistanceUnit)
-import Running.Data.Duration
+import Pacer.Data.Distance.Units (SDistanceUnit)
+import Pacer.Data.Duration
   ( Duration (MkDuration),
     SomeDuration (MkSomeDuration),
   )
-import Running.Data.Duration.Units (STimeUnit)
-import Running.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
-import Running.Prelude as X hiding (IO)
+import Pacer.Data.Duration.Units (STimeUnit)
+import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
+import Pacer.Prelude as X hiding (IO)
 import System.IO as X (IO)
 import Test.Tasty as X (TestName, TestTree, testGroup)
 import Test.Tasty.HUnit as X

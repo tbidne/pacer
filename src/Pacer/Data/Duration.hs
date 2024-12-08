@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Running.Data.Duration
+module Pacer.Data.Duration
   ( -- * Duration
     Duration (..),
 
@@ -20,14 +20,14 @@ module Running.Data.Duration
   )
 where
 
-import Running.Class.Parser (Parser (parser))
-import Running.Class.Parser qualified as P
-import Running.Class.Units (Units (baseFactor), singFactor)
-import Running.Data.Duration.Units
+import Pacer.Class.Parser (Parser (parser))
+import Pacer.Class.Parser qualified as P
+import Pacer.Class.Units (Units (baseFactor), singFactor)
+import Pacer.Data.Duration.Units
   ( STimeUnit (SSecond),
     TimeUnit (Hour, Minute, Second),
   )
-import Running.Prelude
+import Pacer.Prelude
 
 -- | Units for time.
 type Duration :: TimeUnit -> Type -> Type

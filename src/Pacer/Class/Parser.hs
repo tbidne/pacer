@@ -1,5 +1,5 @@
 -- | Provides parsing functionality.
-module Running.Class.Parser
+module Pacer.Class.Parser
   ( Parser (..),
     MParser,
     parse,
@@ -23,7 +23,7 @@ where
 import Data.Char qualified as Ch
 import Data.Text qualified as T
 import Data.Time.Relative qualified as Rel
-import Running.Prelude
+import Pacer.Prelude
 import Text.Megaparsec (Parsec, (<?>))
 import Text.Megaparsec qualified as MP
 import Text.Read qualified as TR
@@ -81,7 +81,7 @@ parse :: (Parser a) => Text -> Either Text a
 parse = parseWith parser
 
 parseWith :: MParser a -> Text -> Either Text a
-parseWith p t = case MP.runParser (p <* MP.eof) "Running.Class.Parser.parseWith" t of
+parseWith p t = case MP.runParser (p <* MP.eof) "Pacer.Class.Parser.parseWith" t of
   Left err -> Left . T.pack . MP.errorBundlePretty $ err
   Right v -> Right v
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ImpredicativeTypes #-}
 
-module Unit.Running.Data.Duration
+module Unit.Pacer.Data.Duration
   ( -- * Tests
     tests,
 
@@ -17,24 +17,24 @@ import Data.List (take)
 import Data.Word (Word8)
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
-import Running.Class.Parser qualified as Parser
-import Running.Data.Duration
+import Pacer.Class.Parser qualified as Parser
+import Pacer.Data.Duration
   ( Duration (MkDuration),
     SomeDuration (MkSomeDuration),
   )
-import Running.Data.Duration qualified as Duration
-import Running.Data.Duration.Units
+import Pacer.Data.Duration qualified as Duration
+import Pacer.Data.Duration.Units
   ( STimeUnit (SHour, SMinute, SSecond),
     TimeUnit (Hour, Minute, Second),
   )
+import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Prelude
-import Unit.Running.Data.Distance.Units qualified as Units
 import Unit.Utils qualified as Utils
 
 tests :: TestTree
 tests =
   testGroup
-    "Running.Data.Duration"
+    "Pacer.Data.Duration"
     [ parseTests,
       equalityTests,
       displayTests,

@@ -1,4 +1,4 @@
-module Running.Config.Args
+module Pacer.Config.Args
   ( Args (..),
     parserInfo,
   )
@@ -24,9 +24,9 @@ import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Types (ArgPolicy (Intersperse))
-import Paths_running qualified as Paths
-import Running.Config.Args.Command (Command, cmdParser)
-import Running.Prelude
+import Pacer.Config.Args.Command (Command, cmdParser)
+import Pacer.Prelude
+import Paths_pacer qualified as Paths
 
 -- | CLI args.
 newtype Args = MkArgs
@@ -48,12 +48,12 @@ parserInfo =
       infoPolicy = Intersperse
     }
   where
-    header = Just "Running: A tool for running."
+    header = Just "Pacer: A tool for runners."
     footerTxt = Just $ fromString versNum
     desc =
       Chunk.paragraph
         $ mconcat
-          [ "Running includes several commands useful for runners."
+          [ "Pacer includes several commands useful for runners."
           ]
 
 argsParser :: Parser Args

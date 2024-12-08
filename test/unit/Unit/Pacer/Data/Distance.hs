@@ -1,6 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
-module Unit.Running.Data.Distance
+module Unit.Pacer.Data.Distance
   ( -- * Tests
     tests,
 
@@ -13,23 +13,23 @@ module Unit.Running.Data.Distance
 where
 
 import Hedgehog.Gen qualified as G
-import Running.Class.Parser qualified as Parser
-import Running.Data.Distance
+import Pacer.Class.Parser qualified as Parser
+import Pacer.Data.Distance
   ( Distance (MkDistance),
     SomeDistance (MkSomeDistance),
   )
-import Running.Data.Distance.Units
+import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SMeter),
   )
+import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Prelude
-import Unit.Running.Data.Distance.Units qualified as Units
 import Unit.Utils qualified as Utils
 
 tests :: TestTree
 tests =
   testGroup
-    "Running.Data.Distance"
+    "Pacer.Data.Distance"
     [ parseTests,
       equalityTests,
       displayTests

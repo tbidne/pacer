@@ -1,7 +1,7 @@
 {
-  description = "A Template for Haskell Packages";
+  description = "Pacer: A utility for runners.";
   inputs = {
-    # ni
+    # nix
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nix-hs-utils.url = "github:tbidne/nix-hs-utils";
@@ -86,7 +86,7 @@
             returnShellEnv:
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
-              name = "running";
+              name = "pacer";
               root = ./.;
             };
         in

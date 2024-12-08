@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Running.Data.Pace
+module Pacer.Data.Pace
   ( -- * Pace
     Pace (..),
     PaceDistF,
@@ -28,18 +28,18 @@ where
 
 import GHC.TypeError (Unsatisfiable)
 import GHC.TypeError qualified as TE
-import Running.Class.Parser (Parser (parser))
-import Running.Class.Units (singFactor)
-import Running.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
-import Running.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
-import Running.Data.Duration
+import Pacer.Class.Parser (Parser (parser))
+import Pacer.Class.Units (singFactor)
+import Pacer.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
+import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
+import Pacer.Data.Duration
   ( Duration (MkDuration),
     TimeUnit
       ( Second
       ),
   )
-import Running.Data.Duration qualified as Duration
-import Running.Prelude
+import Pacer.Data.Duration qualified as Duration
+import Pacer.Prelude
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 

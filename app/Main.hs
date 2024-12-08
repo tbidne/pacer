@@ -4,8 +4,8 @@
 module Main (main) where
 
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
-import Running.Driver (runApp)
-import Running.Prelude hiding (IO)
+import Pacer.Driver (runApp)
+import Pacer.Prelude hiding (IO)
 import System.IO (IO)
 
 -- | Executable entry-point.

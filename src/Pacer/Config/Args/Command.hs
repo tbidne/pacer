@@ -1,4 +1,4 @@
-module Running.Config.Args.Command
+module Pacer.Config.Args.Command
   ( -- * Command
     Command (..),
     cmdParser,
@@ -22,13 +22,13 @@ import Options.Applicative
   )
 import Options.Applicative qualified as OA
 import Options.Applicative.Types (ReadM)
-import Running.Class.Parser qualified as P
-import Running.Config.Args.Utils qualified as Utils
-import Running.Data.Distance (SomeDistance)
-import Running.Data.Duration (Duration)
-import Running.Data.Duration.Units (TimeUnit (Second))
-import Running.Data.Pace (SomePace)
-import Running.Prelude
+import Pacer.Class.Parser qualified as P
+import Pacer.Config.Args.Utils qualified as Utils
+import Pacer.Data.Distance (SomeDistance)
+import Pacer.Data.Duration (Duration)
+import Pacer.Data.Duration.Units (TimeUnit (Second))
+import Pacer.Data.Pace (SomePace)
+import Pacer.Prelude
 
 -- | Possible commands
 data Command

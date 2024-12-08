@@ -1,5 +1,5 @@
 -- | Units for distance.
-module Running.Data.Distance.Units
+module Pacer.Data.Distance.Units
   ( DistanceUnit (..),
 
     -- * Singletons
@@ -7,9 +7,9 @@ module Running.Data.Distance.Units
   )
 where
 
-import Running.Class.Parser (Parser (parser))
-import Running.Class.Units (Units (baseFactor))
-import Running.Prelude
+import Pacer.Class.Parser (Parser (parser))
+import Pacer.Class.Units (Units (baseFactor))
+import Pacer.Prelude
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 

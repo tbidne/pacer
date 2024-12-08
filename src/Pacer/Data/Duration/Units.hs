@@ -1,5 +1,5 @@
 -- | Units for time.
-module Running.Data.Duration.Units
+module Pacer.Data.Duration.Units
   ( TimeUnit (..),
 
     -- * Singletons
@@ -7,8 +7,8 @@ module Running.Data.Duration.Units
   )
 where
 
-import Running.Class.Units (Units (baseFactor))
-import Running.Prelude
+import Pacer.Class.Units (Units (baseFactor))
+import Pacer.Prelude
 
 -- | Time unit.
 data TimeUnit

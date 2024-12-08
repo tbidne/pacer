@@ -1,6 +1,6 @@
 packages: .
 
-package running
+package pacer
   ghc-options:
     -Wall -Wcompat
     -Widentities

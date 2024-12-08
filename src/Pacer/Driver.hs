@@ -1,4 +1,4 @@
-module Running.Driver
+module Pacer.Driver
   ( -- * Main
     runApp,
     runAppWith,
@@ -6,9 +6,9 @@ module Running.Driver
 where
 
 import Options.Applicative qualified as OA
-import Running qualified
-import Running.Config.Args (Args (command), parserInfo)
-import Running.Config.Args.Command
+import Pacer qualified
+import Pacer.Config.Args (Args (command), parserInfo)
+import Pacer.Config.Args.Command
   ( Command (Convert, Scale),
     ConvertFinal (ConvertDistance, ConvertDuration, ConvertPace),
     DistanceDurationPaceArgs,
@@ -16,14 +16,14 @@ import Running.Config.Args.Command
     argsToConvert,
     argsToScale,
   )
-import Running.Data.Distance (SomeDistance (MkSomeDistance))
-import Running.Data.Distance qualified as Dist
-import Running.Data.Distance.Units
+import Pacer.Data.Distance (SomeDistance (MkSomeDistance))
+import Pacer.Data.Distance qualified as Dist
+import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer),
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
-import Running.Data.Pace (Pace (MkPace))
-import Running.Prelude
+import Pacer.Data.Pace (Pace (MkPace))
+import Pacer.Prelude
 
 runApp :: IO ()
 runApp = runAppWith (putStrLn . unpackText)
@@ -39,22 +39,22 @@ handleConvert :: (Text -> IO a) -> DistanceDurationPaceArgs -> IO a
 handleConvert handler ddpArgs =
   argsToConvert ddpArgs >>= \case
     ConvertDistance duration pace -> do
-      let dist = Running.calculateSomeDistance duration pace
+      let dist = Pacer.calculateSomeDistance duration pace
       handler $ display dist
     ConvertDuration paceOptUnits dist -> do
       let duration = case paceOptUnits of
-            Left pace -> Running.calculateSomeDuration dist pace
+            Left pace -> Pacer.calculateSomeDuration dist pace
             Right paceDuration -> case dist of
               MkSomeDistance sdist distx ->
                 case sdist of
                   SMeter ->
                     let disty = Dist.convertDistance distx
-                     in Running.calculateDuration disty (MkPace @Kilometer paceDuration)
-                  SKilometer -> Running.calculateDuration distx (MkPace paceDuration)
-                  SMile -> Running.calculateDuration distx (MkPace paceDuration)
+                     in Pacer.calculateDuration disty (MkPace @Kilometer paceDuration)
+                  SKilometer -> Pacer.calculateDuration distx (MkPace paceDuration)
+                  SMile -> Pacer.calculateDuration distx (MkPace paceDuration)
       handler $ display duration
     ConvertPace duration dist -> do
-      let pace = Running.calculateSomePace dist duration
+      let pace = Pacer.calculateSomePace dist duration
       handler $ display pace
 
 handleScale :: forall a. (Text -> IO a) -> DistanceDurationPaceArgs -> PDouble -> IO a

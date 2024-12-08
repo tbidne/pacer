@@ -1,21 +1,21 @@
-module Unit.Running.Data.Pace
+module Unit.Pacer.Data.Pace
   ( tests,
   )
 where
 
 import Hedgehog.Gen qualified as G
-import Running.Class.Parser qualified as Parser
-import Running.Data.Distance (DistanceUnit (Kilometer, Mile))
-import Running.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
-import Running.Data.Duration (Duration (MkDuration))
-import Running.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
+import Pacer.Class.Parser qualified as Parser
+import Pacer.Data.Distance (DistanceUnit (Kilometer, Mile))
+import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
+import Pacer.Data.Duration (Duration (MkDuration))
+import Pacer.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
+import Unit.Pacer.Data.Duration qualified as D
 import Unit.Prelude
-import Unit.Running.Data.Duration qualified as D
 
 tests :: TestTree
 tests =
   testGroup
-    "Running.Data.Pace"
+    "Pacer.Data.Pace"
     [ parsingTests,
       displayTests
     ]

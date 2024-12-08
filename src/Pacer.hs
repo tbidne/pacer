@@ -1,4 +1,4 @@
-module Running
+module Pacer
   ( -- * Conversions
 
     -- ** Distance
@@ -15,16 +15,16 @@ module Running
   )
 where
 
-import Running.Data.Distance
+import Pacer.Data.Distance
   ( Distance (MkDistance, unDistance),
     SomeDistance (MkSomeDistance),
   )
-import Running.Data.Distance qualified as Dist
-import Running.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
-import Running.Data.Duration (Duration (MkDuration), TimeUnit (Second))
-import Running.Data.Duration qualified as Duration
-import Running.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace), mkPace)
-import Running.Prelude
+import Pacer.Data.Distance qualified as Dist
+import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
+import Pacer.Data.Duration (Duration (MkDuration), TimeUnit (Second))
+import Pacer.Data.Duration qualified as Duration
+import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace), mkPace)
+import Pacer.Prelude
 
 -- | Given a distance and a duration, calculates the pace.
 calculatePace ::

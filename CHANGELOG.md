@@ -1,4 +1,4 @@
-# Revision history for running
+# Revision history for pacer
 
 ## 0.1 -- YYYY-mm-dd
 

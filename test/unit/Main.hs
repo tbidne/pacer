@@ -1,21 +1,21 @@
 module Main (main) where
 
 import Test.Tasty (defaultMain)
+import Unit.Pacer qualified
+import Unit.Pacer.Data.Distance qualified
+import Unit.Pacer.Data.Distance.Units qualified
+import Unit.Pacer.Data.Duration qualified
+import Unit.Pacer.Data.Pace qualified
 import Unit.Prelude
-import Unit.Running qualified
-import Unit.Running.Data.Distance qualified
-import Unit.Running.Data.Distance.Units qualified
-import Unit.Running.Data.Duration qualified
-import Unit.Running.Data.Pace qualified
 
 main :: IO ()
 main =
   defaultMain
     $ testGroup
       "Unit"
-      [ Unit.Running.tests,
-        Unit.Running.Data.Distance.tests,
-        Unit.Running.Data.Distance.Units.tests,
-        Unit.Running.Data.Duration.tests,
-        Unit.Running.Data.Pace.tests
+      [ Unit.Pacer.tests,
+        Unit.Pacer.Data.Distance.tests,
+        Unit.Pacer.Data.Distance.Units.tests,
+        Unit.Pacer.Data.Duration.tests,
+        Unit.Pacer.Data.Pace.tests
       ]
