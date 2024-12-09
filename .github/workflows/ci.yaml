@@ -63,6 +63,31 @@ jobs:
 
       - name: Compile & Test
         run: nix build
+  web:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "macos-latest"
+          - "ubuntu-latest"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23.x
+
+      - name: Install dependencies
+        run: |
+          cd web
+          npm install
+
+      - name: Build frontend
+        run: |
+          cd web
+          npx webpack
   lint:
     runs-on: "ubuntu-latest"
     steps:
