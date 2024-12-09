@@ -1,1 +1,1 @@
-import './graphs'
+import './build_charts'
