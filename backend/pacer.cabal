@@ -1,22 +1,19 @@
-cabal-version:      2.4
-name:               pacer
-version:            0.1
-license:            MIT
-license-file:       LICENSE
-tested-with:        GHC ==9.8.2 || ==9.10.1
-copyright:          2024 Thomas Bidne
-author:             Thomas Bidne
-maintainer:         tbidne@protonmail.com
-homepage:           https://github.com/tbidne/pacer/
-bug-reports:        https://github.com/tbidne/pacer/issues
-synopsis:           Template
-description:        Template
-category:           Template
-extra-source-files:
-  .gitignore
-  cabal.project
-  CHANGELOG.md
-  README.md
+cabal-version: 2.4
+name:          pacer
+version:       0.1
+tested-with:   GHC ==9.8.2 || ==9.10.1
+copyright:     2024 Thomas Bidne
+author:        Thomas Bidne
+maintainer:    tbidne@protonmail.com
+homepage:      https://github.com/tbidne/pacer/
+bug-reports:   https://github.com/tbidne/pacer/issues
+synopsis:      A tool for runners.
+description:
+  Pacer is an executable that produces graphs based on user running data.
+  It also provides a CLI interface for common running calculations e.g.
+  deriving a pace from distance and duration.
+
+category:      Graphics
 
 source-repository head
   type:     git

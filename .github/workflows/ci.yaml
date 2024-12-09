@@ -36,13 +36,13 @@ jobs:
         run: cabal configure --enable-tests --ghc-options -Werror
 
       - name: Compile
-        run: cabal build
+        run: cabal build pacer
 
       - name: Unit tests
-        run: cabal test unit --test-options '--hedgehog-tests 1000000'
+        run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000'
 
       - name: Functional tests
-        run: cabal test functional
+        run: cabal test pacer:functional
   nix:
     strategy:
       fail-fast: false

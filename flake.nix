@@ -87,7 +87,7 @@
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
               name = "pacer";
-              root = ./.;
+              root = ./backend;
             };
         in
         {
