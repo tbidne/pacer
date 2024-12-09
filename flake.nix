@@ -106,7 +106,12 @@
             format = nix-hs-utils.mergeApps {
               apps = [
                 (nix-hs-utils.format (compilerPkgs // pkgsMkDrv))
-                (nix-hs-utils.format-yaml pkgsMkDrv)
+                ({
+                  inherit pkgs;
+                  name = "format";
+                  text = "prettier -w -- **/*html **/*js **/*json **/*ts **/*yaml";
+                  runtimeInputs = [ pkgs.nodePackages.prettier ];
+                })
               ];
             };
 
