@@ -110,6 +110,12 @@ instance (FromInteger a) => FromInteger (Distance d a) where
 instance (ToInteger a) => ToInteger (Distance d a) where
   toZ (MkDistance x) = toZ x
 
+instance (FromReal a) => FromReal (Distance d a) where
+  fromR = MkDistance . fromR
+
+instance (ToReal a) => ToReal (Distance d a) where
+  toR (MkDistance x) = toR x
+
 -- NOTE: [Distance Parsing]
 --
 -- No units, simply reuses Double's instances in Parser.hs.
@@ -256,14 +262,20 @@ instance (Field a, FromInteger a) => VectorSpace (SomeDistance a) a
 instance (FromRational a) => FromRational (SomeDistance a) where
   fromQ = MkSomeDistance SMeter . fromQ
 
-instance (ToRational a) => ToRational (SomeDistance a) where
-  toQ (MkSomeDistance _ x) = toQ x
+instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomeDistance a) where
+  toQ = toQ . someToMeters
+
+instance (FromReal a) => FromReal (SomeDistance a) where
+  fromR = MkSomeDistance SMeter . fromR
+
+instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomeDistance a) where
+  toR = toR . someToMeters
 
 instance (FromInteger a) => FromInteger (SomeDistance a) where
   fromZ = MkSomeDistance SMeter . fromZ
 
-instance (ToInteger a) => ToInteger (SomeDistance a) where
-  toZ (MkSomeDistance _ x) = toZ x
+instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomeDistance a) where
+  toZ = toZ . someToMeters
 
 -- NOTE: [SomeDistance Parsing]
 --
@@ -298,30 +310,30 @@ liftSomeDist2 f x y =
 -- | Marathon.
 marathon :: forall d a. (FromRational a, SingI d) => Distance d a
 marathon = case sing @d of
-  SMeter -> MkDistance $ fromQ 42_195
-  SKilometer -> MkDistance $ fromQ 42.195
-  SMile -> MkDistance $ fromQ 26.2188
+  SMeter -> MkDistance $ fromℚ 42_195
+  SKilometer -> MkDistance $ fromℚ 42.195
+  SMile -> MkDistance $ fromℚ 26.2188
 
 -- | Half marathon.
 halfMarathon :: forall d a. (FromRational a, SingI d) => Distance d a
 halfMarathon = case sing @d of
-  SMeter -> MkDistance $ fromQ 21_097.5
-  SKilometer -> MkDistance $ fromQ 21.0975
-  SMile -> MkDistance $ fromQ 13.1094
+  SMeter -> MkDistance $ fromℚ 21_097.5
+  SKilometer -> MkDistance $ fromℚ 21.0975
+  SMile -> MkDistance $ fromℚ 13.1094
 
 -- | 10 km.
 k_10 :: forall d a. (FromRational a, SingI d) => Distance d a
 k_10 = case sing @d of
-  SMeter -> MkDistance $ fromQ 10_000
-  SKilometer -> MkDistance $ fromQ 10
-  SMile -> MkDistance $ fromQ 6.21371
+  SMeter -> MkDistance $ fromℚ 10_000
+  SKilometer -> MkDistance $ fromℚ 10
+  SMile -> MkDistance $ fromℚ 6.21371
 
 -- | 5 km.
 k_5 :: forall d a. (FromRational a, SingI d) => Distance d a
 k_5 = case sing @d of
-  SMeter -> MkDistance $ fromQ 5_000
-  SKilometer -> MkDistance $ fromQ 5
-  SMile -> MkDistance $ fromQ 3.10686
+  SMeter -> MkDistance $ fromℚ 5_000
+  SKilometer -> MkDistance $ fromℚ 5
+  SMile -> MkDistance $ fromℚ 3.10686
 
 data DistParse a
   = DistParseMarathon

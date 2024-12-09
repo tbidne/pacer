@@ -23,9 +23,9 @@ instance Display TimeUnit where
   displayBuilder Hour = "h"
 
 instance Units TimeUnit where
-  baseFactor Second = fromZ 1
-  baseFactor Minute = fromZ 60
-  baseFactor Hour = fromZ 3_600
+  baseFactor Second = fromℤ 1
+  baseFactor Minute = fromℤ 60
+  baseFactor Hour = fromℤ 3_600
 
 -- | Singleton for 'TimeUnit'.
 data STimeUnit (t :: TimeUnit) where

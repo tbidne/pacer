@@ -111,10 +111,16 @@ instance (ToRational a) => ToRational (Duration t a) where
   toQ (MkDuration x) = toQ x
 
 instance (FromInteger a) => FromInteger (Duration t a) where
-  fromZ = MkDuration . fromZ
+  fromZ = MkDuration . fromℤ
 
 instance (ToInteger a) => ToInteger (Duration t a) where
   toZ (MkDuration x) = toZ x
+
+instance (FromReal a) => FromReal (Duration t a) where
+  fromR = MkDuration . fromR
+
+instance (ToReal a) => ToReal (Duration t a) where
+  toR (MkDuration x) = toR x
 
 -- NOTE: [Duration Parsing]
 --
@@ -327,14 +333,20 @@ instance (FromInteger a, Field a) => VectorSpace (SomeDuration a) a
 instance (FromRational a) => FromRational (SomeDuration a) where
   fromQ = MkSomeDuration SSecond . fromQ
 
-instance (ToRational a) => ToRational (SomeDuration a) where
-  toQ (MkSomeDuration _ x) = toQ x
+instance (FromInteger a, MSemigroup a, ToRational a) => ToRational (SomeDuration a) where
+  toQ = toQ . someToSeconds
+
+instance (FromReal a) => FromReal (SomeDuration a) where
+  fromR = MkSomeDuration SSecond . fromR
+
+instance (FromInteger a, MSemigroup a, ToReal a) => ToReal (SomeDuration a) where
+  toR = toℝ . someToSeconds
 
 instance (FromInteger a) => FromInteger (SomeDuration a) where
   fromZ = MkSomeDuration SSecond . fromZ
 
-instance (ToInteger a) => ToInteger (SomeDuration a) where
-  toZ (MkSomeDuration _ x) = toZ x
+instance (FromInteger a, MSemigroup a, ToInteger a) => ToInteger (SomeDuration a) where
+  toZ = toZ . someToSeconds
 
 -- NOTE: [SomeDuration Parsing]
 --

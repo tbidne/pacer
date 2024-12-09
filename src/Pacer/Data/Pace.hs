@@ -23,6 +23,9 @@ module Pacer.Data.Pace
 
     -- ** Elimination
     unSomePace,
+
+    -- ** Functions
+    someToKilometers,
   )
 where
 
@@ -132,10 +135,16 @@ instance (ToRational a) => ToRational (Pace d a) where
   toQ = toQ . (.unPace)
 
 instance (FromInteger a, PaceDistF d) => FromInteger (Pace d a) where
-  fromZ = MkPace . fromZ
+  fromZ = MkPace . fromℤ
 
 instance (ToInteger a) => ToInteger (Pace d a) where
   toZ = toZ . (.unPace)
+
+instance (FromReal a, PaceDistF d) => FromReal (Pace d a) where
+  fromR = MkPace . fromR
+
+instance (ToReal a) => ToReal (Pace d a) where
+  toR = toR . (.unPace)
 
 -- NOTE: [Pace Parsing]
 --
@@ -274,14 +283,20 @@ instance (MGroup a) => MSpace (SomePace a) a where
 instance (FromRational a) => FromRational (SomePace a) where
   fromQ = MkSomePace SKilometer . fromQ
 
-instance (ToRational a) => ToRational (SomePace a) where
-  toQ = toQ . (.unSomePace)
+instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomePace a) where
+  toQ = toQ . someToKilometers
 
 instance (FromInteger a) => FromInteger (SomePace a) where
-  fromZ = MkSomePace SKilometer . fromZ
+  fromZ = MkSomePace SKilometer . fromℤ
 
-instance (ToInteger a) => ToInteger (SomePace a) where
-  toZ = toZ . (.unSomePace)
+instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomePace a) where
+  toZ = toZ . someToKilometers
+
+instance (FromReal a) => FromReal (SomePace a) where
+  fromR = MkSomePace SKilometer . fromR
+
+instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
+  toR = toR . someToKilometers
 
 -- NOTE: [SomePace Parsing]
 --
@@ -346,3 +361,10 @@ unSomePace (MkSomePace _ (MkPace x)) = x
 -- | Hides the distance.
 mkSomePace :: forall d a. (SingI d) => Pace d a -> SomePace a
 mkSomePace = MkSomePace (sing @d)
+
+-- | Converts some distance to meters.
+someToKilometers ::
+  (FromInteger a, MGroup a) =>
+  SomePace a ->
+  Pace Kilometer a
+someToKilometers (MkSomePace s x) = withSingI s toKilometers x

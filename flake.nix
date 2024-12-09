@@ -8,7 +8,7 @@
 
     # haskell
     algebra-simple = {
-      url = "github:tbidne/algebra-simple/metric";
+      url = "github:tbidne/algebra-simple";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -29,7 +29,7 @@
     };
 
     smart-math = {
-      url = "github:tbidne/smart-math/metric";
+      url = "github:tbidne/smart-math";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -39,7 +39,7 @@
     };
 
     relative-time = {
-      url = "github:tbidne/relative-time/metric";
+      url = "github:tbidne/relative-time";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -46,9 +46,9 @@ instance Parser DistanceUnit where
       ]
 
 instance Units DistanceUnit where
-  baseFactor Meter = fromZ 1
-  baseFactor Kilometer = fromZ 1_000
-  baseFactor Mile = fromZ 1_609
+  baseFactor Meter = fromℤ 1
+  baseFactor Kilometer = fromℤ 1_000
+  baseFactor Mile = fromℤ 1_609
 
 -- | Singleton for 'DistanceUnit'.
 data SDistanceUnit (d :: DistanceUnit) where

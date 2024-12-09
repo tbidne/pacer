@@ -203,6 +203,7 @@ import Numeric.Algebra as X
     MSemiSpace ((.*)),
     MSemigroup ((.*.)),
     MSpace ((.%)),
+    MetricSpace (diffR),
     Module,
     Ring,
     Semifield,
@@ -210,8 +211,8 @@ import Numeric.Algebra as X
     Semiring,
     SemivectorSpace,
     VectorSpace,
+    diffℝ,
   )
-import Numeric.Algebra.MetricSpace as X (MetricSpace (diff))
 import Numeric.Class.Division as X (Division)
 import Numeric.Data.Positive as X (mkPositive, unsafePositive, (+!))
 import Numeric.Data.Positive.Internal as X
@@ -220,8 +221,24 @@ import Numeric.Data.Positive.Internal as X
         UnsafePositive
       ),
   )
-import Numeric.Literal.Integer as X (FromInteger (fromZ), ToInteger (toZ))
-import Numeric.Literal.Rational as X (FromRational (fromQ), ToRational (toQ))
+import Numeric.Literal.Integer as X
+  ( FromInteger (fromZ),
+    ToInteger (toZ),
+    fromℤ,
+    toℤ,
+  )
+import Numeric.Literal.Rational as X
+  ( FromRational (fromQ),
+    ToRational (toQ),
+    fromℚ,
+    toℚ,
+  )
+import Numeric.Literal.Real as X
+  ( FromReal (fromR),
+    ToReal (toR),
+    fromℝ,
+    toℝ,
+  )
 import System.IO as X (IO, putStrLn)
 import Text.Read as X (readMaybe)
 import Text.Read qualified as TR
@@ -288,7 +305,7 @@ type PDouble = Positive Double
 
 -- | Equality with epsilon check for floating points.
 ɛEq :: (MetricSpace a) => Double -> a -> a -> Bool
-ɛEq e x y = diff x y < e
+ɛEq e x y = diffℝ x y < e
 
 mkPositiveFailZ ::
   forall m a.
@@ -300,7 +317,7 @@ mkPositiveFailZ ::
   a ->
   m (Positive a)
 mkPositiveFailZ x
-  | x > fromZ 0 = pure $ UnsafePositive x
+  | x > fromℤ 0 = pure $ UnsafePositive x
   | otherwise = fail $ "Received non-positive: " ++ show x
 
 mkPositiveFailA ::
