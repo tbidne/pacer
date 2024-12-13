@@ -128,6 +128,11 @@ mkCharts ::
   List Chart
 mkCharts runs = fmap (mkChart runs)
 
+-- NOTE: HLint incorrectly thinks some brackets are unnecessary.
+-- See NOTE: [Brackets with OverloadedRecordDot].
+--
+{- HLINT ignore "Redundant bracket" -}
+
 -- | Turns a sequence of runs and a chart request into a chart.
 mkChart ::
   forall a.
@@ -188,10 +193,11 @@ mkChart (MkSomeRuns someRuns@((MkSomeRun @distUnit sd _) :<|| _)) request =
     toYHelper axisType (MkSomeRun @distUnit2 s r) = case axisType of
       YAxisDistance ->
         withSingI s $ toℝ $ case finalDistUnit of
+          -- NOTE: [Brackets with OverloadedRecordDot]
           Meter -> (Run.convertDistance @Kilometer r).distance.unDistance
           Kilometer -> (Run.convertDistance @Kilometer r).distance.unDistance
           Mile -> (Run.convertDistance @Mile r).distance.unDistance
-      YAxisDuration -> toℝ $ r.duration.unDuration
+      YAxisDuration -> toℝ r.duration.unDuration
       YAxisPace ->
         withSingI s $ toℝ $ case finalDistUnit of
           Meter -> runToPace (Run.convertDistance @Kilometer r)
