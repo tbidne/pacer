@@ -8,11 +8,11 @@ where
 import Options.Applicative qualified as OA
 import Pacer.Config.Args (Args (command), parserInfo)
 import Pacer.Config.Args.Command
-  ( Command (Convert, Scale),
-    ConvertFinal (ConvertDistance, ConvertDuration, ConvertPace),
+  ( Command (Derive, Scale),
+    DeriveFinal (DeriveDistance, DeriveDuration, DerivePace),
     DistanceDurationPaceArgs,
     ScaleFinal (ScaleDistance, ScaleDuration, ScalePace),
-    argsToConvert,
+    argsToDerive,
     argsToScale,
   )
 import Pacer.Data.Distance (SomeDistance (MkSomeDistance))
@@ -32,16 +32,16 @@ runAppWith :: (Text -> IO a) -> IO a
 runAppWith handler = do
   args <- OA.execParser parserInfo
   case args.command of
-    Convert ddpArgs -> handleConvert handler ddpArgs
+    Derive ddpArgs -> handleDerive handler ddpArgs
     Scale ddpArgs scaleFactor -> handleScale handler ddpArgs scaleFactor
 
-handleConvert :: (Text -> IO a) -> DistanceDurationPaceArgs -> IO a
-handleConvert handler ddpArgs =
-  argsToConvert ddpArgs >>= \case
-    ConvertDistance duration pace -> do
+handleDerive :: (Text -> IO a) -> DistanceDurationPaceArgs -> IO a
+handleDerive handler ddpArgs =
+  argsToDerive ddpArgs >>= \case
+    DeriveDistance duration pace -> do
       let dist = Derive.deriveSomeDistance ((.unPositive) <$> duration) pace
       handler $ display dist
-    ConvertDuration paceOptUnits dist -> do
+    DeriveDuration paceOptUnits dist -> do
       let duration = case paceOptUnits of
             Left pace -> Derive.deriveSomeDuration dist pace
             Right paceDuration -> case dist of
@@ -53,7 +53,7 @@ handleConvert handler ddpArgs =
                   SKilometer -> Derive.deriveDuration distx (MkPace paceDuration)
                   SMile -> Derive.deriveDuration distx (MkPace paceDuration)
       handler $ display duration
-    ConvertPace duration dist -> do
+    DerivePace duration dist -> do
       let pace = Derive.deriveSomePace dist ((.unPositive) <$> duration)
       handler $ display pace
 

@@ -3,9 +3,9 @@ module Pacer.Config.Args.Command
     Command (..),
     cmdParser,
 
-    -- ** Convert
-    ConvertFinal (..),
-    argsToConvert,
+    -- ** Derive
+    DeriveFinal (..),
+    argsToDerive,
 
     -- ** Scale
     ScaleFinal (..),
@@ -31,8 +31,8 @@ import Pacer.Prelude
 
 -- | Possible commands
 data Command
-  = -- | Converts between distance, duration, and pace.
-    Convert DistanceDurationPaceArgs
+  = -- | Given 2 of distance, duration, and pace, derives the 3rd.
+    Derive DistanceDurationPaceArgs
   | -- | Scales a value.
     Scale DistanceDurationPaceArgs PDouble
   deriving stock (Eq, Show)
@@ -50,40 +50,38 @@ data DistanceDurationPaceArgs = MkDistanceDurationPaceArgs
   deriving stock (Eq, Show)
 
 -- | Final args for convert command, after parsing.
-data ConvertFinal
-  = -- | Converts duration and pace to distance.
-    ConvertDistance (Seconds PDouble) (SomePace PDouble)
-  | -- | Converts pace and distance to duration.
-    ConvertDuration PaceOptUnits (SomeDistance PDouble)
-  | -- | Converts duration and distance to pace.
-    ConvertPace (Seconds PDouble) (SomeDistance PDouble)
+data DeriveFinal
+  = -- | Derives distance from duration and pace.
+    DeriveDistance (Seconds PDouble) (SomePace PDouble)
+  | -- | Derives duration from pace and distance.
+    DeriveDuration PaceOptUnits (SomeDistance PDouble)
+  | -- | Derives pace from duration and distance.
+    DerivePace (Seconds PDouble) (SomeDistance PDouble)
 
 -- | Converts CLI args into their final type, suitable for running the
 -- convert.
-argsToConvert :: DistanceDurationPaceArgs -> IO ConvertFinal
-argsToConvert convertArgs = do
-  case ( convertArgs.mDuration,
-         convertArgs.mPaceOptUnits,
-         convertArgs.mSomeDistance
+argsToDerive :: DistanceDurationPaceArgs -> IO DeriveFinal
+argsToDerive deriveArgs = do
+  case ( deriveArgs.mDuration,
+         deriveArgs.mPaceOptUnits,
+         deriveArgs.mSomeDistance
        ) of
     (Just _, Just _, Just _) ->
-      throwText "Convert requires exactly 2 options, received 3."
+      throwText "Derive requires exactly 2 options, received 3."
     (Nothing, Nothing, Nothing) ->
-      throwText "Convert requires exactly 2 options, received 0."
+      throwText "Derive requires exactly 2 options, received 0."
     -- Duration x Pace -> Distance
     (Just a, Just b, Nothing) -> case b of
-      Left pace -> pure $ ConvertDistance a pace
+      Left pace -> pure $ DeriveDistance a pace
       Right _ ->
-        throwText
-          $ mconcat
-            [ "Converting duration and pace to distance requires that pace ",
-              "has units."
-            ]
+        throwText "Deriving distance requires that pace has units."
     -- PaceOptUnits x Distance -> Duration
-    (Nothing, Just b, Just c) -> pure $ ConvertDuration b c
+    (Nothing, Just b, Just c) -> pure $ DeriveDuration b c
     -- Duration x Distance -> Pace
-    (Just a, Nothing, Just c) -> pure $ ConvertPace a c
-    _ -> throwText "Convert requires exactly 2 options, received 1."
+    (Just a, Nothing, Just c) -> pure $ DerivePace a c
+    _ -> throwText "Derive requires exactly 2 options, received 1."
+
+-- TODO: Convert units command
 
 -- | Final args for scale command, after parsing.
 data ScaleFinal
@@ -104,10 +102,10 @@ data ScaleFinal
 -- a la Trees That Grow, we may need to add it.
 
 argsToScale :: DistanceDurationPaceArgs -> IO ScaleFinal
-argsToScale convertArgs = do
-  case ( convertArgs.mSomeDistance,
-         convertArgs.mDuration,
-         convertArgs.mPaceOptUnits
+argsToScale deriveArgs = do
+  case ( deriveArgs.mSomeDistance,
+         deriveArgs.mDuration,
+         deriveArgs.mPaceOptUnits
        ) of
     (Just _, Just _, Just _) ->
       throwText "Scale requires exactly 1 quantity, received 3."
@@ -122,19 +120,23 @@ cmdParser :: Parser Command
 cmdParser =
   OA.hsubparser
     ( mconcat
-        [ Utils.mkCommand "convert" convertParser convertTxt,
+        [ Utils.mkCommand "derive" deriveParser deriveTxt,
           Utils.mkCommand "scale" scaleParser scaleTxt
         ]
     )
   where
-    convertTxt =
-      Utils.mkCommandDesc "Converts between quantities. Requires exactly 2 options."
+    deriveTxt =
+      Utils.mkCommandDesc
+        $ mconcat
+          [ "Given two quantities, derives the third. For instance, given a ",
+            "distance and a duration, derives the pace."
+          ]
 
     scaleTxt =
       Utils.mkCommandDesc
         "Scales a quantity. Requires exactly one quantity and the scale factor."
 
-    convertParser = Convert <$> convertDistanceDurationPaceArgsParser
+    deriveParser = Derive <$> convertDistanceDurationPaceArgsParser
     scaleParser =
       Scale
         <$> scaleDistanceDurationPaceArgsParser

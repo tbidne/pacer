@@ -100,13 +100,13 @@ test-suite unit
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:
-    Unit.Pacer.Derive
     Unit.Pacer.Chart.Data.ChartRequest
     Unit.Pacer.Chart.Data.Run
     Unit.Pacer.Data.Distance
     Unit.Pacer.Data.Distance.Units
     Unit.Pacer.Data.Duration
     Unit.Pacer.Data.Pace
+    Unit.Pacer.Derive
     Unit.Prelude
     Unit.Utils
 
@@ -127,7 +127,11 @@ test-suite functional
   import:         common-lang
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
-  other-modules:  Functional.Prelude
+  other-modules:
+    Functional.Derive
+    Functional.Prelude
+    Functional.Scale
+
   build-depends:
     , base
     , hedgehog
