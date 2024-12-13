@@ -6,6 +6,8 @@ module Unit.Prelude
     -- * Hedgehog
     annotateUnpack,
     hdiff,
+    testProp,
+    testProp1,
 
     -- * HUnit
     (@/=?),
@@ -73,6 +75,15 @@ import Test.Tasty.HUnit as X
     (@=?),
   )
 import Test.Tasty.Hedgehog as X (testPropertyNamed)
+
+-- | Concise alias for @testPropertyNamed . property@
+testProp :: TestName -> PropertyName -> PropertyT IO () -> TestTree
+testProp name desc = testPropertyNamed name desc . property
+
+-- | 'testProp' that only runs a single test. Used for when we'd really want
+-- HUnit's testCase, but with a better diff.
+testProp1 :: TestName -> PropertyName -> PropertyT IO () -> TestTree
+testProp1 name desc = testPropertyNamed name desc . withTests 1 . property
 
 annotateUnpack :: Text -> PropertyT IO ()
 annotateUnpack = annotate . unpackText

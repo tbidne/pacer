@@ -16,6 +16,9 @@ import Hedgehog.Gen qualified as G
 import Pacer.Class.Parser qualified as Parser
 import Pacer.Data.Distance
   ( Distance (MkDistance),
+    Kilometers,
+    Meters,
+    Miles,
     SomeDistance (MkSomeDistance),
   )
 import Pacer.Data.Distance.Units
@@ -49,9 +52,9 @@ parseTests =
 testParseDistanceGenText :: TestTree
 testParseDistanceGenText = testPropertyNamed "testParseDistanceGenText" desc $ property $ do
   d <- forAll genDistanceText
-  parseOrDieM_ @(Distance Meter Double) d
-  parseOrDieM_ @(Distance Kilometer Double) d
-  parseOrDieM_ @(Distance Mile Double) d
+  parseOrDieM_ @(Meters Double) d
+  parseOrDieM_ @(Kilometers Double) d
+  parseOrDieM_ @(Miles Double) d
 
   sd <- forAll genSomeDistanceText
   parseOrDieM_ @(SomeDistance Double) sd
@@ -162,14 +165,14 @@ testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
 testParseDistanceFailureCases :: TestTree
 testParseDistanceFailureCases = testCase "Parse failures" $ do
   for_ bothVals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Distance Meter Double) t
-    assertLeft d $ Parser.parse @(Distance Meter PDouble) t
+    assertLeft d $ Parser.parse @(Meters Double) t
+    assertLeft d $ Parser.parse @(Meters PDouble) t
     assertLeft d $ Parser.parse @(SomeDistance Double) t
     assertLeft d $ Parser.parse @(SomeDistance PDouble) t
 
   for_ vals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Distance Meter Double) t
-    assertLeft d $ Parser.parse @(Distance Meter PDouble) t
+    assertLeft d $ Parser.parse @(Meters Double) t
+    assertLeft d $ Parser.parse @(Meters PDouble) t
 
   for_ someVals $ \(d, t) -> do
     assertLeft d $ Parser.parse @(SomeDistance Double) t

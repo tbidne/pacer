@@ -1,7 +1,9 @@
 module Main (main) where
 
 import Test.Tasty (defaultMain)
-import Unit.Pacer qualified
+import Unit.Pacer.Derive qualified
+import Unit.Pacer.Chart.Data.ChartRequest qualified
+import Unit.Pacer.Chart.Data.Run qualified
 import Unit.Pacer.Data.Distance qualified
 import Unit.Pacer.Data.Distance.Units qualified
 import Unit.Pacer.Data.Duration qualified
@@ -13,9 +15,11 @@ main =
   defaultMain
     $ testGroup
       "Unit"
-      [ Unit.Pacer.tests,
+      [ Unit.Pacer.Chart.Data.ChartRequest.tests,
+        Unit.Pacer.Chart.Data.Run.tests,
         Unit.Pacer.Data.Distance.tests,
         Unit.Pacer.Data.Distance.Units.tests,
         Unit.Pacer.Data.Duration.tests,
-        Unit.Pacer.Data.Pace.tests
+        Unit.Pacer.Data.Pace.tests,
+        Unit.Pacer.Derive.tests
       ]

@@ -35,12 +35,7 @@ import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Units (singFactor)
 import Pacer.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
-import Pacer.Data.Duration
-  ( Duration (MkDuration),
-    TimeUnit
-      ( Second
-      ),
-  )
+import Pacer.Data.Duration (Duration (MkDuration), Seconds)
 import Pacer.Data.Duration qualified as Duration
 import Pacer.Prelude
 import Text.Megaparsec qualified as MP
@@ -52,9 +47,11 @@ import Text.Megaparsec.Char qualified as MPC
 -- zero since they are so low).
 type Pace :: DistanceUnit -> Type -> Type
 data Pace d a where
-  MkPace :: (PaceDistF d) => Duration Second a -> Pace d a
+  MkPace :: (PaceDistF d) => Seconds a -> Pace d a
 
-instance HasField "unPace" (Pace d a) (Duration Second a) where
+deriving stock instance Functor (Pace d)
+
+instance HasField "unPace" (Pace d a) (Seconds a) where
   getField = unPace
 
 -- NOTE:
@@ -157,8 +154,7 @@ instance (ToReal a) => ToReal (Pace d a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( Fractional a,
-    FromInteger a,
+  ( FromInteger a,
     MGroup a,
     PaceDistF d
   ) =>
@@ -168,11 +164,10 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( Fractional a,
-    FromInteger a,
-    MGroup a,
+  ( FromInteger a,
     Ord a,
     PaceDistF d,
+    Semifield a,
     Show a
   ) =>
   Parser (Pace d (Positive a))
@@ -191,7 +186,7 @@ mkPace ::
 mkPace = MkPace . Duration.toSeconds
 
 -- | Eliminates a pace to the underlying duration.
-unPace :: Pace d a -> Duration Second a
+unPace :: Pace d a -> Seconds a
 unPace (MkPace d) = d
 
 -- | Converts pace to kilometers.
@@ -229,6 +224,8 @@ type SomePace :: Type -> Type
 data SomePace a where
   MkSomePace :: Sing d -> Pace d a -> SomePace a
 
+deriving stock instance Functor SomePace
+
 instance
   ( Eq a,
     FromInteger a,
@@ -251,7 +248,7 @@ instance
   MkSomePace sx x <= MkSomePace sy y =
     withSingI sx toKilometers x <= withSingI sy toKilometers y
 
-instance HasField "unSomePace" (SomePace a) (Duration Second a) where
+instance HasField "unSomePace" (SomePace a) (Seconds a) where
   getField = unSomePace
 
 instance (Show a) => Show (SomePace a) where
@@ -306,14 +303,13 @@ instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( Fractional a,
-    FromInteger a,
+  ( FromInteger a,
     MGroup a
   ) =>
   Parser (SomePace a)
   where
   parser = do
-    MkDuration x <- parser @(Duration Second a)
+    MkDuration x <- parser @(Seconds a)
     MPC.space
     MPC.char '/'
 
@@ -340,10 +336,9 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( Fractional a,
-    FromInteger a,
-    MGroup a,
+  ( FromInteger a,
     Ord a,
+    Semifield a,
     Show a
   ) =>
   Parser (SomePace (Positive a))
@@ -351,11 +346,11 @@ instance
   parser = do
     -- reuse non-positive parser
     MkSomePace s (MkPace (MkDuration x)) <- parser @(SomePace a)
-    y <- mkPositiveFailZ x
+    y <- mkPositiveFail x
     pure $ MkSomePace s (MkPace (MkDuration y))
 
 -- | Exposes the underlying duration.
-unSomePace :: SomePace a -> Duration Second a
+unSomePace :: SomePace a -> Seconds a
 unSomePace (MkSomePace _ (MkPace x)) = x
 
 -- | Hides the distance.

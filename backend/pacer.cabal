@@ -25,6 +25,7 @@ common common-lang
     DataKinds
     DerivingStrategies
     DerivingVia
+    DuplicateRecordFields
     LambdaCase
     LexicalNegation
     NoImplicitPrelude
@@ -40,7 +41,9 @@ library
   other-modules:   Paths_pacer
   autogen-modules: Paths_pacer
   exposed-modules:
-    Pacer
+    Pacer.Chart.Data.Chart
+    Pacer.Chart.Data.ChartRequest
+    Pacer.Chart.Data.Run
     Pacer.Class.Parser
     Pacer.Class.Units
     Pacer.Config.Args
@@ -52,21 +55,29 @@ library
     Pacer.Data.Duration
     Pacer.Data.Duration.Units
     Pacer.Data.Pace
+    Pacer.Derive
     Pacer.Driver
     Pacer.Prelude
+    Pacer.Utils
 
   build-depends:
+    , aeson                 >=2.0      && <2.3
     , algebra-simple        ^>=0.1
     , base                  >=4.14.0.0 && <4.21
     , bytestring            >=0.10.12  && <0.13
+    , containers            >=0.6.3.1  && <0.8
     , exception-utils       ^>=0.1
+    , fs-utils              ^>=0.1
     , megaparsec            >=7.0.5    && <9.7
+    , nonempty-containers   >=0.3.4.2  && <0.4
     , optparse-applicative  >=0.15     && <0.19
     , relative-time         ^>=0.1
     , singletons            ^>=3.0.3
     , smart-math            ^>=0.1
     , text                  >=1.2.3.2  && <2.2
     , text-display          >=0.0.3.0  && <0.6
+    , time                  >=1.9.3    && <1.15
+    , toml-reader           >=0.2.0.0  && <0.3.0.0
 
   -- tuple syntax
   if impl(ghc >=9.10.1)
@@ -89,7 +100,9 @@ test-suite unit
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:
-    Unit.Pacer
+    Unit.Pacer.Derive
+    Unit.Pacer.Chart.Data.ChartRequest
+    Unit.Pacer.Chart.Data.Run
     Unit.Pacer.Data.Distance
     Unit.Pacer.Data.Distance.Units
     Unit.Pacer.Data.Duration
@@ -104,6 +117,8 @@ test-suite unit
     , tasty           >=1.1.0.3 && <1.6
     , tasty-hedgehog  >=1.0.0.2 && <1.5
     , tasty-hunit     >=0.9     && <0.11
+    , time
+    , toml-reader
 
   hs-source-dirs: test/unit
   ghc-options:    -threaded -with-rtsopts=-N

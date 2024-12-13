@@ -1,10 +1,9 @@
-module Unit.Pacer
+module Unit.Pacer.Derive
   ( -- * Tests
     tests,
   )
 where
 
-import Pacer qualified
 import Pacer.Data.Distance
   ( SomeDistance (MkSomeDistance),
     convertDistance,
@@ -18,11 +17,9 @@ import Pacer.Data.Distance.Units
         SMile
       ),
   )
-import Pacer.Data.Duration
-  ( Duration,
-    TimeUnit (Hour, Minute, Second),
-  )
+import Pacer.Data.Duration (Duration, Hours, Minutes, Seconds)
 import Pacer.Data.Pace (SomePace)
+import Pacer.Derive qualified as Derive
 import Unit.Pacer.Data.Distance qualified as Unit.Distance
 import Unit.Pacer.Data.Duration qualified as Unit.Duration
 import Unit.Prelude
@@ -30,7 +27,7 @@ import Unit.Prelude
 tests :: TestTree
 tests =
   testGroup
-    "Pacer"
+    "Pacer.Derive"
     [ calculateTests
     ]
 
@@ -69,9 +66,9 @@ testCalculateDistance =
 
           distDispTxt = display distOut'
 
-          tSec = parseOrDie @(Duration Second PDouble) durationTxt
-          tMin = parseOrDie @(Duration Minute PDouble) durationTxt
-          tHr = parseOrDie @(Duration Hour PDouble) durationTxt
+          tSec = parseOrDie @(Seconds Double) durationTxt
+          tMin = parseOrDie @(Minutes Double) durationTxt
+          tHr = parseOrDie @(Hours Double) durationTxt
 
       let rSec = displaySomeDistance tSec pace
           rMin = displaySomeDistance tMin pace
@@ -99,10 +96,10 @@ testCalculateDuration =
     (go <$> quantities)
   where
     go (paceTxt, distTxt, durationTxt) = testCase desc $ do
-      let pace = parseOrDie @(SomePace PDouble) paceTxt
-          dist = parseOrDie @(SomeDistance PDouble) distTxt
+      let pace = parseOrDie @(SomePace Double) paceTxt
+          dist = parseOrDie @(SomeDistance Double) distTxt
 
-          durationDispTxt = display $ parseOrDie @(Duration Second PDouble) durationTxt
+          durationDispTxt = display $ parseOrDie @(Seconds Double) durationTxt
 
       let r = displaySomeDuration dist pace
 
@@ -129,11 +126,11 @@ testCalculatePace =
       let dist :: SomeDistance PDouble
           dist = parseOrDie distTxt
 
-          paceDispTxt = display $ parseOrDie @(SomePace PDouble) paceTxt
+          paceDispTxt = display $ parseOrDie @(SomePace Double) paceTxt
 
-          tSec = parseOrDie @(Duration Second PDouble) durationTxt
-          tMin = parseOrDie @(Duration Minute PDouble) durationTxt
-          tHr = parseOrDie @(Duration Hour PDouble) durationTxt
+          tSec = parseOrDie @(Seconds Double) durationTxt
+          tMin = parseOrDie @(Minutes Double) durationTxt
+          tHr = parseOrDie @(Hours Double) durationTxt
 
       let rSec = displaySomePace dist tSec
           rMin = displaySomePace dist tMin
@@ -154,14 +151,14 @@ testCalculatePace =
                 paceTxt
               ]
 
-displaySomeDistance :: (SingI t) => Duration t PDouble -> SomePace PDouble -> Text
-displaySomeDistance duration = display . Pacer.calculateSomeDistance duration
+displaySomeDistance :: (SingI t) => Duration t Double -> SomePace PDouble -> Text
+displaySomeDistance duration = display . Derive.deriveSomeDistance duration
 
-displaySomeDuration :: SomeDistance PDouble -> SomePace PDouble -> Text
-displaySomeDuration dist = display . Pacer.calculateSomeDuration dist
+displaySomeDuration :: SomeDistance Double -> SomePace Double -> Text
+displaySomeDuration dist = display . Derive.deriveSomeDuration dist
 
-displaySomePace :: (SingI t) => SomeDistance PDouble -> Duration t PDouble -> Text
-displaySomePace dist = display . Pacer.calculateSomePace dist
+displaySomePace :: (SingI t) => SomeDistance PDouble -> Duration t Double -> Text
+displaySomePace dist = display . Derive.deriveSomePace dist
 
 testPaceTimeInvariance :: TestTree
 testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
@@ -170,9 +167,9 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
 
   let dist = parseOrDie @(SomeDistance PDouble) distTxt
 
-  let tSec = parseOrDie @(Duration Second PDouble) durationTxt
-      tMin = parseOrDie @(Duration Minute PDouble) durationTxt
-      tHr = parseOrDie @(Duration Hour PDouble) durationTxt
+  let tSec = parseOrDie @(Seconds Double) durationTxt
+      tMin = parseOrDie @(Minutes Double) durationTxt
+      tHr = parseOrDie @(Hours Double) durationTxt
 
   annotateShow tSec
   annotateShow tMin
@@ -191,21 +188,21 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
 
     calcPace ::
       (SingI t) =>
-      Duration t PDouble ->
+      Duration t Double ->
       SomeDistance PDouble ->
-      Duration Second PDouble
+      Seconds Double
     calcPace duration (MkSomeDistance s d) = case s of
       SMeter ->
         withSingI
           s
-          ( Pacer.calculatePace
+          ( Derive.derivePace
               (convertDistance @Kilometer d)
               duration
           ).unPace
       SKilometer ->
-        withSingI s (Pacer.calculatePace d duration).unPace
+        withSingI s (Derive.derivePace d duration).unPace
       SMile ->
-        withSingI s (Pacer.calculatePace d duration).unPace
+        withSingI s (Derive.derivePace d duration).unPace
 
 -- Pace, Distance, Time for testing calculations. In general, these values
 -- are __very__ fragile, in the sense that it is easy for rounding differences

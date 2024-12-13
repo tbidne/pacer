@@ -25,8 +25,7 @@ import Options.Applicative.Types (ReadM)
 import Pacer.Class.Parser qualified as P
 import Pacer.Config.Args.Utils qualified as Utils
 import Pacer.Data.Distance (SomeDistance)
-import Pacer.Data.Duration (Duration)
-import Pacer.Data.Duration.Units (TimeUnit (Second))
+import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Prelude
 
@@ -42,7 +41,7 @@ data Command
 -- 2 to derive the 3rd.
 data DistanceDurationPaceArgs = MkDistanceDurationPaceArgs
   { -- | Possible duration.
-    mDuration :: Maybe (Duration Second PDouble),
+    mDuration :: Maybe (Seconds PDouble),
     -- | Possible pace.
     mPaceOptUnits :: Maybe PaceOptUnits,
     -- | Possible distance.
@@ -53,11 +52,11 @@ data DistanceDurationPaceArgs = MkDistanceDurationPaceArgs
 -- | Final args for convert command, after parsing.
 data ConvertFinal
   = -- | Converts duration and pace to distance.
-    ConvertDistance (Duration Second PDouble) (SomePace PDouble)
+    ConvertDistance (Seconds PDouble) (SomePace PDouble)
   | -- | Converts pace and distance to duration.
     ConvertDuration PaceOptUnits (SomeDistance PDouble)
   | -- | Converts duration and distance to pace.
-    ConvertPace (Duration Second PDouble) (SomeDistance PDouble)
+    ConvertPace (Seconds PDouble) (SomeDistance PDouble)
 
 -- | Converts CLI args into their final type, suitable for running the
 -- convert.
@@ -91,7 +90,7 @@ data ScaleFinal
   = -- | Scales distance.
     ScaleDistance (SomeDistance PDouble)
   | -- | Scales duation.
-    ScaleDuration (Duration Second PDouble)
+    ScaleDuration (Seconds PDouble)
   | -- | Scales pace.
     ScalePace PaceOptUnits
 
@@ -181,7 +180,7 @@ someDistanceParser =
                 Left err -> fail $ unpackText err
             )
 
-durationParser :: Parser (Duration Second PDouble)
+durationParser :: Parser (Seconds PDouble)
 durationParser =
   OA.option
     read
@@ -192,7 +191,7 @@ durationParser =
         ]
     )
   where
-    read :: OA.ReadM (Duration Second PDouble)
+    read :: OA.ReadM (Seconds PDouble)
     read = do
       s <- OA.str
       case P.parse s of
@@ -202,7 +201,7 @@ durationParser =
 -- | Represents the pace. For some conversions, the units are optional,
 -- hence we only require the underlying Duration (a Pace is just a duration
 -- with a unit, after all).
-type PaceOptUnits = Either (SomePace PDouble) (Duration Second PDouble)
+type PaceOptUnits = Either (SomePace PDouble) (Seconds PDouble)
 
 convertPaceOptUnitsParser :: Parser PaceOptUnits
 convertPaceOptUnitsParser = paceOptUnitsParser helpTxt
@@ -260,4 +259,4 @@ scaleFactorParser =
     )
   where
     helpTxt = "The scaling factor."
-    read = OA.str >>= (readFail "Double" >=> mkPositiveFailZ)
+    read = OA.str >>= (readFail "Double" >=> mkPositiveFail)

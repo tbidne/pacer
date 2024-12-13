@@ -20,6 +20,9 @@ import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as Parser
 import Pacer.Data.Duration
   ( Duration (MkDuration),
+    Hours,
+    Minutes,
+    Seconds,
     SomeDuration (MkSomeDuration),
   )
 import Pacer.Data.Duration qualified as Duration
@@ -55,9 +58,9 @@ testParseProps :: TestTree
 testParseProps = testPropertyNamed "testParseProps" desc $ property $ do
   txt <- forAll genDurationText
 
-  t1 <- parseOrDieM @(Duration Second Double) txt
-  t2 <- parseOrDieM @(Duration Minute Double) txt
-  t3 <- parseOrDieM @(Duration Hour Double) txt
+  t1 <- parseOrDieM @(Seconds Double) txt
+  t2 <- parseOrDieM @(Minutes Double) txt
+  t3 <- parseOrDieM @(Hours Double) txt
 
   MkSomeDuration SSecond t1 === MkSomeDuration SMinute t2
   MkSomeDuration SMinute t2 === MkSomeDuration SHour t3
@@ -141,8 +144,8 @@ testParseSomeDurationCases = testCase "Parses SomeDuration" $ do
 testParseDurationFailureCases :: TestTree
 testParseDurationFailureCases = testCase "Parse failures" $ do
   for_ vals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Duration Second Double) t
-    assertLeft d $ Parser.parse @(Duration Second PDouble) t
+    assertLeft d $ Parser.parse @(Seconds Double) t
+    assertLeft d $ Parser.parse @(Seconds PDouble) t
     assertLeft d $ Parser.parse @(SomeDuration Double) t
     assertLeft d $ Parser.parse @(SomeDuration PDouble) t
   where

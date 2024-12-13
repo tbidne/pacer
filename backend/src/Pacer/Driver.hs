@@ -6,7 +6,6 @@ module Pacer.Driver
 where
 
 import Options.Applicative qualified as OA
-import Pacer qualified
 import Pacer.Config.Args (Args (command), parserInfo)
 import Pacer.Config.Args.Command
   ( Command (Convert, Scale),
@@ -23,6 +22,7 @@ import Pacer.Data.Distance.Units
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Pace (Pace (MkPace))
+import Pacer.Derive qualified as Derive
 import Pacer.Prelude
 
 runApp :: IO ()
@@ -39,22 +39,22 @@ handleConvert :: (Text -> IO a) -> DistanceDurationPaceArgs -> IO a
 handleConvert handler ddpArgs =
   argsToConvert ddpArgs >>= \case
     ConvertDistance duration pace -> do
-      let dist = Pacer.calculateSomeDistance duration pace
+      let dist = Derive.deriveSomeDistance ((.unPositive) <$> duration) pace
       handler $ display dist
     ConvertDuration paceOptUnits dist -> do
       let duration = case paceOptUnits of
-            Left pace -> Pacer.calculateSomeDuration dist pace
+            Left pace -> Derive.deriveSomeDuration dist pace
             Right paceDuration -> case dist of
               MkSomeDistance sdist distx ->
                 case sdist of
                   SMeter ->
                     let disty = Dist.convertDistance distx
-                     in Pacer.calculateDuration disty (MkPace @Kilometer paceDuration)
-                  SKilometer -> Pacer.calculateDuration distx (MkPace paceDuration)
-                  SMile -> Pacer.calculateDuration distx (MkPace paceDuration)
+                     in Derive.deriveDuration disty (MkPace @Kilometer paceDuration)
+                  SKilometer -> Derive.deriveDuration distx (MkPace paceDuration)
+                  SMile -> Derive.deriveDuration distx (MkPace paceDuration)
       handler $ display duration
     ConvertPace duration dist -> do
-      let pace = Pacer.calculateSomePace dist duration
+      let pace = Derive.deriveSomePace dist ((.unPositive) <$> duration)
       handler $ display pace
 
 handleScale :: forall a. (Text -> IO a) -> DistanceDurationPaceArgs -> PDouble -> IO a

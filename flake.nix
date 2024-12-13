@@ -8,7 +8,7 @@
 
     # haskell
     algebra-simple = {
-      url = "github:tbidne/algebra-simple";
+      url = "github:tbidne/algebra-simple/convert";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -28,8 +28,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    fs-utils = {
+      url = "github:tbidne/fs-utils";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     smart-math = {
-      url = "github:tbidne/smart-math";
+      url = "github:tbidne/smart-math/classes";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -39,7 +46,7 @@
     };
 
     relative-time = {
-      url = "github:tbidne/relative-time";
+      url = "github:tbidne/relative-time/convert";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -70,6 +77,7 @@
                 "algebra-simple"
                 "bounds"
                 "exception-utils"
+                "fs-utils"
                 "smart-math"
                 "relative-time"
               ];

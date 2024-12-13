@@ -15,6 +15,11 @@ module Pacer.Data.Distance
     -- * Units
     DistanceUnit (..),
 
+    -- * Aliases
+    Meters,
+    Kilometers,
+    Miles,
+
     -- * Misc
     marathon,
     halfMarathon,
@@ -37,6 +42,7 @@ import Text.Printf (printf)
 -- | Represents a numeric distance with units.
 type Distance :: DistanceUnit -> Type -> Type
 newtype Distance d a = MkDistance {unDistance :: a}
+  deriving stock (Functor)
   deriving newtype (MetricSpace)
 
 instance (MetricSpace a, SingI d) => Eq (Distance d a) where
@@ -154,7 +160,7 @@ toMeters ::
     SingI d
   ) =>
   Distance d a ->
-  Distance Meter a
+  Meters a
 toMeters = MkDistance . (.*. toBase) . (.unDistance)
   where
     toBase = singFactor @_ @d
@@ -183,7 +189,7 @@ someToMeters ::
     MGroup a
   ) =>
   SomeDistance a ->
-  Distance Meter a
+  Meters a
 someToMeters (MkSomeDistance u x) = withSingI u toMeters x
 
 convertSomeDistance ::
@@ -200,6 +206,8 @@ convertSomeDistance (MkSomeDistance s x) = withSingI s convertDistance x
 type SomeDistance :: Type -> Type
 data SomeDistance a where
   MkSomeDistance :: Sing d -> Distance d a -> SomeDistance a
+
+deriving stock instance Functor SomeDistance
 
 instance (FromInteger a, MetricSpace a, MGroup a) => Eq (SomeDistance a) where
   t1 == t2 = someToMeters t1 == someToMeters t2
@@ -349,3 +357,12 @@ distanceParser = do
       MP.try $ MPC.string "hmarathon" $> DistParseHalfMarathon,
       DistParseNumeric <$> parser
     ]
+
+-- | Alias for 'Distance Meters'.
+type Meters a = Distance Meter a
+
+-- | Alias for 'Distance Kilometers'.
+type Kilometers a = Distance Kilometer a
+
+-- | Alias for 'Distance Miles'.
+type Miles a = Distance Mile a

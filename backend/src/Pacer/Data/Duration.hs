@@ -17,6 +17,11 @@ module Pacer.Data.Duration
 
     -- * Units
     TimeUnit (..),
+
+    -- * Aliases
+    Seconds,
+    Minutes,
+    Hours,
   )
 where
 
@@ -32,6 +37,7 @@ import Pacer.Prelude
 -- | Units for time.
 type Duration :: TimeUnit -> Type -> Type
 newtype Duration t a = MkDuration {unDuration :: a}
+  deriving stock (Functor)
 
 instance (MetricSpace a, SingI t) => Eq (Duration t a) where
   MkDuration x == MkDuration y = ɛEq ɛ x y
@@ -132,8 +138,7 @@ instance (ToReal a) => ToReal (Duration t a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( Fractional a,
-    FromInteger a,
+  ( FromInteger a,
     MGroup a,
     SingI t
   ) =>
@@ -147,10 +152,9 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( Fractional a,
-    FromInteger a,
-    MGroup a,
+  ( FromInteger a,
     Ord a,
+    Semifield a,
     Show a,
     SingI t
   ) =>
@@ -159,7 +163,7 @@ instance
   parser = do
     -- reuse non-positive parser
     MkDuration x <- parser @(Duration t a)
-    y <- mkPositiveFailZ x
+    y <- mkPositiveFail x
     pure $ MkDuration y
 
 liftDuration2 ::
@@ -177,7 +181,7 @@ toSeconds ::
     SingI t
   ) =>
   Duration t a ->
-  Duration Second a
+  Seconds a
 toSeconds = MkDuration . (.*. toBase) . (.unDuration)
   where
     toBase = singFactor @_ @t
@@ -263,6 +267,8 @@ normalizeTime (h, m, s) = (h_final, m_final, s_final)
 type SomeDuration :: Type -> Type
 data SomeDuration a where
   MkSomeDuration :: Sing t -> Duration t a -> SomeDuration a
+
+deriving stock instance Functor SomeDuration
 
 instance
   ( FromInteger a,
@@ -373,8 +379,7 @@ instance (FromInteger a, MSemigroup a, ToInteger a) => ToInteger (SomeDuration a
 
 instance
   {-# OVERLAPPABLE #-}
-  ( Fractional a,
-    FromInteger a,
+  ( FromInteger a,
     MGroup a
   ) =>
   Parser (SomeDuration a)
@@ -383,9 +388,8 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( Fractional a,
-    FromInteger a,
-    MGroup a,
+  ( FromInteger a,
+    Semifield a,
     Ord a,
     Show a
   ) =>
@@ -394,7 +398,7 @@ instance
   parser = do
     -- reuse non-positive parser
     MkSomeDuration s (MkDuration x) <- parser @(SomeDuration a)
-    y <- mkPositiveFailZ x
+    y <- mkPositiveFail x
     pure $ MkSomeDuration s (MkDuration y)
 
 liftSomeDuration2 ::
@@ -410,5 +414,14 @@ liftSomeDuration2 f x y =
 someToSeconds ::
   (FromInteger a, MSemigroup a) =>
   SomeDuration a ->
-  Duration Second a
+  Seconds a
 someToSeconds (MkSomeDuration u t) = withSingI u toSeconds t
+
+-- | Alias for 'Duration Seconds'.
+type Seconds a = Duration Second a
+
+-- | Alias for 'Duration Minutes'.
+type Minutes a = Duration Minute a
+
+-- | Alias for 'Duration Hour'.
+type Hours a = Duration Hour a

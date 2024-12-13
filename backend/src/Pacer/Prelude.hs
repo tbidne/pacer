@@ -45,11 +45,13 @@ module Pacer.Prelude
 
     -- ** Positive
     PDouble,
-    mkPositiveFailZ,
-    mkPositiveFailA,
+    mkPositiveFail,
 
     -- ** Floating
     ɛEq,
+
+    -- * Foldable
+    listToNESeq,
 
     -- * Dev / Debug
     todo,
@@ -101,7 +103,7 @@ import Data.Char as X (Char)
 import Data.Either as X (Either (Left, Right))
 import Data.Eq as X (Eq ((/=), (==)))
 import Data.Foldable as X
-  ( Foldable (fold, foldl', foldr, toList),
+  ( Foldable (fold, foldMap, foldl', foldr, toList),
     any,
     for_,
     length,
@@ -132,6 +134,7 @@ import Data.List as X (elem, filter, replicate, sortOn, zip, zipWith, (++))
 #endif
 import Data.Kind as X (Constraint, Type)
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe as X (Maybe (Just, Nothing), catMaybes, fromMaybe, maybe)
 import Data.Monoid as X (Monoid (mconcat, mempty))
 import Data.Ord as X
@@ -141,6 +144,9 @@ import Data.Ord as X
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Ratio as X (Ratio, Rational, denominator, numerator, (%))
 import Data.Semigroup as X (Semigroup ((<>)))
+import Data.Sequence as X (Seq ((:<|), (:|>)))
+import Data.Sequence.NonEmpty as X (NESeq ((:<||), (:||>)))
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Singletons as X
   ( Sing,
     SingI (sing),
@@ -154,6 +160,8 @@ import Data.Text qualified as T
 import Data.Text.Display as X (Display (displayBuilder), display)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder qualified as TLB
+import Data.Time.Calendar as X (Day)
+import Data.Time.LocalTime as X (LocalTime, ZonedTime)
 import Data.Traversable as X (Traversable (sequenceA, traverse))
 import Data.Tuple as X (fst, snd)
 #if MIN_VERSION_base(4, 20, 0)
@@ -162,6 +170,9 @@ import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word32)
+import FileSystem.IO as X (readBinaryFileIO)
+import FileSystem.OsPath as X (OsPath, ospPathSep)
+import FileSystem.UTF8 as X (decodeUtf8ThrowM)
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum)
 import GHC.Err as X (error, undefined)
 import GHC.Exception (errorCallWithCallStackException)
@@ -214,30 +225,30 @@ import Numeric.Algebra as X
     diffℝ,
   )
 import Numeric.Class.Division as X (Division)
-import Numeric.Data.Positive as X (mkPositive, unsafePositive, (+!))
-import Numeric.Data.Positive.Internal as X
-  ( Positive
-      ( MkPositive,
-        UnsafePositive
-      ),
-  )
-import Numeric.Literal.Integer as X
+import Numeric.Convert.Integer as X
   ( FromInteger (fromZ),
     ToInteger (toZ),
     fromℤ,
     toℤ,
   )
-import Numeric.Literal.Rational as X
+import Numeric.Convert.Rational as X
   ( FromRational (fromQ),
     ToRational (toQ),
     fromℚ,
     toℚ,
   )
-import Numeric.Literal.Real as X
+import Numeric.Convert.Real as X
   ( FromReal (fromR),
     ToReal (toR),
     fromℝ,
     toℝ,
+  )
+import Numeric.Data.Positive.Algebra as X (mkPositive, unsafePositive, (+!))
+import Numeric.Data.Positive.Algebra.Internal as X
+  ( Positive
+      ( MkPositive,
+        UnsafePositive
+      ),
   )
 import System.IO as X (IO, putStrLn)
 import Text.Read as X (readMaybe)
@@ -307,20 +318,7 @@ type PDouble = Positive Double
 ɛEq :: (MetricSpace a) => Double -> a -> a -> Bool
 ɛEq e x y = diffℝ x y < e
 
-mkPositiveFailZ ::
-  forall m a.
-  ( FromInteger a,
-    Ord a,
-    MonadFail m,
-    Show a
-  ) =>
-  a ->
-  m (Positive a)
-mkPositiveFailZ x
-  | x > fromℤ 0 = pure $ UnsafePositive x
-  | otherwise = fail $ "Received non-positive: " ++ show x
-
-mkPositiveFailA ::
+mkPositiveFail ::
   forall m a.
   ( AMonoid a,
     MonadFail m,
@@ -329,9 +327,9 @@ mkPositiveFailA ::
   ) =>
   a ->
   m (Positive a)
-mkPositiveFailA x
-  | x > zero = pure $ UnsafePositive x
-  | otherwise = fail $ "Received non-positive: " ++ show x
+mkPositiveFail x = case mkPositive x of
+  Just y -> pure y
+  Nothing -> fail $ "Received non-positive: " ++ show x
 
 -- | Convenience function for retrieving the demoted value from a type
 -- parameter.
@@ -345,3 +343,6 @@ readFail :: forall a m. (MonadFail m, Read a) => String -> String -> m a
 readFail tyStr s = case TR.readMaybe s of
   Nothing -> fail $ "Could not read " ++ tyStr ++ ": " ++ s
   Just x -> pure x
+
+listToNESeq :: (HasCallStack) => List a -> NESeq a
+listToNESeq = NESeq.fromList . NE.fromList

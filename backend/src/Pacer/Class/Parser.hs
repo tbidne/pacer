@@ -3,7 +3,9 @@ module Pacer.Class.Parser
   ( Parser (..),
     MParser,
     parse,
+    parseFail,
     parseWith,
+    parseWithFail,
 
     -- * Digits
     parseDigits,
@@ -57,15 +59,15 @@ parseDigitText =
 
 -- | Read text like "1d2h3m4s", parse w/ relative time into Fractional
 -- seconds.
-parseTimeString :: forall a. (Fractional a) => MParser a
+parseTimeString :: forall a. (FromInteger a) => MParser a
 parseTimeString = do
   t <- MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c `T.elem` chars)
   case Rel.fromString (unpackText t) of
     Left err -> fail $ "Could not read duration: " ++ err
     Right rt -> do
-      let secondsNat = Rel.toSeconds rt
-          secondsDouble = fromIntegral @_ @Double secondsNat
-          secondsA = realToFrac @Double @a secondsDouble
+      let secondsℕ = Rel.toSeconds rt
+          secondsℤ = toℤ secondsℕ
+          secondsA = fromℤ secondsℤ
 
       pure secondsA
   where
@@ -80,10 +82,20 @@ readDigits b =
 parse :: (Parser a) => Text -> Either Text a
 parse = parseWith parser
 
+parseFail :: forall a m. (MonadFail m, Parser a) => Text -> m a
+parseFail t = case parse t of
+  Left err -> fail $ unpackText err
+  Right x -> pure x
+
 parseWith :: MParser a -> Text -> Either Text a
 parseWith p t = case MP.runParser (p <* MP.eof) "Pacer.Class.Parser.parseWith" t of
   Left err -> Left . T.pack . MP.errorBundlePretty $ err
   Right v -> Right v
+
+parseWithFail :: forall a m. (MonadFail m) => MParser a -> Text -> m a
+parseWithFail p t = case parseWith p t of
+  Left err -> fail $ unpackText err
+  Right x -> pure x
 
 failNonSpace :: MParser ()
 failNonSpace = MP.notFollowedBy nonSpace
