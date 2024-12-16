@@ -1,0 +1,12 @@
+[[charts]]
+title = 'Runs by distance'
+y-axis = 'distance'
+
+[[charts]]
+title = 'Runs by duration'
+y-axis = 'duration'
+y-axis1 = 'distance'
+
+[[charts]]
+title = 'Runs by pace'
+y-axis = 'pace'

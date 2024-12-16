@@ -249,11 +249,7 @@ convertSomeDistance (MkSomeRun s r) =
 newtype SomeRuns a = MkSomeRuns (NESeq (SomeRun a))
   deriving stock (Eq, Show)
 
--- TODO: Decoder should probably do validation e.g. ensure all datetimes are
--- unique.
-
--- TODO: This error needs to be formatted better. Also, we should probably
--- sort this.
+-- TODO: SomeRuns should maintain sorted order.
 
 instance
   ( FromRational a,
@@ -269,36 +265,39 @@ instance
     case xs of
       [] -> fail "Received empty list"
       (y@(MkSomeRun _ r) : ys) -> case eDuplicate of
-        Left (ts, mTitle1, mTitle2) ->
+        Left ((ts1, mTitle1), (ts2, mTitle2)) ->
           fail
             $ unpackText
             $ mconcat
-              [ "Found two runs with the same timestamp '",
-                fmtRunTimestamp ts,
-                "': '",
+              [ "Found overlapping timestamps\n - ",
                 fmtTitle mTitle1,
-                "', '",
+                ": ",
+                fmtRunTimestamp ts1,
+                "\n - ",
                 fmtTitle mTitle2,
-                "'"
+                ": ",
+                fmtRunTimestamp ts2
               ]
         Right _ -> pure $ MkSomeRuns $ fromList (y :| ys)
         where
-          eDuplicate = foldr go (Right $ Map.singleton r.datetime r.title) ys
+          eDuplicate = foldr go (Right $ Map.singleton r.datetime (r.datetime, r.title)) ys
 
           go :: SomeRun a -> SomeRunsAcc -> SomeRunsAcc
           go _ (Left collision) = Left collision
           go (MkSomeRun _ q) (Right mp) =
             case Map.lookup q.datetime mp of
-              Nothing -> Right $ Map.insert q.datetime q.title mp
-              Just collision -> Left (q.datetime, q.title, collision)
+              Nothing -> Right $ Map.insert q.datetime (q.datetime, q.title) mp
+              Just collision -> Left ((q.datetime, q.title), collision)
 
           fmtTitle Nothing = "<no title>"
           fmtTitle (Just t) = t
 
+type TitleAndTime = Tuple2 RunTimestamp (Maybe Text)
+
 type SomeRunsAcc =
   Either
-    (Tuple3 RunTimestamp (Maybe Text) (Maybe Text))
-    (Map.Map RunTimestamp (Maybe Text))
+    (Tuple2 TitleAndTime TitleAndTime)
+    (Map.Map RunTimestamp TitleAndTime)
 
 -- | Converts arbitrary run to some distance unit.
 convertSomeDistances ::

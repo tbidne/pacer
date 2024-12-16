@@ -35,19 +35,27 @@ testParseExampleToml = testProp1 "testParseExampleToml" desc $ do
               yAxis1 = Nothing
             },
           MkChartRequest
-            { filters = [Atom $ FilterLabel "label1"],
-              title = "Runs by duration",
+            { filters = [Atom (FilterLabel "marathon")],
+              title = "Marathons",
               yAxis = YAxisDuration,
-              yAxis1 = Just YAxisDistance
+              yAxis1 = Nothing
             },
           MkChartRequest
             { filters =
-                [ Atom $ FilterLabel "label1",
-                  Or
-                    (Atom $ FilterLabel "label2")
-                    (Not $ Atom $ FilterLabel "label3")
+                [ Atom (FilterLabel "official"),
+                  Not (Atom (FilterLabel "marathon"))
                 ],
-              title = "Runs by pace",
+              title = "Official non-marathons",
+              yAxis = YAxisPace,
+              yAxis1 = Nothing
+            },
+          MkChartRequest
+            { filters =
+                [ Or
+                    (Atom (FilterLabel "half-marathon"))
+                    (Atom (FilterLabel "marathon"))
+                ],
+              title = "Marathons and half-marathons",
               yAxis = YAxisPace,
               yAxis1 = Nothing
             }

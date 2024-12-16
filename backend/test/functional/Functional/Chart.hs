@@ -12,7 +12,8 @@ tests =
     [ testExampleChart,
       testSimple,
       testFilter,
-      testFilterEmptyError
+      testFilterEmptyError,
+      testDuplicateDateError
     ]
 
 testExampleChart :: TestTree
@@ -41,3 +42,8 @@ testFilterEmptyError :: TestTree
 testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]
   where
     desc = "Filter empty error"
+
+testDuplicateDateError :: TestTree
+testDuplicateDateError = testChart desc [osp|testDuplicateDateError|]
+  where
+    desc = "Duplicate date error"
