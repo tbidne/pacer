@@ -18,8 +18,14 @@ module Pacer.Chart.Data.Run
 where
 
 import Data.Aeson (ToJSON (toJSON))
+import Data.Map.Strict qualified as Map
 import Data.Sequence.NonEmpty (fromList)
 import Data.Time qualified as Time
+import Data.Time.Format qualified as Format
+import Data.Time.LocalTime
+  ( LocalTime (LocalTime),
+    ZonedTime (ZonedTime),
+  )
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Data.Distance
@@ -45,11 +51,29 @@ data RunTimestamp
   deriving stock (Show)
 
 instance Eq RunTimestamp where
-  RunDay x == RunDay y = x == y
-  RunLocalTime x == RunLocalTime y = x == y
-  RunZonedTime x == RunZonedTime y =
-    Time.zonedTimeToUTC x == Time.zonedTimeToUTC y
-  _ == _ = False
+  RunDay d1 == t2 = d1 == toDay t2
+  RunLocalTime (LocalTime d1 _) == RunDay d2 = d1 == d2
+  RunLocalTime l1 == RunLocalTime l2 = l1 == l2
+  RunLocalTime l1 == RunZonedTime (ZonedTime l2 _) = l1 == l2
+  RunZonedTime (ZonedTime (LocalTime d1 _) _) == RunDay d2 = d1 == d2
+  RunZonedTime (ZonedTime l1 _) == RunLocalTime l2 = l1 == l2
+  RunZonedTime z1 == RunZonedTime z2 =
+    Time.zonedTimeToUTC z1 == Time.zonedTimeToUTC z2
+
+instance Ord RunTimestamp where
+  RunDay d1 <= t2 = d1 <= toDay t2
+  RunLocalTime (LocalTime d1 _) <= RunDay d2 = d1 <= d2
+  RunLocalTime l1 <= RunLocalTime l2 = l1 <= l2
+  RunLocalTime l1 <= RunZonedTime (ZonedTime l2 _) = l1 <= l2
+  RunZonedTime (ZonedTime (LocalTime d1 _) _) <= RunDay d2 = d1 <= d2
+  RunZonedTime (ZonedTime l1 _) <= RunLocalTime l2 = l1 <= l2
+  RunZonedTime z1 <= RunZonedTime z2 =
+    Time.zonedTimeToUTC z1 <= Time.zonedTimeToUTC z2
+
+toDay :: RunTimestamp -> Day
+toDay (RunDay d) = d
+toDay (RunLocalTime (LocalTime d _)) = d
+toDay (RunZonedTime (ZonedTime (LocalTime d _) _)) = d
 
 instance DecodeTOML RunTimestamp where
   tomlDecoder =
@@ -64,6 +88,18 @@ instance ToJSON RunTimestamp where
   toJSON (RunDay d) = toJSON d
   toJSON (RunLocalTime lt) = toJSON lt
   toJSON (RunZonedTime zt) = toJSON zt
+
+fmtRunTimestamp :: RunTimestamp -> Text
+fmtRunTimestamp =
+  packText <<< \case
+    RunDay d -> Format.formatTime l dfmt d
+    RunLocalTime lt -> Format.formatTime l (dfmt ++ tfmt) lt
+    RunZonedTime zt -> Format.formatTime l (dfmt ++ tfmt ++ zfmt) zt
+  where
+    dfmt = "%Y-%m-%d"
+    tfmt = "T%H:%M:%S"
+    zfmt = "%z"
+    l = Format.defaultTimeLocale
 
 -- | Type for runs.
 type Run :: DistanceUnit -> Type -> Type
@@ -216,6 +252,9 @@ newtype SomeRuns a = MkSomeRuns (NESeq (SomeRun a))
 -- TODO: Decoder should probably do validation e.g. ensure all datetimes are
 -- unique.
 
+-- TODO: This error needs to be formatted better. Also, we should probably
+-- sort this.
+
 instance
   ( FromRational a,
     Ord a,
@@ -229,7 +268,37 @@ instance
     xs <- TOML.getFieldWith (TOML.getArrayOf tomlDecoder) "runs"
     case xs of
       [] -> fail "Received empty list"
-      (y : ys) -> pure $ MkSomeRuns $ fromList (y :| ys)
+      (y@(MkSomeRun _ r) : ys) -> case eDuplicate of
+        Left (ts, mTitle1, mTitle2) ->
+          fail
+            $ unpackText
+            $ mconcat
+              [ "Found two runs with the same timestamp '",
+                fmtRunTimestamp ts,
+                "': '",
+                fmtTitle mTitle1,
+                "', '",
+                fmtTitle mTitle2,
+                "'"
+              ]
+        Right _ -> pure $ MkSomeRuns $ fromList (y :| ys)
+        where
+          eDuplicate = foldr go (Right $ Map.singleton r.datetime r.title) ys
+
+          go :: SomeRun a -> SomeRunsAcc -> SomeRunsAcc
+          go _ (Left collision) = Left collision
+          go (MkSomeRun _ q) (Right mp) =
+            case Map.lookup q.datetime mp of
+              Nothing -> Right $ Map.insert q.datetime q.title mp
+              Just collision -> Left (q.datetime, q.title, collision)
+
+          fmtTitle Nothing = "<no title>"
+          fmtTitle (Just t) = t
+
+type SomeRunsAcc =
+  Either
+    (Tuple3 RunTimestamp (Maybe Text) (Maybe Text))
+    (Map.Map RunTimestamp (Maybe Text))
 
 -- | Converts arbitrary run to some distance unit.
 convertSomeDistances ::

@@ -1,5 +1,5 @@
 [[runs]]
-datetime = 2024-10-20
+datetime = 2024-10-15
 distance = '5 km'
 duration = '20m30s'
 
@@ -22,7 +22,7 @@ duration = '1h'
 labels = ['label3']
 
 [[runs]]
-datetime = 2024-10-26T12:00:00-08:00
+datetime = 2024-10-27T12:00:00-08:00
 distance = '10 kilometers'
 duration = '1h'
 labels = ['label3', 'label4']
