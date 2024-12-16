@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Prelude
   ( module X,
@@ -12,6 +13,10 @@ module Unit.Prelude
     -- * HUnit
     (@/=?),
     assertLeft,
+
+    -- * Golden
+    GoldenParams (..),
+    testGoldenParams,
 
     -- * Parsing
     parseOrDie,
@@ -31,9 +36,13 @@ module Unit.Prelude
     mkPacePD,
     mkSomePaceD,
     mkSomePacePD,
+
+    -- * Misc
+    pShowBS,
   )
 where
 
+import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
   ( Gen,
     Property,
@@ -67,6 +76,7 @@ import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
 import Pacer.Prelude as X hiding (IO)
 import System.IO as X (IO)
 import Test.Tasty as X (TestName, TestTree, testGroup)
+import Test.Tasty.Golden as X (goldenVsFile)
 import Test.Tasty.HUnit as X
   ( Assertion,
     assertBool,
@@ -75,6 +85,7 @@ import Test.Tasty.HUnit as X
     (@=?),
   )
 import Test.Tasty.Hedgehog as X (testPropertyNamed)
+import Text.Pretty.Simple qualified as Pretty
 
 -- | Concise alias for @testPropertyNamed . property@
 testProp :: TestName -> PropertyName -> PropertyT IO () -> TestTree
@@ -162,3 +173,36 @@ mkSomePaceD s = MkSomePace s . mkPaceD
 
 mkSomePacePD :: forall d. (PaceDistF d) => SDistanceUnit d -> Double -> SomePace PDouble
 mkSomePacePD s = MkSomePace s . mkPacePD
+
+data GoldenParams = MkGoldenParams
+  { testDesc :: TestName,
+    testName :: OsPath,
+    runner :: IO ByteString
+  }
+
+testGoldenParams :: GoldenParams -> TestTree
+testGoldenParams goldenParams =
+  goldenVsFile goldenParams.testDesc goldenPath actualPath $ do
+    trySync goldenParams.runner >>= \case
+      Left err -> writeActualFile $ exToBs err
+      Right bs -> writeActualFile bs
+  where
+    outputPathStart =
+      FS.OsPath.unsafeDecode
+        $ [ospPathSep|test/unit/goldens|]
+        </> goldenParams.testName
+
+    exToBs = encodeUtf8 . displayExceptiont
+
+    writeActualFile :: ByteString -> IO ()
+    writeActualFile =
+      writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
+        . (<> "\n")
+
+    actualPath = outputPathStart <> ".actual"
+    goldenPath = outputPathStart <> ".golden"
+
+-- Note that an alternative to pretty-simple would be to use aeson's
+-- ToJSON and print that. Of course that requires ToJSON instances.
+pShowBS :: (Show a) => a -> ByteString
+pShowBS = encodeUtf8 . toStrictText . Pretty.pShowNoColor

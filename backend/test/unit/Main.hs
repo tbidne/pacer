@@ -1,6 +1,7 @@
 module Main (main) where
 
-import Test.Tasty (defaultMain)
+import Test.Tasty (defaultMain, localOption)
+import Test.Tasty.Golden (DeleteOutputFile (OnPass))
 import Unit.Pacer.Chart.Data.ChartRequest qualified
 import Unit.Pacer.Chart.Data.Run qualified
 import Unit.Pacer.Data.Distance qualified
@@ -13,6 +14,7 @@ import Unit.Prelude
 main :: IO ()
 main =
   defaultMain
+    $ localOption OnPass
     $ testGroup
       "Unit"
       [ Unit.Pacer.Chart.Data.ChartRequest.tests,

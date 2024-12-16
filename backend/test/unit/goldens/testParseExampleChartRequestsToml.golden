@@ -1,0 +1,46 @@
+MkChartRequests
+    { unChartRequests = fromList
+        [ MkChartRequest
+            { filters = []
+            , title = "Runs by distance"
+            , yAxis = YAxisDistance
+            , yAxis1 = Nothing
+            }
+        , MkChartRequest
+            { filters =
+                [ Atom
+                    ( FilterLabel "marathon" )
+                ]
+            , title = "Marathons"
+            , yAxis = YAxisDuration
+            , yAxis1 = Nothing
+            }
+        , MkChartRequest
+            { filters =
+                [ Atom
+                    ( FilterLabel "official" )
+                , Not
+                    ( Atom
+                        ( FilterLabel "marathon" )
+                    )
+                ]
+            , title = "Official non-marathons"
+            , yAxis = YAxisPace
+            , yAxis1 = Nothing
+            }
+        , MkChartRequest
+            { filters =
+                [ Or
+                    ( Atom
+                        ( FilterLabel "half-marathon" )
+                    )
+                    ( Atom
+                        ( FilterLabel "marathon" )
+                    )
+                ]
+            , title = "Marathons and half-marathons"
+            , yAxis = YAxisPace
+            , yAxis1 = Nothing
+            }
+        ]
+    }

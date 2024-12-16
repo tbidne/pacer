@@ -184,7 +184,7 @@ instance (Show a) => Show (SomeRun a) where
   showsPrec i (MkSomeRun s r) =
     showParen
       (i >= 11)
-      ( showString "MkDuration "
+      ( showString "MkSomeRun "
           . showsPrec 11 s
           . showSpace
           . withSingI s showsPrec 11 r
@@ -227,10 +227,9 @@ decodeDuration = tomlDecoder >>= P.parseFail
 -- | Converts arbitrary run to some distance unit.
 convertSomeDistance ::
   forall d a.
-  ( AMonoid a,
-    FromInteger a,
-    MGroup a,
+  ( FromInteger a,
     Ord a,
+    Semifield a,
     Show a,
     SingI d
   ) =>
@@ -250,6 +249,20 @@ newtype SomeRuns a = MkSomeRuns (NESeq (SomeRun a))
   deriving stock (Eq, Show)
 
 -- TODO: SomeRuns should maintain sorted order.
+--
+-- Could change this to an NESet. The main difficulty is that in
+-- Pacer.Chart.Data.Chart, we have
+--
+--   mkChart (MkSomeRuns someRuns@((MkSomeRun @distUnit sd _) :<|| _)) request =
+--
+-- i.e. we destruct the SomeRuns in the function defn, and use distUnit in the
+-- where clause. distUnit is an existential so we can only access this because
+-- of the pattern match. Thus if we want to switch toe NESet w/ the least
+-- amount of hassle, we need to create a PatternSynonym that allows peeking
+-- the head element. This will require ViewPatterns.
+--
+-- Or maybe this is too hard, and we can rewrite mkChart w/o the top-level
+-- pattern match (maybe we split the logic into a separate function).
 
 instance
   ( FromRational a,
@@ -302,10 +315,9 @@ type SomeRunsAcc =
 -- | Converts arbitrary run to some distance unit.
 convertSomeDistances ::
   forall d a.
-  ( AMonoid a,
-    FromInteger a,
-    MGroup a,
+  ( FromInteger a,
     Ord a,
+    Semifield a,
     Show a,
     SingI d
   ) =>

@@ -45,11 +45,29 @@ jobs:
       - name: Compile backend
         run: cabal build pacer
 
-      - name: Backend Unit tests
+      - name: Backend unit tests
+        id: backend-unit
         run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000'
 
+      - uses: actions/upload-artifact@v3
+        name: Backend unit tests upload
+        if: ${{ failure() && steps.backend-unit.conclusion == 'failure' }}
+        with:
+          name: backend-unit-tests-artifacts
+          path: |
+            backend/test/unit/goldens
+
       - name: Backend functional tests
+        id: backend-functional
         run: cabal test pacer:functional
+
+      - uses: actions/upload-artifact@v3
+        name: Backend functional tests upload
+        if: ${{ failure() && steps.backend-functional.conclusion == 'failure' }}
+        with:
+          name: backend-functional-tests-artifacts
+          path: |
+            backend/test/functional/goldens
 
       - name: Generate charts json with backend
         run: |

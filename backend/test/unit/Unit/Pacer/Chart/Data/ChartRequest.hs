@@ -11,52 +11,20 @@ tests :: TestTree
 tests =
   testGroup
     "Pacer.Chart.Data.ChartRequest"
-    [ testParseExampleToml
+    [ testParseExampleChartRequestsToml
     ]
 
-testParseExampleToml :: TestTree
-testParseExampleToml = testProp1 "testParseExampleToml" desc $ do
-  contents <- liftIO $ decodeUtf8ThrowM =<< readBinaryFileIO path
-  case decode @ChartRequests contents of
-    Right result -> expected === result
-    Left err -> do
-      annotate $ displayException err
-      failure
+testParseExampleChartRequestsToml :: TestTree
+testParseExampleChartRequestsToml = testGoldenParams params
   where
-    desc = "Parses example toml"
+    params =
+      MkGoldenParams
+        { testDesc = "Parses example runs.toml",
+          testName = [osp|testParseExampleChartRequestsToml|],
+          runner = do
+            contents <- decodeUtf8ThrowM =<< readBinaryFileIO path
+            case decode @ChartRequests contents of
+              Right result -> pure $ pShowBS result
+              Left err -> throwIO err
+        }
     path = [ospPathSep|data/input/example/chart-requests.toml|]
-
-    expected =
-      MkChartRequests
-        [ MkChartRequest
-            { filters = [],
-              title = "Runs by distance",
-              yAxis = YAxisDistance,
-              yAxis1 = Nothing
-            },
-          MkChartRequest
-            { filters = [Atom (FilterLabel "marathon")],
-              title = "Marathons",
-              yAxis = YAxisDuration,
-              yAxis1 = Nothing
-            },
-          MkChartRequest
-            { filters =
-                [ Atom (FilterLabel "official"),
-                  Not (Atom (FilterLabel "marathon"))
-                ],
-              title = "Official non-marathons",
-              yAxis = YAxisPace,
-              yAxis1 = Nothing
-            },
-          MkChartRequest
-            { filters =
-                [ Or
-                    (Atom (FilterLabel "half-marathon"))
-                    (Atom (FilterLabel "marathon"))
-                ],
-              title = "Marathons and half-marathons",
-              yAxis = YAxisPace,
-              yAxis1 = Nothing
-            }
-        ]
