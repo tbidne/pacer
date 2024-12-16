@@ -12,14 +12,15 @@ module Pacer.Chart.Data.Run
     convertSomeDistance,
 
     -- * SomeRuns
+    SomeRunsKey (..),
     SomeRuns (..),
-    convertSomeDistances,
   )
 where
 
 import Data.Aeson (ToJSON (toJSON))
-import Data.Map.Strict qualified as Map
-import Data.Sequence.NonEmpty (fromList)
+import Data.Map.NonEmpty (NEMap)
+import Data.Map.NonEmpty qualified as NEMap
+import Data.Set.NonEmpty qualified as NESet
 import Data.Time qualified as Time
 import Data.Time.Format qualified as Format
 import Data.Time.LocalTime
@@ -244,25 +245,22 @@ convertSomeDistance (MkSomeRun s r) =
       title = r.title
     }
 
--- | Holds multiple runs.
-newtype SomeRuns a = MkSomeRuns (NESeq (SomeRun a))
-  deriving stock (Eq, Show)
+-- | Key for 'SomeRuns'. Used to enforce that timestamps are unique.
+newtype SomeRunsKey a = MkSomeRunsKey {unSomeRunsKey :: SomeRun a}
 
--- TODO: SomeRuns should maintain sorted order.
---
--- Could change this to an NESet. The main difficulty is that in
--- Pacer.Chart.Data.Chart, we have
---
---   mkChart (MkSomeRuns someRuns@((MkSomeRun @distUnit sd _) :<|| _)) request =
---
--- i.e. we destruct the SomeRuns in the function defn, and use distUnit in the
--- where clause. distUnit is an existential so we can only access this because
--- of the pattern match. Thus if we want to switch toe NESet w/ the least
--- amount of hassle, we need to create a PatternSynonym that allows peeking
--- the head element. This will require ViewPatterns.
---
--- Or maybe this is too hard, and we can rewrite mkChart w/o the top-level
--- pattern match (maybe we split the logic into a separate function).
+deriving stock instance (Show a) => Show (SomeRunsKey a)
+
+instance Eq (SomeRunsKey a) where
+  MkSomeRunsKey (MkSomeRun _ r1) == MkSomeRunsKey (MkSomeRun _ r2) =
+    r1.datetime == r2.datetime
+
+instance Ord (SomeRunsKey a) where
+  MkSomeRunsKey (MkSomeRun _ r1) <= MkSomeRunsKey (MkSomeRun _ r2) =
+    r1.datetime <= r2.datetime
+
+-- | Holds multiple runs.
+newtype SomeRuns a = MkSomeRuns (NESet (SomeRunsKey a))
+  deriving stock (Eq, Show)
 
 instance
   ( FromRational a,
@@ -291,36 +289,48 @@ instance
                 ": ",
                 fmtRunTimestamp ts2
               ]
-        Right _ -> pure $ MkSomeRuns $ fromList (y :| ys)
+        Right mp ->
+          pure $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
         where
-          eDuplicate = foldr go (Right $ Map.singleton r.datetime (r.datetime, r.title)) ys
+          -- The logic here is:
+          --
+          -- 1. Transform parsed List -> Map Timestamp SomeRunsKey
+          -- 2. If we don't receive any duplicates, transform
+          --      Map Timestamp SomeRunsKey -> Set SomeRunsKey
+          --
+          -- Why don't we just immediately used a set, rather than the
+          -- intermediate map? Because given some collision
+          --
+          --   (ts1, r1), (ts2, r2)
+          --
+          -- we want to report the timestamps ts1, ts2, and the titles if they
+          -- exist, r1.title and r2.title. But if we just used a
+          --
+          --   Set (SomeRunsKey a)
+          --
+          -- all we can do is check for a collision on the timestamp
+          -- (using its Eq/Ord). We would have no way to retrieve the original
+          -- ts2 and r2 because there is no `lookup :: a -> Set a -> Maybe a`.
+          --
+          -- Hence we use a Map to store the entire original, and if all goes
+          -- well, pass it to a Set.
+          eDuplicate =
+            foldr go (Right $ NEMap.singleton r.datetime (MkSomeRunsKey y)) ys
 
-          go :: SomeRun a -> SomeRunsAcc -> SomeRunsAcc
+          go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
           go _ (Left collision) = Left collision
-          go (MkSomeRun _ q) (Right mp) =
-            case Map.lookup q.datetime mp of
-              Nothing -> Right $ Map.insert q.datetime (q.datetime, q.title) mp
-              Just collision -> Left ((q.datetime, q.title), collision)
+          go someRun@(MkSomeRun _ q) (Right mp) =
+            case NEMap.lookup q.datetime mp of
+              Nothing -> Right $ NEMap.insert q.datetime (MkSomeRunsKey someRun) mp
+              Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
+                Left ((q.datetime, q.title), (collision.datetime, collision.title))
 
           fmtTitle Nothing = "<no title>"
           fmtTitle (Just t) = t
 
 type TitleAndTime = Tuple2 RunTimestamp (Maybe Text)
 
-type SomeRunsAcc =
+type SomeRunsAcc a =
   Either
     (Tuple2 TitleAndTime TitleAndTime)
-    (Map.Map RunTimestamp TitleAndTime)
-
--- | Converts arbitrary run to some distance unit.
-convertSomeDistances ::
-  forall d a.
-  ( FromInteger a,
-    Ord a,
-    Semifield a,
-    Show a,
-    SingI d
-  ) =>
-  SomeRuns a ->
-  NESeq (Run d a)
-convertSomeDistances (MkSomeRuns rs) = convertSomeDistance <$> rs
+    (NEMap RunTimestamp (SomeRunsKey a))

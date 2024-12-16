@@ -1,56 +1,7 @@
 MkSomeRuns
     ( fromList
-        ( MkSomeRun SKilometer
-            ( MkRun
-                { datetime = RunDay 2024-10-15
-                , distance = MkDistance
-                    ( UnsafePositive 5.0 ) Kilometer
-                , duration = MkDuration
-                    ( UnsafePositive 1230.0 ) Second
-                , labels = []
-                , title = Nothing
-                }
-            ) :|
-            [ MkSomeRun SMile
-                ( MkRun
-                    { datetime = RunLocalTime 2024-10-20 14:30:00
-                    , distance = MkDistance
-                        ( UnsafePositive 20.0 ) Mile
-                    , duration = MkDuration
-                        ( UnsafePositive 9654.0 ) Second
-                    , labels = [ "label1" ]
-                    , title = Nothing
-                    }
-                )
-            , MkSomeRun SKilometer
-                ( MkRun
-                    { datetime = RunZonedTime 2024-10-25 12:00:00 -0800
-                    , distance = MkDistance
-                        ( UnsafePositive 42.195 ) Kilometer
-                    , duration = MkDuration
-                        ( UnsafePositive 12000.0 ) Second
-                    , labels =
-                        [ "official"
-                        , "marathon"
-                        ]
-                    , title = Just "Some Marathon"
-                    }
-                )
-            , MkSomeRun SKilometer
-                ( MkRun
-                    { datetime = RunZonedTime 2024-10-28 12:00:00 -0800
-                    , distance = MkDistance
-                        ( UnsafePositive 42.195 ) Kilometer
-                    , duration = MkDuration
-                        ( UnsafePositive 18900.0 ) Second
-                    , labels =
-                        [ "official"
-                        , "marathon"
-                        ]
-                    , title = Just "Another marathon"
-                    }
-                )
-            , MkSomeRun SKilometer
+        ( MkSomeRunsKey
+            { unSomeRunsKey = MkSomeRun SKilometer
                 ( MkRun
                     { datetime = RunZonedTime 2024-10-10 12:00:00 -0800
                     , distance = MkDistance
@@ -64,6 +15,65 @@ MkSomeRuns
                     , title = Just "Some half marathon"
                     }
                 )
+            } :|
+            [ MkSomeRunsKey
+                { unSomeRunsKey = MkSomeRun SKilometer
+                    ( MkRun
+                        { datetime = RunDay 2024-10-15
+                        , distance = MkDistance
+                            ( UnsafePositive 5.0 ) Kilometer
+                        , duration = MkDuration
+                            ( UnsafePositive 1230.0 ) Second
+                        , labels = []
+                        , title = Nothing
+                        }
+                    )
+                }
+            , MkSomeRunsKey
+                { unSomeRunsKey = MkSomeRun SMile
+                    ( MkRun
+                        { datetime = RunLocalTime 2024-10-20 14:30:00
+                        , distance = MkDistance
+                            ( UnsafePositive 20.0 ) Mile
+                        , duration = MkDuration
+                            ( UnsafePositive 9654.0 ) Second
+                        , labels = [ "label1" ]
+                        , title = Nothing
+                        }
+                    )
+                }
+            , MkSomeRunsKey
+                { unSomeRunsKey = MkSomeRun SKilometer
+                    ( MkRun
+                        { datetime = RunZonedTime 2024-10-25 12:00:00 -0800
+                        , distance = MkDistance
+                            ( UnsafePositive 42.195 ) Kilometer
+                        , duration = MkDuration
+                            ( UnsafePositive 12000.0 ) Second
+                        , labels =
+                            [ "official"
+                            , "marathon"
+                            ]
+                        , title = Just "Some Marathon"
+                        }
+                    )
+                }
+            , MkSomeRunsKey
+                { unSomeRunsKey = MkSomeRun SKilometer
+                    ( MkRun
+                        { datetime = RunZonedTime 2024-10-28 12:00:00 -0800
+                        , distance = MkDistance
+                            ( UnsafePositive 42.195 ) Kilometer
+                        , duration = MkDuration
+                            ( UnsafePositive 18900.0 ) Second
+                        , labels =
+                            [ "official"
+                            , "marathon"
+                            ]
+                        , title = Just "Another marathon"
+                        }
+                    )
+                }
             ]
         )
     )

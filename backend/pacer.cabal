@@ -31,6 +31,7 @@ common common-lang
     NoImplicitPrelude
     OverloadedRecordDot
     OverloadedStrings
+    PatternSynonyms
     TypeAbstractions
     TypeFamilyDependencies
 

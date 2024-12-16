@@ -8,7 +8,6 @@ where
 
 import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON))
 import Data.Aeson qualified as Asn
-import Data.Foldable1 (Foldable1 (foldMap1))
 import Data.List (all)
 import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
@@ -30,6 +29,7 @@ import Pacer.Chart.Data.Run
     RunTimestamp,
     SomeRun (MkSomeRun),
     SomeRuns (MkSomeRuns),
+    SomeRunsKey (MkSomeRunsKey, unSomeRunsKey),
   )
 import Pacer.Chart.Data.Run qualified as Run
 import Pacer.Data.Distance (Distance (unDistance))
@@ -155,76 +155,80 @@ mkChart ::
   ChartRequest ->
   -- | Chart result. Nothing if no runs passed the request's filter.
   Either Text Chart
-mkChart (MkSomeRuns someRuns@((MkSomeRun @distUnit sd _) :<|| _)) request =
-  case filteredRuns of
-    Empty -> Left request.title
-    r :<| rs -> Right $ MkChart (mkChartData (r :<|| rs)) request.title
-  where
-    filteredRuns = filterRuns someRuns request.filters
+mkChart
+  ( MkSomeRuns
+      (SetToSeqNE someRuns@(MkSomeRunsKey (MkSomeRun @distUnit sd _) :<|| _))
+    )
+  request =
+    case filteredRuns of
+      Empty -> Left request.title
+      r :<| rs -> Right $ MkChart (mkChartData (r :<|| rs)) request.title
+    where
+      filteredRuns = filterRuns someRuns request.filters
 
-    finalDistUnit :: DistanceUnit
-    finalDistUnit = case sd of
-      SMeter -> Kilometer
-      SKilometer -> Kilometer
-      SMile -> Mile
+      finalDistUnit :: DistanceUnit
+      finalDistUnit = case sd of
+        SMeter -> Kilometer
+        SKilometer -> Kilometer
+        SMile -> Mile
 
-    mkChartData :: NESeq (SomeRun a) -> ChartData
-    mkChartData runs = case request.yAxis1 of
-      Nothing ->
-        let vals = withSingI sd $ foldMap1 toAccY runs
-            lbl = mkYLabel request.yAxis
-         in MkChartDataY (MkChartY vals lbl)
-      Just yAxis1 ->
-        let vals = withSingI sd $ foldMap1 (toAccY1 yAxis1) runs
-            lbl = mkYLabel request.yAxis
-            lbl1 = mkYLabel yAxis1
-         in MkChartDataY1 (MkChartY1 vals lbl lbl1)
+      mkChartData :: NESeq (SomeRun a) -> ChartData
+      mkChartData runs = case request.yAxis1 of
+        Nothing ->
+          let vals = withSingI sd $ foldMap1 toAccY runs
+              lbl = mkYLabel request.yAxis
+           in MkChartDataY (MkChartY vals lbl)
+        Just yAxis1 ->
+          let vals = withSingI sd $ foldMap1 (toAccY1 yAxis1) runs
+              lbl = mkYLabel request.yAxis
+              lbl1 = mkYLabel yAxis1
+           in MkChartDataY1 (MkChartY1 vals lbl lbl1)
 
-    mkYLabel :: YAxisType -> Text
-    mkYLabel = \case
-      YAxisDistance -> dstTxt
-      YAxisDuration -> "time"
-      YAxisPace -> "/" <> dstTxt
-      where
-        dstTxt = display $ withSingI sd $ fromSingI @_ @distUnit
-
-    toAccY :: SomeRun a -> AccY
-    toAccY sr@(MkSomeRun _ r) = NESeq.singleton (r.datetime, toY sr)
-
-    toAccY1 :: YAxisType -> SomeRun a -> AccY1
-    toAccY1 yAxisType sr@(MkSomeRun _ r) =
-      NESeq.singleton (r.datetime, toY sr, toYHelper yAxisType sr)
-
-    toY :: SomeRun a -> Double
-    toY = toYHelper request.yAxis
-
-    toYHelper :: YAxisType -> SomeRun a -> Double
-    toYHelper axisType (MkSomeRun s r) = case axisType of
-      YAxisDistance ->
-        withSingI s $ toℝ $ case finalDistUnit of
-          -- NOTE: [Brackets with OverloadedRecordDot]
-          Meter -> (Run.convertDistance @Kilometer r).distance.unDistance
-          Kilometer -> (Run.convertDistance @Kilometer r).distance.unDistance
-          Mile -> (Run.convertDistance @Mile r).distance.unDistance
-      YAxisDuration -> toℝ r.duration.unDuration
-      YAxisPace ->
-        withSingI s $ toℝ $ case finalDistUnit of
-          Meter -> runToPace (Run.convertDistance @Kilometer r)
-          Kilometer -> runToPace (Run.convertDistance @Kilometer r)
-          Mile -> runToPace (Run.convertDistance @Kilometer r)
+      mkYLabel :: YAxisType -> Text
+      mkYLabel = \case
+        YAxisDistance -> dstTxt
+        YAxisDuration -> "time"
+        YAxisPace -> "/" <> dstTxt
         where
-          runToPace runUnits =
-            let pace =
-                  Derive.derivePace
-                    runUnits.distance
-                    ((.unPositive) <$> runUnits.duration)
-             in pace.unPace.unDuration
+          dstTxt = display $ withSingI sd $ fromSingI @_ @distUnit
 
-filterRuns :: NESeq (SomeRun a) -> List FilterExpr -> Seq (SomeRun a)
-filterRuns rs filters = NESeq.filter filterRun rs
+      toAccY :: SomeRun a -> AccY
+      toAccY sr@(MkSomeRun _ r) = NESeq.singleton (r.datetime, toY sr)
+
+      toAccY1 :: YAxisType -> SomeRun a -> AccY1
+      toAccY1 yAxisType sr@(MkSomeRun _ r) =
+        NESeq.singleton (r.datetime, toY sr, toYHelper yAxisType sr)
+
+      toY :: SomeRun a -> Double
+      toY = toYHelper request.yAxis
+
+      toYHelper :: YAxisType -> SomeRun a -> Double
+      toYHelper axisType (MkSomeRun s r) = case axisType of
+        YAxisDistance ->
+          withSingI s $ toℝ $ case finalDistUnit of
+            -- NOTE: [Brackets with OverloadedRecordDot]
+            Meter -> (Run.convertDistance @Kilometer r).distance.unDistance
+            Kilometer -> (Run.convertDistance @Kilometer r).distance.unDistance
+            Mile -> (Run.convertDistance @Mile r).distance.unDistance
+        YAxisDuration -> toℝ r.duration.unDuration
+        YAxisPace ->
+          withSingI s $ toℝ $ case finalDistUnit of
+            Meter -> runToPace (Run.convertDistance @Kilometer r)
+            Kilometer -> runToPace (Run.convertDistance @Kilometer r)
+            Mile -> runToPace (Run.convertDistance @Kilometer r)
+          where
+            runToPace runUnits =
+              let pace =
+                    Derive.derivePace
+                      runUnits.distance
+                      ((.unPositive) <$> runUnits.duration)
+               in pace.unPace.unDuration
+
+filterRuns :: NESeq (SomeRunsKey a) -> List FilterExpr -> Seq (SomeRun a)
+filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
   where
-    filterRun :: SomeRun a -> Bool
+    filterRun :: SomeRunsKey a -> Bool
     filterRun r = all (eval (applyFilter r)) filters
 
-    applyFilter :: SomeRun a -> FilterType -> Bool
-    applyFilter (MkSomeRun _ r) (FilterLabel lbl) = lbl `elem` r.labels
+    applyFilter :: SomeRunsKey a -> FilterType -> Bool
+    applyFilter (MkSomeRunsKey (MkSomeRun _ r)) (FilterLabel lbl) = lbl `elem` r.labels

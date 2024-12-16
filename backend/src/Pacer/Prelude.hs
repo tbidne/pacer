@@ -2,6 +2,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE ViewPatterns #-}
 
 {- ORMOLU_DISABLE -}
 
@@ -61,6 +62,7 @@ module Pacer.Prelude
     todo,
 
     -- * Misc
+    pattern SetToSeqNE,
     errorLeft,
     errorMapLeft,
     failLeft,
@@ -115,6 +117,7 @@ import Data.Foldable as X
     length,
     traverse_,
   )
+import Data.Foldable1 as X (Foldable1 (foldMap1, toNonEmpty))
 import Data.Function as X (const, flip, id, ($), (&))
 import Data.Functor as X
   ( Functor (fmap),
@@ -153,6 +156,8 @@ import Data.Semigroup as X (Semigroup ((<>)))
 import Data.Sequence as X (Seq ((:<|), (:|>)))
 import Data.Sequence.NonEmpty as X (NESeq ((:<||), (:||>)))
 import Data.Sequence.NonEmpty qualified as NESeq
+import Data.Set.NonEmpty as X (NESet)
+import Data.Set.NonEmpty qualified as NESet
 import Data.Singletons as X
   ( Sing,
     SingI (sing),
@@ -366,3 +371,11 @@ readFileUtf8 = decodeUtf8ThrowM <=< readBinaryFileIO
 
 writeFileUtf8 :: OsPath -> Text -> IO ()
 writeFileUtf8 p = writeBinaryFileIO p . encodeUtf8
+
+-- | Bidirectional pattern synonym for NESet <-> NESeq
+pattern SetToSeqNE :: (Ord a) => NESeq a -> NESet a
+pattern SetToSeqNE x <- (NESeq.fromList . NESet.toList -> x)
+  where
+    SetToSeqNE x = NESet.fromList (toNonEmpty x)
+
+{-# COMPLETE SetToSeqNE #-}
