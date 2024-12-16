@@ -39,7 +39,7 @@ testParseExampleToml = testProp1 "testParseExampleToml" desc $ do
       failure
   where
     desc = "Parses example toml"
-    path = [ospPathSep|../data/example_runs.toml|]
+    path = [ospPathSep|data/input/example/runs.toml|]
 
     expected =
       MkSomeRuns

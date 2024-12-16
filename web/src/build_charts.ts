@@ -1,5 +1,5 @@
 import { Chart, ChartOptions } from "chart.js/auto";
-import * as charts from "./charts.json";
+import * as charts from "../data/input/charts.json";
 import { appendCanvasId, mkChartOptions, mkChartOptions2Y } from "./utils";
 
 function mkDataSet(x: { values: number[]; label: string }) {

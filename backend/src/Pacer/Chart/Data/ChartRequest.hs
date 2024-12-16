@@ -133,7 +133,7 @@ instance DecodeTOML ChartRequest where
         }
 
 -- | List of chart requests.
-newtype ChartRequests = MkChartRequests (List ChartRequest)
+newtype ChartRequests = MkChartRequests {unChartRequests :: Seq ChartRequest}
   deriving stock (Eq, Show)
 
 instance DecodeTOML ChartRequests where

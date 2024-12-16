@@ -17,11 +17,12 @@ module Pacer.Config.Args.Command
   )
 where
 
-import Options.Applicative
-  ( Parser,
-  )
+import FileSystem.OsPath qualified as OsPath
+import Options.Applicative (Parser)
 import Options.Applicative qualified as OA
 import Options.Applicative.Types (ReadM)
+import Pacer.Chart (ChartParams (MkChartParams), ChartParamsArgs)
+import Pacer.Chart qualified as Chart
 import Pacer.Class.Parser qualified as P
 import Pacer.Config.Args.Utils qualified as Utils
 import Pacer.Data.Distance (SomeDistance)
@@ -31,7 +32,9 @@ import Pacer.Prelude
 
 -- | Possible commands
 data Command
-  = -- | Given 2 of distance, duration, and pace, derives the 3rd.
+  = -- | Generate charts
+    Chart ChartParamsArgs
+  | -- | Given 2 of distance, duration, and pace, derives the 3rd.
     Derive DistanceDurationPaceArgs
   | -- | Scales a value.
     Scale DistanceDurationPaceArgs PDouble
@@ -120,11 +123,13 @@ cmdParser :: Parser Command
 cmdParser =
   OA.hsubparser
     ( mconcat
-        [ Utils.mkCommand "derive" deriveParser deriveTxt,
+        [ Utils.mkCommand "chart" chartParser chartTxt,
+          Utils.mkCommand "derive" deriveParser deriveTxt,
           Utils.mkCommand "scale" scaleParser scaleTxt
         ]
     )
   where
+    chartTxt = Utils.mkCommandDesc "Generates charts json file"
     deriveTxt =
       Utils.mkCommandDesc
         $ mconcat
@@ -136,6 +141,7 @@ cmdParser =
       Utils.mkCommandDesc
         "Scales a quantity. Requires exactly one quantity and the scale factor."
 
+    chartParser = Chart <$> chartParamsArgsParser
     deriveParser = Derive <$> convertDistanceDurationPaceArgsParser
     scaleParser =
       Scale
@@ -214,6 +220,82 @@ convertPaceOptUnitsParser = paceOptUnitsParser helpTxt
           "given, we use the distance's units. Only kilometers and miles are ",
           "allowed."
         ]
+
+chartParamsArgsParser :: Parser ChartParamsArgs
+chartParamsArgsParser = do
+  chartRequestsPath <- chartRequestsPathParser
+  runsPath <- runsPathParser
+  outJsonPath <- outJsonPathParser
+
+  pure
+    $ MkChartParams
+      { chartRequestsPath,
+        runsPath,
+        outJsonPath
+      }
+
+chartRequestsPathParser :: Parser (Maybe OsPath)
+chartRequestsPathParser =
+  OA.optional
+    $ OA.option
+      read
+      ( mconcat
+          [ OA.short 'c',
+            OA.long "chart-requests",
+            OA.metavar "PATH",
+            Utils.mkHelp
+              $ mconcat
+                [ "Path to chart-requests toml file. If not given, defaults to '",
+                  OsPath.decodeLenient Chart.defChartRequestsPath,
+                  "'"
+                ]
+          ]
+      )
+  where
+    read :: ReadM OsPath
+    read = OA.str >>= OsPath.encodeFail
+
+runsPathParser :: Parser (Maybe OsPath)
+runsPathParser =
+  OA.optional
+    $ OA.option
+      read
+      ( mconcat
+          [ OA.short 'r',
+            OA.long "runs",
+            OA.metavar "PATH",
+            Utils.mkHelp
+              $ mconcat
+                [ "Path to runs toml file. If not given, defaults to '",
+                  OsPath.decodeLenient Chart.defRunsPath,
+                  "'"
+                ]
+          ]
+      )
+  where
+    read :: ReadM OsPath
+    read = OA.str >>= OsPath.encodeFail
+
+outJsonPathParser :: Parser (Maybe OsPath)
+outJsonPathParser =
+  OA.optional
+    $ OA.option
+      read
+      ( mconcat
+          [ OA.short 'j',
+            OA.long "json",
+            OA.metavar "PATH",
+            Utils.mkHelp
+              $ mconcat
+                [ "Path to generated json file. If not given, defaults to '",
+                  OsPath.decodeLenient Chart.defOutJsonPath,
+                  "'"
+                ]
+          ]
+      )
+  where
+    read :: ReadM OsPath
+    read = OA.str >>= OsPath.encodeFail
 
 scalePaceOptUnitsParser :: Parser PaceOptUnits
 scalePaceOptUnitsParser = paceOptUnitsParser helpTxt

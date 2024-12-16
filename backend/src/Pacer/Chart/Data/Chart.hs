@@ -12,6 +12,7 @@ import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Pacer.Chart.Data.ChartRequest
   ( ChartRequest (title, yAxis, yAxis1),
+    ChartRequests (unChartRequests),
     YAxisType
       ( YAxisDistance,
         YAxisDuration,
@@ -55,7 +56,7 @@ instance ToJSON Chart where
   toJSON c =
     Asn.object
       [ "title" .= c.title,
-        "values" .= c.chartData
+        "data" .= c.chartData
       ]
 
 -- | Data for a chart with a single Y axis.
@@ -124,9 +125,9 @@ mkCharts ::
     ToReal a
   ) =>
   SomeRuns a ->
-  List ChartRequest ->
-  List Chart
-mkCharts runs = fmap (mkChart runs)
+  ChartRequests ->
+  Seq Chart
+mkCharts runs = fmap (mkChart runs) . (.unChartRequests)
 
 -- NOTE: HLint incorrectly thinks some brackets are unnecessary.
 -- See NOTE: [Brackets with OverloadedRecordDot].
@@ -190,7 +191,7 @@ mkChart (MkSomeRuns someRuns@((MkSomeRun @distUnit sd _) :<|| _)) request =
     toY = toYHelper request.yAxis
 
     toYHelper :: YAxisType -> SomeRun a -> Double
-    toYHelper axisType (MkSomeRun @distUnit2 s r) = case axisType of
+    toYHelper axisType (MkSomeRun s r) = case axisType of
       YAxisDistance ->
         withSingI s $ toℝ $ case finalDistUnit of
           -- NOTE: [Brackets with OverloadedRecordDot]

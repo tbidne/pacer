@@ -25,6 +25,10 @@ module Pacer.Prelude
     TextBuilder,
     builderToLazyText,
 
+    -- * File IO
+    readFileUtf8,
+    writeFileUtf8,
+
     -- * Singletons
     fromSingI,
 
@@ -59,6 +63,8 @@ module Pacer.Prelude
     -- * Misc
     errorLeft,
     errorMapLeft,
+    failLeft,
+    failMapLeft,
     readFail,
 
     -- Prelude re-exports
@@ -167,11 +173,12 @@ import Data.Tuple as X (fst, snd)
 #if MIN_VERSION_base(4, 20, 0)
 import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
 #endif
+import Data.Text.Encoding (encodeUtf8)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word32)
-import FileSystem.IO as X (readBinaryFileIO)
-import FileSystem.OsPath as X (OsPath, ospPathSep)
+import FileSystem.IO as X (readBinaryFileIO, writeBinaryFileIO)
+import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import FileSystem.UTF8 as X (decodeUtf8ThrowM)
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum)
 import GHC.Err as X (error, undefined)
@@ -254,12 +261,19 @@ import System.IO as X (IO, putStrLn)
 import Text.Read as X (readMaybe)
 import Text.Read qualified as TR
 
-errorMapLeft :: (HasCallStack) => (a -> String) -> Either a c -> c
+errorMapLeft :: (HasCallStack) => (a -> String) -> Either a b -> b
 errorMapLeft f = errorLeft . first f
 
 errorLeft :: (HasCallStack) => Either String a -> a
 errorLeft (Left str) = error str
 errorLeft (Right x) = x
+
+failMapLeft :: (MonadFail m) => (a -> String) -> Either a b -> m b
+failMapLeft f = failLeft . first f
+
+failLeft :: (MonadFail m) => Either String a -> m a
+failLeft (Left str) = fail str
+failLeft (Right x) = pure x
 
 showt :: (Show a) => a -> Text
 showt = packText . show
@@ -346,3 +360,9 @@ readFail tyStr s = case TR.readMaybe s of
 
 listToNESeq :: (HasCallStack) => List a -> NESeq a
 listToNESeq = NESeq.fromList . NE.fromList
+
+readFileUtf8 :: OsPath -> IO Text
+readFileUtf8 = decodeUtf8ThrowM <=< readBinaryFileIO
+
+writeFileUtf8 :: OsPath -> Text -> IO ()
+writeFileUtf8 p = writeBinaryFileIO p . encodeUtf8

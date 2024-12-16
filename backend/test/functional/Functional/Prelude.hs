@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Functional.Prelude
   ( module X,
@@ -10,10 +11,16 @@ module Functional.Prelude
     runMultiArgs,
     runArgs,
     runException,
+
+    -- * Golden
+    GoldenParams (..),
+    testGoldenParams,
+    testChart,
   )
 where
 
 import Data.Word (Word8)
+import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
   ( Gen,
     Property,
@@ -30,11 +37,13 @@ import Hedgehog as X
     (/==),
     (===),
   )
+import Pacer.Chart qualified as Chart
 import Pacer.Driver (runAppWith)
 import Pacer.Prelude as X hiding (IO)
 import System.Environment (withArgs)
 import System.IO as X (IO)
 import Test.Tasty as X (TestName, TestTree, testGroup)
+import Test.Tasty.Golden as X (goldenVsFile)
 import Test.Tasty.HUnit as X
   ( Assertion,
     assertBool,
@@ -86,3 +95,61 @@ runException desc expected args = testCase desc $ do
   case eResult of
     Right r -> assertFailure $ unpackText $ "Expected exception, received: " <> r
     Left ex -> expected @=? displayExceptiont ex
+
+data GoldenParams = MkGoldenParams
+  { testDesc :: TestName,
+    testName :: OsPath,
+    runner :: IO ByteString
+  }
+
+-- | Given a text description and testName OsPath, creates a golden test.
+-- Expects the following to exist:
+--
+-- - @data\/testName_runs.toml@
+-- - @data\/testName_chart-requests.toml@
+-- - @goldens\/testName.golden@
+--
+-- Note that, confusingly, the 'TestName' type is __not__ what we are
+-- referring to as testName. Rather, tasty takes in a string test
+-- __description__, which has type 'TestName'. We call this description
+--
+-- By 'test name', we refer to the actual function name e.g. in
+--
+-- @
+-- testFoo = testChart "some description" [osp|testFoo|]
+-- @
+--
+-- testFoo is the 'test name'.
+testChart :: TestName -> OsPath -> TestTree
+testChart desc testName = testGoldenParams params
+  where
+    params =
+      MkGoldenParams
+        { testDesc = desc,
+          testName,
+          runner =
+            toStrictByteString
+              <$> Chart.createChartsJsonBS
+                (Just runsPath)
+                (Just chartRequestsPath)
+        }
+    basePath = [ospPathSep|test/functional/data|]
+    chartRequestsPath = basePath </> testName <> [osp|_chart-requests.toml|]
+    runsPath = basePath </> testName <> [osp|_runs.toml|]
+
+testGoldenParams :: GoldenParams -> TestTree
+testGoldenParams goldenParams =
+  goldenVsFile goldenParams.testDesc goldenPath actualPath $ do
+    bs <- goldenParams.runner
+    writeActualFile bs
+  where
+    outputPathStart =
+      FS.OsPath.unsafeDecode
+        $ [ospPathSep|test/functional/goldens|]
+        </> goldenParams.testName
+
+    writeActualFile :: ByteString -> IO ()
+    writeActualFile = writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
+
+    actualPath = outputPathStart <> ".actual"
+    goldenPath = outputPathStart <> ".golden"

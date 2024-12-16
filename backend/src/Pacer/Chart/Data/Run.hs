@@ -145,7 +145,6 @@ instance
       == toMeters y
 
 instance (Show a) => Show (SomeRun a) where
-  -- show (MkSomeRun s r) = todo
   showsPrec i (MkSomeRun s r) =
     showParen
       (i >= 11)

@@ -29,57 +29,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: haskell-actions/setup@v2
+      - name: Setup haskell
+        uses: haskell-actions/setup@v2
         with:
           ghc-version: ${{ matrix.ghc }}
-
-      - name: Configure
-        run: cabal configure --enable-tests --ghc-options -Werror
-
-      - name: Compile
-        run: cabal build pacer
-
-      - name: Unit tests
-        run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000'
-
-      - name: Functional tests
-        run: cabal test pacer:functional
-  nix:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "macos-latest"
-          - "ubuntu-latest"
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup nix
-        uses: cachix/install-nix-action@v25
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - name: Compile & Test
-        run: nix build
-  web:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "macos-latest"
-          - "ubuntu-latest"
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 23.x
 
-      - name: Install dependencies
+      - name: Configure backend
+        run: cabal configure --enable-tests --ghc-options -Werror
+
+      - name: Compile backend
+        run: cabal build pacer
+
+      - name: Backend Unit tests
+        run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000'
+
+      - name: Backend functional tests
+        run: cabal test pacer:functional
+
+      - name: Generate charts json with backend
+        run: |
+          cabal run pacer -- chart \
+            --runs backend/data/input/example/runs.toml \
+            --chart-requests backend/data/input/example/chart-requests.toml
+
+      - name: Install web dependencies
         run: |
           cd web
           npm install

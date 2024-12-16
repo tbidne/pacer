@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Pacer.Chart.Data.ChartRequest (tests) where
@@ -23,7 +24,7 @@ testParseExampleToml = testProp1 "testParseExampleToml" desc $ do
       failure
   where
     desc = "Parses example toml"
-    path = [ospPathSep|../data/example_chart_requests.toml|]
+    path = [ospPathSep|data/input/example/chart-requests.toml|]
 
     expected =
       MkChartRequests
