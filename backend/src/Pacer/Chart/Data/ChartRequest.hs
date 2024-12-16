@@ -56,7 +56,9 @@ newtype FilterType
 instance Parser FilterType where
   parser = parseLabel
     where
-      parseLabel = FilterLabel <$> MP.takeWhile1P Nothing (/= ')')
+      parseLabel = do
+        void $ MPC.string "label "
+        FilterLabel <$> MP.takeWhile1P Nothing (/= ')')
 
 -- | Expressions upon which we can filter
 data Expr a
