@@ -2,18 +2,20 @@
 title = 'Runs by distance'
 y-axis = 'distance'
 
-# Only takes runs with label 'label1'
+# Only takes runs with label 'marathon'
 [[charts]]
-filters = ['label1']
-title = 'Runs by duration'
+title = 'Marathons'
+filters = ['marathon']
 y-axis = 'duration'
-y-axis1 = 'distance'
 
-# Only takes runs with all of the following conditions:
-#
-#   1. Has label 'label1'
-#   2. Has label 'label2' OR does not have label 'label3'
+# Takes runs w/ label 'official' but __not__ marathon.
 [[charts]]
-filters = ['label1', 'or (label2) (not (label3))']
-title = 'Runs by pace'
+title = 'Official non-marathons'
+filters = ['official', 'not (marathon)']
+y-axis = 'pace'
+
+# Takes half-marathon and marathon
+[[charts]]
+title = 'Marathons and half-marathons'
+filters = ['or (half-marathon) (marathon)']
 y-axis = 'pace'

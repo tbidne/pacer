@@ -10,7 +10,8 @@ tests =
   testGroup
     "Pacer.Chart"
     [ testExampleChart,
-      testSimple
+      testSimple,
+      testFilter
     ]
 
 testExampleChart :: TestTree
@@ -31,3 +32,6 @@ testExampleChart = testGoldenParams params
 
 testSimple :: TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]
+
+testFilter :: TestTree
+testFilter = testChart "Filter example" [osp|testFilter|]

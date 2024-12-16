@@ -168,7 +168,7 @@ import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder qualified as TLB
 import Data.Time.Calendar as X (Day)
 import Data.Time.LocalTime as X (LocalTime, ZonedTime)
-import Data.Traversable as X (Traversable (sequenceA, traverse))
+import Data.Traversable as X (Traversable (sequenceA, traverse), for)
 import Data.Tuple as X (fst, snd)
 #if MIN_VERSION_base(4, 20, 0)
 import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)

@@ -3,6 +3,7 @@ module Pacer.Chart.Data.ChartRequest
     ChartRequest (..),
     FilterType (..),
     Expr (..),
+    eval,
     FilterExpr,
     YAxisType (..),
 
@@ -65,7 +66,19 @@ data Expr a
     Not (Expr a) -- "not (expr)"
   | -- | "or (expr) (expr)""
     Or (Expr a) (Expr a)
+  | -- | To keep the expression simple, we don't actually parse AND
+    --  (AND is represented by multiple filters). Its inclusion here is purely
+    -- to represent Xor.
+    And (Expr a) (Expr a)
   deriving stock (Eq, Show)
+
+eval :: (a -> Bool) -> Expr a -> Bool
+eval p = go
+  where
+    go (Atom x) = p x
+    go (Not e) = not (go e)
+    go (Or e1 e2) = go e1 || go e2
+    go (And e1 e2) = go e1 && go e2
 
 -- | Alias for a filter expression.
 type FilterExpr = Expr FilterType
@@ -77,6 +90,7 @@ instance (Parser a) => Parser (Expr a) where
         MP.choice
           [ parseNot,
             parseOr,
+            parseXor,
             parseAtom
           ]
 
@@ -97,6 +111,14 @@ instance (Parser a) => Parser (Expr a) where
         f2 <- parseFilter
         MPC.char ')'
         pure $ Or f1 f2
+
+      parseXor = do
+        MPC.string "xor ("
+        f1 <- parseFilter
+        MPC.string ") ("
+        f2 <- parseFilter
+        MPC.char ')'
+        pure $ Or (And f1 (Not f2)) (And (Not f1) f2)
 
       parseAtom = Atom <$> P.parser
 

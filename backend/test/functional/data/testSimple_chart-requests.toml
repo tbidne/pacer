@@ -2,18 +2,11 @@
 title = 'Runs by distance'
 y-axis = 'distance'
 
-# Only takes runs with label 'label1'
 [[charts]]
-filters = ['label1']
 title = 'Runs by duration'
 y-axis = 'duration'
 y-axis1 = 'distance'
 
-# Only takes runs with all of the following conditions:
-#
-#   1. Has label 'label1'
-#   2. Has label 'label2' OR does not have label 'label3'
 [[charts]]
-filters = ['label1', 'or (label2) (not (label3))']
 title = 'Runs by pace'
 y-axis = 'pace'

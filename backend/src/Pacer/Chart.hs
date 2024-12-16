@@ -119,7 +119,17 @@ createChartSeq runsPath chartRequestsPath = do
   runs <- readDecodeToml @(SomeRuns Double) runsPath
   chartRequests <- readDecodeToml @ChartRequests chartRequestsPath
 
-  pure $ Chart.mkCharts runs chartRequests
+  let titlesOrCharts = Chart.mkCharts runs chartRequests
+
+  for titlesOrCharts $ \case
+    Right c -> pure c
+    Left t ->
+      throwText
+        $ mconcat
+          [ "Chart with title '",
+            t,
+            "' is empty due to all runs being filtered out."
+          ]
   where
     readDecodeToml :: forall a. (DecodeTOML a) => OsPath -> IO a
     readDecodeToml = failMapLeft displayException . decode <=< readFileUtf8
