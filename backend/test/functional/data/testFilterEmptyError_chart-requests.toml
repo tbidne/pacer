@@ -1,0 +1,24 @@
+[[charts]]
+title = 'Chart 1'
+y-axis = 'distance'
+
+[[charts]]
+title = 'Chart 2'
+y-axis = 'duration'
+y-axis1 = 'distance'
+filters = ['label1']
+
+[[charts]]
+title = 'Chart 3'
+y-axis = 'pace'
+filters = ['label1', 'or (label2) (label3)']
+
+[[charts]]
+title = 'Chart 4'
+y-axis = 'pace'
+filters = ['label2', 'label4']
+
+[[charts]]
+title = 'Chart 5'
+filters = ['xor (label3) (label4)']
+y-axis = 'pace'

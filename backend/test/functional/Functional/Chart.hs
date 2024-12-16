@@ -11,7 +11,8 @@ tests =
     "Pacer.Chart"
     [ testExampleChart,
       testSimple,
-      testFilter
+      testFilter,
+      testFilterEmptyError
     ]
 
 testExampleChart :: TestTree
@@ -35,3 +36,8 @@ testSimple = testChart "Simple example" [osp|testSimple|]
 
 testFilter :: TestTree
 testFilter = testChart "Filter example" [osp|testFilter|]
+
+testFilterEmptyError :: TestTree
+testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]
+  where
+    desc = "Filter empty error"

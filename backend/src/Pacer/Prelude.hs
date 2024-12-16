@@ -87,7 +87,7 @@ import Control.Exception as X
     throwIO,
     try,
   )
-import Control.Exception.Utils as X (TextException, throwText)
+import Control.Exception.Utils as X (TextException, throwText, trySync)
 import Control.Monad as X
   ( Monad ((>>=)),
     forever,
@@ -179,7 +179,7 @@ import Data.Void as X (Void, absurd)
 import Data.Word as X (Word32)
 import FileSystem.IO as X (readBinaryFileIO, writeBinaryFileIO)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
-import FileSystem.UTF8 as X (decodeUtf8ThrowM)
+import FileSystem.UTF8 as X (decodeUtf8ThrowM, encodeUtf8)
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum)
 import GHC.Err as X (error, undefined)
 import GHC.Exception (errorCallWithCallStackException)

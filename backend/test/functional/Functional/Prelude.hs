@@ -140,16 +140,21 @@ testChart desc testName = testGoldenParams params
 testGoldenParams :: GoldenParams -> TestTree
 testGoldenParams goldenParams =
   goldenVsFile goldenParams.testDesc goldenPath actualPath $ do
-    bs <- goldenParams.runner
-    writeActualFile bs
+    trySync goldenParams.runner >>= \case
+      Left err -> writeActualFile $ exToBs err
+      Right bs -> writeActualFile bs
   where
     outputPathStart =
       FS.OsPath.unsafeDecode
         $ [ospPathSep|test/functional/goldens|]
         </> goldenParams.testName
 
+    exToBs = encodeUtf8 . displayExceptiont
+
     writeActualFile :: ByteString -> IO ()
-    writeActualFile = writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
+    writeActualFile =
+      writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
+        . (<> "\n")
 
     actualPath = outputPathStart <> ".actual"
     goldenPath = outputPathStart <> ".golden"
