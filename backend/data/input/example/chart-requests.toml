@@ -7,6 +7,7 @@ y-axis = 'distance'
 title = 'Marathons'
 filters = ['label marathon']
 y-axis = 'duration'
+y1-axis = 'pace'
 
 # Takes runs w/ label 'official' but __not__ marathon.
 [[charts]]

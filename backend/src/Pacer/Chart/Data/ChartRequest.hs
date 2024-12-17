@@ -147,7 +147,7 @@ instance DecodeTOML ChartRequest where
     filters <- Utils.getFieldOptArrayOf "filters"
     title <- TOML.getFieldWith tomlDecoder "title"
     yAxis <- TOML.getFieldWith tomlDecoder "y-axis"
-    yAxis1 <- TOML.getFieldOptWith tomlDecoder "y-axis1"
+    yAxis1 <- TOML.getFieldOptWith tomlDecoder "y1-axis"
     pure
       $ MkChartRequest
         { filters,

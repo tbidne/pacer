@@ -5,7 +5,7 @@ y-axis = 'distance'
 [[charts]]
 title = 'Runs by duration'
 y-axis = 'duration'
-y-axis1 = 'distance'
+y1-axis = 'distance'
 
 [[charts]]
 title = 'Runs by pace'

@@ -13,7 +13,7 @@ MkChartRequests
                 ]
             , title = "Marathons"
             , yAxis = YAxisDuration
-            , yAxis1 = Nothing
+            , yAxis1 = Just YAxisPace
             }
         , MkChartRequest
             { filters =
