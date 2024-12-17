@@ -15,20 +15,21 @@ function mkDataSet(x: { values: number[]; label: string }) {
  * We widen charts to charts_typed since if charts.json does not have any
  * charts with a y1 axis, ts will infer the y1 prop does not exist,
  * hence the y1 access will fail.
-*/
+ */
 const charts_typed = charts as {
   data: {
     x: string[];
     y: {
-      label: string; values: number[];
+      label: string;
+      values: number[];
     };
     y1: {
-      label: string; values: number[];
+      label: string;
+      values: number[];
     };
   };
   title: string;
 }[];
-
 
 for (var i = 0; i <= charts_typed.length; i++) {
   const elemId = `chart${i}`;

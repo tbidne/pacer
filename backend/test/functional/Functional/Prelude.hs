@@ -16,11 +16,12 @@ module Functional.Prelude
     GoldenParams (..),
     testGoldenParams,
     testChart,
+    testChartPosix,
   )
 where
 
 import Data.Word (Word8)
-import FileSystem.OsPath (unsafeDecode)
+import FileSystem.OsPath (unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
   ( Gen,
@@ -129,8 +130,31 @@ data GoldenParams = MkGoldenParams
 --
 -- testFoo is the 'test name'.
 testChart :: TestName -> OsPath -> IO OsPath -> TestTree
-testChart testDesc testName getTestDir = testGoldenParams getTestDir params
+testChart = testChartPosix False
+
+-- | Like 'testChart', except it includes to determine if we take the current
+-- OS into account.
+testChartPosix ::
+  -- | If true, we will append posix/windows to the end of the golden test
+  -- path e.g. testName_posix.golden.
+  Bool ->
+  -- | Test description.
+  TestName ->
+  -- | Test name.
+  OsPath ->
+  -- | Retrieves the current directory.
+  IO OsPath ->
+  TestTree
+testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestDir params
   where
+    -- This is the path to the golden files. If osSwitch is false, then it
+    -- is the same as testName e.g. testName.golden. If the switch is active,
+    -- then we need to append the os e.g. testName_posix.golden.
+    goldenName =
+      if osSwitch
+        then testName <> unsafeEncode ("_" ++ posixWindowsStr)
+        else testName
+
     params =
       MkGoldenParams
         { mkArgs = \testDir ->
@@ -143,7 +167,7 @@ testChart testDesc testName getTestDir = testGoldenParams getTestDir params
               unsafeDecode (mkJsonPath testDir)
             ],
           testDesc,
-          testName,
+          testName = goldenName,
           -- NOTE: It would be nice to test the txt output here i.e. the
           -- second arg. Alas, it includes the path of the output json file,
           -- which is non-deterministic, as it includes the tmp dir.
@@ -153,6 +177,8 @@ testChart testDesc testName getTestDir = testGoldenParams getTestDir params
           resultToBytes = \path _ -> readBinaryFileIO . mkJsonPath $ path
         }
 
+    -- These are always based on the testName, since all Os's share the same
+    -- CLI inputs.
     basePath = [ospPathSep|test/functional/data|]
     chartRequestsPath = unsafeDecode $ basePath </> testName <> [osp|_chart-requests.toml|]
     runsPath = unsafeDecode $ basePath </> testName <> [osp|_runs.toml|]

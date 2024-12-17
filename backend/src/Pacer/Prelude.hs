@@ -63,6 +63,13 @@ module Pacer.Prelude
     -- * Dev / Debug
     todo,
 
+    -- * OS
+    Os (..),
+    currentOs,
+    currentOsStr,
+    isPosix,
+    posixWindowsStr,
+
     -- * Misc
     pattern SetToSeqNE,
     errorLeft,
@@ -112,6 +119,7 @@ import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.ByteString.Lazy qualified as BSL
 import Data.Char as X (Char)
+import Data.Char qualified as Ch
 import Data.Either as X (Either (Left, Right))
 import Data.Eq as X (Eq ((/=), (==)))
 import Data.Foldable as X
@@ -393,3 +401,32 @@ knownExceptions :: List ExceptionProxy
 knownExceptions =
   [ MkExceptionProxy @TextException Proxy
   ]
+
+data Os
+  = Linux
+  | Osx
+  | Windows
+  deriving stock (Eq, Show)
+
+currentOs :: Os
+#if WINDOWS
+currentOs = Windows
+#elif OSX
+currentOs = Osx
+#else
+currentOs = Linux
+#endif
+
+currentOsStr :: String
+currentOsStr = Ch.toLower <$> show currentOs
+
+isPosix :: Bool
+isPosix = case currentOs of
+  Windows -> False
+  _ -> True
+
+posixWindowsStr :: String
+posixWindowsStr =
+  if isPosix
+    then "posix"
+    else "windows"

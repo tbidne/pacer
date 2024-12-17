@@ -35,6 +35,15 @@ common common-lang
     TypeAbstractions
     TypeFamilyDependencies
 
+  if os(windows)
+    cpp-options: -DWINDOWS
+
+  elif os(osx)
+    cpp-options: -DOSX -DPOSIX
+
+  else
+    cpp-options: -DLINUX -DPOSIX
+
   default-language:   GHC2021
 
 library

@@ -69,12 +69,11 @@ jobs:
           path: |
             backend/test/functional/goldens
 
+      # yamllint disable rule:line-length
       - name: Generate charts json with backend
         run: |
-          cabal run pacer -- chart \
-            --runs backend/data/input/example/runs.toml \
-            --chart-requests backend/data/input/example/chart-requests.toml
-
+          cabal run pacer -- chart --runs backend/data/input/example/runs.toml --chart-requests backend/data/input/example/chart-requests.toml
+      # yamllint enable rule:line-length
       - name: Install web dependencies
         run: |
           cd web

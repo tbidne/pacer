@@ -50,6 +50,6 @@ testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]
     desc = "Filter empty error"
 
 testDuplicateDateError :: IO OsPath -> TestTree
-testDuplicateDateError = testChart desc [osp|testDuplicateDateError|]
+testDuplicateDateError = testChartPosix True desc [osp|testDuplicateDateError|]
   where
     desc = "Duplicate date error"
