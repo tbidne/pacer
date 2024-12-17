@@ -2,48 +2,54 @@
 
 module Functional.Chart (tests) where
 
+import FileSystem.OsPath (unsafeDecode)
 import Functional.Prelude
-import Pacer.Chart qualified as Chart
 
-tests :: TestTree
-tests =
+tests :: IO OsPath -> TestTree
+tests getTestDir =
   testGroup
     "Pacer.Chart"
-    [ testExampleChart,
-      testSimple,
-      testFilter,
-      testFilterEmptyError,
-      testDuplicateDateError
+    [ testExampleChart getTestDir,
+      testSimple getTestDir,
+      testFilter getTestDir,
+      testFilterEmptyError getTestDir,
+      testDuplicateDateError getTestDir
     ]
 
-testExampleChart :: TestTree
-testExampleChart = testGoldenParams params
+testExampleChart :: IO OsPath -> TestTree
+testExampleChart getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { testDesc = "Generates example",
+        { mkArgs = \testDir ->
+            [ "chart",
+              "--runs",
+              runsPath,
+              "--chart-requests",
+              chartRequestsPath,
+              "--json",
+              unsafeDecode (mkJsonPath testDir)
+            ],
+          testDesc = "Generates example",
           testName = [osp|testExampleChart|],
-          runner =
-            toStrictByteString
-              <$> Chart.createChartsJsonBS
-                (Just runsPath)
-                (Just chartRequestsPath)
+          resultToBytes = \path _ -> readBinaryFileIO . mkJsonPath $ path
         }
-    runsPath = [osp|data/input/example/runs.toml|]
-    chartRequestsPath = [osp|data/input/example/chart-requests.toml|]
+    runsPath = unsafeDecode [osp|data/input/example/runs.toml|]
+    chartRequestsPath = unsafeDecode [osp|data/input/example/chart-requests.toml|]
+    mkJsonPath testDir = testDir </> [ospPathSep|testExampleChart_charts.json|]
 
-testSimple :: TestTree
+testSimple :: IO OsPath -> TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]
 
-testFilter :: TestTree
+testFilter :: IO OsPath -> TestTree
 testFilter = testChart "Filter example" [osp|testFilter|]
 
-testFilterEmptyError :: TestTree
+testFilterEmptyError :: IO OsPath -> TestTree
 testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]
   where
     desc = "Filter empty error"
 
-testDuplicateDateError :: TestTree
+testDuplicateDateError :: IO OsPath -> TestTree
 testDuplicateDateError = testChart desc [osp|testDuplicateDateError|]
   where
     desc = "Duplicate date error"

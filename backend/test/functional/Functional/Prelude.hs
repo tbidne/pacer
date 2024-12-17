@@ -20,6 +20,7 @@ module Functional.Prelude
 where
 
 import Data.Word (Word8)
+import FileSystem.OsPath (unsafeDecode)
 import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
   ( Gen,
@@ -37,7 +38,6 @@ import Hedgehog as X
     (/==),
     (===),
   )
-import Pacer.Chart qualified as Chart
 import Pacer.Driver (runAppWith)
 import Pacer.Prelude as X hiding (IO)
 import System.Environment (withArgs)
@@ -96,10 +96,18 @@ runException desc expected args = testCase desc $ do
     Right r -> assertFailure $ unpackText $ "Expected exception, received: " <> r
     Left ex -> expected @=? displayExceptiont ex
 
+-- | Parameters for golden tests.
 data GoldenParams = MkGoldenParams
-  { testDesc :: TestName,
+  { -- | Functions to make the CLI arguments. The parameter is the tmp test
+    -- directory.
+    mkArgs :: OsPath -> List String,
+    -- | Test string description.
+    testDesc :: TestName,
+    -- | Test function name, for creating unique file paths.
     testName :: OsPath,
-    runner :: IO ByteString
+    -- | Function that creates the bytes to be written to the golden file.
+    -- The inputs are the tmp test directory, and the CLI's stdout.
+    resultToBytes :: OsPath -> Text -> IO ByteString
   }
 
 -- | Given a text description and testName OsPath, creates a golden test.
@@ -120,36 +128,53 @@ data GoldenParams = MkGoldenParams
 -- @
 --
 -- testFoo is the 'test name'.
-testChart :: TestName -> OsPath -> TestTree
-testChart desc testName = testGoldenParams params
+testChart :: TestName -> OsPath -> IO OsPath -> TestTree
+testChart testDesc testName getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { testDesc = desc,
+        { mkArgs = \testDir ->
+            [ "chart",
+              "--runs",
+              runsPath,
+              "--chart-requests",
+              chartRequestsPath,
+              "--json",
+              unsafeDecode (mkJsonPath testDir)
+            ],
+          testDesc,
           testName,
-          runner =
-            toStrictByteString
-              <$> Chart.createChartsJsonBS
-                (Just runsPath)
-                (Just chartRequestsPath)
+          -- NOTE: It would be nice to test the txt output here i.e. the
+          -- second arg. Alas, it includes the path of the output json file,
+          -- which is non-deterministic, as it includes the tmp dir.
+          --
+          -- Thus for now we ignore it, since the json output is the main
+          -- part we care about.
+          resultToBytes = \path _ -> readBinaryFileIO . mkJsonPath $ path
         }
-    basePath = [ospPathSep|test/functional/data|]
-    chartRequestsPath = basePath </> testName <> [osp|_chart-requests.toml|]
-    runsPath = basePath </> testName <> [osp|_runs.toml|]
 
-testGoldenParams :: GoldenParams -> TestTree
-testGoldenParams goldenParams =
+    basePath = [ospPathSep|test/functional/data|]
+    chartRequestsPath = unsafeDecode $ basePath </> testName <> [osp|_chart-requests.toml|]
+    runsPath = unsafeDecode $ basePath </> testName <> [osp|_runs.toml|]
+    mkJsonPath testDir = testDir </> testName <> [ospPathSep|_charts.json|]
+
+testGoldenParams :: IO OsPath -> GoldenParams -> TestTree
+testGoldenParams getTestDir goldenParams = do
   goldenVsFile goldenParams.testDesc goldenPath actualPath $ do
-    trySync goldenParams.runner >>= \case
+    testDir <- getTestDir
+    let args = goldenParams.mkArgs testDir
+    trySync (withArgs args $ runAppWith pure) >>= \case
       Left err -> writeActualFile $ exToBs err
-      Right bs -> writeActualFile bs
+      Right txt -> do
+        bs <- goldenParams.resultToBytes testDir txt
+        writeActualFile bs
   where
     outputPathStart =
       FS.OsPath.unsafeDecode
         $ [ospPathSep|test/functional/goldens|]
         </> goldenParams.testName
 
-    exToBs = encodeUtf8 . displayExceptiont
+    exToBs = encodeUtf8 . packText . displayInnerMatchKnown
 
     writeActualFile :: ByteString -> IO ()
     writeActualFile =

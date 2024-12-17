@@ -43,8 +43,10 @@ module Pacer.Prelude
 
 #endif
 
-    -- * Exception
+    -- * Exceptions
     displayExceptiont,
+    displayInnerMatchKnown,
+    knownExceptions,
 
     -- * Numeric
 
@@ -89,6 +91,8 @@ import Control.Exception as X
     throwIO,
     try,
   )
+import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
+import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
 import Control.Exception.Utils as X (TextException, throwText, trySync)
 import Control.Monad as X
   ( Monad ((>>=)),
@@ -379,3 +383,13 @@ pattern SetToSeqNE x <- (NESeq.fromList . NESet.toList -> x)
     SetToSeqNE x = NESet.fromList (toNonEmpty x)
 
 {-# COMPLETE SetToSeqNE #-}
+
+-- | This and knownExceptions will probably need to be moved to e.g.
+-- Pacer.Exception, when we actually make our own.
+displayInnerMatchKnown :: (Exception e) => e -> String
+displayInnerMatchKnown = Ex.Ann.Utils.displayInnerMatch knownExceptions
+
+knownExceptions :: List ExceptionProxy
+knownExceptions =
+  [ MkExceptionProxy @TextException Proxy
+  ]

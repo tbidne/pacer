@@ -5,6 +5,9 @@ module Pacer.Driver
   )
 where
 
+import Control.Exception.Annotation.Utils
+  ( setUncaughtExceptionDisplayInnerMatch,
+  )
 import FileSystem.OsPath qualified as OsPath
 import Options.Applicative qualified as OA
 import Pacer.Chart (ChartParamsArgs)
@@ -33,6 +36,11 @@ runApp = runAppWith (putStrLn . unpackText)
 
 runAppWith :: (Text -> IO a) -> IO a
 runAppWith handler = do
+  -- TODO: We should make this more precise at some point.
+  setUncaughtExceptionDisplayInnerMatch
+    knownExceptions
+    putStrLn
+
   args <- OA.execParser parserInfo
   case args.command of
     Chart chartArgs -> handleChart handler chartArgs
