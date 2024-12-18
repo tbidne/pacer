@@ -34,10 +34,18 @@ import Pacer.Data.Duration.Units
   )
 import Pacer.Prelude
 
+-------------------------------------------------------------------------------
+--                                  Duration                                 --
+-------------------------------------------------------------------------------
+
 -- | Units for time.
 type Duration :: TimeUnit -> Type -> Type
 newtype Duration t a = MkDuration {unDuration :: a}
   deriving stock (Functor)
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 instance (MetricSpace a, SingI t) => Eq (Duration t a) where
   MkDuration x == MkDuration y = ɛEq ɛ x y
@@ -87,6 +95,10 @@ instance
         | i < 9 = "0"
         | otherwise = ""
 
+-------------------------------------------------------------------------------
+--                                   Algebra                                 --
+-------------------------------------------------------------------------------
+
 instance (ASemigroup a) => ASemigroup (Duration t a) where
   (.+.) = liftDuration2 (.+.)
 
@@ -110,6 +122,10 @@ instance (Ring a) => Module (Duration t a) a
 
 instance (Field a) => VectorSpace (Duration t a) a
 
+-------------------------------------------------------------------------------
+--                             Numeric Conversions                           --
+-------------------------------------------------------------------------------
+
 instance (FromRational a) => FromRational (Duration t a) where
   fromQ = MkDuration . fromQ
 
@@ -127,6 +143,10 @@ instance (FromReal a) => FromReal (Duration t a) where
 
 instance (ToReal a) => ToReal (Duration t a) where
   toR (MkDuration x) = toR x
+
+-------------------------------------------------------------------------------
+--                                   Parsing                                 --
+-------------------------------------------------------------------------------
 
 -- NOTE: [Duration Parsing]
 --
@@ -165,6 +185,10 @@ instance
     MkDuration x <- parser @(Duration t a)
     y <- mkPositiveFail x
     pure $ MkDuration y
+
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
 
 liftDuration2 ::
   (a -> a -> a) ->
@@ -263,10 +287,18 @@ normalizeTime (h, m, s) = (h_final, m_final, s_final)
         then (h + 1, 0)
         else (h, m_temp)
 
+-------------------------------------------------------------------------------
+--                                SomeDistance                               --
+-------------------------------------------------------------------------------
+
 -- | Duration, existentially quantifying the units.
 type SomeDuration :: Type -> Type
 data SomeDuration a where
   MkSomeDuration :: Sing t -> Duration t a -> SomeDuration a
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 deriving stock instance Functor SomeDuration
 
@@ -313,6 +345,10 @@ instance
   where
   displayBuilder (MkSomeDuration u x) = withSingI u displayBuilder x
 
+-------------------------------------------------------------------------------
+--                                   Algebra                                 --
+-------------------------------------------------------------------------------
+
 instance (ASemigroup a, FromInteger a, MSemigroup a) => ASemigroup (SomeDuration a) where
   (.+.) = liftSomeDuration2 (.+.)
 
@@ -336,6 +372,10 @@ instance (FromInteger a, Ring a) => Module (SomeDuration a) a
 
 instance (FromInteger a, Field a) => VectorSpace (SomeDuration a) a
 
+-------------------------------------------------------------------------------
+--                             Numeric Conversions                           --
+-------------------------------------------------------------------------------
+
 instance (FromRational a) => FromRational (SomeDuration a) where
   fromQ = MkSomeDuration SSecond . fromQ
 
@@ -353,6 +393,10 @@ instance (FromInteger a) => FromInteger (SomeDuration a) where
 
 instance (FromInteger a, MSemigroup a, ToInteger a) => ToInteger (SomeDuration a) where
   toZ = toZ . someToSeconds
+
+-------------------------------------------------------------------------------
+--                                   Parsing                                 --
+-------------------------------------------------------------------------------
 
 -- NOTE: [SomeDuration Parsing]
 --
@@ -401,6 +445,10 @@ instance
     y <- mkPositiveFail x
     pure $ MkSomeDuration s (MkDuration y)
 
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
+
 liftSomeDuration2 ::
   (FromInteger a, MSemigroup a) =>
   (forall t. Duration t a -> Duration t a -> Duration t a) ->
@@ -426,4 +474,10 @@ type Minutes a = Duration Minute a
 -- | Alias for 'Duration Hour'.
 type Hours a = Duration Hour a
 
--- TODO: Consider HasDuration and ConvertDuration classes
+-- NOTE: Unlike Distance, we do not have conversions classes like HasDuration
+-- and ConvertDuration. We could easily add them, however the utility is
+-- lessened, since most of our types just use monormorphic Seconds anyway
+-- (in fact, it's questionable whether we should support different units
+-- at all).
+--
+-- Should this change, we can add the corresponding classes.

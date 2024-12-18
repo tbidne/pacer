@@ -163,9 +163,12 @@ instance (FromInteger a, MGroup a, SingI d, SingI e) => ConvertDistance (Distanc
       fromBase = singFactor @_ @e
 
 instance (SingI d) => HasDistance (Distance d a) where
+  type DistanceVal (Distance d a) = Distance d a
   type HideDistance (Distance d a) = SomeDistance a
 
   distanceUnitOf _ = fromSingI @_ @d
+
+  distanceOf = id
 
   hideDistance = MkSomeDistance (sing @d)
 
@@ -317,9 +320,12 @@ instance (FromInteger a, MGroup a, SingI e) => ConvertDistance (SomeDistance a) 
   convertDistance_ (MkSomeDistance s x) = withSingI s convertDistance_ x
 
 instance HasDistance (SomeDistance a) where
+  type DistanceVal (SomeDistance a) = SomeDistance a
   type HideDistance (SomeDistance a) = SomeDistance a
 
   distanceUnitOf (MkSomeDistance sd _) = fromSing sd
+
+  distanceOf = id
 
   hideDistance = id
 
@@ -419,10 +425,13 @@ type Miles a = Distance Mile a
 
 -- | Class that provides a unified interface for handling distance units.
 class HasDistance a where
+  type DistanceVal a
   type HideDistance a
 
   -- | Retrieves the type of distance unit.
   distanceUnitOf :: a -> DistanceUnit
+
+  distanceOf :: a -> DistanceVal a
 
   -- | Hides the distance unit.
   hideDistance :: a -> HideDistance a

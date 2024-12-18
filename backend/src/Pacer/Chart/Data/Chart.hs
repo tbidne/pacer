@@ -35,11 +35,11 @@ import Pacer.Chart.Data.Run
 import Pacer.Chart.Data.Run qualified as Run
 import Pacer.Data.Distance
   ( Distance (unDistance),
+    HasDistance (distanceUnitOf),
     SomeDistance (MkSomeDistance),
   )
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
-    SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (unDuration))
@@ -164,7 +164,7 @@ mkChart ::
   Either Text Chart
 mkChart
   ( MkSomeRuns
-      (SetToSeqNE someRuns@(MkSomeRunsKey (MkSomeRun @distUnit sd _) :<|| _))
+      (SetToSeqNE someRuns@(MkSomeRunsKey someRun@(MkSomeRun @distUnit sd _) :<|| _))
     )
   request =
     case filteredRuns of
@@ -174,10 +174,7 @@ mkChart
       filteredRuns = filterRuns someRuns request.filters
 
       finalDistUnit :: DistanceUnit
-      finalDistUnit = case sd of
-        SMeter -> Kilometer
-        SKilometer -> Kilometer
-        SMile -> Mile
+      finalDistUnit = distanceUnitOf someRun
 
       mkChartData :: NESeq (SomeRun a) -> ChartData
       mkChartData runs = case request.y1Axis of
@@ -214,14 +211,14 @@ mkChart
         YAxisDistance ->
           withSingI s $ toℝ $ case finalDistUnit of
             -- NOTE: [Brackets with OverloadedRecordDot]
-            Meter -> (DistU.convertDistance_ @_ @Kilometer r).distance.unDistance
-            Kilometer -> (DistU.convertDistance_ @_ @Kilometer r).distance.unDistance
+            Meter -> (DistU.convertToKilometers_ r).distance.unDistance
+            Kilometer -> (DistU.convertToKilometers_ r).distance.unDistance
             Mile -> (DistU.convertDistance_ @_ @Mile r).distance.unDistance
         YAxisDuration -> toℝ r.duration.unDuration
         YAxisPace ->
           withSingI s $ toℝ $ case finalDistUnit of
-            Meter -> runToPace (DistU.convertDistance_ @_ @Kilometer r)
-            Kilometer -> runToPace (DistU.convertDistance_ @_ @Kilometer r)
+            Meter -> runToPace (DistU.convertToKilometers_ r)
+            Kilometer -> runToPace (DistU.convertToKilometers_ r)
             -- TODO: Previously this was converting to Kilometers, but that
             -- was almost certainly a bug that tests did not catch.
             -- Let's write one.

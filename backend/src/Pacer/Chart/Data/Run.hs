@@ -34,8 +34,14 @@ import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Data.Distance
   ( Distance,
-    DistanceUnit (Kilometer),
-    HasDistance (HideDistance, distanceUnitOf, hideDistance),
+    DistanceUnit,
+    HasDistance
+      ( DistanceVal,
+        HideDistance,
+        distanceOf,
+        distanceUnitOf,
+        hideDistance
+      ),
     SomeDistance (MkSomeDistance),
   )
 import Pacer.Data.Distance.Units
@@ -54,12 +60,20 @@ import TOML
   )
 import TOML qualified
 
+-------------------------------------------------------------------------------
+--                                RunTimestamp                               --
+-------------------------------------------------------------------------------
+
 -- | Timestamp for runs.
 data RunTimestamp
   = RunDay Day
   | RunLocalTime LocalTime
   | RunZonedTime ZonedTime
   deriving stock (Show)
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 instance Eq RunTimestamp where
   RunDay d1 == t2 = d1 == toDay t2
@@ -81,10 +95,9 @@ instance Ord RunTimestamp where
   RunZonedTime z1 <= RunZonedTime z2 =
     Time.zonedTimeToUTC z1 <= Time.zonedTimeToUTC z2
 
-toDay :: RunTimestamp -> Day
-toDay (RunDay d) = d
-toDay (RunLocalTime (LocalTime d _)) = d
-toDay (RunZonedTime (ZonedTime (LocalTime d _) _)) = d
+-------------------------------------------------------------------------------
+--                               Serialization                               --
+-------------------------------------------------------------------------------
 
 instance DecodeTOML RunTimestamp where
   tomlDecoder =
@@ -100,6 +113,15 @@ instance ToJSON RunTimestamp where
   toJSON (RunLocalTime lt) = toJSON lt
   toJSON (RunZonedTime zt) = toJSON zt
 
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
+
+toDay :: RunTimestamp -> Day
+toDay (RunDay d) = d
+toDay (RunLocalTime (LocalTime d _)) = d
+toDay (RunZonedTime (ZonedTime (LocalTime d _) _)) = d
+
 fmtRunTimestamp :: RunTimestamp -> Text
 fmtRunTimestamp =
   packText <<< \case
@@ -111,6 +133,10 @@ fmtRunTimestamp =
     tfmt = "T%H:%M:%S"
     zfmt = "%z"
     l = Format.defaultTimeLocale
+
+-------------------------------------------------------------------------------
+--                                    Run                                    --
+-------------------------------------------------------------------------------
 
 -- | Type for runs.
 type Run :: DistanceUnit -> Type -> Type
@@ -127,6 +153,10 @@ data Run dist a = MkRun
     title :: Maybe Text
   }
   deriving stock (Eq, Show)
+
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
 
 -- NOTE: ConvertDistance needs a Semifield instance presumably because
 -- Run contains Positive, which needs it for construction.
@@ -153,11 +183,18 @@ instance
       }
 
 instance (SingI dist) => HasDistance (Run dist a) where
+  type DistanceVal (Run dist a) = Distance dist (Positive a)
   type HideDistance (Run dist a) = SomeRun a
 
   distanceUnitOf _ = fromSingI @_ @dist
 
+  distanceOf = (.distance)
+
   hideDistance = MkSomeRun (sing @dist)
+
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
 
 -- | Derives the pace from a run.
 derivePace ::
@@ -172,23 +209,18 @@ derivePace r =
     r.distance
     ((.unPositive) <$> r.duration)
 
+-------------------------------------------------------------------------------
+--                                  SomeRun                                  --
+-------------------------------------------------------------------------------
+
 -- | Existential quantifies a Run's distance.
 type SomeRun :: Type -> Type
 data SomeRun a where
   MkSomeRun :: Sing d -> Run d a -> SomeRun a
 
-instance
-  ( FromInteger a,
-    Ord a,
-    Semifield a,
-    Show a,
-    SingI e
-  ) =>
-  ConvertDistance (SomeRun a) e
-  where
-  type ConvertedDistance (SomeRun a) e = Run e a
-
-  convertDistance_ (MkSomeRun s x) = withSingI s convertDistance_ x
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 instance
   ( FromInteger a,
@@ -211,12 +243,9 @@ instance (Show a) => Show (SomeRun a) where
           . withSingI s showsPrec 11 r
       )
 
-instance HasDistance (SomeRun a) where
-  type HideDistance (SomeRun a) = SomeRun a
-
-  distanceUnitOf (MkSomeRun s _) = fromSing s
-
-  hideDistance = id
+-------------------------------------------------------------------------------
+--                               Serialization                               --
+-------------------------------------------------------------------------------
 
 instance
   ( FromRational a,
@@ -252,8 +281,44 @@ decodeDistance = tomlDecoder >>= P.parseFail
 decodeDuration :: forall a. (Parser (Seconds a)) => Decoder (Seconds a)
 decodeDuration = tomlDecoder >>= P.parseFail
 
--- | Key for 'SomeRuns'. Used to enforce that timestamps are unique.
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
+instance
+  ( FromInteger a,
+    Ord a,
+    Semifield a,
+    Show a,
+    SingI e
+  ) =>
+  ConvertDistance (SomeRun a) e
+  where
+  type ConvertedDistance (SomeRun a) e = Run e a
+
+  convertDistance_ (MkSomeRun s x) = withSingI s convertDistance_ x
+
+instance HasDistance (SomeRun a) where
+  type DistanceVal (SomeRun a) = SomeDistance (Positive a)
+  type HideDistance (SomeRun a) = SomeRun a
+
+  distanceUnitOf (MkSomeRun s _) = fromSing s
+
+  distanceOf (MkSomeRun s r) = withSingI s $ hideDistance $ distanceOf r
+
+  hideDistance = id
+
+-------------------------------------------------------------------------------
+--                                SomeRunsKey                                --
+-------------------------------------------------------------------------------
+
+-- | Key for 'SomeRuns'. Eq/Ord use an equivalence class on the timestamp,
+-- used to enforce that timestamps are unique.
 newtype SomeRunsKey a = MkSomeRunsKey {unSomeRunsKey :: SomeRun a}
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 deriving stock instance (Show a) => Show (SomeRunsKey a)
 
@@ -265,9 +330,17 @@ instance Ord (SomeRunsKey a) where
   MkSomeRunsKey (MkSomeRun _ r1) <= MkSomeRunsKey (MkSomeRun _ r2) =
     r1.datetime <= r2.datetime
 
+-------------------------------------------------------------------------------
+--                                  SomeRuns                                 --
+-------------------------------------------------------------------------------
+
 -- | Holds multiple runs.
 newtype SomeRuns a = MkSomeRuns (NESet (SomeRunsKey a))
   deriving stock (Eq, Show)
+
+-------------------------------------------------------------------------------
+--                               Serialization                               --
+-------------------------------------------------------------------------------
 
 instance
   ( FromRational a,
@@ -342,6 +415,11 @@ type SomeRunsAcc a =
     (Tuple2 TitleAndTime TitleAndTime)
     (NEMap RunTimestamp (SomeRunsKey a))
 
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
+
+-- | Derives a pace from some run.
 deriveSomePace ::
   ( FromInteger a,
     Ord a,
@@ -351,7 +429,7 @@ deriveSomePace ::
   SomeRun a ->
   SomePace a
 deriveSomePace (MkSomeRun sr r) = case sr of
-  SMeter -> hideDistance $ derivePace (convertDistance_ @_ @Kilometer r)
+  SMeter -> hideDistance $ derivePace (DistU.convertToKilometers_ r)
   SKilometer -> hideDistance $ derivePace r
   SMile -> hideDistance $ derivePace r
 

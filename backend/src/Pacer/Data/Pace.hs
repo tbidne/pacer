@@ -28,8 +28,16 @@ import GHC.TypeError qualified as TE
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Units (singFactor)
 import Pacer.Data.Distance
-  ( DistanceUnit (Kilometer, Meter, Mile),
-    HasDistance (HideDistance, distanceUnitOf, hideDistance),
+  ( Distance (MkDistance),
+    DistanceUnit (Kilometer, Meter, Mile),
+    HasDistance
+      ( DistanceVal,
+        HideDistance,
+        distanceOf,
+        distanceUnitOf,
+        hideDistance
+      ),
+    SomeDistance,
   )
 import Pacer.Data.Distance.Units
   ( ConvertDistance (ConvertedDistance, convertDistance_),
@@ -42,6 +50,10 @@ import Pacer.Prelude
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
+-------------------------------------------------------------------------------
+--                                    Pace                                   --
+-------------------------------------------------------------------------------
+
 -- | Represents a duration per distance e.g. 4'30" per kilometer. We only
 -- allow the distance to be kilometers or miles. Meters are disallowed as
 -- they chance for mistakes are high (i.e. almost all paces per meter are
@@ -49,6 +61,10 @@ import Text.Megaparsec.Char qualified as MPC
 type Pace :: DistanceUnit -> Type -> Type
 data Pace d a where
   MkPace :: (PaceDistF d) => Seconds a -> Pace d a
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 deriving stock instance Functor (Pace d)
 
@@ -120,11 +136,19 @@ instance
     where
       d = fromSingI @_ @d
 
+-------------------------------------------------------------------------------
+--                                   Algebra                                 --
+-------------------------------------------------------------------------------
+
 instance (MSemigroup a) => MSemiSpace (Pace d a) a where
   MkPace x .* k = MkPace (x .* k)
 
 instance (MGroup a) => MSpace (Pace d a) a where
   MkPace x .% k = MkPace (x .% k)
+
+-------------------------------------------------------------------------------
+--                             Numeric Conversions                           --
+-------------------------------------------------------------------------------
 
 instance (FromRational a, PaceDistF d) => FromRational (Pace d a) where
   fromQ = MkPace . fromQ
@@ -144,6 +168,10 @@ instance (FromReal a, PaceDistF d) => FromReal (Pace d a) where
 instance (ToReal a) => ToReal (Pace d a) where
   toR = toR . (.unPace)
 
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
 instance
   ( FromInteger a,
     PaceDistF d,
@@ -162,12 +190,19 @@ instance
       toBase = singFactor @_ @d
       fromBase = singFactor @_ @e
 
-instance (PaceDistF d, SingI d) => HasDistance (Pace d a) where
+instance (MMonoid a, PaceDistF d, SingI d) => HasDistance (Pace d a) where
+  type DistanceVal (Pace d a) = Distance d a
   type HideDistance (Pace d a) = SomePace a
 
   distanceUnitOf _ = fromSingI @_ @d
 
+  distanceOf _ = MkDistance one
+
   hideDistance = MkSomePace (sing @d)
+
+-------------------------------------------------------------------------------
+--                                   Parsing                                 --
+-------------------------------------------------------------------------------
 
 -- NOTE: [Pace Parsing]
 --
@@ -200,6 +235,10 @@ instance
   where
   parser = MkPace <$> parser
 
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
+
 -- | Creates a pace from a duration.
 mkPace ::
   ( PaceDistF d,
@@ -215,10 +254,18 @@ mkPace = MkPace . Duration.toSeconds
 unPace :: Pace d a -> Seconds a
 unPace (MkPace d) = d
 
+-------------------------------------------------------------------------------
+--                                  SomePace                                 --
+-------------------------------------------------------------------------------
+
 -- | Pace, existentially quantifying the distance unit.
 type SomePace :: Type -> Type
 data SomePace a where
   MkSomePace :: (PaceDistF d) => Sing d -> Pace d a -> SomePace a
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 deriving stock instance Functor SomePace
 
@@ -265,11 +312,19 @@ instance
   where
   displayBuilder (MkSomePace s x) = withSingI s displayBuilder x
 
+-------------------------------------------------------------------------------
+--                                   Algebra                                 --
+-------------------------------------------------------------------------------
+
 instance (MSemigroup a) => MSemiSpace (SomePace a) a where
   MkSomePace s x .* k = MkSomePace s (x .* k)
 
 instance (MGroup a) => MSpace (SomePace a) a where
   MkSomePace s x .% k = MkSomePace s (x .% k)
+
+-------------------------------------------------------------------------------
+--                             Numeric Conversions                           --
+-------------------------------------------------------------------------------
 
 instance (FromRational a) => FromRational (SomePace a) where
   fromQ = MkSomePace SKilometer . fromQ
@@ -289,6 +344,10 @@ instance (FromReal a) => FromReal (SomePace a) where
 instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
   toR = toR . DistU.convertToKilometers_
 
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
 instance
   ( FromInteger a,
     MGroup a,
@@ -302,12 +361,19 @@ instance
   convertDistance_ :: SomePace a -> Pace e a
   convertDistance_ (MkSomePace s p) = withSingI s $ convertDistance_ p
 
-instance HasDistance (SomePace a) where
+instance (MMonoid a) => HasDistance (SomePace a) where
+  type DistanceVal (SomePace a) = SomeDistance a
   type HideDistance (SomePace a) = SomePace a
 
   distanceUnitOf (MkSomePace s _) = fromSing s
 
+  distanceOf (MkSomePace s p) = withSingI s $ hideDistance $ distanceOf p
+
   hideDistance = id
+
+-------------------------------------------------------------------------------
+--                                   Parsing                                 --
+-------------------------------------------------------------------------------
 
 -- NOTE: [SomePace Parsing]
 --
@@ -362,6 +428,10 @@ instance
     MkSomePace s (MkPace (MkDuration x)) <- parser @(SomePace a)
     y <- mkPositiveFail x
     pure $ MkSomePace s (MkPace (MkDuration y))
+
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
 
 -- | Exposes the underlying duration.
 unSomePace :: SomePace a -> Seconds a
