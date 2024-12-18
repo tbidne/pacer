@@ -16,7 +16,7 @@ import Pacer.Chart.Data.ChartRequest
   ( ChartRequest (filters, title, y1Axis, yAxis),
     ChartRequests (unChartRequests),
     FilterExpr,
-    FilterOp (FilterEq, FilterGt, FilterGte, FilterLt, FilterLte),
+    FilterOp (MkFilterOp),
     FilterType (FilterDistance, FilterDuration, FilterLabel, FilterPace),
     YAxisType
       ( YAxisDistance,
@@ -36,13 +36,13 @@ import Pacer.Chart.Data.Run qualified as Run
 import Pacer.Data.Distance
   ( Distance (unDistance),
     HasDistance (distanceUnitOf),
-    SomeDistance (MkSomeDistance),
+    SomeDistance,
   )
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Duration (unDuration))
+import Pacer.Data.Duration (Duration (unDuration), Seconds)
 import Pacer.Data.Pace (SomePace (MkSomePace))
 import Pacer.Prelude
 
@@ -244,23 +244,34 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     filterRun r = all (eval (applyFilter r)) filters
 
     applyFilter :: SomeRunsKey a -> FilterType a -> Bool
-    applyFilter (MkSomeRunsKey (MkSomeRun _ r)) (FilterLabel lbl) = lbl `elem` r.labels
-    applyFilter (MkSomeRunsKey (MkSomeRun @runDist sr r)) (FilterDistance op (MkSomeDistance sd d)) =
-      let d' = withSingI sr $ withSingI sd $ DistU.convertDistance_ @_ @runDist d
-       in withSingI sr $ (opToFun op) r.distance d'
-    applyFilter (MkSomeRunsKey (MkSomeRun _ r)) (FilterDuration op d) = (opToFun op) r.duration d
-    applyFilter (MkSomeRunsKey someRun) (FilterPace op (MkSomePace sfp filterPace)) =
+    applyFilter srk (FilterLabel lbl) = applyLabel srk.unSomeRunsKey lbl
+    applyFilter srk (FilterDistance op d) = applyDist srk.unSomeRunsKey op d
+    applyFilter srk (FilterDuration op d) = applyDur srk.unSomeRunsKey op d
+    applyFilter srk (FilterPace op p) = applyPace srk.unSomeRunsKey op p
+
+    applyLabel :: SomeRun a -> Text -> Bool
+    applyLabel (MkSomeRun _ r) lbl = lbl `elem` r.labels
+
+    applyDist :: SomeRun a -> FilterOp -> SomeDistance (Positive a) -> Bool
+    applyDist (MkSomeRun @runDist sr r) op fDist =
+      withSingI sr $ (opToFun op) r.distance fDist'
+      where
+        fDist' :: Distance runDist (Positive a)
+        fDist' = withSingI sr $ DistU.convertDistance_ @_ @runDist fDist
+
+    applyDur :: SomeRun a -> FilterOp -> Seconds (Positive a) -> Bool
+    applyDur (MkSomeRun _ r) op = (opToFun op) r.duration
+
+    applyPace :: SomeRun a -> FilterOp -> SomePace (Positive a) -> Bool
+    applyPace someRun@(MkSomeRun _ _) op (MkSomePace sfp fPace) =
       -- 1. convert someRun to runPace
       case Run.deriveSomePace someRun of
         (MkSomePace @runDist srp runPace) ->
           -- 2. convert filterPace to runPace's units
           withSingI srp
             $ withSingI sfp
-            $ case DistU.convertDistance_ @_ @runDist filterPace of
-              p' -> (opToFun op) runPace ((.unPositive) <$> p')
+            $ case DistU.convertDistance_ @_ @runDist fPace of
+              fPace' -> (opToFun op) runPace ((.unPositive) <$> fPace')
 
-    opToFun FilterLt = (<)
-    opToFun FilterLte = (>=)
-    opToFun FilterEq = (==)
-    opToFun FilterGt = (>)
-    opToFun FilterGte = (>=)
+    opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
+    opToFun (MkFilterOp _ f) = f

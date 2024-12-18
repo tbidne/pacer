@@ -53,24 +53,24 @@ instance DecodeTOML YAxisType where
                 "', expected one of (distance|duration|pace)."
               ]
 
--- FIXME: Can we just use a binary function instead?
+-- | Operator for filter comparisons. The text field is just so we can have
+-- Eq and Show instances, though they are of arguably little value.
+data FilterOp = MkFilterOp Text (forall a. (Ord a) => a -> a -> Bool)
 
-data FilterOp
-  = FilterLt
-  | FilterLte
-  | FilterEq
-  | FilterGt
-  | FilterGte
-  deriving stock (Eq, Show)
+instance Show FilterOp where
+  show (MkFilterOp txt _) = "MkFilterOp " ++ unpackText txt ++ " _"
+
+instance Eq FilterOp where
+  MkFilterOp t1 _ == MkFilterOp t2 _ = t1 == t2
 
 instance Parser FilterOp where
   parser =
     MP.choice
-      [ MPC.string "<=" $> FilterLte,
-        MPC.char '<' $> FilterLt,
-        MPC.char '=' $> FilterEq,
-        MPC.string ">=" $> FilterGte,
-        MPC.char '>' $> FilterGt
+      [ MPC.string "<=" $> MkFilterOp "<=" (<=),
+        MPC.char '<' $> MkFilterOp "<" (<),
+        MPC.char '=' $> MkFilterOp "==" (==),
+        MPC.string ">=" $> MkFilterOp ">=" (>=),
+        MPC.char '>' $> MkFilterOp ">" (>)
       ]
 
 -- | Ways in which we can filter runs.
@@ -151,8 +151,15 @@ instance (Parser a) => Parser (Expr a) where
             parseAtom
           ]
 
-      -- REVIEW: Can we eliminate unnecessary parens? E.g. not (label),
-      -- or (label1) (label2)?
+      -- NOTE: In theory, we could make parens optional, and simply try
+      -- parsing an atom e.g.
+      --
+      --     not distance > 5 km
+      --
+      -- However, as all of our atoms are multiple words -- thus
+      -- require/support whitespace -- parens unambiguously improve
+      -- readability, so we require them. The only change that maybe makes
+      -- sense here is making parens part of the atom parser.
       parseNot = do
         MPC.string "not ("
         f <- parseFilter
