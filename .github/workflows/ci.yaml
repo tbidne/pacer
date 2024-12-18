@@ -5,7 +5,6 @@ on: # yamllint disable-line rule:truthy rule:comments
   push:
     branches:
       - main
-      - chart.js
 
   pull_request:
     branches:
