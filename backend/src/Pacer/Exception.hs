@@ -1,5 +1,6 @@
 module Pacer.Exception
   ( -- * Exceptions
+    CreateChartE (..),
     TomlE (..),
 
     -- ** Commands
@@ -56,6 +57,18 @@ instance Exception CommandScaleE where
           ++ i
           ++ "."
 
+-- | Exception during chart creation.
+newtype CreateChartE = CreateChartFilterEmpty Text
+  deriving stock (Show)
+
+instance Exception CreateChartE where
+  displayException (CreateChartFilterEmpty t) =
+    mconcat
+      [ "Chart with title '",
+        unpackText t,
+        "' is empty due to all runs being filtered out."
+      ]
+
 -- | Exception for toml errors that includes the path.
 data TomlE = MkTomlE OsPath TOMLError
   deriving stock (Show)
@@ -74,7 +87,8 @@ displayInnerMatchKnown = Ex.Ann.Utils.displayInnerMatch knownExceptions
 
 knownExceptions :: List ExceptionProxy
 knownExceptions =
-  [ MkExceptionProxy @CommandDeriveE Proxy,
+  [ MkExceptionProxy @CreateChartE Proxy,
+    MkExceptionProxy @CommandDeriveE Proxy,
     MkExceptionProxy @CommandScaleE Proxy,
     MkExceptionProxy @TomlE Proxy
   ]

@@ -29,7 +29,7 @@ import Pacer.Chart.Data.Chart (Chart)
 import Pacer.Chart.Data.Chart qualified as Chart
 import Pacer.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Chart.Data.Run (SomeRuns)
-import Pacer.Exception (TomlE (MkTomlE))
+import Pacer.Exception (CreateChartE (CreateChartFilterEmpty), TomlE (MkTomlE))
 import Pacer.Prelude
 import System.Directory.OsPath qualified as Dir
 import System.OsPath qualified as OsPath
@@ -124,13 +124,7 @@ createChartSeq runsPath chartRequestsPath = do
 
   for titlesOrCharts $ \case
     Right c -> pure c
-    Left t ->
-      throwText
-        $ mconcat
-          [ "Chart with title '",
-            t,
-            "' is empty due to all runs being filtered out."
-          ]
+    Left t -> throwIO $ CreateChartFilterEmpty t
   where
     readDecodeToml :: forall a. (DecodeTOML a) => OsPath -> IO a
     readDecodeToml path = do
