@@ -2,6 +2,10 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+#if MIN_VERSION_base(4, 20, 0)
+{-# LANGUAGE RequiredTypeArguments #-}
+#endif
+
 {- ORMOLU_DISABLE -}
 
 -- | Provide distance types.
@@ -54,11 +58,19 @@ import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 import Text.Printf (printf)
 
+-------------------------------------------------------------------------------
+--                                  Distance                                 --
+-------------------------------------------------------------------------------
+
 -- | Represents a numeric distance with units.
 type Distance :: DistanceUnit -> Type -> Type
 newtype Distance d a = MkDistance {unDistance :: a}
   deriving stock (Functor)
   deriving newtype (MetricSpace)
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 instance (MetricSpace a, SingI d) => Eq (Distance d a) where
   x == y = ɛEq ɛ x y
@@ -96,6 +108,10 @@ instance (Display a, SingI d, ToRational a) => Display (Distance d a) where
         Kilometer -> displayBuilder @String $ printf "%.2f" xDouble
         Mile -> displayBuilder @String $ printf "%.2f" xDouble
 
+-------------------------------------------------------------------------------
+--                                   Algebra                                 --
+-------------------------------------------------------------------------------
+
 instance (ASemigroup a) => ASemigroup (Distance d a) where
   (.+.) = liftDist2 (.+.)
 
@@ -119,6 +135,10 @@ instance (Ring a) => Module (Distance d a) a
 
 instance (Field a) => VectorSpace (Distance d a) a
 
+-------------------------------------------------------------------------------
+--                             Numeric Conversions                           --
+-------------------------------------------------------------------------------
+
 instance (FromRational a) => FromRational (Distance d a) where
   fromQ = MkDistance . fromQ
 
@@ -137,12 +157,29 @@ instance (FromReal a) => FromReal (Distance d a) where
 instance (ToReal a) => ToReal (Distance d a) where
   toR (MkDistance x) = toR x
 
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
+instance (FromInteger a, MGroup a, SingI d, SingI e) => ConvertDistance (Distance d a) e where
+  type ConvertedDistance (Distance d a) e = Distance e a
+
+  convertDistance_ :: Distance d a -> Distance e a
+  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . (.unDistance)
+    where
+      toBase = singFactor @_ @d
+      fromBase = singFactor @_ @e
+
 instance (SingI d) => HasDistance (Distance d a) where
   type HideDistance (Distance d a) = SomeDistance a
 
   distanceUnitOf _ = fromSingI @_ @d
 
   hideDistance = MkSomeDistance (sing @d)
+
+-------------------------------------------------------------------------------
+--                                   Parsing                                 --
+-------------------------------------------------------------------------------
 
 -- NOTE: [Distance Parsing]
 --
@@ -167,6 +204,10 @@ instance
       DistParseHalfMarathon -> halfMarathon
       DistParseNumeric x -> MkDistance x
 
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
+
 liftDist2 ::
   (a -> a -> a) ->
   Distance d a ->
@@ -174,10 +215,18 @@ liftDist2 ::
   Distance d a
 liftDist2 f (MkDistance x) (MkDistance y) = MkDistance (f x y)
 
+-------------------------------------------------------------------------------
+--                                SomeDistance                               --
+-------------------------------------------------------------------------------
+
 -- | Distance, existentially quantifying the units.
 type SomeDistance :: Type -> Type
 data SomeDistance a where
   MkSomeDistance :: Sing d -> Distance d a -> SomeDistance a
+
+-------------------------------------------------------------------------------
+--                                Base Classes                               --
+-------------------------------------------------------------------------------
 
 deriving stock instance Functor SomeDistance
 
@@ -210,6 +259,10 @@ instance (Show a) => Show (SomeDistance a) where
 instance (Display a, ToRational a) => Display (SomeDistance a) where
   displayBuilder (MkSomeDistance u x) = withSingI u displayBuilder x
 
+-------------------------------------------------------------------------------
+--                                   Algebra                                 --
+-------------------------------------------------------------------------------
+
 instance
   ( ASemigroup a,
     FromInteger a,
@@ -239,6 +292,10 @@ instance (Field a, FromInteger a) => Module (SomeDistance a) a
 
 instance (Field a, FromInteger a) => VectorSpace (SomeDistance a) a
 
+-------------------------------------------------------------------------------
+--                             Numeric Conversions                           --
+-------------------------------------------------------------------------------
+
 instance (FromRational a) => FromRational (SomeDistance a) where
   fromQ = MkSomeDistance SMeter . fromQ
 
@@ -257,12 +314,26 @@ instance (FromInteger a) => FromInteger (SomeDistance a) where
 instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomeDistance a) where
   toZ = toZ . convertToMeters_
 
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
+instance (FromInteger a, MGroup a, SingI e) => ConvertDistance (SomeDistance a) e where
+  type ConvertedDistance (SomeDistance a) e = Distance e a
+
+  convertDistance_ :: SomeDistance a -> Distance e a
+  convertDistance_ (MkSomeDistance s x) = withSingI s convertDistance_ x
+
 instance HasDistance (SomeDistance a) where
   type HideDistance (SomeDistance a) = SomeDistance a
 
   distanceUnitOf (MkSomeDistance sd _) = fromSing sd
 
   hideDistance = id
+
+-------------------------------------------------------------------------------
+--                                   Parsing                                 --
+-------------------------------------------------------------------------------
 
 -- NOTE: [SomeDistance Parsing]
 --
@@ -281,6 +352,25 @@ instance (FromRational a, Parser a) => Parser (SomeDistance a) where
           Meter -> MkSomeDistance SMeter (MkDistance x)
           Kilometer -> MkSomeDistance SKilometer (MkDistance x)
           Mile -> MkSomeDistance SMile (MkDistance x)
+
+data DistParse a
+  = DistParseMarathon
+  | DistParseHalfMarathon
+  | DistParseNumeric a
+
+-- | Normal parsing w/ special cases
+distanceParser :: (Parser a) => MParser (DistParse a)
+distanceParser = do
+  MP.choice
+    [ MP.try $ MPC.string "marathon" $> DistParseMarathon,
+      MP.try $ MPC.string "half-marathon" $> DistParseHalfMarathon,
+      MP.try $ MPC.string "hmarathon" $> DistParseHalfMarathon,
+      DistParseNumeric <$> parser
+    ]
+
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
 
 liftSomeDist2 ::
   (FromInteger a, MGroup a) =>
@@ -322,21 +412,6 @@ k_5 = case sing @d of
   SKilometer -> MkDistance $ fromℚ 5
   SMile -> MkDistance $ fromℚ 3.10686
 
-data DistParse a
-  = DistParseMarathon
-  | DistParseHalfMarathon
-  | DistParseNumeric a
-
--- | Normal parsing w/ special cases
-distanceParser :: (Parser a) => MParser (DistParse a)
-distanceParser = do
-  MP.choice
-    [ MP.try $ MPC.string "marathon" $> DistParseMarathon,
-      MP.try $ MPC.string "half-marathon" $> DistParseHalfMarathon,
-      MP.try $ MPC.string "hmarathon" $> DistParseHalfMarathon,
-      DistParseNumeric <$> parser
-    ]
-
 -- | Alias for 'Distance Meters'.
 type Meters a = Distance Meter a
 
@@ -345,6 +420,10 @@ type Kilometers a = Distance Kilometer a
 
 -- | Alias for 'Distance Miles'.
 type Miles a = Distance Mile a
+
+-------------------------------------------------------------------------------
+--                                Units classes                              --
+-------------------------------------------------------------------------------
 
 -- NOTE: [ConvertDistance and constraints]
 --
@@ -394,38 +473,26 @@ class ConvertDistance a e where
 
   convertDistance_ :: a -> ConvertedDistance a e
 
-instance (FromInteger a, MGroup a, SingI d, SingI e) => ConvertDistance (Distance d a) e where
-  type ConvertedDistance (Distance d a) e = Distance e a
-
-  convertDistance_ :: Distance d a -> Distance e a
-  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . (.unDistance)
-    where
-      toBase = singFactor @_ @d
-      fromBase = singFactor @_ @e
-
-instance (FromInteger a, MGroup a, SingI e) => ConvertDistance (SomeDistance a) e where
-  type ConvertedDistance (SomeDistance a) e = Distance e a
-
-  convertDistance_ :: SomeDistance a -> Distance e a
-  convertDistance_ (MkSomeDistance s x) = withSingI s convertDistance_ x
-
 -- | Convert to meters.
 convertToMeters_ :: (ConvertDistance a Meter) => a -> ConvertedDistance a Meter
 convertToMeters_ = convertDistance_ @_ @Meter
 
 -- | Convert to kilometers.
 convertToKilometers_ ::
-  (ConvertDistance a Kilometer) => a -> ConvertedDistance a Kilometer
+  (ConvertDistance a Kilometer) =>
+  a ->
+  ConvertedDistance a Kilometer
 convertToKilometers_ = convertDistance_ @_ @Kilometer
 
 #if MIN_VERSION_base(4, 20, 0)
+-- | Converts distance with visible forall.
 convertDistance ::
   forall e ->
   forall a.
-  (ConvertDistance a) =>
+  (ConvertDistance a e) =>
   a ->
-  ConvertedDistance e a
-convertDistance _ = convertDistance_
+  ConvertedDistance a e
+convertDistance e @a = convertDistance_ @a @e
 #endif
 
 -- | Class that provides a unified interface for handling distance units.
