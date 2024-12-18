@@ -5,7 +5,7 @@ module Unit.Pacer.Derive
 where
 
 import Pacer.Data.Distance (SomeDistance (MkSomeDistance))
-import Pacer.Data.Distance qualified as Dist
+import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer),
     SDistanceUnit
@@ -58,7 +58,7 @@ testCalculateDistance =
             MkSomeDistance s dist -> case s of
               SMeter ->
                 MkSomeDistance SKilometer
-                  $ Dist.convertDistance_ @_ @Kilometer dist
+                  $ DistU.convertDistance_ @_ @Kilometer dist
               _ -> MkSomeDistance s dist
 
           distDispTxt = display distOut'
@@ -193,7 +193,7 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
         withSingI
           s
           ( Derive.derivePace
-              (Dist.convertDistance_ @_ @Kilometer d)
+              (DistU.convertDistance_ @_ @Kilometer d)
               duration
           ).unPace
       SKilometer ->

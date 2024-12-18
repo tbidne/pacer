@@ -1,17 +1,43 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE CPP #-}
+
+#if MIN_VERSION_base(4, 20, 0)
+{-# LANGUAGE RequiredTypeArguments #-}
+#endif
+
+{- ORMOLU_DISABLE -}
+
 -- | Units for distance.
 module Pacer.Data.Distance.Units
-  ( DistanceUnit (..),
+  ( -- * Primary type
+    DistanceUnit (..),
 
     -- * Singletons
     SDistanceUnit (..),
+
+    -- * Conversion
+    ConvertDistance (..),
+
+#if MIN_VERSION_base(4, 20, 0)
+    convertDistance,
+#endif
+
+    convertToMeters_,
+    convertToKilometers_
   )
 where
+
+{- ORMOLU_ENABLE -}
 
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Units (Units (baseFactor))
 import Pacer.Prelude
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
+
+-------------------------------------------------------------------------------
+--                                    Core                                   --
+-------------------------------------------------------------------------------
 
 -- | Distance unit.
 data DistanceUnit
@@ -50,6 +76,10 @@ instance Units DistanceUnit where
   baseFactor Kilometer = fromℤ 1_000
   baseFactor Mile = fromℤ 1_609
 
+-------------------------------------------------------------------------------
+--                                 Singleton                                 --
+-------------------------------------------------------------------------------
+
 -- | Singleton for 'DistanceUnit'.
 data SDistanceUnit (d :: DistanceUnit) where
   SMeter :: SDistanceUnit Meter
@@ -79,3 +109,77 @@ instance SingKind DistanceUnit where
   toSing Meter = SomeSing SMeter
   toSing Kilometer = SomeSing SKilometer
   toSing Mile = SomeSing SMile
+
+-------------------------------------------------------------------------------
+--                                 Conversion                                --
+-------------------------------------------------------------------------------
+
+-- NOTE: [ConvertDistance and constraints]
+--
+-- The simplest way to define ConvertDistance is something like:
+--
+--     class ConvertDistance a where
+--       type ToConstraints (e :: DistanceUnit) a :: Constraint
+--       type ConvertedDistance (e :: DistanceUnit) a
+--
+--       convertDistance_ :: (SingI e, ToConstraints e a) => a -> ConvertedDistance e a
+--
+-- Alas, while this works for most types, unfortunately it does not work for
+-- Pace, because Pace must also include PaceDistF on its return type e.
+-- We cannot include type constraints on e directly, so a workaround is:
+--
+--     class ConvertDistance a where
+--       type ToConstraints (e :: DistanceUnit) a :: Constraint
+--       type ConvertedDistance (e :: DistanceUnit) a
+--
+--       convertDistance :: (SingI e, ToConstraints e a) => Proxy e -> a -> ConvertedDistance e a
+--
+-- That is, we include a second type family for possible constraints. Most
+-- types would leave this as () (empty constraint), but Pace would have:
+--
+--     instance (FromInteger a, PaceDistF d, Semifield a, SingI d) => ConvertDistance (Pace d a) where
+--       type ToConstraints e (Pace d a) = (PaceDistF e)
+--       type ConvertDistance e (Pace d a) = Pace e a
+--
+--       convertDistance :: forall e. (PaceDistF e, SingI e) => Proxy e -> Pace d a -> Pace e a
+--       convertDistance _ = MkPace . (.% fromBase) . (.* toBase) . (.unPace)
+--         where
+--           toBase = singFactor @_ @d
+--           fromBase = singFactor @_ @e
+--
+-- The Proxy is due to needing to pass e into fromBase (cannot be inferred,
+-- apparently), and unforunately we cannot use TypeAbstraction to recover
+-- the type until at least GHC 9.10 (e.g. convertDistance @e).
+--
+-- Due to the Proxy and forall weirdness, we instead go with the simpler MPTC
+-- solution. Once we require GHC 9.10+, we can try the associated type
+-- solution.
+
+-- | Common interface for converting distance units.
+type ConvertDistance :: Type -> DistanceUnit -> Constraint
+class ConvertDistance a e where
+  type ConvertedDistance a e
+
+  convertDistance_ :: a -> ConvertedDistance a e
+
+-- | Convert to meters.
+convertToMeters_ :: (ConvertDistance a Meter) => a -> ConvertedDistance a Meter
+convertToMeters_ = convertDistance_ @_ @Meter
+
+-- | Convert to kilometers.
+convertToKilometers_ ::
+  (ConvertDistance a Kilometer) =>
+  a ->
+  ConvertedDistance a Kilometer
+convertToKilometers_ = convertDistance_ @_ @Kilometer
+
+#if MIN_VERSION_base(4, 20, 0)
+-- | Converts distance with visible forall.
+convertDistance ::
+  forall e ->
+  forall a.
+  (ConvertDistance a e) =>
+  a ->
+  ConvertedDistance a e
+convertDistance e @a = convertDistance_ @a @e
+#endif

@@ -28,12 +28,14 @@ import GHC.TypeError qualified as TE
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Units (singFactor)
 import Pacer.Data.Distance
-  ( ConvertDistance (ConvertedDistance, convertDistance_),
-    DistanceUnit (Kilometer, Meter, Mile),
+  ( DistanceUnit (Kilometer, Meter, Mile),
     HasDistance (HideDistance, distanceUnitOf, hideDistance),
   )
-import Pacer.Data.Distance qualified as Dist
-import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
+import Pacer.Data.Distance.Units
+  ( ConvertDistance (ConvertedDistance, convertDistance_),
+    SDistanceUnit (SKilometer, SMile),
+  )
+import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (MkDuration), Seconds)
 import Pacer.Data.Duration qualified as Duration
 import Pacer.Prelude
@@ -228,7 +230,7 @@ instance
   ) =>
   Eq (SomePace a)
   where
-  (==) = applySomePaceKm2 (==)
+  (==) = applySomePace2 (==)
 
 instance
   ( FromInteger a,
@@ -238,7 +240,7 @@ instance
   ) =>
   Ord (SomePace a)
   where
-  (<=) = applySomePaceKm2 (<=)
+  (<=) = applySomePace2 (<=)
 
 instance HasField "unSomePace" (SomePace a) (Seconds a) where
   getField = unSomePace
@@ -273,19 +275,19 @@ instance (FromRational a) => FromRational (SomePace a) where
   fromQ = MkSomePace SKilometer . fromQ
 
 instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomePace a) where
-  toQ = toQ . Dist.convertToKilometers_
+  toQ = toQ . DistU.convertToKilometers_
 
 instance (FromInteger a) => FromInteger (SomePace a) where
   fromZ = MkSomePace SKilometer . fromℤ
 
 instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomePace a) where
-  toZ = toZ . Dist.convertToKilometers_
+  toZ = toZ . DistU.convertToKilometers_
 
 instance (FromReal a) => FromReal (SomePace a) where
   fromR = MkSomePace SKilometer . fromR
 
 instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
-  toR = toR . Dist.convertToKilometers_
+  toR = toR . DistU.convertToKilometers_
 
 instance
   ( FromInteger a,
@@ -369,11 +371,11 @@ unSomePace (MkSomePace _ (MkPace x)) = x
 mkSomePace :: forall d a. (PaceDistF d, SingI d) => Pace d a -> SomePace a
 mkSomePace = MkSomePace (sing @d)
 
-applySomePaceKm2 ::
+applySomePace2 ::
   (FromInteger a, MGroup a) =>
-  (Pace Kilometer a -> Pace Kilometer a -> r) ->
+  (forall d. (SingI d) => Pace d a -> Pace d a -> r) ->
   SomePace a ->
   SomePace a ->
   r
-applySomePaceKm2 f p1 p2 =
-  Dist.convertToKilometers_ p1 `f` Dist.convertToKilometers_ p2
+applySomePace2 f p1 p2 =
+  DistU.convertToKilometers_ p1 `f` DistU.convertToKilometers_ p2

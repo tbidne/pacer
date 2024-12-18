@@ -37,11 +37,11 @@ import Pacer.Data.Distance
   ( Distance (unDistance),
     SomeDistance (MkSomeDistance),
   )
-import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
+import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (unDuration))
 import Pacer.Data.Pace (SomePace (MkSomePace))
 import Pacer.Prelude
@@ -214,18 +214,18 @@ mkChart
         YAxisDistance ->
           withSingI s $ toℝ $ case finalDistUnit of
             -- NOTE: [Brackets with OverloadedRecordDot]
-            Meter -> (Dist.convertDistance_ @_ @Kilometer r).distance.unDistance
-            Kilometer -> (Dist.convertDistance_ @_ @Kilometer r).distance.unDistance
-            Mile -> (Dist.convertDistance_ @_ @Mile r).distance.unDistance
+            Meter -> (DistU.convertDistance_ @_ @Kilometer r).distance.unDistance
+            Kilometer -> (DistU.convertDistance_ @_ @Kilometer r).distance.unDistance
+            Mile -> (DistU.convertDistance_ @_ @Mile r).distance.unDistance
         YAxisDuration -> toℝ r.duration.unDuration
         YAxisPace ->
           withSingI s $ toℝ $ case finalDistUnit of
-            Meter -> runToPace (Dist.convertDistance_ @_ @Kilometer r)
-            Kilometer -> runToPace (Dist.convertDistance_ @_ @Kilometer r)
+            Meter -> runToPace (DistU.convertDistance_ @_ @Kilometer r)
+            Kilometer -> runToPace (DistU.convertDistance_ @_ @Kilometer r)
             -- TODO: Previously this was converting to Kilometers, but that
             -- was almost certainly a bug that tests did not catch.
             -- Let's write one.
-            Mile -> runToPace (Dist.convertDistance_ @_ @Mile r)
+            Mile -> runToPace (DistU.convertDistance_ @_ @Mile r)
           where
             runToPace runUnits =
               (Run.derivePace runUnits).unPace.unDuration
@@ -249,7 +249,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     applyFilter :: SomeRunsKey a -> FilterType a -> Bool
     applyFilter (MkSomeRunsKey (MkSomeRun _ r)) (FilterLabel lbl) = lbl `elem` r.labels
     applyFilter (MkSomeRunsKey (MkSomeRun @runDist sr r)) (FilterDistance op (MkSomeDistance sd d)) =
-      let d' = withSingI sr $ withSingI sd $ Dist.convertDistance_ @_ @runDist d
+      let d' = withSingI sr $ withSingI sd $ DistU.convertDistance_ @_ @runDist d
        in withSingI sr $ (opToFun op) r.distance d'
     applyFilter (MkSomeRunsKey (MkSomeRun _ r)) (FilterDuration op d) = (opToFun op) r.duration d
     applyFilter (MkSomeRunsKey someRun) (FilterPace op (MkSomePace sfp filterPace)) =
@@ -259,7 +259,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
           -- 2. convert filterPace to runPace's units
           withSingI srp
             $ withSingI sfp
-            $ case Dist.convertDistance_ @_ @runDist filterPace of
+            $ case DistU.convertDistance_ @_ @runDist filterPace of
               p' -> (opToFun op) runPace ((.unPositive) <$> p')
 
     opToFun FilterLt = (<)

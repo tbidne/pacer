@@ -33,14 +33,16 @@ import Data.Time.LocalTime
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Data.Distance
-  ( ConvertDistance (convertDistance_),
-    Distance,
+  ( Distance,
     DistanceUnit (Kilometer),
     HasDistance (HideDistance, distanceUnitOf, hideDistance),
     SomeDistance (MkSomeDistance),
   )
-import Pacer.Data.Distance qualified as Dist
-import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
+import Pacer.Data.Distance.Units
+  ( ConvertDistance (ConvertedDistance, convertDistance_),
+    SDistanceUnit (SKilometer, SMeter, SMile),
+  )
+import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
 import Pacer.Derive qualified as Derive
@@ -197,11 +199,7 @@ instance
   ) =>
   Eq (SomeRun a)
   where
-  MkSomeRun sx x == MkSomeRun sy y =
-    withSingI sx
-      $ withSingI sy
-      $ Dist.convertToMeters_ x
-      == Dist.convertToMeters_ y
+  (==) = applySomeRun2 (==)
 
 instance (Show a) => Show (SomeRun a) where
   showsPrec i (MkSomeRun s r) =
@@ -356,3 +354,12 @@ deriveSomePace (MkSomeRun sr r) = case sr of
   SMeter -> hideDistance $ derivePace (convertDistance_ @_ @Kilometer r)
   SKilometer -> hideDistance $ derivePace r
   SMile -> hideDistance $ derivePace r
+
+applySomeRun2 ::
+  (FromInteger a, Ord a, Semifield a, Show a) =>
+  (forall d. (SingI d) => Run d a -> Run d a -> r) ->
+  SomeRun a ->
+  SomeRun a ->
+  r
+applySomeRun2 f p1 p2 =
+  DistU.convertToMeters_ p1 `f` DistU.convertToMeters_ p2

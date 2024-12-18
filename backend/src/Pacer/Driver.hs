@@ -22,11 +22,11 @@ import Pacer.Config.Args.Command
     argsToScale,
   )
 import Pacer.Data.Distance (SomeDistance (MkSomeDistance))
-import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer),
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
+import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Pace (Pace (MkPace))
 import Pacer.Derive qualified as Derive
 import Pacer.Prelude
@@ -80,7 +80,7 @@ handleDerive handler ddpArgs =
               MkSomeDistance sdist distx ->
                 case sdist of
                   SMeter ->
-                    let disty = Dist.convertDistance_ distx
+                    let disty = DistU.convertDistance_ distx
                      in Derive.deriveDuration disty (MkPace @Kilometer paceDuration)
                   SKilometer -> Derive.deriveDuration distx (MkPace paceDuration)
                   SMile -> Derive.deriveDuration distx (MkPace paceDuration)
