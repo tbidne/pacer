@@ -1,13 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE UndecidableInstances #-}
-
-#if MIN_VERSION_base(4, 20, 0)
-{-# LANGUAGE RequiredTypeArguments #-}
-#endif
-
-{- ORMOLU_DISABLE -}
-
 -- | Provide distance types.
 module Pacer.Data.Distance
   ( -- * Distance
@@ -34,8 +24,6 @@ module Pacer.Data.Distance
     k_5,
   )
 where
-
-{- ORMOLU_ENABLE -}
 
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Units (singFactor)
