@@ -29,6 +29,7 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Pace (Pace (MkPace))
 import Pacer.Derive qualified as Derive
+import Pacer.Exception qualified as PEx
 import Pacer.Prelude
 
 runApp :: IO ()
@@ -36,9 +37,8 @@ runApp = runAppWith (putStrLn . unpackText)
 
 runAppWith :: (Text -> IO a) -> IO a
 runAppWith handler = do
-  -- TODO: We should make this more precise at some point.
   setUncaughtExceptionDisplayInnerMatch
-    knownExceptions
+    PEx.knownExceptions
     putStrLn
 
   args <- OA.execParser parserInfo

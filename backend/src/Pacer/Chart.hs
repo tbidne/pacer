@@ -25,11 +25,11 @@ import Data.Aeson.Encode.Pretty
     Indent (Spaces),
   )
 import Data.Aeson.Encode.Pretty qualified as AsnPretty
-import FileSystem.OsPath (decodeLenient)
 import Pacer.Chart.Data.Chart (Chart)
 import Pacer.Chart.Data.Chart qualified as Chart
 import Pacer.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Chart.Data.Run (SomeRuns)
+import Pacer.Exception (TomlE (MkTomlE))
 import Pacer.Prelude
 import System.Directory.OsPath qualified as Dir
 import System.OsPath qualified as OsPath
@@ -137,14 +137,7 @@ createChartSeq runsPath chartRequestsPath = do
       contents <- readFileUtf8 path
       case decode contents of
         Right t -> pure t
-        Left err ->
-          throwText
-            $ mconcat
-              [ "Error decoding toml file '",
-                packText $ decodeLenient path,
-                "': ",
-                displayExceptiont err
-              ]
+        Left err -> throwIO $ MkTomlE path err
 
 -- | Advances the ChartParams phase, filling in missing values with defaults.
 advancePhase :: ChartParamsArgs -> ChartParamsFinal

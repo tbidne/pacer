@@ -28,6 +28,19 @@ import Pacer.Config.Args.Utils qualified as Utils
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
+import Pacer.Exception
+  ( CommandDeriveE
+      ( CommandDeriveArgs0,
+        CommandDeriveArgs1,
+        CommandDeriveArgs3,
+        CommandDeriveNoPaceUnit
+      ),
+    CommandScaleE
+      ( CommandScaleArgs0,
+        CommandScaleArgs2,
+        CommandScaleArgs3
+      ),
+  )
 import Pacer.Prelude
 
 -- | Possible commands
@@ -69,20 +82,17 @@ argsToDerive deriveArgs = do
          deriveArgs.mPaceOptUnits,
          deriveArgs.mSomeDistance
        ) of
-    (Just _, Just _, Just _) ->
-      throwText "Derive requires exactly 2 options, received 3."
-    (Nothing, Nothing, Nothing) ->
-      throwText "Derive requires exactly 2 options, received 0."
+    (Just _, Just _, Just _) -> throwIO CommandDeriveArgs3
+    (Nothing, Nothing, Nothing) -> throwIO CommandDeriveArgs0
     -- Duration x Pace -> Distance
     (Just a, Just b, Nothing) -> case b of
       Left pace -> pure $ DeriveDistance a pace
-      Right _ ->
-        throwText "Deriving distance requires that pace has units."
+      Right _ -> throwIO CommandDeriveNoPaceUnit
     -- PaceOptUnits x Distance -> Duration
     (Nothing, Just b, Just c) -> pure $ DeriveDuration b c
     -- Duration x Distance -> Pace
     (Just a, Nothing, Just c) -> pure $ DerivePace a c
-    _ -> throwText "Derive requires exactly 2 options, received 1."
+    _ -> throwIO CommandDeriveArgs1
 
 -- TODO: Convert units command
 
@@ -110,14 +120,12 @@ argsToScale deriveArgs = do
          deriveArgs.mDuration,
          deriveArgs.mPaceOptUnits
        ) of
-    (Just _, Just _, Just _) ->
-      throwText "Scale requires exactly 1 quantity, received 3."
-    (Nothing, Nothing, Nothing) ->
-      throwText "Scale requires exactly 1 quantity, received 0."
+    (Just _, Just _, Just _) -> throwIO CommandScaleArgs3
+    (Nothing, Nothing, Nothing) -> throwIO CommandScaleArgs0
     (Just a, Nothing, Nothing) -> pure $ ScaleDistance a
     (Nothing, Just b, Nothing) -> pure $ ScaleDuration b
     (Nothing, Nothing, Just c) -> pure $ ScalePace c
-    _ -> throwText "Scale requires exactly 1 quantity, received 2."
+    _ -> throwIO CommandScaleArgs2
 
 cmdParser :: Parser Command
 cmdParser =

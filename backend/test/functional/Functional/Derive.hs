@@ -1,6 +1,7 @@
 module Functional.Derive (tests) where
 
 import Functional.Prelude
+import Pacer.Exception (CommandDeriveE)
 
 tests :: TestTree
 tests =
@@ -11,7 +12,7 @@ tests =
       testDeriveToPace,
       testDeriveError
         "Empty args error"
-        "Derive requires exactly 2 options, received 0."
+        "Derive requires exactly 2 quantities, received 0."
         [],
       testDeriveError
         "Distance only error"
@@ -31,14 +32,14 @@ tests =
         ["--duration", "3h", "--pace", "4m30s"],
       testDeriveError
         "3 args error"
-        "Derive requires exactly 2 options, received 3."
+        "Derive requires exactly 2 quantities, received 3."
         ["--distance", "marathon", "--duration", "3h", "--pace", "4m30s"]
     ]
   where
-    singleArgErr = "Derive requires exactly 2 options, received 1."
+    singleArgErr = "Derive requires exactly 2 quantities, received 1."
 
     testDeriveError desc expected args =
-      runException @TextException desc expected args'
+      runException @CommandDeriveE desc expected args'
       where
         args' = "derive" : args
 

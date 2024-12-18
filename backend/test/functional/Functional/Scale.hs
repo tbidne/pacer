@@ -1,6 +1,7 @@
 module Functional.Scale (tests) where
 
 import Functional.Prelude
+import Pacer.Exception (CommandScaleE)
 
 tests :: TestTree
 tests =
@@ -32,7 +33,7 @@ tests =
     ]
   where
     testScaleError desc expected args =
-      runException @TextException desc expected args'
+      runException @CommandScaleE desc expected args'
       where
         args' = "scale" : "-k" : "2" : args
 

@@ -68,6 +68,7 @@ library
     Pacer.Data.Pace
     Pacer.Derive
     Pacer.Driver
+    Pacer.Exception
     Pacer.Prelude
     Pacer.Utils
 

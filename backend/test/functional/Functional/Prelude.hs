@@ -40,6 +40,7 @@ import Hedgehog as X
     (===),
   )
 import Pacer.Driver (runAppWith)
+import Pacer.Exception (displayInnerMatchKnown)
 import Pacer.Prelude as X hiding (IO)
 import System.Environment (withArgs)
 import System.IO as X (IO)
