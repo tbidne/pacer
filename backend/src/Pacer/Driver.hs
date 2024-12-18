@@ -80,7 +80,7 @@ handleDerive handler ddpArgs =
               MkSomeDistance sdist distx ->
                 case sdist of
                   SMeter ->
-                    let disty = Dist.convertDistance distx
+                    let disty = Dist.convertDistance_ distx
                      in Derive.deriveDuration disty (MkPace @Kilometer paceDuration)
                   SKilometer -> Derive.deriveDuration distx (MkPace paceDuration)
                   SMile -> Derive.deriveDuration distx (MkPace paceDuration)

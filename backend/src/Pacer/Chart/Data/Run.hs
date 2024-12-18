@@ -4,12 +4,15 @@ module Pacer.Chart.Data.Run
   ( -- * Run
     Run (..),
     RunTimestamp (..),
-    toMeters,
-    convertDistance,
+
+    -- ** Functions
+    derivePace,
 
     -- * SomeRun
     SomeRun (..),
-    convertSomeDistance,
+
+    -- ** Functions
+    deriveSomePace,
 
     -- * SomeRuns
     SomeRunsKey (..),
@@ -30,12 +33,17 @@ import Data.Time.LocalTime
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Data.Distance
-  ( Distance,
-    DistanceUnit (Meter),
+  ( ConvertDistance (convertDistance_),
+    Distance,
+    DistanceUnit (Kilometer),
+    HasDistance (HideDistance, distanceUnitOf, hideDistance),
     SomeDistance (MkSomeDistance),
   )
 import Pacer.Data.Distance qualified as Dist
+import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
 import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
+import Pacer.Derive qualified as Derive
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML
@@ -118,47 +126,49 @@ data Run dist a = MkRun
   }
   deriving stock (Eq, Show)
 
--- | Converts arbitrary run to meters.
-toMeters ::
-  ( AMonoid a,
-    FromInteger a,
-    MSemigroup a,
-    Ord a,
-    Show a,
-    SingI dist
-  ) =>
-  Run dist a ->
-  Run Meter a
-toMeters r =
-  MkRun
-    { datetime = r.datetime,
-      distance = Dist.toMeters r.distance,
-      duration = r.duration,
-      labels = r.labels,
-      title = r.title
-    }
+-- NOTE: ConvertDistance needs a Semifield instance presumably because
+-- Run contains Positive, which needs it for construction.
 
--- | Converts arbitrary run to some distance unit.
-convertDistance ::
-  forall d2 d1 a.
-  ( AMonoid a,
-    FromInteger a,
-    MGroup a,
+instance
+  ( FromInteger a,
     Ord a,
+    Semifield a,
     Show a,
-    SingI d1,
-    SingI d2
+    SingI dist,
+    SingI e
   ) =>
-  Run d1 a ->
-  Run d2 a
-convertDistance r =
-  MkRun
-    { datetime = r.datetime,
-      distance = Dist.convertDistance @d2 r.distance,
-      duration = r.duration,
-      labels = r.labels,
-      title = r.title
-    }
+  ConvertDistance (Run dist a) e
+  where
+  type ConvertedDistance (Run dist a) e = Run e a
+
+  convertDistance_ r =
+    MkRun
+      { datetime = r.datetime,
+        distance = convertDistance_ r.distance,
+        duration = r.duration,
+        labels = r.labels,
+        title = r.title
+      }
+
+instance (SingI dist) => HasDistance (Run dist a) where
+  type HideDistance (Run dist a) = SomeRun a
+
+  distanceUnitOf _ = fromSingI @_ @dist
+
+  hideDistance = MkSomeRun (sing @dist)
+
+-- | Derives the pace from a run.
+derivePace ::
+  ( FromInteger a,
+    MGroup a,
+    PaceDistF d
+  ) =>
+  Run d a ->
+  Pace d a
+derivePace r =
+  Derive.derivePace
+    r.distance
+    ((.unPositive) <$> r.duration)
 
 -- | Existential quantifies a Run's distance.
 type SomeRun :: Type -> Type
@@ -166,10 +176,22 @@ data SomeRun a where
   MkSomeRun :: Sing d -> Run d a -> SomeRun a
 
 instance
-  ( AMonoid a,
-    FromInteger a,
-    MSemigroup a,
+  ( FromInteger a,
+    Ord a,
+    Semifield a,
+    Show a,
+    SingI e
+  ) =>
+  ConvertDistance (SomeRun a) e
+  where
+  type ConvertedDistance (SomeRun a) e = Run e a
+
+  convertDistance_ (MkSomeRun s x) = withSingI s convertDistance_ x
+
+instance
+  ( FromInteger a,
     MetricSpace a,
+    Semifield a,
     Ord a,
     Show a
   ) =>
@@ -178,8 +200,8 @@ instance
   MkSomeRun sx x == MkSomeRun sy y =
     withSingI sx
       $ withSingI sy
-      $ toMeters x
-      == toMeters y
+      $ Dist.convertToMeters_ x
+      == Dist.convertToMeters_ y
 
 instance (Show a) => Show (SomeRun a) where
   showsPrec i (MkSomeRun s r) =
@@ -190,6 +212,13 @@ instance (Show a) => Show (SomeRun a) where
           . showSpace
           . withSingI s showsPrec 11 r
       )
+
+instance HasDistance (SomeRun a) where
+  type HideDistance (SomeRun a) = SomeRun a
+
+  distanceUnitOf (MkSomeRun s _) = fromSing s
+
+  hideDistance = id
 
 instance
   ( FromRational a,
@@ -224,26 +253,6 @@ decodeDistance = tomlDecoder >>= P.parseFail
 
 decodeDuration :: forall a. (Parser (Seconds a)) => Decoder (Seconds a)
 decodeDuration = tomlDecoder >>= P.parseFail
-
--- | Converts arbitrary run to some distance unit.
-convertSomeDistance ::
-  forall d a.
-  ( FromInteger a,
-    Ord a,
-    Semifield a,
-    Show a,
-    SingI d
-  ) =>
-  SomeRun a ->
-  Run d a
-convertSomeDistance (MkSomeRun s r) =
-  MkRun
-    { datetime = r.datetime,
-      distance = withSingI s $ Dist.convertDistance @d r.distance,
-      duration = r.duration,
-      labels = r.labels,
-      title = r.title
-    }
 
 -- | Key for 'SomeRuns'. Used to enforce that timestamps are unique.
 newtype SomeRunsKey a = MkSomeRunsKey {unSomeRunsKey :: SomeRun a}
@@ -334,3 +343,16 @@ type SomeRunsAcc a =
   Either
     (Tuple2 TitleAndTime TitleAndTime)
     (NEMap RunTimestamp (SomeRunsKey a))
+
+deriveSomePace ::
+  ( FromInteger a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  SomeRun a ->
+  SomePace a
+deriveSomePace (MkSomeRun sr r) = case sr of
+  SMeter -> hideDistance $ derivePace (convertDistance_ @_ @Kilometer r)
+  SKilometer -> hideDistance $ derivePace r
+  SMile -> hideDistance $ derivePace r

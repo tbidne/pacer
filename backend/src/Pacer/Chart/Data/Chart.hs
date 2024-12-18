@@ -13,10 +13,11 @@ import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Pacer.Chart.Data.ChartRequest
-  ( ChartRequest (filters, title, yAxis, yAxis1),
+  ( ChartRequest (filters, title, y1Axis, yAxis),
     ChartRequests (unChartRequests),
     FilterExpr,
-    FilterType (FilterLabel),
+    FilterOp (FilterEq, FilterGt, FilterGte, FilterLt, FilterLte),
+    FilterType (FilterDistance, FilterDuration, FilterLabel, FilterPace),
     YAxisType
       ( YAxisDistance,
         YAxisDuration,
@@ -32,13 +33,17 @@ import Pacer.Chart.Data.Run
     SomeRunsKey (MkSomeRunsKey, unSomeRunsKey),
   )
 import Pacer.Chart.Data.Run qualified as Run
-import Pacer.Data.Distance (Distance (unDistance))
+import Pacer.Data.Distance
+  ( Distance (unDistance),
+    SomeDistance (MkSomeDistance),
+  )
+import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Duration (Duration (unDuration))
-import Pacer.Derive qualified as Derive
+import Pacer.Data.Pace (SomePace (MkSomePace))
 import Pacer.Prelude
 
 -- | Holds all data associated to a chart.
@@ -125,13 +130,14 @@ type AccY1 = NESeq (Tuple3 RunTimestamp Double Double)
 -- | Turns a sequence of runs and chart requests into charts.
 mkCharts ::
   ( FromInteger a,
+    MetricSpace a,
     Ord a,
     Semifield a,
     Show a,
     ToReal a
   ) =>
   SomeRuns a ->
-  ChartRequests ->
+  ChartRequests a ->
   Seq (Either Text Chart)
 mkCharts runs = fmap (mkChart runs) . (.unChartRequests)
 
@@ -144,6 +150,7 @@ mkCharts runs = fmap (mkChart runs) . (.unChartRequests)
 mkChart ::
   forall a.
   ( FromInteger a,
+    MetricSpace a,
     Ord a,
     Semifield a,
     Show a,
@@ -152,7 +159,7 @@ mkChart ::
   -- | List of runs.
   SomeRuns a ->
   -- | Chart request.
-  ChartRequest ->
+  ChartRequest a ->
   -- | Chart result. Nothing if no runs passed the request's filter.
   Either Text Chart
 mkChart
@@ -173,15 +180,15 @@ mkChart
         SMile -> Mile
 
       mkChartData :: NESeq (SomeRun a) -> ChartData
-      mkChartData runs = case request.yAxis1 of
+      mkChartData runs = case request.y1Axis of
         Nothing ->
           let vals = withSingI sd $ foldMap1 toAccY runs
               lbl = mkYLabel request.yAxis
            in MkChartDataY (MkChartY vals lbl)
-        Just yAxis1 ->
-          let vals = withSingI sd $ foldMap1 (toAccY1 yAxis1) runs
+        Just y1Axis ->
+          let vals = withSingI sd $ foldMap1 (toAccY1 y1Axis) runs
               lbl = mkYLabel request.yAxis
-              lbl1 = mkYLabel yAxis1
+              lbl1 = mkYLabel y1Axis
            in MkChartDataY1 (MkChartY1 vals lbl lbl1)
 
       mkYLabel :: YAxisType -> Text
@@ -207,28 +214,56 @@ mkChart
         YAxisDistance ->
           withSingI s $ toℝ $ case finalDistUnit of
             -- NOTE: [Brackets with OverloadedRecordDot]
-            Meter -> (Run.convertDistance @Kilometer r).distance.unDistance
-            Kilometer -> (Run.convertDistance @Kilometer r).distance.unDistance
-            Mile -> (Run.convertDistance @Mile r).distance.unDistance
+            Meter -> (Dist.convertDistance_ @_ @Kilometer r).distance.unDistance
+            Kilometer -> (Dist.convertDistance_ @_ @Kilometer r).distance.unDistance
+            Mile -> (Dist.convertDistance_ @_ @Mile r).distance.unDistance
         YAxisDuration -> toℝ r.duration.unDuration
         YAxisPace ->
           withSingI s $ toℝ $ case finalDistUnit of
-            Meter -> runToPace (Run.convertDistance @Kilometer r)
-            Kilometer -> runToPace (Run.convertDistance @Kilometer r)
-            Mile -> runToPace (Run.convertDistance @Kilometer r)
+            Meter -> runToPace (Dist.convertDistance_ @_ @Kilometer r)
+            Kilometer -> runToPace (Dist.convertDistance_ @_ @Kilometer r)
+            -- TODO: Previously this was converting to Kilometers, but that
+            -- was almost certainly a bug that tests did not catch.
+            -- Let's write one.
+            Mile -> runToPace (Dist.convertDistance_ @_ @Mile r)
           where
             runToPace runUnits =
-              let pace =
-                    Derive.derivePace
-                      runUnits.distance
-                      ((.unPositive) <$> runUnits.duration)
-               in pace.unPace.unDuration
+              (Run.derivePace runUnits).unPace.unDuration
 
-filterRuns :: NESeq (SomeRunsKey a) -> List FilterExpr -> Seq (SomeRun a)
+filterRuns ::
+  forall a.
+  ( FromInteger a,
+    MetricSpace a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  NESeq (SomeRunsKey a) ->
+  List (FilterExpr a) ->
+  Seq (SomeRun a)
 filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
   where
     filterRun :: SomeRunsKey a -> Bool
     filterRun r = all (eval (applyFilter r)) filters
 
-    applyFilter :: SomeRunsKey a -> FilterType -> Bool
+    applyFilter :: SomeRunsKey a -> FilterType a -> Bool
     applyFilter (MkSomeRunsKey (MkSomeRun _ r)) (FilterLabel lbl) = lbl `elem` r.labels
+    applyFilter (MkSomeRunsKey (MkSomeRun @runDist sr r)) (FilterDistance op (MkSomeDistance sd d)) =
+      let d' = withSingI sr $ withSingI sd $ Dist.convertDistance_ @_ @runDist d
+       in withSingI sr $ (opToFun op) r.distance d'
+    applyFilter (MkSomeRunsKey (MkSomeRun _ r)) (FilterDuration op d) = (opToFun op) r.duration d
+    applyFilter (MkSomeRunsKey someRun) (FilterPace op (MkSomePace sfp filterPace)) =
+      -- 1. convert someRun to runPace
+      case Run.deriveSomePace someRun of
+        (MkSomePace @runDist srp runPace) ->
+          -- 2. convert filterPace to runPace's units
+          withSingI srp
+            $ withSingI sfp
+            $ case Dist.convertDistance_ @_ @runDist filterPace of
+              p' -> (opToFun op) runPace ((.unPositive) <$> p')
+
+    opToFun FilterLt = (<)
+    opToFun FilterLte = (>=)
+    opToFun FilterEq = (==)
+    opToFun FilterGt = (>)
+    opToFun FilterGte = (>=)

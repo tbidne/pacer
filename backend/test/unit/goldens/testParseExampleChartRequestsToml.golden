@@ -4,7 +4,7 @@ MkChartRequests
             { filters = []
             , title = "Runs by distance"
             , yAxis = YAxisDistance
-            , yAxis1 = Nothing
+            , y1Axis = Nothing
             }
         , MkChartRequest
             { filters =
@@ -13,7 +13,7 @@ MkChartRequests
                 ]
             , title = "Marathons"
             , yAxis = YAxisDuration
-            , yAxis1 = Just YAxisPace
+            , y1Axis = Just YAxisPace
             }
         , MkChartRequest
             { filters =
@@ -26,7 +26,7 @@ MkChartRequests
                 ]
             , title = "Official non-marathons"
             , yAxis = YAxisPace
-            , yAxis1 = Nothing
+            , y1Axis = Nothing
             }
         , MkChartRequest
             { filters =
@@ -40,7 +40,7 @@ MkChartRequests
                 ]
             , title = "Marathons and half-marathons"
             , yAxis = YAxisPace
-            , yAxis1 = Nothing
+            , y1Axis = Nothing
             }
         ]
     }

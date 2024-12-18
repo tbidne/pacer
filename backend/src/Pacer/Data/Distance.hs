@@ -1,16 +1,26 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE UndecidableInstances #-}
+
+{- ORMOLU_DISABLE -}
+
 -- | Provide distance types.
 module Pacer.Data.Distance
   ( -- * Distance
     Distance (..),
 
-    -- ** Functions
-    toMeters,
-    convertDistance,
-
     -- * Some Distance
     SomeDistance (..),
-    someToMeters,
-    convertSomeDistance,
+
+    -- * Conversion
+    ConvertDistance (..),
+
+#if MIN_VERSION_base(4, 20, 0)
+    convertDistance,
+#endif
+
+    convertToMeters_,
+    convertToKilometers_,
 
     -- * Units
     DistanceUnit (..),
@@ -20,6 +30,9 @@ module Pacer.Data.Distance
     Kilometers,
     Miles,
 
+    -- * Hiding Distance
+    HasDistance (..),
+
     -- * Misc
     marathon,
     halfMarathon,
@@ -27,6 +40,8 @@ module Pacer.Data.Distance
     k_5,
   )
 where
+
+{- ORMOLU_ENABLE -}
 
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Units (singFactor)
@@ -122,6 +137,13 @@ instance (FromReal a) => FromReal (Distance d a) where
 instance (ToReal a) => ToReal (Distance d a) where
   toR (MkDistance x) = toR x
 
+instance (SingI d) => HasDistance (Distance d a) where
+  type HideDistance (Distance d a) = SomeDistance a
+
+  distanceUnitOf _ = fromSingI @_ @d
+
+  hideDistance = MkSomeDistance (sing @d)
+
 -- NOTE: [Distance Parsing]
 --
 -- No units, simply reuses Double's instances in Parser.hs.
@@ -152,56 +174,6 @@ liftDist2 ::
   Distance d a
 liftDist2 f (MkDistance x) (MkDistance y) = MkDistance (f x y)
 
--- | Converts any distance to meters.
-toMeters ::
-  forall d a.
-  ( FromInteger a,
-    MSemigroup a,
-    SingI d
-  ) =>
-  Distance d a ->
-  Meters a
-toMeters = MkDistance . (.*. toBase) . (.unDistance)
-  where
-    toBase = singFactor @_ @d
-
--- Technically toMeters is a special case of convertDistance, but by
--- re-implementing it we avoid the 'MGroup' requirement.
-
--- | Convert from on distance to another.
-convertDistance ::
-  forall d2 d1 a.
-  ( FromInteger a,
-    MGroup a,
-    SingI d1,
-    SingI d2
-  ) =>
-  Distance d1 a ->
-  Distance d2 a
-convertDistance = MkDistance . (.%. fromBase) . (.*. toBase) . (.unDistance)
-  where
-    toBase = singFactor @_ @d1
-    fromBase = singFactor @_ @d2
-
--- | Converts some distance to meters.
-someToMeters ::
-  ( FromInteger a,
-    MGroup a
-  ) =>
-  SomeDistance a ->
-  Meters a
-someToMeters (MkSomeDistance u x) = withSingI u toMeters x
-
-convertSomeDistance ::
-  forall d a.
-  ( FromInteger a,
-    MGroup a,
-    SingI d
-  ) =>
-  SomeDistance a ->
-  Distance d a
-convertSomeDistance (MkSomeDistance s x) = withSingI s convertDistance x
-
 -- | Distance, existentially quantifying the units.
 type SomeDistance :: Type -> Type
 data SomeDistance a where
@@ -210,7 +182,7 @@ data SomeDistance a where
 deriving stock instance Functor SomeDistance
 
 instance (FromInteger a, MetricSpace a, MGroup a) => Eq (SomeDistance a) where
-  t1 == t2 = someToMeters t1 == someToMeters t2
+  t1 == t2 = convertToMeters_ t1 == convertToMeters_ t2
 
 instance
   ( FromInteger a,
@@ -220,7 +192,7 @@ instance
   ) =>
   Ord (SomeDistance a)
   where
-  t1 <= t2 = someToMeters t1 <= someToMeters t2
+  t1 <= t2 = convertToMeters_ t1 <= convertToMeters_ t2
 
 instance HasField "unSomeDistance" (SomeDistance a) a where
   getField (MkSomeDistance _ (MkDistance x)) = x
@@ -271,19 +243,26 @@ instance (FromRational a) => FromRational (SomeDistance a) where
   fromQ = MkSomeDistance SMeter . fromQ
 
 instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomeDistance a) where
-  toQ = toQ . someToMeters
+  toQ = toQ . convertToMeters_
 
 instance (FromReal a) => FromReal (SomeDistance a) where
   fromR = MkSomeDistance SMeter . fromR
 
 instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomeDistance a) where
-  toR = toR . someToMeters
+  toR = toR . convertToMeters_
 
 instance (FromInteger a) => FromInteger (SomeDistance a) where
   fromZ = MkSomeDistance SMeter . fromZ
 
 instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomeDistance a) where
-  toZ = toZ . someToMeters
+  toZ = toZ . convertToMeters_
+
+instance HasDistance (SomeDistance a) where
+  type HideDistance (SomeDistance a) = SomeDistance a
+
+  distanceUnitOf (MkSomeDistance sd _) = fromSing sd
+
+  hideDistance = id
 
 -- NOTE: [SomeDistance Parsing]
 --
@@ -310,7 +289,7 @@ liftSomeDist2 ::
   SomeDistance a ->
   SomeDistance a
 liftSomeDist2 f x y =
-  MkSomeDistance SMeter (someToMeters x `f` someToMeters y)
+  hideDistance (convertToMeters_ x `f` convertToMeters_ y)
 
 -- NOTE: Values hardcoded rather than multiplied by factor to avoid some
 -- (minor) float rounding.
@@ -366,3 +345,95 @@ type Kilometers a = Distance Kilometer a
 
 -- | Alias for 'Distance Miles'.
 type Miles a = Distance Mile a
+
+-- NOTE: [ConvertDistance and constraints]
+--
+-- The simplest way to define ConvertDistance is something like:
+--
+--     class ConvertDistance a where
+--       type ToConstraints (e :: DistanceUnit) a :: Constraint
+--       type ConvertedDistance (e :: DistanceUnit) a
+--
+--       convertDistance_ :: (SingI e, ToConstraints e a) => a -> ConvertedDistance e a
+--
+-- Alas, while this works for most types, unfortunately it does not work for
+-- Pace, because Pace must also include PaceDistF on its return type e.
+-- We cannot include type constraints on e directly, so a workaround is:
+--
+--     class ConvertDistance a where
+--       type ToConstraints (e :: DistanceUnit) a :: Constraint
+--       type ConvertedDistance (e :: DistanceUnit) a
+--
+--       convertDistance :: (SingI e, ToConstraints e a) => Proxy e -> a -> ConvertedDistance e a
+--
+-- That is, we include a second type family for possible constraints. Most
+-- types would leave this as () (empty constraint), but Pace would have:
+--
+--     instance (FromInteger a, PaceDistF d, Semifield a, SingI d) => ConvertDistance (Pace d a) where
+--       type ToConstraints e (Pace d a) = (PaceDistF e)
+--       type ConvertDistance e (Pace d a) = Pace e a
+--
+--       convertDistance :: forall e. (PaceDistF e, SingI e) => Proxy e -> Pace d a -> Pace e a
+--       convertDistance _ = MkPace . (.% fromBase) . (.* toBase) . (.unPace)
+--         where
+--           toBase = singFactor @_ @d
+--           fromBase = singFactor @_ @e
+--
+-- The Proxy is due to needing to pass e into fromBase (cannot be inferred,
+-- apparently), and unforunately we cannot use TypeAbstraction to recover
+-- the type until at least GHC 9.10 (e.g. convertDistance @e).
+--
+-- Due to the Proxy and forall weirdness, we instead go with the simpler MPTC
+-- solution. Once we require GHC 9.10+, we can try the associated type
+-- solution.
+
+-- | Common interface for converting distance units.
+type ConvertDistance :: Type -> DistanceUnit -> Constraint
+class ConvertDistance a e where
+  type ConvertedDistance a e
+
+  convertDistance_ :: a -> ConvertedDistance a e
+
+instance (FromInteger a, MGroup a, SingI d, SingI e) => ConvertDistance (Distance d a) e where
+  type ConvertedDistance (Distance d a) e = Distance e a
+
+  convertDistance_ :: Distance d a -> Distance e a
+  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . (.unDistance)
+    where
+      toBase = singFactor @_ @d
+      fromBase = singFactor @_ @e
+
+instance (FromInteger a, MGroup a, SingI e) => ConvertDistance (SomeDistance a) e where
+  type ConvertedDistance (SomeDistance a) e = Distance e a
+
+  convertDistance_ :: SomeDistance a -> Distance e a
+  convertDistance_ (MkSomeDistance s x) = withSingI s convertDistance_ x
+
+-- | Convert to meters.
+convertToMeters_ :: (ConvertDistance a Meter) => a -> ConvertedDistance a Meter
+convertToMeters_ = convertDistance_ @_ @Meter
+
+-- | Convert to kilometers.
+convertToKilometers_ ::
+  (ConvertDistance a Kilometer) => a -> ConvertedDistance a Kilometer
+convertToKilometers_ = convertDistance_ @_ @Kilometer
+
+#if MIN_VERSION_base(4, 20, 0)
+convertDistance ::
+  forall e ->
+  forall a.
+  (ConvertDistance a) =>
+  a ->
+  ConvertedDistance e a
+convertDistance _ = convertDistance_
+#endif
+
+-- | Class that provides a unified interface for handling distance units.
+class HasDistance a where
+  type HideDistance a
+
+  -- | Retrieves the type of distance unit.
+  distanceUnitOf :: a -> DistanceUnit
+
+  -- | Hides the distance unit.
+  hideDistance :: a -> HideDistance a

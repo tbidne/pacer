@@ -425,3 +425,5 @@ type Minutes a = Duration Minute a
 
 -- | Alias for 'Duration Hour'.
 type Hours a = Duration Hour a
+
+-- TODO: Consider HasDuration and ConvertDuration classes

@@ -1,19 +1,27 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Chart.Data.ChartRequest
   ( -- * ChartRequest
     ChartRequest (..),
+    YAxisType (..),
+
+    -- ** Filtering
     FilterType (..),
+    FilterOp (..),
     Expr (..),
     eval,
     FilterExpr,
-    YAxisType (..),
 
     -- * ChartRequests
     ChartRequests (..),
   )
 where
 
-import Pacer.Class.Parser (Parser)
+import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
+import Pacer.Data.Distance (SomeDistance)
+import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Pace (SomePace)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML
@@ -45,20 +53,67 @@ instance DecodeTOML YAxisType where
                 "', expected one of (distance|duration|pace)."
               ]
 
--- TODO: More filters e.g. inequalities w/ distance, duration, pace
+-- FIXME: Can we just use a binary function instead?
 
--- | Ways in which we can filter runs.
-newtype FilterType
-  = -- | Filters by label equality.
-    FilterLabel Text
+data FilterOp
+  = FilterLt
+  | FilterLte
+  | FilterEq
+  | FilterGt
+  | FilterGte
   deriving stock (Eq, Show)
 
-instance Parser FilterType where
-  parser = parseLabel
+instance Parser FilterOp where
+  parser =
+    MP.choice
+      [ MPC.string "<=" $> FilterLte,
+        MPC.char '<' $> FilterLt,
+        MPC.char '=' $> FilterEq,
+        MPC.string ">=" $> FilterGte,
+        MPC.char '>' $> FilterGt
+      ]
+
+-- | Ways in which we can filter runs.
+data FilterType a
+  = -- | Filters by label equality.
+    FilterLabel Text
+  | FilterDistance FilterOp (SomeDistance (Positive a))
+  | FilterDuration FilterOp (Seconds (Positive a))
+  | FilterPace FilterOp (SomePace (Positive a))
+  deriving stock (Eq, Show)
+
+instance
+  ( FromRational a,
+    Ord a,
+    Parser (Positive a),
+    Semifield a,
+    Show a
+  ) =>
+  Parser (FilterType a)
+  where
+  parser =
+    MP.choice
+      [ parseLabel,
+        parseDist,
+        parseDuration,
+        parsePace
+      ]
     where
       parseLabel = do
         void $ MPC.string "label "
         FilterLabel <$> MP.takeWhile1P Nothing (/= ')')
+
+      parseDist = parsePred "distance" FilterDistance
+      parseDuration = parsePred "duration" FilterDuration
+      parsePace = parsePred "pace" FilterPace
+
+      parsePred s cons = do
+        MPC.string s
+        MPC.space1
+        op <- parser
+        MPC.space1
+        d <- parser
+        pure $ cons op d
 
 -- | Expressions upon which we can filter
 data Expr a
@@ -83,7 +138,7 @@ eval p = go
     go (And e1 e2) = go e1 && go e2
 
 -- | Alias for a filter expression.
-type FilterExpr = Expr FilterType
+type FilterExpr a = Expr (FilterType a)
 
 instance (Parser a) => Parser (Expr a) where
   parser = parseFilter
@@ -130,35 +185,51 @@ instance (Parser a) => DecodeTOML (Expr a) where
 -- TODO: Chart request could have optional units
 
 -- | Chart request type.
-data ChartRequest = MkChartRequest
+data ChartRequest a = MkChartRequest
   { -- | Optional list of filters to apply. The filters are "AND'd" together.
-    filters :: List FilterExpr,
+    filters :: List (FilterExpr a),
     -- | Title for this chart.
     title :: Text,
     -- | Y-axis value.
     yAxis :: YAxisType,
     -- | Optional second y-axis.
-    yAxis1 :: Maybe YAxisType
+    y1Axis :: Maybe YAxisType
   }
   deriving stock (Eq, Show)
 
-instance DecodeTOML ChartRequest where
+instance
+  ( FromRational a,
+    Ord a,
+    Parser (Positive a),
+    Semifield a,
+    Show a
+  ) =>
+  DecodeTOML (ChartRequest a)
+  where
   tomlDecoder = do
     filters <- Utils.getFieldOptArrayOf "filters"
     title <- TOML.getFieldWith tomlDecoder "title"
     yAxis <- TOML.getFieldWith tomlDecoder "y-axis"
-    yAxis1 <- TOML.getFieldOptWith tomlDecoder "y1-axis"
+    y1Axis <- TOML.getFieldOptWith tomlDecoder "y1-axis"
     pure
       $ MkChartRequest
         { filters,
           title,
           yAxis,
-          yAxis1
+          y1Axis
         }
 
 -- | List of chart requests.
-newtype ChartRequests = MkChartRequests {unChartRequests :: Seq ChartRequest}
+newtype ChartRequests a = MkChartRequests {unChartRequests :: Seq (ChartRequest a)}
   deriving stock (Eq, Show)
 
-instance DecodeTOML ChartRequests where
+instance
+  ( FromRational a,
+    Ord a,
+    Parser (Positive a),
+    Semifield a,
+    Show a
+  ) =>
+  DecodeTOML (ChartRequests a)
+  where
   tomlDecoder = MkChartRequests <$> TOML.getFieldWith tomlDecoder "charts"

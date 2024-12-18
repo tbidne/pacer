@@ -118,7 +118,7 @@ createChartSeq ::
   IO (Seq Chart)
 createChartSeq runsPath chartRequestsPath = do
   runs <- readDecodeToml @(SomeRuns Double) runsPath
-  chartRequests <- readDecodeToml @ChartRequests chartRequestsPath
+  chartRequests <- readDecodeToml @(ChartRequests Double) chartRequestsPath
 
   let titlesOrCharts = Chart.mkCharts runs chartRequests
 

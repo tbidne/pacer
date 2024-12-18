@@ -16,7 +16,7 @@ where
 
 import Pacer.Data.Distance
   ( Distance (MkDistance, unDistance),
-    DistanceUnit (Kilometer),
+    HasDistance (hideDistance),
     SomeDistance (MkSomeDistance),
   )
 import Pacer.Data.Distance qualified as Dist
@@ -62,12 +62,12 @@ deriveSomePace ::
 deriveSomePace (MkSomeDistance sdist distance) duration =
   case sdist of
     SMeter ->
-      let distanceKm = Dist.convertDistance @Kilometer distance
-       in MkSomePace SKilometer $ derivePace distanceKm duration
+      let distanceKm = Dist.convertToKilometers_ distance
+       in hideDistance $ derivePace distanceKm duration
     SKilometer ->
-      MkSomePace SKilometer $ derivePace distance duration
+      hideDistance $ derivePace distance duration
     SMile ->
-      MkSomePace SMile $ derivePace distance duration
+      hideDistance $ derivePace distance duration
 
 -- | Given a distance and pace, derives the duration.
 deriveDuration ::
@@ -101,7 +101,7 @@ deriveSomeDuration
       distance' =
         withSingI sdistance
           $ withSingI space
-          $ Dist.convertDistance distance
+          $ Dist.convertDistance_ distance
 
 -- | Given a duration and pace, derives the distance.
 deriveDistance ::

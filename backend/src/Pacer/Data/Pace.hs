@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Data.Pace
@@ -11,10 +12,6 @@ module Pacer.Data.Pace
     -- ** Elimination
     unPace,
 
-    -- ** Functions
-    toKilometers,
-    convertPace,
-
     -- * SomePace
     SomePace (..),
 
@@ -23,9 +20,6 @@ module Pacer.Data.Pace
 
     -- ** Elimination
     unSomePace,
-
-    -- ** Functions
-    someToKilometers,
   )
 where
 
@@ -33,7 +27,12 @@ import GHC.TypeError (Unsatisfiable)
 import GHC.TypeError qualified as TE
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Units (singFactor)
-import Pacer.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
+import Pacer.Data.Distance
+  ( ConvertDistance (ConvertedDistance, convertDistance_),
+    DistanceUnit (Kilometer, Meter, Mile),
+    HasDistance (HideDistance, distanceUnitOf, hideDistance),
+  )
+import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
 import Pacer.Data.Duration (Duration (MkDuration), Seconds)
 import Pacer.Data.Duration qualified as Duration
@@ -143,6 +142,31 @@ instance (FromReal a, PaceDistF d) => FromReal (Pace d a) where
 instance (ToReal a) => ToReal (Pace d a) where
   toR = toR . (.unPace)
 
+instance
+  ( FromInteger a,
+    PaceDistF d,
+    PaceDistF e,
+    MGroup a,
+    SingI d,
+    SingI e
+  ) =>
+  ConvertDistance (Pace d a) e
+  where
+  type ConvertedDistance (Pace d a) e = Pace e a
+
+  convertDistance_ :: Pace d a -> Pace e a
+  convertDistance_ = MkPace . (.% fromBase) . (.* toBase) . (.unPace)
+    where
+      toBase = singFactor @_ @d
+      fromBase = singFactor @_ @e
+
+instance (PaceDistF d, SingI d) => HasDistance (Pace d a) where
+  type HideDistance (Pace d a) = SomePace a
+
+  distanceUnitOf _ = fromSingI @_ @d
+
+  hideDistance = MkSomePace (sing @d)
+
 -- NOTE: [Pace Parsing]
 --
 -- Parses a pace like "1h 4'30\"", where each h/m/s component is optional,
@@ -189,40 +213,10 @@ mkPace = MkPace . Duration.toSeconds
 unPace :: Pace d a -> Seconds a
 unPace (MkPace d) = d
 
--- | Converts pace to kilometers.
-toKilometers ::
-  forall d1 a.
-  ( FromInteger a,
-    MGroup a,
-    SingI d1
-  ) =>
-  Pace d1 a ->
-  Pace Kilometer a
-toKilometers = MkPace . (.% fromBase) . (.* toBase) . (.unPace)
-  where
-    toBase = singFactor @_ @d1
-    fromBase = singFactor @_ @Kilometer
-
--- | Converts pace to arbitrary units.
-convertPace ::
-  forall d1 d2 a.
-  ( FromInteger a,
-    MGroup a,
-    PaceDistF d2,
-    SingI d1,
-    SingI d2
-  ) =>
-  Pace d1 a ->
-  Pace d2 a
-convertPace = MkPace . (.% fromBase) . (.* toBase) . (.unPace)
-  where
-    toBase = singFactor @_ @d1
-    fromBase = singFactor @_ @d2
-
 -- | Pace, existentially quantifying the distance unit.
 type SomePace :: Type -> Type
 data SomePace a where
-  MkSomePace :: Sing d -> Pace d a -> SomePace a
+  MkSomePace :: (PaceDistF d) => Sing d -> Pace d a -> SomePace a
 
 deriving stock instance Functor SomePace
 
@@ -234,8 +228,7 @@ instance
   ) =>
   Eq (SomePace a)
   where
-  MkSomePace sx x == MkSomePace sy y =
-    withSingI sx toKilometers x == withSingI sy toKilometers y
+  (==) = applySomePaceKm2 (==)
 
 instance
   ( FromInteger a,
@@ -245,8 +238,7 @@ instance
   ) =>
   Ord (SomePace a)
   where
-  MkSomePace sx x <= MkSomePace sy y =
-    withSingI sx toKilometers x <= withSingI sy toKilometers y
+  (<=) = applySomePaceKm2 (<=)
 
 instance HasField "unSomePace" (SomePace a) (Seconds a) where
   getField = unSomePace
@@ -281,19 +273,39 @@ instance (FromRational a) => FromRational (SomePace a) where
   fromQ = MkSomePace SKilometer . fromQ
 
 instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomePace a) where
-  toQ = toQ . someToKilometers
+  toQ = toQ . Dist.convertToKilometers_
 
 instance (FromInteger a) => FromInteger (SomePace a) where
   fromZ = MkSomePace SKilometer . fromℤ
 
 instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomePace a) where
-  toZ = toZ . someToKilometers
+  toZ = toZ . Dist.convertToKilometers_
 
 instance (FromReal a) => FromReal (SomePace a) where
   fromR = MkSomePace SKilometer . fromR
 
 instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
-  toR = toR . someToKilometers
+  toR = toR . Dist.convertToKilometers_
+
+instance
+  ( FromInteger a,
+    MGroup a,
+    PaceDistF e,
+    SingI e
+  ) =>
+  ConvertDistance (SomePace a) e
+  where
+  type ConvertedDistance (SomePace a) e = Pace e a
+
+  convertDistance_ :: SomePace a -> Pace e a
+  convertDistance_ (MkSomePace s p) = withSingI s $ convertDistance_ p
+
+instance HasDistance (SomePace a) where
+  type HideDistance (SomePace a) = SomePace a
+
+  distanceUnitOf (MkSomePace s _) = fromSing s
+
+  hideDistance = id
 
 -- NOTE: [SomePace Parsing]
 --
@@ -354,12 +366,14 @@ unSomePace :: SomePace a -> Seconds a
 unSomePace (MkSomePace _ (MkPace x)) = x
 
 -- | Hides the distance.
-mkSomePace :: forall d a. (SingI d) => Pace d a -> SomePace a
+mkSomePace :: forall d a. (PaceDistF d, SingI d) => Pace d a -> SomePace a
 mkSomePace = MkSomePace (sing @d)
 
--- | Converts some distance to meters.
-someToKilometers ::
+applySomePaceKm2 ::
   (FromInteger a, MGroup a) =>
+  (Pace Kilometer a -> Pace Kilometer a -> r) ->
   SomePace a ->
-  Pace Kilometer a
-someToKilometers (MkSomePace s x) = withSingI s toKilometers x
+  SomePace a ->
+  r
+applySomePaceKm2 f p1 p2 =
+  Dist.convertToKilometers_ p1 `f` Dist.convertToKilometers_ p2

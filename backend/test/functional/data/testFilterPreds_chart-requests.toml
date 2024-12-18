@@ -1,0 +1,19 @@
+[[charts]]
+title = 'Long runs'
+y-axis = 'pace'
+filters = ['distance > 30km']
+
+[[charts]]
+title = 'Long runs 2'
+y-axis = 'distance'
+filters = ['distance >= 30km']
+
+[[charts]]
+title = 'Fast runs'
+y-axis = 'pace'
+filters = ['pace < 3m30s /km']
+
+[[charts]]
+title = 'Specific duration runs'
+y-axis = 'duration'
+filters = ['duration > 40m', 'duration < 3h']
