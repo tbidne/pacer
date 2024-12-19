@@ -4,7 +4,7 @@
   "description": "Generates graphs for runners",
   "main": "web/main.js",
   "scripts": {
-    "start": "node web/main.js",
+    "start": "npx webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

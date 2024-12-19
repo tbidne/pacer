@@ -91,22 +91,31 @@
           };
 
           mkPkg =
-            returnShellEnv:
+            includeWeb: returnShellEnv:
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
               name = "pacer";
               root = ./backend;
+
+              devTools =
+                if includeWeb then
+                  (nix-hs-utils.mkDevTools (compilerPkgs // { nixFmt = "nixfmt"; })) ++ webDeps
+                else
+                  null;
             };
+
+          webDeps = [ pkgs.nodejs_23 ];
         in
         {
-          packages.default = mkPkg false;
-          devShells = {
-            default = mkPkg true;
+          packages.default = mkPkg false false;
 
-            nodejs = pkgs.mkShell {
-              buildInputs = [
-                pkgs.nodejs_23
-              ];
+          devShells = {
+            backend = mkPkg false true;
+
+            default = mkPkg true true;
+
+            web = pkgs.mkShell {
+              buildInputs = webDeps;
             };
           };
 

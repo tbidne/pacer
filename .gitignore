@@ -8,6 +8,10 @@ cabal.project.local
 # nix
 /result
 
+# data
+/backend/data/input/chart-requests.toml
+/backend/data/input/runs.toml
+
 # web
 /web/data/input/charts.json
 /web/dist
