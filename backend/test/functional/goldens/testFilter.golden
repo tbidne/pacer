@@ -1,90 +1,239 @@
 [
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-15",
         "2024-10-20T14:30:00",
         "2024-10-25T12:00:00-08:00",
         "2024-10-26T12:00:00-08:00",
         "2024-10-27T12:00:00-08:00"
       ],
-      "y": {
-        "label": "km",
-        "values": [
-          5,
-          32.18,
-          42.195,
-          10,
-          10
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            5,
+            32.18,
+            42.195,
+            10,
+            10
+          ],
+          "fill": false,
+          "label": "distance",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Chart 1"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Chart 1"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "km"
+          }
+        }
+      }
+    }
   },
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-20T14:30:00",
         "2024-10-25T12:00:00-08:00"
       ],
-      "y": {
-        "label": "time",
-        "values": [
-          9654,
-          12000
-        ]
-      },
-      "y1": {
-        "label": "km",
-        "values": [
-          32.18,
-          42.195
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            9654,
+            12000
+          ],
+          "fill": false,
+          "label": "duration",
+          "tension": 0
+        },
+        {
+          "data": [
+            32.18,
+            42.195
+          ],
+          "fill": false,
+          "label": "distance",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Chart 2"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Chart 2"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "time"
+          }
+        },
+        "y1": {
+          "position": "right",
+          "title": {
+            "display": true,
+            "text": "km"
+          }
+        }
+      }
+    }
   },
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-25T12:00:00-08:00"
       ],
-      "y": {
-        "label": "/km",
-        "values": [
-          284.3938855314611
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            284.3938855314611
+          ],
+          "fill": false,
+          "label": "pace",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Chart 3"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Chart 3"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "/km"
+          }
+        }
+      }
+    }
   },
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-26T12:00:00-08:00"
       ],
-      "y": {
-        "label": "/km",
-        "values": [
-          360
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            360
+          ],
+          "fill": false,
+          "label": "pace",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Chart 4"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Chart 4"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "/km"
+          }
+        }
+      }
+    }
   },
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-26T12:00:00-08:00"
       ],
-      "y": {
-        "label": "/km",
-        "values": [
-          360
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            360
+          ],
+          "fill": false,
+          "label": "pace",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Chart 5"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Chart 5"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "/km"
+          }
+        }
+      }
+    }
   }
 ]
 

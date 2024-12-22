@@ -1,80 +1,201 @@
 [
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-10T12:00:00-08:00",
         "2024-10-15",
         "2024-10-20T14:30:00",
         "2024-10-25T12:00:00-08:00",
         "2024-10-28T12:00:00-08:00"
       ],
-      "y": {
-        "label": "km",
-        "values": [
-          21.0975,
-          5,
-          32.18,
-          42.195,
-          42.195
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            21.0975,
+            5,
+            32.18,
+            42.195,
+            42.195
+          ],
+          "fill": false,
+          "label": "distance",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Runs by distance"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Runs by distance"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "km"
+          }
+        }
+      }
+    }
   },
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-25T12:00:00-08:00",
         "2024-10-28T12:00:00-08:00"
       ],
-      "y": {
-        "label": "time",
-        "values": [
-          12000,
-          18900
-        ]
-      },
-      "y1": {
-        "label": "/km",
-        "values": [
-          284.3938855314611,
-          447.9203697120512
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            12000,
+            18900
+          ],
+          "fill": false,
+          "label": "duration",
+          "tension": 0
+        },
+        {
+          "data": [
+            284.3938855314611,
+            447.9203697120512
+          ],
+          "fill": false,
+          "label": "pace",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Marathons"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Marathons"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "time"
+          }
+        },
+        "y1": {
+          "position": "right",
+          "title": {
+            "display": true,
+            "text": "/km"
+          }
+        }
+      }
+    }
   },
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-10T12:00:00-08:00"
       ],
-      "y": {
-        "label": "/km",
-        "values": [
-          42.65908282971916
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            42.65908282971916
+          ],
+          "fill": false,
+          "label": "pace",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Official non-marathons"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Official non-marathons"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "/km"
+          }
+        }
+      }
+    }
   },
   {
-    "data": {
-      "x": [
+    "datasets": {
+      "xAxis": [
         "2024-10-10T12:00:00-08:00",
         "2024-10-25T12:00:00-08:00",
         "2024-10-28T12:00:00-08:00"
       ],
-      "y": {
-        "label": "/km",
-        "values": [
-          42.65908282971916,
-          284.3938855314611,
-          447.9203697120512
-        ]
-      }
+      "yAxes": [
+        {
+          "data": [
+            42.65908282971916,
+            284.3938855314611,
+            447.9203697120512
+          ],
+          "fill": false,
+          "label": "pace",
+          "tension": 0
+        }
+      ]
     },
-    "title": "Marathons and half-marathons"
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "title": {
+          "display": true,
+          "text": "Marathons and half-marathons"
+        }
+      },
+      "responsive": true,
+      "scales": {
+        "x": {
+          "title": {
+            "display": true,
+            "text": "datetime"
+          }
+        },
+        "y": {
+          "position": "left",
+          "title": {
+            "display": true,
+            "text": "/km"
+          }
+        }
+      }
+    }
   }
 ]
 

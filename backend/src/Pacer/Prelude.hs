@@ -43,7 +43,16 @@ module Pacer.Prelude
 
 #endif
 
-    -- * Exceptions
+    -- * Errors
+    -- ** Either
+    failLeft,
+    failMapLeft,
+    readFail,
+    throwLeft,
+    throwMapLeft,
+    errorLeft,
+    errorMapLeft,
+    -- ** Misc
     displayExceptiont,
 
     -- * Numeric
@@ -70,11 +79,6 @@ module Pacer.Prelude
 
     -- * Misc
     pattern SetToSeqNE,
-    errorLeft,
-    errorMapLeft,
-    failLeft,
-    failMapLeft,
-    readFail,
 
     -- Prelude re-exports
     module X
@@ -287,6 +291,13 @@ failMapLeft f = failLeft . first f
 failLeft :: (MonadFail m) => Either String a -> m a
 failLeft (Left str) = fail str
 failLeft (Right x) = pure x
+
+throwMapLeft :: (Exception e) => (a -> e) -> Either a b -> IO b
+throwMapLeft f = throwLeft . first f
+
+throwLeft :: (Exception e) => Either e a -> IO a
+throwLeft (Left ex) = throwIO ex
+throwLeft (Right x) = pure x
 
 showt :: (Show a) => a -> Text
 showt = packText . show

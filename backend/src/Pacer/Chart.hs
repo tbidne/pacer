@@ -29,7 +29,7 @@ import Pacer.Chart.Data.Chart (Chart)
 import Pacer.Chart.Data.Chart qualified as Chart
 import Pacer.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Chart.Data.Run (SomeRuns)
-import Pacer.Exception (CreateChartE (CreateChartFilterEmpty), TomlE (MkTomlE))
+import Pacer.Exception (TomlE (MkTomlE))
 import Pacer.Prelude
 import System.Directory.OsPath qualified as Dir
 import System.OsPath qualified as OsPath
@@ -120,11 +120,7 @@ createChartSeq runsPath chartRequestsPath = do
   runs <- readDecodeToml @(SomeRuns Double) runsPath
   chartRequests <- readDecodeToml @(ChartRequests Double) chartRequestsPath
 
-  let titlesOrCharts = Chart.mkCharts runs chartRequests
-
-  for titlesOrCharts $ \case
-    Right c -> pure c
-    Left t -> throwIO $ CreateChartFilterEmpty t
+  throwLeft (Chart.mkCharts runs chartRequests)
   where
     readDecodeToml :: forall a. (DecodeTOML a) => OsPath -> IO a
     readDecodeToml path = do

@@ -331,12 +331,44 @@ instance Ord (SomeRunsKey a) where
     r1.datetime <= r2.datetime
 
 -------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
+instance HasDistance (SomeRunsKey a) where
+  type DistanceVal (SomeRunsKey a) = SomeDistance (Positive a)
+  type HideDistance (SomeRunsKey a) = SomeRunsKey a
+
+  distanceUnitOf :: SomeRunsKey a -> DistanceUnit
+  distanceUnitOf (MkSomeRunsKey sr) = distanceUnitOf sr
+
+  distanceOf :: SomeRunsKey a -> SomeDistance (Positive a)
+  distanceOf (MkSomeRunsKey sr) = distanceOf sr
+
+  hideDistance = id
+
+-------------------------------------------------------------------------------
 --                                  SomeRuns                                 --
 -------------------------------------------------------------------------------
 
 -- | Holds multiple runs.
 newtype SomeRuns a = MkSomeRuns (NESet (SomeRunsKey a))
   deriving stock (Eq, Show)
+
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
+instance HasDistance (SomeRuns a) where
+  type DistanceVal (SomeRuns a) = SomeDistance (Positive a)
+  type HideDistance (SomeRuns a) = SomeRuns a
+
+  distanceUnitOf :: SomeRuns a -> DistanceUnit
+  distanceUnitOf (MkSomeRuns (SetToSeqNE (srk :<|| _))) = distanceUnitOf srk
+
+  distanceOf :: SomeRuns a -> SomeDistance (Positive a)
+  distanceOf (MkSomeRuns (SetToSeqNE (srk :<|| _))) = distanceOf srk
+
+  hideDistance = id
 
 -------------------------------------------------------------------------------
 --                               Serialization                               --

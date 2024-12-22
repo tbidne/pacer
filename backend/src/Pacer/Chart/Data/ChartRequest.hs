@@ -17,6 +17,8 @@ module Pacer.Chart.Data.ChartRequest
   )
 where
 
+import Data.Aeson (ToJSON)
+import Data.Aeson.Types (ToJSON (toJSON))
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
 import Pacer.Data.Distance (SomeDistance)
@@ -52,6 +54,11 @@ instance DecodeTOML YAxisType where
                 other,
                 "', expected one of (distance|duration|pace)."
               ]
+
+instance ToJSON YAxisType where
+  toJSON YAxisDistance = "distance"
+  toJSON YAxisDuration = "duration"
+  toJSON YAxisPace = "pace"
 
 -- | Operator for filter comparisons. The text field is just so we can have
 -- Eq and Show instances, though they are of arguably little value.
