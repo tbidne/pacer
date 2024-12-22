@@ -81,11 +81,28 @@ instance ToJSON ChartOptions where
         Asn.object
           $ [ "x"
                 .= Asn.object
-                  [ "title"
+                  [ "time"
+                      .= Asn.object
+                        [ "displayFormats"
+                            .= Asn.object
+                              [ -- NOTE: Keeping the lablel relatively concise as it
+                                -- is more readable, and the tooltip contains the full
+                                -- timestamp anyway.
+                                "day" .= t "dd MMM yy"
+                              ],
+                          "unit" .= t "day"
+                        ],
+                    "title"
                       .= Asn.object
                         [ "display" .= True,
-                          "text" .= ("datetime" :: Text)
-                        ]
+                          "text" .= t "datetime"
+                        ],
+                    -- NOTE: timeseries over cartesian (string "time") as the
+                    -- spaces out events equally, while the latter spaces
+                    -- relative to the actual time difference. But this is
+                    -- usually quite silly as e.g. official marathons may be
+                    -- very spaces out, and this provides no actual value.
+                    "type" .= t "timeseries"
                   ],
               "y" .= c.yOptions
             ]
@@ -120,3 +137,7 @@ mkChartOptions dunit request =
       YAxisPace -> "/" <> dstTxt
       where
         dstTxt = display dunit
+
+-- | TODO: This can be replaced with -XNamedDefaults once it is available.
+t :: Text -> Text
+t = id

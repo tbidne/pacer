@@ -1,4 +1,5 @@
 import { Chart, ChartOptions } from "chart.js/auto";
+import "chartjs-adapter-date-fns";
 import * as charts from "../data/input/charts.json";
 import { appendCanvasId } from "./utils";
 
