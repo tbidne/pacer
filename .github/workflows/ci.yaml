@@ -78,6 +78,13 @@ jobs:
           cd web
           npm install
 
+      # TODO: It would be nice if we could test that the html page actually
+      # does what we want because it is possible for webpack to succeed yet
+      # the page is broken.
+      #
+      # It may be possible to require 0 console errors, though of course that
+      # could be overly restrictive.
+
       - name: Build frontend
         run: |
           cd web

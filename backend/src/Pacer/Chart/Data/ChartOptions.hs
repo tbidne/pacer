@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Pacer.Chart.Data.ChartOptions
   ( ChartOptions (..),
     mkChartOptions,
