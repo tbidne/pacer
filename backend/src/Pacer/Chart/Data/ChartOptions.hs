@@ -132,7 +132,7 @@ mkChartOptions dunit request =
     mkYLabel = \case
       YAxisDistance -> dstTxt
       YAxisDuration -> "time"
-      YAxisPace -> "/" <> dstTxt
+      YAxisPace -> "pace /" <> dstTxt
       where
         dstTxt = display dunit
 

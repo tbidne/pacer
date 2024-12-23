@@ -82,7 +82,8 @@ instance ToJSON ChartY where
           [ "data" .= y,
             "label" .= c.yType,
             "fill" .= False,
-            "tension" .= (0 :: Int)
+            "tension" .= (0 :: Int),
+            "yAxisID" .= ("y" :: Text)
           ]
 
 -- | Data for a chart with two Y axes.
@@ -109,14 +110,16 @@ instance ToJSON ChartY1 where
           [ "data" .= y,
             "label" .= c.yType,
             "fill" .= False,
-            "tension" .= (0 :: Int)
+            "tension" .= (0 :: Int),
+            "yAxisID" .= ("y" :: Text)
           ]
       y1Axis =
         Asn.object
           [ "data" .= y1,
             "label" .= c.y1Type,
             "fill" .= False,
-            "tension" .= (0 :: Int)
+            "tension" .= (0 :: Int),
+            "yAxisID" .= ("y1" :: Text)
           ]
 
 -- | Accumulator for chart with a single Y axis.
