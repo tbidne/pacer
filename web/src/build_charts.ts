@@ -3,27 +3,47 @@ import { Tick } from "chart.js/dist/core/core.scale";
 import "chartjs-adapter-date-fns";
 import * as charts from "../data/input/charts.json";
 import { PChart, PChartOpts, PTitle, PYAxisElem, PYOptT } from "./types";
-import { appendCanvasId } from "./utils";
+import { appendCanvasId, format_opts_seconds, format_seconds } from "./utils";
 
 function is_time(s: string): boolean {
   return s == "time" || s.startsWith("pace");
 }
 
-function set_ytime_callback<A>(yOpt: PYOptT<A>): void {
+function set_ytime_callbacks<A>(yAxisElem: PYAxisElem, yOpt: PYOptT<A>): void {
   const yType = yOpt.title.text;
   if (is_time(yType)) {
+    yAxisElem.tooltip = {
+      callbacks: {
+        // item.raw also works, though it has an unknown type, so we use
+        // 'formattedValue', which is a string.
+        label: (item) => format_seconds(Number(item.formattedValue)),
+      },
+    };
     yOpt.ticks = {
-      callback: format_seconds,
+      callback: format_opts_seconds,
     };
   }
 }
 
-function js_to_chartjs_opts(opts: PChartOpts): ChartOptions {
-  set_ytime_callback(opts.scales.y);
+function js_to_chartjs_opts(
+  yAxisElems: PYAxisElem[],
+  opts: PChartOpts,
+): ChartOptions {
+  if (yAxisElems.length < 1) {
+    throw new Error("No y-axis elements, impossible!");
+  }
+  const yAxisElem = yAxisElems[0];
+  set_ytime_callbacks(yAxisElem, opts.scales.y);
 
   const y1 = opts.scales.y1;
   if (y1 != null) {
-    set_ytime_callback(y1);
+    if (yAxisElems.length < 2) {
+      throw new Error(
+        "y1 exists on the options but not in the datasets, impossible!",
+      );
+    }
+    const y1AxisElem = yAxisElems[1];
+    set_ytime_callbacks(y1AxisElem, y1);
   }
 
   return opts;
@@ -36,38 +56,27 @@ function js_to_chartjs_opts(opts: PChartOpts): ChartOptions {
  */
 const charts_typed = charts as PChart[];
 
-function pad2(n: number): string {
-  const prefix = n < 10 ? "0" : "";
-  return `${prefix}${n}`;
+function main() {
+  for (var i = 0; i < charts_typed.length; i++) {
+    const elemId = `chart${i}`;
+    appendCanvasId(elemId);
+
+    const chart = charts_typed[i];
+
+    // The original value is modified, so the new assignment is mostly
+    // unnecessary. The only reason we do so is the cast to the final type
+    // ChartOptions, maybe it catches some errors more quickly?
+    const opts = js_to_chartjs_opts(chart.datasets.yAxes, chart.options);
+
+    new Chart(elemId, {
+      type: "line",
+      data: {
+        labels: chart.datasets.xAxis,
+        datasets: chart.datasets.yAxes,
+      },
+      options: opts,
+    });
+  }
 }
 
-function format_seconds(value: string, index: number, labels: Tick[]): string {
-  const n = Number(value);
-
-  const h = Math.floor(n / 3600);
-  const m = Math.floor((n % 3600) / 60);
-  const s = Math.floor(n % 60);
-
-  const h_str = h > 0 ? `${h}h ` : "";
-  const s_str = pad2(s);
-
-  return `${h_str}${m}'${s_str}"`;
-}
-
-for (var i = 0; i < charts_typed.length; i++) {
-  const elemId = `chart${i}`;
-  appendCanvasId(elemId);
-
-  const chart = charts_typed[i];
-
-  const opts = js_to_chartjs_opts(chart.options);
-
-  new Chart(elemId, {
-    type: "line",
-    data: {
-      labels: chart.datasets.xAxis,
-      datasets: chart.datasets.yAxes,
-    },
-    options: opts,
-  });
-}
+main();

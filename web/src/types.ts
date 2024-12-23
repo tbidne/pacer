@@ -1,3 +1,5 @@
+import { LineControllerChartOptions, TooltipItem } from "chart.js/auto";
+
 /**
  * This is very similar to chart.js's ChartOptions. Why do we have a distinct
  * type? The json the backend returns isn't __quite__ the same as the Chart
@@ -48,10 +50,15 @@ type PTitle = {
 };
 
 type PYAxisElem = {
-  label: string;
   data: number[];
   fill: boolean;
+  label: string;
   tension: number;
+  tooltip?: {
+    callbacks: {
+      label: (item: TooltipItem<"line">) => string;
+    };
+  };
 };
 
 type PYOpt = PYOptT<"left">;
