@@ -1,8 +1,7 @@
 import { Chart, ChartOptions } from "chart.js/auto";
-import { Tick } from "chart.js/dist/core/core.scale";
 import "chartjs-adapter-date-fns";
 import * as charts from "../data/input/charts.json";
-import { PChart, PChartOpts, PTitle, PYAxisElem, PYOptT } from "./types";
+import { PChart, PChartOpts, PYAxisElem, PYOptT } from "./types";
 import { appendCanvasId, format_opts_seconds, format_seconds } from "./utils";
 
 function is_time(s: string): boolean {
@@ -14,9 +13,11 @@ function set_ytime_callbacks<A>(yAxisElem: PYAxisElem, yOpt: PYOptT<A>): void {
   if (is_time(yType)) {
     yAxisElem.tooltip = {
       callbacks: {
-        // item.raw also works, though it has an unknown type, so we use
-        // 'formattedValue', which is a string.
-        label: (item) => format_seconds(Number(item.formattedValue)),
+        // Previously we used formattedValue, which is an actual string,
+        // but unfortunately it contains commas, which fails to parse as a
+        // number. Instead we use raw, which seems to work, though the
+        // safety is dubious.
+        label: (item) => format_seconds(Number(item.raw as string)),
       },
     };
     yOpt.ticks = {
