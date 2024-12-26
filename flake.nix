@@ -8,7 +8,7 @@
 
     # haskell
     algebra-simple = {
-      url = "github:tbidne/algebra-simple/convert";
+      url = "github:tbidne/algebra-simple";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";

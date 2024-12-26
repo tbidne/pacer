@@ -15,7 +15,8 @@
           ],
           "fill": false,
           "label": "distance",
-          "tension": 0
+          "tension": 0,
+          "yAxisID": "y"
         }
       ]
     },
@@ -30,10 +31,17 @@
       "responsive": true,
       "scales": {
         "x": {
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
           "title": {
             "display": true,
             "text": "datetime"
-          }
+          },
+          "type": "timeseries"
         },
         "y": {
           "position": "left",
@@ -61,7 +69,8 @@
           ],
           "fill": false,
           "label": "duration",
-          "tension": 0
+          "tension": 0,
+          "yAxisID": "y"
         },
         {
           "data": [
@@ -71,7 +80,8 @@
           ],
           "fill": false,
           "label": "distance",
-          "tension": 0
+          "tension": 0,
+          "yAxisID": "y1"
         }
       ]
     },
@@ -86,10 +96,17 @@
       "responsive": true,
       "scales": {
         "x": {
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
           "title": {
             "display": true,
             "text": "datetime"
-          }
+          },
+          "type": "timeseries"
         },
         "y": {
           "position": "left",
@@ -124,7 +141,8 @@
           ],
           "fill": false,
           "label": "pace",
-          "tension": 0
+          "tension": 0,
+          "yAxisID": "y"
         }
       ]
     },
@@ -139,16 +157,23 @@
       "responsive": true,
       "scales": {
         "x": {
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
           "title": {
             "display": true,
             "text": "datetime"
-          }
+          },
+          "type": "timeseries"
         },
         "y": {
           "position": "left",
           "title": {
             "display": true,
-            "text": "/km"
+            "text": "pace /km"
           }
         }
       }
