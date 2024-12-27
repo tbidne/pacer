@@ -3,20 +3,24 @@ import * as charts from "../data/input/charts.json";
 import { PChart, PChartOpts, PYAxisElem, PYOptT } from "./types";
 import { appendCanvasId, format_opts_seconds, format_seconds } from "./utils";
 
-function is_time(s: string): boolean {
-  return s == "time" || s.startsWith("pace");
+function get_ytime_prefix(s: string): "duration" | "pace" | null {
+  if (s == "time") return "duration";
+  else if (s.startsWith("pace")) return "pace";
+  else return null;
 }
 
 function set_ytime_callbacks<A>(yAxisElem: PYAxisElem, yOpt: PYOptT<A>): void {
   const yType = yOpt.title.text;
-  if (is_time(yType)) {
+  const yTimePrefix = get_ytime_prefix(yType);
+  if (yTimePrefix != null) {
     yAxisElem.tooltip = {
       callbacks: {
         // Previously we used formattedValue, which is an actual string,
         // but unfortunately it contains commas, which fails to parse as a
         // number. Instead we use raw, which seems to work, though the
         // safety is dubious.
-        label: (item) => format_seconds(Number(item.raw as string)),
+        label: (item) =>
+          `${yTimePrefix}: ${format_seconds(Number(item.raw as string))}`,
       },
     };
     // Ticks object may be set on backend opts, so we need to ensure we do
