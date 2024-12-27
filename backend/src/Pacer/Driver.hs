@@ -41,7 +41,7 @@ runAppWith handler = do
     PEx.knownExceptions
     putStrLn
 
-  args <- OA.execParser parserInfo
+  args <- OA.execParser (parserInfo @ℚNonNeg)
   case args.command of
     Chart chartArgs -> handleChart handler chartArgs
     Derive ddpArgs -> handleDerive handler ddpArgs
@@ -67,7 +67,17 @@ handleChart handler chartParamsArgs = do
           "'"
         ]
 
-handleDerive :: (Text -> IO a) -> DistanceDurationPaceArgs -> IO a
+handleDerive ::
+  ( Display a,
+    FromInteger a,
+    Ord a,
+    Semifield a,
+    Show a,
+    ToRational a
+  ) =>
+  (Text -> IO b) ->
+  DistanceDurationPaceArgs a ->
+  IO b
 handleDerive handler ddpArgs =
   argsToDerive ddpArgs >>= \case
     DeriveDistance duration pace -> do
@@ -89,7 +99,19 @@ handleDerive handler ddpArgs =
       let pace = Derive.deriveSomePace dist ((.unPositive) <$> duration)
       handler $ display pace
 
-handleScale :: forall a. (Text -> IO a) -> DistanceDurationPaceArgs -> PDouble -> IO a
+handleScale ::
+  forall a b.
+  ( AMonoid a,
+    FromInteger a,
+    MSemigroup a,
+    Ord a,
+    Show a,
+    ToRational a
+  ) =>
+  (Text -> IO b) ->
+  DistanceDurationPaceArgs a ->
+  Positive a ->
+  IO b
 handleScale handler ddpArgs scaleFactor =
   argsToScale ddpArgs >>= \case
     ScaleDistance dist -> scaleDisplay dist
@@ -98,5 +120,5 @@ handleScale handler ddpArgs scaleFactor =
       Left pace -> scaleDisplay pace
       Right duration -> scaleDisplay duration
   where
-    scaleDisplay :: forall b. (Display b, MSemiSpace b PDouble) => b -> IO a
+    scaleDisplay :: forall x. (Display x, MSemiSpace x (Positive a)) => x -> IO b
     scaleDisplay = handler . display . (.* scaleFactor)

@@ -92,7 +92,7 @@ data FilterType a
 instance
   ( FromRational a,
     Ord a,
-    Parser (Positive a),
+    Parser a,
     Semifield a,
     Show a
   ) =>
@@ -214,7 +214,7 @@ data ChartRequest a = MkChartRequest
 instance
   ( FromRational a,
     Ord a,
-    Parser (Positive a),
+    Parser a,
     Semifield a,
     Show a
   ) =>
@@ -240,7 +240,7 @@ newtype ChartRequests a = MkChartRequests {unChartRequests :: Seq (ChartRequest 
 instance
   ( FromRational a,
     Ord a,
-    Parser (Positive a),
+    Parser a,
     Semifield a,
     Show a
   ) =>

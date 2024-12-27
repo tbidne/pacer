@@ -58,10 +58,14 @@ module Pacer.Prelude
     -- * Numeric
 
     -- ** Positive
-    PDouble,
     mkPositiveFail,
 
+    -- ** Fraction
+    ℚNonNeg,
+    ℚPos,
+
     -- ** Floating
+    PDouble,
     ɛEq,
 
     -- * Foldable
@@ -139,6 +143,7 @@ import Data.Functor as X
     (<&>),
   )
 import Data.Int as X (Int)
+import Numeric.Data.Fraction.Algebra as X (Fraction)
 #if MIN_VERSION_base(4, 20, 0)
 import Data.List as X
   ( List,
@@ -351,6 +356,10 @@ todo = raise# (errorCallWithCallStackException "Prelude.todo: not yet implemente
 
 -- | Positive Double.
 type PDouble = Positive Double
+
+type ℚNonNeg = Fraction Natural
+
+type ℚPos = Positive (Fraction Natural)
 
 -- | Equality with epsilon check for floating points.
 ɛEq :: (MetricSpace a) => Double -> a -> a -> Bool

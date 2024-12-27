@@ -52,7 +52,7 @@ derivePace distance duration =
 -- the pace.
 deriveSomePace ::
   forall t a.
-  (AMonoid a, FromInteger a, MGroup a, Ord a, Show a, SingI t) =>
+  (FromInteger a, Ord a, Semifield a, Show a, SingI t) =>
   -- | Existentially-quantified distance.
   SomeDistance (Positive a) ->
   -- | Duration.

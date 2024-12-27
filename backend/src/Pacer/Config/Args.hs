@@ -24,19 +24,28 @@ import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Types (ArgPolicy (Intersperse))
+import Pacer.Class.Parser qualified as P
 import Pacer.Config.Args.Command (Command, cmdParser)
 import Pacer.Prelude
 import Paths_pacer qualified as Paths
 
 -- | CLI args.
-newtype Args = MkArgs
+newtype Args a = MkArgs
   { -- | Command to run.
-    command :: Command
+    command :: Command a
   }
   deriving stock (Eq, Show)
 
 -- | Optparse-Applicative info.
-parserInfo :: ParserInfo Args
+parserInfo ::
+  forall a.
+  ( FromRational a,
+    Ord a,
+    P.Parser a,
+    Semifield a,
+    Show a
+  ) =>
+  ParserInfo (Args a)
 parserInfo =
   ParserInfo
     { infoParser = argsParser,
@@ -56,7 +65,15 @@ parserInfo =
           [ "Pacer includes several commands useful for runners."
           ]
 
-argsParser :: Parser Args
+argsParser ::
+  forall a.
+  ( FromRational a,
+    Ord a,
+    P.Parser a,
+    Semifield a,
+    Show a
+  ) =>
+  Parser (Args a)
 argsParser =
   MkArgs
     <$> cmdParser
