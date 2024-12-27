@@ -22,7 +22,7 @@ package pacer
 source-repository-package
     type: git
     location: https://github.com/tbidne/algebra-simple.git
-    tag: 511a988e4707d0ee6a1ca42d48ecb125addb50e0
+    tag: 074ec817e7be495e36b94c071f010204bc547351
 
 source-repository-package
     type: git
@@ -42,7 +42,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/smart-math.git
-    tag: 44b3c053671e132c1159a533d3242140a58e27ab
+    tag: 641b6b5cf5708c7a27af3b2d94a5947bc24449ef
 
 source-repository-package
     type: git

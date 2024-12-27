@@ -13,16 +13,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1735284710,
-        "narHash": "sha256-HlVbTRx+48llQiKtxHMVj20r3Evi/RYw0mAYpY96Lcc=",
+        "lastModified": 1735299337,
+        "narHash": "sha256-l6xNGYmOc5RsAmayEhI6QagYcoVCAJVZZDRl4gs2N50=",
         "owner": "tbidne",
         "repo": "algebra-simple",
-        "rev": "511a988e4707d0ee6a1ca42d48ecb125addb50e0",
+        "rev": "074ec817e7be495e36b94c071f010204bc547351",
         "type": "github"
       },
       "original": {
         "owner": "tbidne",
-        "ref": "fixed",
         "repo": "algebra-simple",
         "type": "github"
       }
@@ -231,16 +230,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1735284828,
-        "narHash": "sha256-0/ys1RE8Lwfz77jjm8U0xF3OVvwLPDLtPZP/S0vQPcg=",
+        "lastModified": 1735299498,
+        "narHash": "sha256-gKUXS3LfOK8FI5YzSq9pcKUry9A51hVMna8YSbtC+kQ=",
         "owner": "tbidne",
         "repo": "smart-math",
-        "rev": "44b3c053671e132c1159a533d3242140a58e27ab",
+        "rev": "641b6b5cf5708c7a27af3b2d94a5947bc24449ef",
         "type": "github"
       },
       "original": {
         "owner": "tbidne",
-        "ref": "classes",
         "repo": "smart-math",
         "type": "github"
       }

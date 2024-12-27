@@ -8,7 +8,7 @@
 
     # haskell
     algebra-simple = {
-      url = "github:tbidne/algebra-simple/fixed";
+      url = "github:tbidne/algebra-simple";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -36,7 +36,7 @@
     };
 
     smart-math = {
-      url = "github:tbidne/smart-math/classes";
+      url = "github:tbidne/smart-math";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
