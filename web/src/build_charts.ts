@@ -1,5 +1,4 @@
 import { Chart, ChartOptions } from "chart.js/auto";
-import "chartjs-adapter-date-fns";
 import * as charts from "../data/input/charts.json";
 import { PChart, PChartOpts, PYAxisElem, PYOptT } from "./types";
 import { appendCanvasId, format_opts_seconds, format_seconds } from "./utils";
