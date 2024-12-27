@@ -15,6 +15,7 @@
           ],
           "fill": false,
           "label": "distance",
+          "pointHoverRadius": 20,
           "tension": 0,
           "yAxisID": "y"
         }
@@ -23,14 +24,32 @@
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
         "title": {
+          "color": "#c3c3c3",
           "display": true,
           "text": "Runs by distance"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
         }
       },
+      "pointHitRadius": 20,
       "responsive": true,
       "scales": {
         "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
           "time": {
             "displayFormats": {
               "day": "dd MMM yy"
@@ -38,14 +57,22 @@
             "unit": "day"
           },
           "title": {
+            "color": "#c3c3c3",
             "display": true,
             "text": "datetime"
           },
           "type": "timeseries"
         },
         "y": {
+          "grid": {
+            "color": "#393939"
+          },
           "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
           "title": {
+            "color": "#c3c3c3",
             "display": true,
             "text": "km"
           }
@@ -69,6 +96,7 @@
           ],
           "fill": false,
           "label": "duration",
+          "pointHoverRadius": 20,
           "tension": 0,
           "yAxisID": "y"
         },
@@ -80,6 +108,7 @@
           ],
           "fill": false,
           "label": "distance",
+          "pointHoverRadius": 20,
           "tension": 0,
           "yAxisID": "y1"
         }
@@ -88,14 +117,32 @@
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
         "title": {
+          "color": "#c3c3c3",
           "display": true,
           "text": "Runs by duration"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
         }
       },
+      "pointHitRadius": 20,
       "responsive": true,
       "scales": {
         "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
           "time": {
             "displayFormats": {
               "day": "dd MMM yy"
@@ -103,21 +150,36 @@
             "unit": "day"
           },
           "title": {
+            "color": "#c3c3c3",
             "display": true,
             "text": "datetime"
           },
           "type": "timeseries"
         },
         "y": {
+          "grid": {
+            "color": "#393939"
+          },
           "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
           "title": {
+            "color": "#c3c3c3",
             "display": true,
             "text": "time"
           }
         },
         "y1": {
+          "grid": {
+            "color": "#393939"
+          },
           "position": "right",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
           "title": {
+            "color": "#c3c3c3",
             "display": true,
             "text": "km"
           }
@@ -141,6 +203,7 @@
           ],
           "fill": false,
           "label": "pace",
+          "pointHoverRadius": 20,
           "tension": 0,
           "yAxisID": "y"
         }
@@ -149,14 +212,32 @@
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
         "title": {
+          "color": "#c3c3c3",
           "display": true,
           "text": "Runs by pace"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
         }
       },
+      "pointHitRadius": 20,
       "responsive": true,
       "scales": {
         "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
           "time": {
             "displayFormats": {
               "day": "dd MMM yy"
@@ -164,14 +245,22 @@
             "unit": "day"
           },
           "title": {
+            "color": "#c3c3c3",
             "display": true,
             "text": "datetime"
           },
           "type": "timeseries"
         },
         "y": {
+          "grid": {
+            "color": "#393939"
+          },
           "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
           "title": {
+            "color": "#c3c3c3",
             "display": true,
             "text": "pace /km"
           }
