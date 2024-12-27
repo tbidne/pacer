@@ -19,9 +19,11 @@ function set_ytime_callbacks<A>(yAxisElem: PYAxisElem, yOpt: PYOptT<A>): void {
         label: (item) => format_seconds(Number(item.raw as string)),
       },
     };
-    yOpt.ticks = {
-      callback: format_opts_seconds,
-    };
+    // Ticks object may be set on backend opts, so we need to ensure we do
+    // not override it if it exists. We merely want to set the callback
+    // field.
+    const ticks = yOpt.ticks ? yOpt.ticks : {};
+    ticks.callback = format_opts_seconds;
   }
 }
 

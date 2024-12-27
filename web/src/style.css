@@ -1,5 +1,8 @@
-/* #191b1c #0d1117 */
-
 body {
   background-color: #191b1c;
+}
+
+h1 {
+  /* see NOTE: [Text Color] */
+  color: #c3c3c3;
 }

@@ -69,7 +69,8 @@ type PYOptT<A> = {
   position: A;
   title: PTitle;
   ticks?: {
-    callback: (value: string, index: number, labels: any) => string;
+    callback?: (value: string, index: number, labels: any) => string;
+    color?: string;
   };
 };
 

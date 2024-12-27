@@ -7,7 +7,7 @@ module Pacer.Chart.Data.ChartData
   )
 where
 
-import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON))
+import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON), Value)
 import Data.Aeson qualified as Asn
 import Data.List (all)
 import Data.List qualified as L
@@ -77,14 +77,7 @@ instance ToJSON ChartY where
     where
       (x, y) = L.unzip $ toList c.values
 
-      yAxis =
-        Asn.object
-          [ "data" .= y,
-            "label" .= c.yType,
-            "fill" .= False,
-            "tension" .= (0 :: Int),
-            "yAxisID" .= ("y" :: Text)
-          ]
+      yAxis = mkYJson y c.yType "y"
 
 -- | Data for a chart with two Y axes.
 data ChartY1 = MkChartY1
@@ -105,22 +98,19 @@ instance ToJSON ChartY1 where
       ]
     where
       (x, y, y1) = L.unzip3 $ toList c.values
-      yAxis =
-        Asn.object
-          [ "data" .= y,
-            "label" .= c.yType,
-            "fill" .= False,
-            "tension" .= (0 :: Int),
-            "yAxisID" .= ("y" :: Text)
-          ]
-      y1Axis =
-        Asn.object
-          [ "data" .= y1,
-            "label" .= c.y1Type,
-            "fill" .= False,
-            "tension" .= (0 :: Int),
-            "yAxisID" .= ("y1" :: Text)
-          ]
+      yAxis = mkYJson y c.yType "y"
+      y1Axis = mkYJson y1 c.y1Type "y1"
+
+mkYJson :: [Double] -> YAxisType -> Text -> Value
+mkYJson yVal yType yId =
+  Asn.object
+    [ "data" .= yVal,
+      "label" .= yType,
+      "fill" .= False,
+      "pointHoverRadius" .= i 20, -- point size on hover
+      "tension" .= i 0,
+      "yAxisID" .= yId
+    ]
 
 -- | Accumulator for chart with a single Y axis.
 type AccY = NESeq (Tuple2 RunTimestamp Double)
@@ -267,3 +257,6 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
     opToFun (MkFilterOp _ f) = f
+
+i :: Int -> Int
+i = id

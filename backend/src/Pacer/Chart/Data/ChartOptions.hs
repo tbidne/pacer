@@ -6,6 +6,7 @@ where
 
 import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON))
 import Data.Aeson qualified as Asn
+import Data.Aeson.Types (Pair)
 import Pacer.Chart.Data.ChartRequest
   ( ChartRequest (title, y1Axis, yAxis),
     YAxisType
@@ -39,14 +40,15 @@ data YOptions = MkYOptions
 instance ToJSON YOptions where
   toJSON y =
     Asn.object
-      [ -- "min" .= (0 :: Int),
-        "position" .= y.position,
-        "title"
-          .= Asn.object
-            [ "display" .= True,
-              "text" .= y.label
-            ]
-      ]
+      $ [ "position" .= y.position,
+          "title"
+            .= Asn.object
+              [ "color" .= textColor,
+                "display" .= True,
+                "text" .= y.label
+              ]
+        ]
+      ++ commonOpts
 
 -- | Chart option data.
 data ChartOptions = MkChartOptions
@@ -64,12 +66,16 @@ instance ToJSON ChartOptions where
     Asn.object
       [ "plugins"
           .= Asn.object
-            [ "title"
+            [ "legend" .= legendOpts,
+              "title"
                 .= Asn.object
-                  [ "display" .= True,
+                  [ "color" .= textColor,
+                    "display" .= True,
                     "text" .= c.title
-                  ]
+                  ],
+              "tooltip" .= tooltipOpts
             ],
+        "pointHitRadius" .= i 20, -- tooltip hitbox
         "responsive" .= True,
         "maintainAspectRatio" .= False,
         "scales" .= scales
@@ -79,32 +85,49 @@ instance ToJSON ChartOptions where
         Asn.object
           $ [ "x"
                 .= Asn.object
-                  [ "time"
-                      .= Asn.object
-                        [ "displayFormats"
-                            .= Asn.object
-                              [ -- NOTE: Keeping the lablel relatively concise as it
-                                -- is more readable, and the tooltip contains the full
-                                -- timestamp anyway.
-                                "day" .= t "dd MMM yy"
-                              ],
-                          "unit" .= t "day"
-                        ],
-                    "title"
-                      .= Asn.object
-                        [ "display" .= True,
-                          "text" .= t "datetime"
-                        ],
-                    -- NOTE: timeseries over cartesian (string "time") as the
-                    -- spaces out events equally, while the latter spaces
-                    -- relative to the actual time difference. But this is
-                    -- usually quite silly as e.g. official marathons may be
-                    -- very spaces out, and this provides no actual value.
-                    "type" .= t "timeseries"
-                  ],
+                  ( [ "time"
+                        .= Asn.object
+                          [ "displayFormats"
+                              .= Asn.object
+                                [ -- NOTE: Keeping the lablel relatively concise as it
+                                  -- is more readable, and the tooltip contains the full
+                                  -- timestamp anyway.
+                                  "day" .= t "dd MMM yy"
+                                ],
+                            "unit" .= t "day"
+                          ],
+                      "title"
+                        .= Asn.object
+                          [ "color" .= textColor,
+                            "display" .= True,
+                            "text" .= t "datetime"
+                          ],
+                      -- NOTE: timeseries over cartesian (string "time") as the
+                      -- spaces out events equally, while the latter spaces
+                      -- relative to the actual time difference. But this is
+                      -- usually quite silly as e.g. official marathons may be
+                      -- very spaces out, and this provides no actual value.
+                      "type" .= t "timeseries"
+                    ]
+                      ++ commonOpts
+                  ),
               "y" .= c.yOptions
             ]
           ++ maybe [] (\z -> ["y1" .= z]) c.y1Options
+
+      legendOpts =
+        Asn.object
+          [ "labels"
+              .= Asn.object
+                ["color" .= textColor]
+          ]
+
+      tooltipOpts =
+        Asn.object
+          [ "backgroundColor" .= tooltipBackgroundColor,
+            "bodyColor" .= tooltipTextColor,
+            "titleColor" .= tooltipTextColor
+          ]
 
 -- | Creates a chart options from the request. The distance unit is used
 -- for labeling the axis.
@@ -136,6 +159,39 @@ mkChartOptions dunit request =
       where
         dstTxt = display dunit
 
+commonOpts :: List Pair
+commonOpts =
+  [ gripOpts,
+    ticksOpts
+  ]
+  where
+    gripOpts =
+      "grid"
+        .= Asn.object
+          [ "color" .= gridColor
+          ]
+    ticksOpts =
+      "ticks"
+        .= Asn.object
+          [ "color" .= textColor
+          ]
+
+gridColor :: Text
+gridColor = "#393939"
+
+-- NOTE: [Text Color]
+textColor :: Text
+textColor = "#c3c3c3"
+
+tooltipBackgroundColor :: Text
+tooltipBackgroundColor = "rgba(204, 204, 204, 0.75)"
+
+tooltipTextColor :: Text
+tooltipTextColor = "black"
+
 -- | TODO: This can be replaced with -XNamedDefaults once it is available.
 t :: Text -> Text
 t = id
+
+i :: Int -> Int
+i = id
