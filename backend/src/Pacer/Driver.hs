@@ -41,7 +41,7 @@ runAppWith handler = do
     PEx.knownExceptions
     putStrLn
 
-  args <- OA.execParser (parserInfo @ℚNonNeg)
+  args <- OA.execParser (parserInfo @Double)
   case args.command of
     Chart chartArgs -> handleChart handler chartArgs
     Derive ddpArgs -> handleDerive handler ddpArgs
