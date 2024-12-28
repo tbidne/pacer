@@ -1,8 +1,20 @@
 body {
   background-color: #191b1c;
+  text-align: center;
 }
 
 h1 {
   /* see NOTE: [Text Color] */
   color: #c3c3c3;
+}
+
+.chart-container {
+  height: 75vh;
+  margin: auto;
+  position: relative;
+  width: 75vw;
+}
+
+.chart-element {
+  margin-top: 25px;
 }

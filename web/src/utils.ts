@@ -7,6 +7,7 @@ export function appendCanvasId(canvasId: string): void {
   const container = document.getElementById("chart-container-id");
   const element = document.createElement("canvas");
   element.setAttribute("id", canvasId);
+  element.setAttribute("class", "chart-element");
   container.appendChild(element);
 }
 

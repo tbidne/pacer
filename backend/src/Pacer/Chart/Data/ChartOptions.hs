@@ -45,6 +45,7 @@ instance ToJSON YOptions where
             .= Asn.object
               [ "color" .= textColor,
                 "display" .= True,
+                labelFontOpts,
                 "text" .= y.label
               ]
         ]
@@ -71,6 +72,7 @@ instance ToJSON ChartOptions where
                 .= Asn.object
                   [ "color" .= textColor,
                     "display" .= True,
+                    fontOpts 24,
                     "text" .= c.title
                   ],
               "tooltip" .= tooltipOpts
@@ -100,6 +102,7 @@ instance ToJSON ChartOptions where
                         .= Asn.object
                           [ "color" .= textColor,
                             "display" .= True,
+                            labelFontOpts,
                             "text" .= t "datetime"
                           ],
                       -- NOTE: timeseries over cartesian (string "time") as the
@@ -175,6 +178,16 @@ commonOpts =
         .= Asn.object
           [ "color" .= textColor
           ]
+
+labelFontOpts :: Pair
+labelFontOpts = fontOpts 16
+
+fontOpts :: Int -> Pair
+fontOpts sz =
+  "font"
+    .= Asn.object
+      [ "size" .= i sz
+      ]
 
 gridColor :: Text
 gridColor = "#393939"
