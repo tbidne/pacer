@@ -25,6 +25,7 @@ where
 
 import GHC.TypeError (Unsatisfiable)
 import GHC.TypeError qualified as TE
+import GHC.TypeLits (symbolVal)
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Units (singFactor)
 import Pacer.Data.Distance
@@ -411,9 +412,9 @@ instance
         ]
 
     case eDUnit of
-      Left "meters" -> fail "Meters are disallowed in Pace; use km or mi."
+      Left "meters" -> fail $ symbolVal (Proxy @Utils.PaceMetersErrMsg)
       Left d -> fail $ "Pace unit " ++ d ++ " should be singular"
-      Right Meter -> fail "Meters are disallowed in Pace; use km or mi."
+      Right Meter -> fail $ symbolVal (Proxy @Utils.PaceMetersErrMsg)
       Right Kilometer -> pure $ MkSomePace SKilometer $ MkPace (MkDuration x)
       Right Mile -> pure $ MkSomePace SMile $ MkPace (MkDuration x)
 
