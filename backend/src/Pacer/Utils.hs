@@ -5,6 +5,9 @@ module Pacer.Utils
 
     -- * TOML
     getFieldOptArrayOf,
+
+    -- * Misc
+    PaceMetersErrMsg,
   )
 where
 
@@ -25,3 +28,5 @@ encodeMaybes = (>>= encodeMaybe)
 encodeMaybe :: (ToJSON v) => Tuple2 Key (Maybe v) -> [Pair]
 encodeMaybe (_, Nothing) = []
 encodeMaybe (k, Just v) = [k .= v]
+
+type PaceMetersErrMsg = "Meters are disallowed in Pace; use km or mi."

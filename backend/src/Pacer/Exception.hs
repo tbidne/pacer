@@ -16,7 +16,9 @@ where
 import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
 import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
 import FileSystem.OsPath (decodeLenient)
+import GHC.TypeLits (symbolVal)
 import Pacer.Prelude
+import Pacer.Utils qualified as Utils
 import TOML (TOMLError)
 
 -- | Exception for CLI derive command.
@@ -25,6 +27,8 @@ data CommandDeriveE
   | CommandDeriveArgs1
   | CommandDeriveArgs3
   | CommandDeriveNoPaceUnit
+  | -- | Error for deriving pace with out unit in meters, not allowed.
+    CommandDerivePaceMeters
   deriving stock (Show)
 
 instance Exception CommandDeriveE where
@@ -33,6 +37,7 @@ instance Exception CommandDeriveE where
     CommandDeriveArgs1 -> argsErr "1"
     CommandDeriveArgs3 -> argsErr "3"
     CommandDeriveNoPaceUnit -> "Deriving distance requires that pace has units."
+    CommandDerivePaceMeters -> symbolVal (Proxy @Utils.PaceMetersErrMsg)
     where
       argsErr i =
         "Derive requires exactly 2 quantities, received "

@@ -1,13 +1,15 @@
 MkChartRequests
     { unChartRequests = fromList
         [ MkChartRequest
-            { filters = []
+            { description = Nothing
+            , filters = []
             , title = "Runs by distance"
             , yAxis = YAxisDistance
             , y1Axis = Nothing
             }
         , MkChartRequest
-            { filters =
+            { description = Nothing
+            , filters =
                 [ Atom
                     ( FilterLabel "marathon" )
                 ]
@@ -16,7 +18,8 @@ MkChartRequests
             , y1Axis = Just YAxisPace
             }
         , MkChartRequest
-            { filters =
+            { description = Nothing
+            , filters =
                 [ Atom
                     ( FilterLabel "official" )
                 , Not
@@ -29,7 +32,8 @@ MkChartRequests
             , y1Axis = Nothing
             }
         , MkChartRequest
-            { filters =
+            { description = Nothing
+            , filters =
                 [ Or
                     ( Atom
                         ( FilterLabel "half-marathon" )

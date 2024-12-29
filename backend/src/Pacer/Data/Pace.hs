@@ -47,6 +47,7 @@ import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (MkDuration), Seconds)
 import Pacer.Data.Duration qualified as Duration
 import Pacer.Prelude
+import Pacer.Utils qualified as Utils
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
@@ -80,7 +81,7 @@ instance HasField "unPace" (Pace d a) (Seconds a) where
 
 type PaceDistF :: DistanceUnit -> Constraint
 type family PaceDistF d where
-  PaceDistF Meter = Unsatisfiable (TE.Text "Meters are disallowed in Pace; use km or mi.")
+  PaceDistF Meter = Unsatisfiable (TE.Text Utils.PaceMetersErrMsg)
   PaceDistF Kilometer = ()
   PaceDistF Mile = ()
 
@@ -185,7 +186,9 @@ instance
   type ConvertedDistance (Pace d a) e = Pace e a
 
   convertDistance_ :: Pace d a -> Pace e a
-  convertDistance_ = MkPace . (.% fromBase) . (.* toBase) . (.unPace)
+  -- Note this is backwards from distance (.% fromBase) . (.* toBase) because
+  -- our units are a divisor, not a multiplier (i.e. 4 /km vs. 4 km).
+  convertDistance_ = MkPace . (.* fromBase) . (.% toBase) . (.unPace)
     where
       toBase = singFactor @_ @d
       fromBase = singFactor @_ @e

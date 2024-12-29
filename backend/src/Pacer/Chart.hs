@@ -73,7 +73,7 @@ instance Semigroup ChartParamsArgs where
     MkChartParams (x1 <|> y1) (x2 <|> y2) (x3 <|> y3)
 
 instance Monoid ChartParamsArgs where
-  mempty = MkChartParams mempty mempty mempty
+  mempty = MkChartParams empty empty empty
 
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.

@@ -25,7 +25,7 @@ import Pacer.Chart (ChartParams (MkChartParams), ChartParamsArgs)
 import Pacer.Chart qualified as Chart
 import Pacer.Class.Parser qualified as P
 import Pacer.Config.Args.Utils qualified as Utils
-import Pacer.Data.Distance (SomeDistance)
+import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Exception
@@ -61,7 +61,9 @@ data DistanceDurationPaceArgs a = MkDistanceDurationPaceArgs
     -- | Possible pace.
     mPaceOptUnits :: Maybe (PaceOptUnits a),
     -- | Possible distance.
-    mSomeDistance :: Maybe (SomeDistance (Positive a))
+    mSomeDistance :: Maybe (SomeDistance (Positive a)),
+    -- | Possible output unit.
+    mUnit :: Maybe DistanceUnit
   }
   deriving stock (Eq, Show)
 
@@ -202,12 +204,14 @@ distanceDurationPaceArgsParser paceOptParser = do
   mDuration <- OA.optional durationParser
   mPaceOptUnits <- OA.optional paceOptParser
   mSomeDistance <- OA.optional someDistanceParser
+  mUnit <- distanceUnitParser
 
   pure
     $ MkDistanceDurationPaceArgs
       { mDuration,
         mPaceOptUnits,
-        mSomeDistance
+        mSomeDistance,
+        mUnit
       }
 
 someDistanceParser ::
@@ -420,6 +424,21 @@ scaleFactorParser =
   where
     helpTxt = "The scaling factor."
     read = readParseable
+
+distanceUnitParser :: Parser (Maybe DistanceUnit)
+distanceUnitParser =
+  OA.optional
+    $ OA.option
+      readParseable
+      ( mconcat
+          [ OA.short 'u',
+            OA.long "unit",
+            OA.metavar "UNIT",
+            Utils.mkHelp helpTxt
+          ]
+      )
+  where
+    helpTxt = "Output unit e.g. 'km', 'miles'."
 
 readParseable :: (P.Parser a) => ReadM a
 readParseable =

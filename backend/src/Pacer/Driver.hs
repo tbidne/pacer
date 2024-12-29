@@ -16,14 +16,14 @@ import Pacer.Config.Args (Args (command), parserInfo)
 import Pacer.Config.Args.Command
   ( Command (Chart, Derive, Scale),
     DeriveFinal (DeriveDistance, DeriveDuration, DerivePace),
-    DistanceDurationPaceArgs,
+    DistanceDurationPaceArgs (mUnit),
     ScaleFinal (ScaleDistance, ScaleDuration, ScalePace),
     argsToDerive,
     argsToScale,
   )
 import Pacer.Data.Distance (SomeDistance (MkSomeDistance))
 import Pacer.Data.Distance.Units
-  ( DistanceUnit (Kilometer),
+  ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
@@ -68,6 +68,7 @@ handleChart handler chartParamsArgs = do
         ]
 
 handleDerive ::
+  forall a b.
   ( Display a,
     FromInteger a,
     Ord a,
@@ -82,7 +83,12 @@ handleDerive handler ddpArgs =
   argsToDerive ddpArgs >>= \case
     DeriveDistance duration pace -> do
       let dist = Derive.deriveSomeDistance ((.unPositive) <$> duration) pace
-      handler $ display dist
+      case ddpArgs.mUnit of
+        Nothing -> handler $ display dist
+        Just unit -> case toSing unit of
+          SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
+            let dist' = DistU.convertDistance_ @_ @e dist
+            handler $ display dist'
     DeriveDuration paceOptUnits dist -> do
       let duration = case paceOptUnits of
             Left pace -> Derive.deriveSomeDuration dist pace
@@ -97,7 +103,12 @@ handleDerive handler ddpArgs =
       handler $ display duration
     DerivePace duration dist -> do
       let pace = Derive.deriveSomePace dist ((.unPositive) <$> duration)
-      handler $ display pace
+      case ddpArgs.mUnit of
+        Nothing -> handler $ display pace
+        Just unit -> case unit of
+          Meter -> throwIO PEx.CommandDerivePaceMeters
+          Kilometer -> handler $ display $ DistU.convertDistance_ @_ @Kilometer pace
+          Mile -> handler $ display $ DistU.convertDistance_ @_ @Mile pace
 
 handleScale ::
   forall a b.
