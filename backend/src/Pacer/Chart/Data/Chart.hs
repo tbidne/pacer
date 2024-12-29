@@ -9,7 +9,9 @@ import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON))
 import Data.Aeson qualified as Asn
 import Pacer.Chart.Data.ChartData (ChartData)
 import Pacer.Chart.Data.ChartData qualified as ChartData
-import Pacer.Chart.Data.ChartOptions
+import Pacer.Chart.Data.ChartExtra (ChartExtra)
+import Pacer.Chart.Data.ChartExtra qualified as ChartExtra
+import Pacer.Chart.Data.ChartOptions (ChartOptions)
 import Pacer.Chart.Data.ChartOptions qualified as ChartOptions
 import Pacer.Chart.Data.ChartRequest
   ( ChartRequest,
@@ -24,6 +26,8 @@ import Pacer.Prelude
 data Chart = MkChart
   { -- | Chart data.
     chartData :: ChartData,
+    -- | Chart extra.
+    chartExtra :: ChartExtra,
     -- | Chart options.
     chartOptions :: ChartOptions
   }
@@ -33,6 +37,7 @@ instance ToJSON Chart where
   toJSON c =
     Asn.object
       [ "datasets" .= c.chartData,
+        "extra" .= c.chartExtra,
         "options" .= c.chartOptions
       ]
 
@@ -63,7 +68,15 @@ mkChart ::
   SomeRuns a ->
   ChartRequest a ->
   Either CreateChartE Chart
-mkChart someRuns request = (\cd -> MkChart cd opts) <$> eChartData
+mkChart someRuns request = toChart <$> eChartData
   where
     eChartData = ChartData.mkChartData someRuns request
-    opts = ChartOptions.mkChartOptions (distanceUnitOf someRuns) request
+    chartExtra = ChartExtra.mkChartExtra request
+    chartOptions = ChartOptions.mkChartOptions (distanceUnitOf someRuns) request
+
+    toChart chartData =
+      MkChart
+        { chartData,
+          chartExtra,
+          chartOptions
+        }

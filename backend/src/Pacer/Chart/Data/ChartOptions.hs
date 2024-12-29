@@ -70,7 +70,8 @@ instance ToJSON ChartOptions where
             [ "legend" .= legendOpts,
               "title"
                 .= Asn.object
-                  [ "color" .= textColor,
+                  [ "align" .= t "center",
+                    "color" .= textColor,
                     "display" .= True,
                     fontOpts 24,
                     "text" .= c.title

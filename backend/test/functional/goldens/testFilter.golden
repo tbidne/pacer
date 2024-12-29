@@ -25,6 +25,7 @@
         }
       ]
     },
+    "extra": {},
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
@@ -34,6 +35,7 @@
           }
         },
         "title": {
+          "align": "center",
           "color": "#c3c3c3",
           "display": true,
           "font": {
@@ -124,6 +126,7 @@
         }
       ]
     },
+    "extra": {},
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
@@ -133,6 +136,7 @@
           }
         },
         "title": {
+          "align": "center",
           "color": "#c3c3c3",
           "display": true,
           "font": {
@@ -227,6 +231,7 @@
         }
       ]
     },
+    "extra": {},
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
@@ -236,6 +241,7 @@
           }
         },
         "title": {
+          "align": "center",
           "color": "#c3c3c3",
           "display": true,
           "font": {
@@ -313,6 +319,7 @@
         }
       ]
     },
+    "extra": {},
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
@@ -322,6 +329,7 @@
           }
         },
         "title": {
+          "align": "center",
           "color": "#c3c3c3",
           "display": true,
           "font": {
@@ -399,6 +407,7 @@
         }
       ]
     },
+    "extra": {},
     "options": {
       "maintainAspectRatio": false,
       "plugins": {
@@ -408,6 +417,7 @@
           }
         },
         "title": {
+          "align": "center",
           "color": "#c3c3c3",
           "display": true,
           "font": {

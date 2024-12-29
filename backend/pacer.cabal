@@ -54,6 +54,7 @@ library
     Pacer.Chart
     Pacer.Chart.Data.Chart
     Pacer.Chart.Data.ChartData
+    Pacer.Chart.Data.ChartExtra
     Pacer.Chart.Data.ChartOptions
     Pacer.Chart.Data.ChartRequest
     Pacer.Chart.Data.Run

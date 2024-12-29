@@ -3,12 +3,15 @@ import { ChartOptions, Tick } from "chart.js/auto";
 /**
  * Appends a new canvas element with the given id.
  */
-export function appendCanvasId(canvasId: string): void {
+export function appendCanvasId(id: number): string {
   const container = document.getElementById("chart-container-id");
   const element = document.createElement("canvas");
+  const canvasId = `canvas-${id}`;
   element.setAttribute("id", canvasId);
   element.setAttribute("class", "chart-element");
+
   container.appendChild(element);
+  return canvasId;
 }
 
 export function pad2(n: number): string {

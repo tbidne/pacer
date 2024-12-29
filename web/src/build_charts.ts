@@ -1,6 +1,6 @@
 import { Chart, ChartOptions } from "chart.js/auto";
 import * as charts from "../data/input/charts.json";
-import { PChart, PChartOpts, PYAxisElem, PYOptT } from "./types";
+import { PChart, PChartExtra, PChartOpts, PYAxisElem, PYOptT } from "./types";
 import { appendCanvasId, format_opts_seconds, format_seconds } from "./utils";
 
 function get_ytime_prefix(s: string): "duration" | "pace" | null {
@@ -55,6 +55,26 @@ function js_to_chartjs_opts(
   return opts;
 }
 
+function handle_extra(id: number, extra: PChartExtra): void {
+  const desc = extra.description;
+  if (desc != null) {
+    const container = document.getElementById("chart-container-id");
+
+    const title = document.createElement("h2");
+    const titleId = `desc-title-${id}`;
+    title.setAttribute("id", titleId);
+    title.innerHTML = "Description";
+
+    const element = document.createElement("p");
+    const descId = `desc-${id}`;
+    element.setAttribute("id", descId);
+    element.innerHTML = desc;
+
+    container.appendChild(title);
+    container.appendChild(element);
+  }
+}
+
 /**
  * We widen charts to charts_typed since if charts.json does not have any
  * charts with a y1 axis, ts will infer the y1 prop does not exist,
@@ -64,10 +84,11 @@ const charts_typed = charts as PChart[];
 
 function main() {
   for (var i = 0; i < charts_typed.length; i++) {
-    const elemId = `chart${i}`;
-    appendCanvasId(elemId);
-
     const chart = charts_typed[i];
+
+    const elemId = appendCanvasId(i);
+    // TODO: Should make this more robus.
+    handle_extra(i, chart.extra);
 
     // The original value is modified, so the new assignment is mostly
     // unnecessary. The only reason we do so is the cast to the final type

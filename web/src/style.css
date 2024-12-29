@@ -1,11 +1,20 @@
 body {
   background-color: #191b1c;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: center;
 }
 
 h1 {
   /* see NOTE: [Text Color] */
   color: #c3c3c3;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+}
+
+h2 {
+  /* see NOTE: [Text Color] */
+  color: #c3c3c3;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+  text-align: left;
 }
 
 .chart-container {
@@ -16,5 +25,14 @@ h1 {
 }
 
 .chart-element {
+  height: 431px;
   margin-top: 25px;
+  width: 2880px;
+}
+
+p {
+  /* see NOTE: [Text Color] */
+  color: #c3c3c3;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+  text-align: left;
 }

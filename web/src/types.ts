@@ -36,12 +36,17 @@ type PChartOpts = {
   };
 };
 
+type PChartExtra = {
+  description?: string;
+};
+
 type PChart = {
   options: PChartOpts;
   datasets: {
     xAxis: string[];
     yAxes: PYAxisElem[];
   };
+  extra: PChartExtra;
 };
 
 type PTitle = {
@@ -74,4 +79,4 @@ type PYOptT<A> = {
   };
 };
 
-export { PChart, PChartOpts, PTitle, PYAxisElem, PYOptT };
+export { PChart, PChartExtra, PChartOpts, PTitle, PYAxisElem, PYOptT };

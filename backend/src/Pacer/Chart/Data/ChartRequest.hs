@@ -200,7 +200,9 @@ instance (Parser a) => DecodeTOML (Expr a) where
 
 -- | Chart request type.
 data ChartRequest a = MkChartRequest
-  { -- | Optional list of filters to apply. The filters are "AND'd" together.
+  { -- | Optional text description.
+    description :: Maybe Text,
+    -- | Optional list of filters to apply. The filters are "AND'd" together.
     filters :: List (FilterExpr a),
     -- | Title for this chart.
     title :: Text,
@@ -221,13 +223,15 @@ instance
   DecodeTOML (ChartRequest a)
   where
   tomlDecoder = do
+    description <- TOML.getFieldOptWith tomlDecoder "description"
     filters <- Utils.getFieldOptArrayOf "filters"
     title <- TOML.getFieldWith tomlDecoder "title"
     yAxis <- TOML.getFieldWith tomlDecoder "y-axis"
     y1Axis <- TOML.getFieldOptWith tomlDecoder "y1-axis"
     pure
       $ MkChartRequest
-        { filters,
+        { description,
+          filters,
           title,
           yAxis,
           y1Axis
