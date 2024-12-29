@@ -63,7 +63,6 @@ library
     Pacer.Config.Args
     Pacer.Config.Args.Command
     Pacer.Config.Args.Utils
-    Pacer.Config.Data
     Pacer.Data.Distance
     Pacer.Data.Distance.Units
     Pacer.Data.Duration

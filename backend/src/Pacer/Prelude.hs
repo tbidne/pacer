@@ -161,7 +161,13 @@ import Data.List as X (elem, filter, replicate, sortOn, zip, zipWith, (++))
 import Data.Kind as X (Constraint, Type)
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NE
-import Data.Maybe as X (Maybe (Just, Nothing), catMaybes, fromMaybe, maybe)
+import Data.Maybe as X
+  ( Maybe (Just, Nothing),
+    catMaybes,
+    fromMaybe,
+    isJust,
+    maybe,
+  )
 import Data.Monoid as X (Monoid (mconcat, mempty))
 import Data.Ord as X
   ( Ord (compare, (<), (<=), (>), (>=)),

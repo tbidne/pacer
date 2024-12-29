@@ -23,10 +23,16 @@ import TOML (TOMLError)
 
 -- | Exception for CLI derive command.
 data CommandDeriveE
-  = CommandDeriveArgs0
-  | CommandDeriveArgs1
-  | CommandDeriveArgs3
-  | CommandDeriveNoPaceUnit
+  = -- | Wanted 2 quantities, received 0.
+    CommandDeriveArgs0
+  | -- | Wanted 2 quantities, received 1.
+    CommandDeriveArgs1
+  | -- | Wanted 2 quantities, received 3.
+    CommandDeriveArgs3
+  | -- | Output units are not used with derive duration.
+    CommandDeriveDurationUnit
+  | -- | Deriving distance requires pace with units.
+    CommandDeriveNoPaceUnit
   | -- | Error for deriving pace with out unit in meters, not allowed.
     CommandDerivePaceMeters
   deriving stock (Show)
@@ -36,6 +42,7 @@ instance Exception CommandDeriveE where
     CommandDeriveArgs0 -> argsErr "0"
     CommandDeriveArgs1 -> argsErr "1"
     CommandDeriveArgs3 -> argsErr "3"
+    CommandDeriveDurationUnit -> "--unit is not used when deriving duration."
     CommandDeriveNoPaceUnit -> "Deriving distance requires that pace has units."
     CommandDerivePaceMeters -> symbolVal (Proxy @Utils.PaceMetersErrMsg)
     where
@@ -46,9 +53,20 @@ instance Exception CommandDeriveE where
 
 -- | Exception for CLI scale command.
 data CommandScaleE
-  = CommandScaleArgs0
-  | CommandScaleArgs2
-  | CommandScaleArgs3
+  = -- | Wanted 1 quantity, received 0.
+    CommandScaleArgs0
+  | -- | Wanted 1 quantity, received 2.
+    CommandScaleArgs2
+  | -- | Wanted 1 quantity, received 3.
+    CommandScaleArgs3
+  | -- | Output units are not used with scale duration.
+    CommandScaleDurationUnit
+  | -- | Error for scaling pace with out unit in meters, not allowed.
+    CommandScalePaceMeters
+  | -- | Error for scaling pace with out unit when original unit not given,
+    -- nonsensical. The text arg is the original pace without units, so we
+    -- can produce an example of correct usage.
+    CommandScalePaceUnitNoUnit Text
   deriving stock (Show)
 
 instance Exception CommandScaleE where
@@ -56,6 +74,15 @@ instance Exception CommandScaleE where
     CommandScaleArgs0 -> argsErr "0"
     CommandScaleArgs2 -> argsErr "2"
     CommandScaleArgs3 -> argsErr "3"
+    CommandScaleDurationUnit -> "--unit is not used when scaling duration."
+    CommandScalePaceMeters -> symbolVal (Proxy @Utils.PaceMetersErrMsg)
+    CommandScalePaceUnitNoUnit example ->
+      mconcat
+        [ "Scaling pace with --unit requires that the original units are ",
+          "given e.g. --pace '",
+          unpackText example,
+          "'."
+        ]
     where
       argsErr i =
         "Scale requires exactly 1 quantity, received "

@@ -6,7 +6,7 @@ import Pacer.Exception (CommandDeriveE)
 tests :: TestTree
 tests =
   testGroup
-    "derive"
+    "Derive"
     [ distanceTests,
       durationTests,
       paceTests,
@@ -18,11 +18,11 @@ distanceTests =
   testGroup
     "Distance"
     [ testDeriveToDistance,
-      testDeriveToDistanceConvert
+      testDeriveToDistanceUnit
     ]
 
 testDeriveToDistance :: TestTree
-testDeriveToDistance = testCase "Derives Distance" $ do
+testDeriveToDistance = testCase "Derives distance" $ do
   runMultiArgs mkArgs vals
   where
     mkArgs (d, p) = ["derive", "--duration", d, "--pace", p]
@@ -36,8 +36,8 @@ testDeriveToDistance = testCase "Derives Distance" $ do
           (("3h", "5m /mile"), "36.00 mi")
         ]
 
-testDeriveToDistanceConvert :: TestTree
-testDeriveToDistanceConvert = testCase "Derives Distance with convert" $ do
+testDeriveToDistanceUnit :: TestTree
+testDeriveToDistanceUnit = testCase "Derives distance with unit" $ do
   runMultiArgs mkArgs vals
   where
     mkArgs (du, p, u) = ["derive", "--duration", du, "--pace", p, "--unit", u]
@@ -54,11 +54,12 @@ durationTests :: TestTree
 durationTests =
   testGroup
     "Duration"
-    [ testDeriveToDuration
+    [ testDeriveToDuration,
+      testDeriveToDurationUnitError
     ]
 
 testDeriveToDuration :: TestTree
-testDeriveToDuration = testCase "Derives Duration" $ do
+testDeriveToDuration = testCase "Derives duration" $ do
   runMultiArgs mkArgs vals
   where
     mkArgs (d, p) = ["derive", "--distance", d, "--pace", p]
@@ -79,17 +80,24 @@ testDeriveToDuration = testCase "Derives Duration" $ do
           (("half-marathon", "5m /mi"), "1h 5'34\"")
         ]
 
+testDeriveToDurationUnitError :: TestTree
+testDeriveToDurationUnitError = runException @CommandDeriveE desc expected args
+  where
+    desc = "Derive duration error with -u m"
+    args = ["derive", "--distance", "marathon", "--pace", "5m", "-u", "km"]
+    expected = "--unit is not used when deriving duration."
+
 paceTests :: TestTree
 paceTests =
   testGroup
     "Pace"
     [ testDeriveToPace,
-      testDeriveToPaceConvert,
+      testDeriveToPaceUnit,
       testPaceError
     ]
 
 testDeriveToPace :: TestTree
-testDeriveToPace = testCase "Derives Pace" $ do
+testDeriveToPace = testCase "Derives pace" $ do
   runMultiArgs mkArgs vals
   where
     mkArgs (di, du) = ["derive", "--distance", di, "--duration", du]
@@ -106,8 +114,8 @@ testDeriveToPace = testCase "Derives Pace" $ do
           (("half-marathon", "3h30s"), "8'33\" /km")
         ]
 
-testDeriveToPaceConvert :: TestTree
-testDeriveToPaceConvert = testCase "Derives Pace with convert" $ do
+testDeriveToPaceUnit :: TestTree
+testDeriveToPaceUnit = testCase "Derives pace with unit" $ do
   runMultiArgs mkArgs vals
   where
     mkArgs (di, du, u) = ["derive", "--distance", di, "--duration", du, "--unit", u]
@@ -123,14 +131,14 @@ testDeriveToPaceConvert = testCase "Derives Pace with convert" $ do
 testPaceError :: TestTree
 testPaceError = runException @CommandDeriveE desc expected args
   where
-    desc = "Derive Pace error with -u m"
+    desc = "Derive pace error with -u m"
     args = ["derive", "--distance", "marathon", "--duration", "3h", "-u", "m"]
     expected = "Meters are disallowed in Pace; use km or mi."
 
 argsErrorTests :: TestTree
 argsErrorTests =
   testGroup
-    "Number of args errors"
+    "General args errors"
     [ testDeriveError
         "Empty args error"
         "Derive requires exactly 2 quantities, received 0."

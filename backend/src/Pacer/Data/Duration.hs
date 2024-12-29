@@ -10,6 +10,7 @@ module Pacer.Data.Duration
     -- ** Functions
     toSeconds,
     convertDuration,
+    toTimeString,
 
     -- * Some Duration
     SomeDuration (..),
@@ -269,6 +270,26 @@ toHrMinSec d = normalizeTime (h_init, m_init, s_init)
 
     k_hr :: Double
     k_hr = baseFactor Hour
+
+toTimeString ::
+  forall t a.
+  ( FromInteger a,
+    MSemigroup a,
+    SingI t,
+    ToRational a
+  ) =>
+  Duration t a ->
+  Text
+toTimeString d =
+  mconcat
+    [ showu h "h",
+      showu m "m",
+      showu s "s"
+    ]
+  where
+    (h, m, s) = toHrMinSec d
+    showu 0 _ = ""
+    showu x u = showt x <> u
 
 -- Normalizes values. This is a bit clunky. Alternatively, we could
 -- simply trade our 'round' usages for 'floor', and that would probably avoid

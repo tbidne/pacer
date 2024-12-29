@@ -27,6 +27,7 @@ import Pacer.Data.Distance.Units
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
+import Pacer.Data.Duration qualified as Dur
 import Pacer.Data.Pace (Pace (MkPace))
 import Pacer.Derive qualified as Derive
 import Pacer.Exception qualified as PEx
@@ -90,6 +91,9 @@ handleDerive handler ddpArgs =
             let dist' = DistU.convertDistance_ @_ @e dist
             handler $ display dist'
     DeriveDuration paceOptUnits dist -> do
+      when (isJust ddpArgs.mUnit)
+        $ throwIO PEx.CommandDeriveDurationUnit
+
       let duration = case paceOptUnits of
             Left pace -> Derive.deriveSomeDuration dist pace
             Right paceDuration -> case dist of
@@ -112,10 +116,9 @@ handleDerive handler ddpArgs =
 
 handleScale ::
   forall a b.
-  ( AMonoid a,
-    FromInteger a,
-    MSemigroup a,
+  ( FromInteger a,
     Ord a,
+    Semifield a,
     Show a,
     ToRational a
   ) =>
@@ -125,11 +128,41 @@ handleScale ::
   IO b
 handleScale handler ddpArgs scaleFactor =
   argsToScale ddpArgs >>= \case
-    ScaleDistance dist -> scaleDisplay dist
-    ScaleDuration duration -> scaleDisplay duration
-    ScalePace paceOptUnits -> case paceOptUnits of
-      Left pace -> scaleDisplay pace
-      Right duration -> scaleDisplay duration
+    ScaleDistance dist -> do
+      let distScaled = dist .* scaleFactor
+      case ddpArgs.mUnit of
+        Nothing -> handler $ display distScaled
+        Just unit -> case toSing unit of
+          SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
+            let distScaled' = DistU.convertDistance_ @_ @e distScaled
+            handler $ display distScaled'
+    ScaleDuration duration -> do
+      when (isJust ddpArgs.mUnit)
+        $ throwIO PEx.CommandScaleDurationUnit
+
+      handleDisplay $ duration .* scaleFactor
+    ScalePace paceOptUnits ->
+      case paceOptUnits of
+        Left pace -> do
+          let paceScaled = pace .* scaleFactor
+          case ddpArgs.mUnit of
+            Nothing -> handleDisplay paceScaled
+            Just unit -> case unit of
+              Meter -> throwIO PEx.CommandScalePaceMeters
+              Kilometer ->
+                handler
+                  $ display
+                  $ DistU.convertDistance_ @_ @Kilometer paceScaled
+              Mile ->
+                handler
+                  $ display
+                  $ DistU.convertDistance_ @_ @Mile paceScaled
+        Right duration -> do
+          when (isJust ddpArgs.mUnit) $ do
+            let example = Dur.toTimeString duration <> " /km"
+            throwIO $ PEx.CommandScalePaceUnitNoUnit example
+
+          handleDisplay $ duration .* scaleFactor
   where
-    scaleDisplay :: forall x. (Display x, MSemiSpace x (Positive a)) => x -> IO b
-    scaleDisplay = handler . display . (.* scaleFactor)
+    handleDisplay :: forall x. (Display x) => x -> IO b
+    handleDisplay = handler . display
