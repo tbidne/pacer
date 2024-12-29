@@ -238,7 +238,7 @@ toHrMinSec d = normalizeTime (h_init, m_init, s_init)
   where
     -- total_seconds: duration in seconds, via a -> Rational -> Double
     total_seconds :: Double
-    total_seconds = realToFrac $ toQ $ toSeconds d
+    total_seconds = toℝ $ toSeconds d
 
     -- In general _init means the calculated value __before__ we handle
     -- normalizing (e.g. 60 seconds -> 1 minute).
@@ -250,7 +250,7 @@ toHrMinSec d = normalizeTime (h_init, m_init, s_init)
     -- rem_seconds := total number of seconds from the frac_h remainder,
     -- after multiplying by the hour/second factor.
     rem_seconds :: Double
-    rem_seconds = fromIntegral @Integer (round (frac_h * k_hr))
+    rem_seconds = fromℤ (round (frac_h * k_hr))
 
     -- m is the integral number of minutes
     -- frac_m in [0, 1) is the fraction of a minute leftover i.e. multiply
