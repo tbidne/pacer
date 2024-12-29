@@ -14,11 +14,11 @@ import Pacer.Chart.Data.ChartExtra qualified as ChartExtra
 import Pacer.Chart.Data.ChartOptions (ChartOptions)
 import Pacer.Chart.Data.ChartOptions qualified as ChartOptions
 import Pacer.Chart.Data.ChartRequest
-  ( ChartRequest,
+  ( ChartRequest (unit),
     ChartRequests (unChartRequests),
   )
 import Pacer.Chart.Data.Run (SomeRuns)
-import Pacer.Data.Distance (HasDistance (distanceUnitOf))
+import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
 import Pacer.Prelude
 
@@ -70,9 +70,9 @@ mkChart ::
   Either CreateChartE Chart
 mkChart someRuns request = toChart <$> eChartData
   where
-    eChartData = ChartData.mkChartData someRuns request
+    eChartData = ChartData.mkChartData finalDistUnit someRuns request
     chartExtra = ChartExtra.mkChartExtra request
-    chartOptions = ChartOptions.mkChartOptions (distanceUnitOf someRuns) request
+    chartOptions = ChartOptions.mkChartOptions finalDistUnit request
 
     toChart chartData =
       MkChart
@@ -80,3 +80,6 @@ mkChart someRuns request = toChart <$> eChartData
           chartExtra,
           chartOptions
         }
+
+    finalDistUnit :: DistanceUnit
+    finalDistUnit = fromMaybe (distanceUnitOf someRuns) request.unit

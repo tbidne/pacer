@@ -30,8 +30,10 @@ where
 {- ORMOLU_ENABLE -}
 
 import Pacer.Class.Parser (Parser (parser))
+import Pacer.Class.Parser qualified as P
 import Pacer.Class.Units (Units (baseFactor))
 import Pacer.Prelude
+import TOML (DecodeTOML (tomlDecoder))
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
@@ -70,6 +72,9 @@ instance Parser DistanceUnit where
         MPC.string "mi" $> Mile,
         MPC.char 'm' $> Meter
       ]
+
+instance DecodeTOML DistanceUnit where
+  tomlDecoder = tomlDecoder >>= P.parseFail
 
 instance Units DistanceUnit where
   baseFactor Meter = fromℤ 1

@@ -34,11 +34,7 @@ import Pacer.Chart.Data.Run
     SomeRunsKey (MkSomeRunsKey, unSomeRunsKey),
   )
 import Pacer.Chart.Data.Run qualified as Run
-import Pacer.Data.Distance
-  ( Distance (unDistance),
-    HasDistance (distanceUnitOf),
-    SomeDistance,
-  )
+import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
   )
@@ -127,10 +123,13 @@ mkChartDatas ::
     Show a,
     ToReal a
   ) =>
+  -- | Final distance unit to use.
+  DistanceUnit ->
   SomeRuns a ->
   ChartRequests a ->
   Either CreateChartE (Seq ChartData)
-mkChartDatas runs = traverse (mkChartData runs) . (.unChartRequests)
+mkChartDatas finalDistUnit runs =
+  traverse (mkChartData finalDistUnit runs) . (.unChartRequests)
 
 -- NOTE: HLint incorrectly thinks some brackets are unnecessary.
 -- See NOTE: [Brackets with OverloadedRecordDot].
@@ -147,6 +146,8 @@ mkChartData ::
     Show a,
     ToReal a
   ) =>
+  -- | Final distance unit to use.
+  DistanceUnit ->
   -- | List of runs.
   SomeRuns a ->
   -- | Chart request.
@@ -154,18 +155,14 @@ mkChartData ::
   -- | ChartData result. Nothing if no runs passed the request's filter.
   Either CreateChartE ChartData
 mkChartData
-  ( MkSomeRuns
-      (SetToSeqNE someRuns@(MkSomeRunsKey someRun@(MkSomeRun sd _) :<|| _))
-    )
+  finalDistUnit
+  (MkSomeRuns (SetToSeqNE someRuns@(MkSomeRunsKey (MkSomeRun sd _) :<|| _)))
   request =
     case filteredRuns of
       Empty -> Left $ CreateChartFilterEmpty request.title
       r :<| rs -> Right (mkChartDataSets (r :<|| rs))
     where
       filteredRuns = filterRuns someRuns request.filters
-
-      finalDistUnit :: DistanceUnit
-      finalDistUnit = distanceUnitOf someRun
 
       mkChartDataSets :: NESeq (SomeRun a) -> ChartData
       mkChartDataSets runs = case request.y1Axis of

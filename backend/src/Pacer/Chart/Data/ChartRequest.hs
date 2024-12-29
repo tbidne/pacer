@@ -21,7 +21,7 @@ import Data.Aeson (ToJSON)
 import Data.Aeson.Types (ToJSON (toJSON))
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
-import Pacer.Data.Distance (SomeDistance)
+import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Prelude
@@ -196,8 +196,6 @@ instance (Parser a) => Parser (Expr a) where
 instance (Parser a) => DecodeTOML (Expr a) where
   tomlDecoder = tomlDecoder >>= P.parseFail
 
--- TODO: Chart request could have optional units
-
 -- | Chart request type.
 data ChartRequest a = MkChartRequest
   { -- | Optional text description.
@@ -206,6 +204,8 @@ data ChartRequest a = MkChartRequest
     filters :: List (FilterExpr a),
     -- | Title for this chart.
     title :: Text,
+    -- | Optional output unit.
+    unit :: Maybe DistanceUnit,
     -- | Y-axis value.
     yAxis :: YAxisType,
     -- | Optional second y-axis.
@@ -226,6 +226,7 @@ instance
     description <- TOML.getFieldOptWith tomlDecoder "description"
     filters <- Utils.getFieldOptArrayOf "filters"
     title <- TOML.getFieldWith tomlDecoder "title"
+    unit <- TOML.getFieldOptWith tomlDecoder "unit"
     yAxis <- TOML.getFieldWith tomlDecoder "y-axis"
     y1Axis <- TOML.getFieldOptWith tomlDecoder "y1-axis"
     pure
@@ -233,6 +234,7 @@ instance
         { description,
           filters,
           title,
+          unit,
           yAxis,
           y1Axis
         }

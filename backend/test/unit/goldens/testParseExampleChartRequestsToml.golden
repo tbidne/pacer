@@ -1,11 +1,20 @@
 MkChartRequests
     { unChartRequests = fromList
         [ MkChartRequest
-            { description = Nothing
+            { description = Just "This is some runs plotted by distance."
             , filters = []
             , title = "Runs by distance"
+            , unit = Nothing
             , yAxis = YAxisDistance
             , y1Axis = Nothing
+            }
+        , MkChartRequest
+            { description = Just "The same runs as before, but in miles."
+            , filters = []
+            , title = "Runs by distance 2"
+            , unit = Just Mile
+            , yAxis = YAxisDistance
+            , y1Axis = Just YAxisPace
             }
         , MkChartRequest
             { description = Nothing
@@ -14,6 +23,7 @@ MkChartRequests
                     ( FilterLabel "marathon" )
                 ]
             , title = "Marathons"
+            , unit = Nothing
             , yAxis = YAxisDuration
             , y1Axis = Just YAxisPace
             }
@@ -28,6 +38,7 @@ MkChartRequests
                     )
                 ]
             , title = "Official non-marathons"
+            , unit = Nothing
             , yAxis = YAxisPace
             , y1Axis = Nothing
             }
@@ -43,6 +54,7 @@ MkChartRequests
                     )
                 ]
             , title = "Marathons and half-marathons"
+            , unit = Nothing
             , yAxis = YAxisPace
             , y1Axis = Nothing
             }
