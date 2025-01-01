@@ -3,6 +3,10 @@ module Pacer.Config.Args.Command
     Command (..),
     cmdParser,
 
+    -- ** Convert
+    ConvertFinal (..),
+    argsToConvert,
+
     -- ** Derive
     DeriveFinal (..),
     argsToDerive,
@@ -12,6 +16,7 @@ module Pacer.Config.Args.Command
     argsToScale,
 
     -- * Misc
+    DistancePaceArgs (..),
     DistanceDurationPaceArgs (..),
     PaceOptUnits,
   )
@@ -29,7 +34,8 @@ import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Exception
-  ( CommandDeriveE
+  ( CommandConvertE (CommandConvertArgs0, CommandConvertArgs2),
+    CommandDeriveE
       ( CommandDeriveArgs0,
         CommandDeriveArgs1,
         CommandDeriveArgs3,
@@ -47,14 +53,43 @@ import Pacer.Prelude
 data Command a
   = -- | Generate charts
     Chart ChartParamsArgs
+  | -- | Converts a quantity.
+    Convert (DistancePaceArgs a)
   | -- | Given 2 of distance, duration, and pace, derives the 3rd.
     Derive (DistanceDurationPaceArgs a)
   | -- | Scales a value.
     Scale (DistanceDurationPaceArgs a) (Positive a)
   deriving stock (Eq, Show)
 
--- | Args for conversions. All args are optional, though we require exactly
--- 2 to derive the 3rd.
+data DistancePaceArgs a = MkDistancePaceArgs
+  { -- | Possible distance.
+    mSomeDistance :: Maybe (SomeDistance (Positive a)),
+    -- | Possible pace.
+    mSomePace :: Maybe (SomePace (Positive a)),
+    -- | Output unit.
+    unit :: DistanceUnit
+  }
+  deriving stock (Eq, Show)
+
+-- | Final args for scale command, after parsing.
+data ConvertFinal a
+  = -- | Converts distance.
+    ConvertDistance (SomeDistance (Positive a))
+  | -- | Converts pace.
+    ConvertPace (SomePace (Positive a))
+
+argsToConvert :: DistancePaceArgs a -> IO (ConvertFinal a)
+argsToConvert deriveArgs = do
+  case ( deriveArgs.mSomeDistance,
+         deriveArgs.mSomePace
+       ) of
+    (Just _, Just _) -> throwIO CommandConvertArgs2
+    (Nothing, Nothing) -> throwIO CommandConvertArgs0
+    (Just a, Nothing) -> pure $ ConvertDistance a
+    (Nothing, Just b) -> pure $ ConvertPace b
+
+-- | Args for derive and scale. All args are optional, though we require
+-- exactly 2 and 1, respectively.
 data DistanceDurationPaceArgs a = MkDistanceDurationPaceArgs
   { -- | Possible duration.
     mDuration :: Maybe (Seconds (Positive a)),
@@ -95,8 +130,6 @@ argsToDerive deriveArgs = do
     -- Duration x Distance -> Pace
     (Just a, Nothing, Just c) -> pure $ DerivePace a c
     _ -> throwIO CommandDeriveArgs1
-
--- TODO: Convert units command
 
 -- | Final args for scale command, after parsing.
 data ScaleFinal a
@@ -142,12 +175,16 @@ cmdParser =
   OA.hsubparser
     ( mconcat
         [ Utils.mkCommand "chart" chartParser chartTxt,
+          Utils.mkCommand "convert" convertParser convertTxt,
           Utils.mkCommand "derive" deriveParser deriveTxt,
           Utils.mkCommand "scale" scaleParser scaleTxt
         ]
     )
   where
     chartTxt = Utils.mkCommandDesc "Generates charts json file"
+    convertTxt =
+      Utils.mkCommandDesc
+        "Converts a quantity. Requires exactly one quantity and the unit."
     deriveTxt =
       Utils.mkCommandDesc
         $ mconcat
@@ -160,13 +197,35 @@ cmdParser =
         "Scales a quantity. Requires exactly one quantity and the scale factor."
 
     chartParser = Chart <$> chartParamsArgsParser
-    deriveParser = Derive <$> convertDistanceDurationPaceArgsParser
+    convertParser = Convert <$> convertDpArgsParser
+    deriveParser = Derive <$> deriveDdpArgsParser
     scaleParser =
       Scale
-        <$> scaleDistanceDurationPaceArgsParser
+        <$> scaleDdpArgsParser
         <*> scaleFactorParser
 
-convertDistanceDurationPaceArgsParser ::
+convertDpArgsParser ::
+  forall a.
+  ( FromRational a,
+    Ord a,
+    P.Parser a,
+    Semifield a,
+    Show a
+  ) =>
+  Parser (DistancePaceArgs a)
+convertDpArgsParser = do
+  mSomeDistance <- OA.optional someDistanceParser
+  mSomePace <- OA.optional somePaceParser
+  unit <- distanceUnitParser
+
+  pure
+    $ MkDistancePaceArgs
+      { mSomeDistance,
+        mSomePace,
+        unit
+      }
+
+deriveDdpArgsParser ::
   forall a.
   ( FromRational a,
     Ord a,
@@ -175,10 +234,10 @@ convertDistanceDurationPaceArgsParser ::
     Show a
   ) =>
   Parser (DistanceDurationPaceArgs a)
-convertDistanceDurationPaceArgsParser =
-  distanceDurationPaceArgsParser convertPaceOptUnitsParser
+deriveDdpArgsParser =
+  ddpArgsParser derivePaceOptUnitsParser
 
-scaleDistanceDurationPaceArgsParser ::
+scaleDdpArgsParser ::
   forall a.
   ( FromRational a,
     Ord a,
@@ -187,10 +246,10 @@ scaleDistanceDurationPaceArgsParser ::
     Show a
   ) =>
   Parser (DistanceDurationPaceArgs a)
-scaleDistanceDurationPaceArgsParser =
-  distanceDurationPaceArgsParser scalePaceOptUnitsParser
+scaleDdpArgsParser =
+  ddpArgsParser paceOptUnitsParser
 
-distanceDurationPaceArgsParser ::
+ddpArgsParser ::
   forall a.
   ( FromRational a,
     Ord a,
@@ -200,11 +259,11 @@ distanceDurationPaceArgsParser ::
   ) =>
   Parser (PaceOptUnits a) ->
   Parser (DistanceDurationPaceArgs a)
-distanceDurationPaceArgsParser paceOptParser = do
+ddpArgsParser paceOptParser = do
   mDuration <- OA.optional durationParser
   mPaceOptUnits <- OA.optional paceOptParser
   mSomeDistance <- OA.optional someDistanceParser
-  mUnit <- distanceUnitParser
+  mUnit <- OA.optional distanceUnitParser
 
   pure
     $ MkDistanceDurationPaceArgs
@@ -236,6 +295,29 @@ someDistanceParser =
     read :: OA.ReadM (SomeDistance (Positive a))
     read = readParseable
 
+somePaceParser ::
+  forall a.
+  ( FromRational a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  Parser (SomePace (Positive a))
+somePaceParser =
+  OA.option
+    read
+    ( mconcat
+        [ OA.long "pace",
+          OA.metavar "TIME_STR (/UNIT)",
+          Utils.mkHelp helpTxt
+        ]
+    )
+  where
+    read :: ReadM (SomePace (Positive a))
+    read = readParseable
+
+    helpTxt = "A pace e.g. '4m30s /km', '1h5m /mi'."
+
 durationParser ::
   forall a.
   ( FromRational a,
@@ -262,7 +344,7 @@ durationParser =
 -- with a unit, after all).
 type PaceOptUnits a = Either (SomePace (Positive a)) (Seconds (Positive a))
 
-convertPaceOptUnitsParser ::
+derivePaceOptUnitsParser ::
   forall a.
   ( FromRational a,
     Ord a,
@@ -270,7 +352,7 @@ convertPaceOptUnitsParser ::
     Show a
   ) =>
   Parser (PaceOptUnits a)
-convertPaceOptUnitsParser = paceOptUnitsParser helpTxt
+derivePaceOptUnitsParser = paceOptUnitsParserHelp helpTxt
   where
     helpTxt =
       mconcat
@@ -355,7 +437,7 @@ outJsonPathParser =
     read :: ReadM OsPath
     read = OA.str >>= OsPath.encodeFail
 
-scalePaceOptUnitsParser ::
+paceOptUnitsParser ::
   forall a.
   ( FromRational a,
     Ord a,
@@ -363,11 +445,11 @@ scalePaceOptUnitsParser ::
     Show a
   ) =>
   Parser (PaceOptUnits a)
-scalePaceOptUnitsParser = paceOptUnitsParser helpTxt
+paceOptUnitsParser = paceOptUnitsParserHelp helpTxt
   where
     helpTxt = "A pace e.g. '4m30s /km', '1h5m /mi', '4m30'."
 
-paceOptUnitsParser ::
+paceOptUnitsParserHelp ::
   forall a.
   ( FromRational a,
     Ord a,
@@ -376,7 +458,7 @@ paceOptUnitsParser ::
   ) =>
   String ->
   Parser (PaceOptUnits a)
-paceOptUnitsParser helpTxt =
+paceOptUnitsParserHelp helpTxt =
   OA.option
     read
     ( mconcat
@@ -425,18 +507,17 @@ scaleFactorParser =
     helpTxt = "The scaling factor."
     read = readParseable
 
-distanceUnitParser :: Parser (Maybe DistanceUnit)
+distanceUnitParser :: Parser DistanceUnit
 distanceUnitParser =
-  OA.optional
-    $ OA.option
-      readParseable
-      ( mconcat
-          [ OA.short 'u',
-            OA.long "unit",
-            OA.metavar "UNIT",
-            Utils.mkHelp helpTxt
-          ]
-      )
+  OA.option
+    readParseable
+    ( mconcat
+        [ OA.short 'u',
+          OA.long "unit",
+          OA.metavar "UNIT",
+          Utils.mkHelp helpTxt
+        ]
+    )
   where
     helpTxt = "Output unit e.g. 'km', 'miles'."
 

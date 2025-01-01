@@ -14,10 +14,13 @@ import Pacer.Chart (ChartParamsArgs)
 import Pacer.Chart qualified as Chart
 import Pacer.Config.Args (Args (command), parserInfo)
 import Pacer.Config.Args.Command
-  ( Command (Chart, Derive, Scale),
+  ( Command (Chart, Convert, Derive, Scale),
+    ConvertFinal (ConvertDistance, ConvertPace),
     DeriveFinal (DeriveDistance, DeriveDuration, DerivePace),
     DistanceDurationPaceArgs (mUnit),
+    DistancePaceArgs (unit),
     ScaleFinal (ScaleDistance, ScaleDuration, ScalePace),
+    argsToConvert,
     argsToDerive,
     argsToScale,
   )
@@ -45,6 +48,7 @@ runAppWith handler = do
   args <- OA.execParser (parserInfo @Double)
   case args.command of
     Chart chartArgs -> handleChart handler chartArgs
+    Convert convertArgs -> handleConvert handler convertArgs
     Derive ddpArgs -> handleDerive handler ddpArgs
     Scale ddpArgs scaleFactor -> handleScale handler ddpArgs scaleFactor
 
@@ -67,6 +71,31 @@ handleChart handler chartParamsArgs = do
           packText $ OsPath.decodeLenient chartParamsFinal.outJsonPath,
           "'"
         ]
+
+handleConvert ::
+  forall a b.
+  ( FromInteger a,
+    Ord a,
+    Semifield a,
+    Show a,
+    ToRational a
+  ) =>
+  (Text -> IO b) ->
+  DistancePaceArgs a ->
+  IO b
+handleConvert handler dpArgs =
+  argsToConvert dpArgs >>= \case
+    ConvertDistance dist ->
+      case toSing unit of
+        SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
+          let dist' = DistU.convertDistance_ @_ @e dist
+          handler $ display dist'
+    ConvertPace pace -> case unit of
+      Meter -> throwIO PEx.CommandConvertPaceMeters
+      Kilometer -> handler $ display $ DistU.convertDistance_ @_ @Kilometer pace
+      Mile -> handler $ display $ DistU.convertDistance_ @_ @Mile pace
+  where
+    unit = dpArgs.unit
 
 handleDerive ::
   forall a b.

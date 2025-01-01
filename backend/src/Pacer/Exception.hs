@@ -4,6 +4,7 @@ module Pacer.Exception
     TomlE (..),
 
     -- ** Commands
+    CommandConvertE (..),
     CommandDeriveE (..),
     CommandScaleE (..),
 
@@ -20,6 +21,27 @@ import GHC.TypeLits (symbolVal)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML (TOMLError)
+
+-- | Exception for CLI scale command.
+data CommandConvertE
+  = -- | Wanted 1 quantity, received 0.
+    CommandConvertArgs0
+  | -- | Wanted 1 quantity, received 2.
+    CommandConvertArgs2
+  | -- | Error for converting pace with out unit in meters, not allowed.
+    CommandConvertPaceMeters
+  deriving stock (Show)
+
+instance Exception CommandConvertE where
+  displayException = \case
+    CommandConvertArgs0 -> argsErr "0"
+    CommandConvertArgs2 -> argsErr "2"
+    CommandConvertPaceMeters -> symbolVal (Proxy @Utils.PaceMetersErrMsg)
+    where
+      argsErr i =
+        "Convert requires exactly 1 quantity, received "
+          ++ i
+          ++ "."
 
 -- | Exception for CLI derive command.
 data CommandDeriveE

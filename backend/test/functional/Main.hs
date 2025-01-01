@@ -5,6 +5,7 @@ module Main (main) where
 
 import FileSystem.OsPath (decodeLenient)
 import Functional.Chart qualified
+import Functional.Convert qualified
 import Functional.Derive qualified
 import Functional.Prelude
 import Functional.Scale qualified
@@ -22,6 +23,7 @@ main =
       testGroup
         "Functional"
         [ Functional.Chart.tests getTestDir,
+          Functional.Convert.tests,
           Functional.Derive.tests,
           Functional.Scale.tests
         ]
