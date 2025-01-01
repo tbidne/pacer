@@ -95,7 +95,7 @@
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
               name = "pacer";
-              root = ./backend;
+              root = ./.;
 
               devTools =
                 if includeWeb then

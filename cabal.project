@@ -1,4 +1,4 @@
-packages: ./backend/*.cabal
+packages: pacer.cabal
 
 package pacer
   ghc-options:

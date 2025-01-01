@@ -9,8 +9,8 @@ cabal.project.local
 /result
 
 # data
-/backend/data/input/chart-requests.toml
-/backend/data/input/runs.toml
+/data/input/chart-requests.toml
+/data/input/runs.toml
 
 # web
 /web/data/input/charts.json

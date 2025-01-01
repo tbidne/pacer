@@ -1,14 +1,14 @@
 ---
 cradle:
   cabal:
-    - path: "./backend/src"
+    - path: "./src"
       component: "lib:pacer"
 
-    - path: "./backend/app/Main.hs"
+    - path: "./app/Main.hs"
       component: "pacer:exe:pacer"
 
-    - path: "./backend/test/unit"
+    - path: "./test/unit"
       component: "pacer:test:unit"
 
-    - path: "./backend/test/functional"
+    - path: "./test/functional"
       component: "pacer:test:functional"
