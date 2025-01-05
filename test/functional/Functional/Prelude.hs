@@ -1,5 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-missing-methods #-}
 
 module Functional.Prelude
   ( module X,
@@ -20,8 +21,12 @@ module Functional.Prelude
   )
 where
 
+import Control.Monad.Reader (MonadReader, ReaderT (runReaderT), asks)
+import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 import Data.Word (Word8)
-import FileSystem.OsPath (unsafeDecode, unsafeEncode)
+import FileSystem.OsPath (decodeLenient, unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
   ( Gen,
@@ -39,11 +44,12 @@ import Hedgehog as X
     (/==),
     (===),
   )
-import Pacer.Driver (runAppWith)
+import Pacer.Driver (runApp)
 import Pacer.Exception (displayInnerMatchKnown)
 import Pacer.Prelude as X hiding (IO)
 import System.Environment (withArgs)
 import System.IO as X (IO)
+import System.OsPath qualified as OsPath
 import Test.Tasty as X (TestName, TestTree, testGroup)
 import Test.Tasty.Golden as X (goldenVsFile)
 import Test.Tasty.HUnit as X
@@ -62,6 +68,52 @@ x <@=?> my = do
 
 infix 1 <@=?>
 
+data FuncEnv = MkFuncEnv
+  { logsRef :: IORef Text,
+    outFilesMapRef :: IORef (Map OsPath ByteString)
+  }
+
+newtype FuncIO a = MkFuncIO {unFuncIO :: ReaderT FuncEnv IO a}
+  deriving newtype
+    ( Applicative,
+      Functor,
+      Monad,
+      MonadIO,
+      MonadOptparse,
+      MonadReader FuncEnv,
+      MonadThrow,
+      MonadFileReader,
+      MonadPathWriter
+    )
+
+runFuncIO :: FuncIO a -> IO FuncEnv
+runFuncIO m = do
+  logsRef <- newIORef ""
+  outFilesMapRef <- newIORef Map.empty
+  let env =
+        MkFuncEnv
+          { logsRef,
+            outFilesMapRef
+          }
+
+  _ <- runReaderT (unFuncIO m) env
+  pure env
+
+instance MonadFileWriter FuncIO where
+  -- When a test tries to write a file, record it in the map i.e.
+  --
+  -- writeBinaryFile p bs --> Map.insert p bs
+  writeBinaryFile path bs = do
+    outFilesMapRef <- asks (.outFilesMapRef)
+    liftIO $ modifyIORef' outFilesMapRef (Map.insert fileName bs)
+    where
+      fileName = OsPath.takeFileName path
+
+instance MonadTerminal FuncIO where
+  putStrLn s = do
+    logsRef <- asks (.logsRef)
+    liftIO $ modifyIORef' logsRef (<> packText s)
+
 runMultiArgs :: (a -> List String) -> List (Word8, (a, Text)) -> IO ()
 runMultiArgs mkArgs vals =
   for_ vals $ \(idx, (a, e)) -> do
@@ -70,7 +122,8 @@ runMultiArgs mkArgs vals =
 
 runArgs :: Maybe Word8 -> List String -> Text -> IO ()
 runArgs mIdx args expected = do
-  result <- withArgs args $ runAppWith pure
+  funcEnv <- withArgs args $ runFuncIO runApp
+  result <- readIORef funcEnv.logsRef
 
   let (idxTxt, indentTxt) = case mIdx of
         Just idx -> (showt idx <> ". ", "   ")
@@ -92,7 +145,8 @@ runArgs mIdx args expected = do
 
 runException :: forall e. (Exception e) => TestName -> Text -> List String -> TestTree
 runException desc expected args = testCase desc $ do
-  eResult <- try @e $ withArgs args $ runAppWith pure
+  eFuncEnv <- try @e $ withArgs args $ runFuncIO runApp
+  eResult <- secondA (\x -> readIORef x.logsRef) eFuncEnv
 
   case eResult of
     Right r -> assertFailure $ unpackText $ "Expected exception, received: " <> r
@@ -103,13 +157,12 @@ data GoldenParams = MkGoldenParams
   { -- | Functions to make the CLI arguments. The parameter is the tmp test
     -- directory.
     mkArgs :: OsPath -> List String,
+    -- | Output file.
+    outFileName :: Maybe OsPath,
     -- | Test string description.
     testDesc :: TestName,
     -- | Test function name, for creating unique file paths.
-    testName :: OsPath,
-    -- | Function that creates the bytes to be written to the golden file.
-    -- The inputs are the tmp test directory, and the CLI's stdout.
-    resultToBytes :: OsPath -> Text -> IO ByteString
+    testName :: OsPath
   }
 
 -- | Given a text description and testName OsPath, creates a golden test.
@@ -158,24 +211,20 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
 
     params =
       MkGoldenParams
-        { mkArgs = \testDir ->
-            [ "chart",
-              "--runs",
-              runsPath,
-              "--chart-requests",
-              chartRequestsPath,
-              "--json",
-              unsafeDecode (mkJsonPath testDir)
-            ],
+        { mkArgs =
+            const
+              [ "chart",
+                "--runs",
+                runsPath,
+                "--chart-requests",
+                chartRequestsPath,
+                "--json",
+                "charts.json"
+              ],
+          -- The chart tests will all write an output file charts.json
+          outFileName = Just [osp|charts.json|],
           testDesc,
-          testName = goldenName,
-          -- NOTE: It would be nice to test the txt output here i.e. the
-          -- second arg. Alas, it includes the path of the output json file,
-          -- which is non-deterministic, as it includes the tmp dir.
-          --
-          -- Thus for now we ignore it, since the json output is the main
-          -- part we care about.
-          resultToBytes = \path _ -> readBinaryFileIO . mkJsonPath $ path
+          testName = goldenName
         }
 
     -- These are always based on the testName, since all Os's share the same
@@ -183,18 +232,40 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
     basePath = [ospPathSep|test/functional/data|]
     chartRequestsPath = unsafeDecode $ basePath </> testName <> [osp|_chart-requests.toml|]
     runsPath = unsafeDecode $ basePath </> testName <> [osp|_runs.toml|]
-    mkJsonPath testDir = testDir </> testName <> [ospPathSep|_charts.json|]
 
 testGoldenParams :: IO OsPath -> GoldenParams -> TestTree
 testGoldenParams getTestDir goldenParams = do
   goldenVsFile goldenParams.testDesc goldenPath actualPath $ do
     testDir <- getTestDir
+
     let args = goldenParams.mkArgs testDir
-    trySync (withArgs args $ runAppWith pure) >>= \case
+    eFuncEnv <- trySync $ withArgs args $ runFuncIO runApp
+    case eFuncEnv of
       Left err -> writeActualFile $ exToBs err
-      Right txt -> do
-        bs <- goldenParams.resultToBytes testDir txt
-        writeActualFile bs
+      Right funcEnv ->
+        case goldenParams.outFileName of
+          -- No out file, golden test uses the logs (stdout)
+          Nothing -> do
+            bs <- encodeUtf8 <$> readIORef funcEnv.logsRef
+            writeActualFile bs
+          -- We expect a file to have been written to a given path. This is
+          -- what the golden test is based on.
+          Just expectedName -> do
+            outFilesMap <- readIORef funcEnv.outFilesMapRef
+            case Map.lookup expectedName outFilesMap of
+              -- Found the write attempt in our env's map. Write it to compare
+              -- it with the golden expectation.
+              Just bs -> writeActualFile bs
+              -- Expected file not found, failure.
+              Nothing -> do
+                let msg =
+                      mconcat
+                        [ "functional.writeBinaryFile: Unexpected path: '",
+                          packText (decodeLenient expectedName),
+                          "'.\n\nKnown paths:\n\n",
+                          showt $ Map.keysSet outFilesMap
+                        ]
+                writeActualFile $ encodeUtf8 msg
   where
     outputPathStart =
       FS.OsPath.unsafeDecode

@@ -78,13 +78,18 @@ data ConvertFinal a
   | -- | Converts pace.
     ConvertPace (SomePace (Positive a))
 
-argsToConvert :: DistancePaceArgs a -> IO (ConvertFinal a)
+argsToConvert ::
+  ( HasCallStack,
+    MonadThrow m
+  ) =>
+  DistancePaceArgs a ->
+  m (ConvertFinal a)
 argsToConvert deriveArgs = do
   case ( deriveArgs.mSomeDistance,
          deriveArgs.mSomePace
        ) of
-    (Just _, Just _) -> throwIO CommandConvertArgs2
-    (Nothing, Nothing) -> throwIO CommandConvertArgs0
+    (Just _, Just _) -> throwM CommandConvertArgs2
+    (Nothing, Nothing) -> throwM CommandConvertArgs0
     (Just a, Nothing) -> pure $ ConvertDistance a
     (Nothing, Just b) -> pure $ ConvertPace b
 
@@ -113,23 +118,28 @@ data DeriveFinal a
 
 -- | Converts CLI args into their final type, suitable for running the
 -- convert.
-argsToDerive :: DistanceDurationPaceArgs a -> IO (DeriveFinal a)
+argsToDerive ::
+  ( HasCallStack,
+    MonadThrow m
+  ) =>
+  DistanceDurationPaceArgs a ->
+  m (DeriveFinal a)
 argsToDerive deriveArgs = do
   case ( deriveArgs.mDuration,
          deriveArgs.mPaceOptUnits,
          deriveArgs.mSomeDistance
        ) of
-    (Just _, Just _, Just _) -> throwIO CommandDeriveArgs3
-    (Nothing, Nothing, Nothing) -> throwIO CommandDeriveArgs0
+    (Just _, Just _, Just _) -> throwM CommandDeriveArgs3
+    (Nothing, Nothing, Nothing) -> throwM CommandDeriveArgs0
     -- Duration x Pace -> Distance
     (Just a, Just b, Nothing) -> case b of
       Left pace -> pure $ DeriveDistance a pace
-      Right _ -> throwIO CommandDeriveNoPaceUnit
+      Right _ -> throwM CommandDeriveNoPaceUnit
     -- PaceOptUnits x Distance -> Duration
     (Nothing, Just b, Just c) -> pure $ DeriveDuration b c
     -- Duration x Distance -> Pace
     (Just a, Nothing, Just c) -> pure $ DerivePace a c
-    _ -> throwIO CommandDeriveArgs1
+    _ -> throwM CommandDeriveArgs1
 
 -- | Final args for scale command, after parsing.
 data ScaleFinal a
@@ -149,18 +159,23 @@ data ScaleFinal a
 -- If we ever do something facier e.g. "evolve" the args in a phased manner
 -- a la Trees That Grow, we may need to add it.
 
-argsToScale :: DistanceDurationPaceArgs a -> IO (ScaleFinal a)
+argsToScale ::
+  ( HasCallStack,
+    MonadThrow m
+  ) =>
+  DistanceDurationPaceArgs a ->
+  m (ScaleFinal a)
 argsToScale deriveArgs = do
   case ( deriveArgs.mSomeDistance,
          deriveArgs.mDuration,
          deriveArgs.mPaceOptUnits
        ) of
-    (Just _, Just _, Just _) -> throwIO CommandScaleArgs3
-    (Nothing, Nothing, Nothing) -> throwIO CommandScaleArgs0
+    (Just _, Just _, Just _) -> throwM CommandScaleArgs3
+    (Nothing, Nothing, Nothing) -> throwM CommandScaleArgs0
     (Just a, Nothing, Nothing) -> pure $ ScaleDistance a
     (Nothing, Just b, Nothing) -> pure $ ScaleDuration b
     (Nothing, Nothing, Just c) -> pure $ ScalePace c
-    _ -> throwIO CommandScaleArgs2
+    _ -> throwM CommandScaleArgs2
 
 cmdParser ::
   forall a.

@@ -1,15 +1,10 @@
 module Pacer.Driver
   ( -- * Main
     runApp,
-    runAppWith,
   )
 where
 
-import Control.Exception.Annotation.Utils
-  ( setUncaughtExceptionDisplayInnerMatch,
-  )
 import FileSystem.OsPath qualified as OsPath
-import Options.Applicative qualified as OA
 import Pacer.Chart (ChartParamsArgs)
 import Pacer.Chart qualified as Chart
 import Pacer.Config.Args (Args (command), parserInfo)
@@ -36,27 +31,37 @@ import Pacer.Derive qualified as Derive
 import Pacer.Exception qualified as PEx
 import Pacer.Prelude
 
-runApp :: IO ()
-runApp = runAppWith (putStrLn . unpackText)
-
-runAppWith :: (Text -> IO a) -> IO a
-runAppWith handler = do
-  setUncaughtExceptionDisplayInnerMatch
-    PEx.knownExceptions
-    putStrLn
-
-  args <- OA.execParser (parserInfo @Double)
+runApp ::
+  ( HasCallStack,
+    MonadFileReader m,
+    MonadFileWriter m,
+    MonadPathWriter m,
+    MonadOptparse m,
+    MonadTerminal m,
+    MonadThrow m
+  ) =>
+  m ()
+runApp = do
+  args <- execParser (parserInfo @Double)
   case args.command of
-    Chart chartArgs -> handleChart handler chartArgs
-    Convert convertArgs -> handleConvert handler convertArgs
-    Derive ddpArgs -> handleDerive handler ddpArgs
-    Scale ddpArgs scaleFactor -> handleScale handler ddpArgs scaleFactor
+    Chart chartArgs -> handleChart chartArgs
+    Convert convertArgs -> handleConvert convertArgs
+    Derive ddpArgs -> handleDerive ddpArgs
+    Scale ddpArgs scaleFactor -> handleScale ddpArgs scaleFactor
 
-handleChart :: (Text -> IO a) -> ChartParamsArgs -> IO a
-handleChart handler chartParamsArgs = do
+handleChart ::
+  ( HasCallStack,
+    MonadFileReader m,
+    MonadFileWriter m,
+    MonadPathWriter m,
+    MonadTerminal m,
+    MonadThrow m
+  ) =>
+  ChartParamsArgs ->
+  m ()
+handleChart chartParamsArgs = do
   Chart.createChartsJsonFile chartParamsFinal
-
-  handler msg
+  putTextLn msg
   where
     chartParamsFinal = Chart.advancePhase chartParamsArgs
 
@@ -73,55 +78,59 @@ handleChart handler chartParamsArgs = do
         ]
 
 handleConvert ::
-  forall a b.
+  forall m a.
   ( FromInteger a,
+    HasCallStack,
+    MonadTerminal m,
+    MonadThrow m,
     Ord a,
     Semifield a,
     Show a,
     ToRational a
   ) =>
-  (Text -> IO b) ->
   DistancePaceArgs a ->
-  IO b
-handleConvert handler dpArgs =
+  m ()
+handleConvert dpArgs =
   argsToConvert dpArgs >>= \case
     ConvertDistance dist ->
       case toSing unit of
         SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
           let dist' = DistU.convertDistance_ @_ @e dist
-          handler $ display dist'
+          putTextLn $ display dist'
     ConvertPace pace -> case unit of
-      Meter -> throwIO PEx.CommandConvertPaceMeters
-      Kilometer -> handler $ display $ DistU.convertDistance_ @_ @Kilometer pace
-      Mile -> handler $ display $ DistU.convertDistance_ @_ @Mile pace
+      Meter -> throwM PEx.CommandConvertPaceMeters
+      Kilometer -> putTextLn $ display $ DistU.convertDistance_ @_ @Kilometer pace
+      Mile -> putTextLn $ display $ DistU.convertDistance_ @_ @Mile pace
   where
     unit = dpArgs.unit
 
 handleDerive ::
-  forall a b.
+  forall m a.
   ( Display a,
     FromInteger a,
+    HasCallStack,
+    MonadTerminal m,
+    MonadThrow m,
     Ord a,
     Semifield a,
     Show a,
     ToRational a
   ) =>
-  (Text -> IO b) ->
   DistanceDurationPaceArgs a ->
-  IO b
-handleDerive handler ddpArgs =
+  m ()
+handleDerive ddpArgs =
   argsToDerive ddpArgs >>= \case
     DeriveDistance duration pace -> do
       let dist = Derive.deriveSomeDistance ((.unPositive) <$> duration) pace
       case ddpArgs.mUnit of
-        Nothing -> handler $ display dist
+        Nothing -> putTextLn $ display dist
         Just unit -> case toSing unit of
           SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
             let dist' = DistU.convertDistance_ @_ @e dist
-            handler $ display dist'
+            putTextLn $ display dist'
     DeriveDuration paceOptUnits dist -> do
       when (isJust ddpArgs.mUnit)
-        $ throwIO PEx.CommandDeriveDurationUnit
+        $ throwM PEx.CommandDeriveDurationUnit
 
       let duration = case paceOptUnits of
             Left pace -> Derive.deriveSomeDuration dist pace
@@ -133,41 +142,43 @@ handleDerive handler ddpArgs =
                      in Derive.deriveDuration disty (MkPace @Kilometer paceDuration)
                   SKilometer -> Derive.deriveDuration distx (MkPace paceDuration)
                   SMile -> Derive.deriveDuration distx (MkPace paceDuration)
-      handler $ display duration
+      putTextLn $ display duration
     DerivePace duration dist -> do
       let pace = Derive.deriveSomePace dist ((.unPositive) <$> duration)
       case ddpArgs.mUnit of
-        Nothing -> handler $ display pace
+        Nothing -> putTextLn $ display pace
         Just unit -> case unit of
-          Meter -> throwIO PEx.CommandDerivePaceMeters
-          Kilometer -> handler $ display $ DistU.convertDistance_ @_ @Kilometer pace
-          Mile -> handler $ display $ DistU.convertDistance_ @_ @Mile pace
+          Meter -> throwM PEx.CommandDerivePaceMeters
+          Kilometer -> putTextLn $ display $ DistU.convertDistance_ @_ @Kilometer pace
+          Mile -> putTextLn $ display $ DistU.convertDistance_ @_ @Mile pace
 
 handleScale ::
-  forall a b.
+  forall m a.
   ( FromInteger a,
+    HasCallStack,
+    MonadTerminal m,
+    MonadThrow m,
     Ord a,
     Semifield a,
     Show a,
     ToRational a
   ) =>
-  (Text -> IO b) ->
   DistanceDurationPaceArgs a ->
   Positive a ->
-  IO b
-handleScale handler ddpArgs scaleFactor =
+  m ()
+handleScale ddpArgs scaleFactor =
   argsToScale ddpArgs >>= \case
     ScaleDistance dist -> do
       let distScaled = dist .* scaleFactor
       case ddpArgs.mUnit of
-        Nothing -> handler $ display distScaled
+        Nothing -> putTextLn $ display distScaled
         Just unit -> case toSing unit of
           SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
             let distScaled' = DistU.convertDistance_ @_ @e distScaled
-            handler $ display distScaled'
+            putTextLn $ display distScaled'
     ScaleDuration duration -> do
       when (isJust ddpArgs.mUnit)
-        $ throwIO PEx.CommandScaleDurationUnit
+        $ throwM PEx.CommandScaleDurationUnit
 
       handleDisplay $ duration .* scaleFactor
     ScalePace paceOptUnits ->
@@ -177,21 +188,21 @@ handleScale handler ddpArgs scaleFactor =
           case ddpArgs.mUnit of
             Nothing -> handleDisplay paceScaled
             Just unit -> case unit of
-              Meter -> throwIO PEx.CommandScalePaceMeters
+              Meter -> throwM PEx.CommandScalePaceMeters
               Kilometer ->
-                handler
+                putTextLn
                   $ display
                   $ DistU.convertDistance_ @_ @Kilometer paceScaled
               Mile ->
-                handler
+                putTextLn
                   $ display
                   $ DistU.convertDistance_ @_ @Mile paceScaled
         Right duration -> do
           when (isJust ddpArgs.mUnit) $ do
             let example = Dur.toTimeString duration <> " /km"
-            throwIO $ PEx.CommandScalePaceUnitNoUnit example
+            throwM $ PEx.CommandScalePaceUnitNoUnit example
 
           handleDisplay $ duration .* scaleFactor
   where
-    handleDisplay :: forall x. (Display x) => x -> IO b
-    handleDisplay = handler . display
+    handleDisplay :: forall x. (Display x) => x -> m ()
+    handleDisplay = putTextLn . display

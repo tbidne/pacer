@@ -31,9 +31,9 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
               "--json",
               unsafeDecode (mkJsonPath testDir)
             ],
+          outFileName = Just [osp|testExampleChart_charts.json|],
           testDesc = "Generates example",
-          testName = [osp|testExampleChart|],
-          resultToBytes = \path _ -> readBinaryFileIO . mkJsonPath $ path
+          testName = [osp|testExampleChart|]
         }
     runsPath = unsafeDecode [osp|data/input/example/runs.toml|]
     chartRequestsPath = unsafeDecode [osp|data/input/example/chart-requests.toml|]

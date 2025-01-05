@@ -3,14 +3,18 @@
 
 module Main (main) where
 
+import Effects.FileSystem.PathReader qualified as PR
+import Effects.FileSystem.PathWriter qualified as PW
 import FileSystem.OsPath (decodeLenient)
 import Functional.Chart qualified
 import Functional.Convert qualified
 import Functional.Derive qualified
 import Functional.Prelude
 import Functional.Scale qualified
-import System.Directory.OsPath qualified as Dir
 import System.Environment.Guard
+  ( ExpectEnv (ExpectEnvSet),
+    guardOrElse',
+  )
 import Test.Tasty (defaultMain, localOption, withResource)
 import Test.Tasty.Golden (DeleteOutputFile (OnPass))
 
@@ -30,15 +34,14 @@ main =
 
 setup :: IO OsPath
 setup = do
-  rootTmpDir <- (</> [osp|pacer|]) <$> Dir.getTemporaryDirectory
+  rootTmpDir <- (</> [osp|pacer|]) <$> PR.getTemporaryDirectory
   let tmpDir = rootTmpDir </> tmpName
 
   -- Make sure we delete any leftover files from a previous run, so tests
   -- have a clean environment.
-  dirExists <- Dir.doesDirectoryExist tmpDir
-  when dirExists (Dir.removeDirectoryRecursive tmpDir)
+  PW.removeDirectoryRecursiveIfExists_ tmpDir
 
-  Dir.createDirectoryIfMissing True tmpDir
+  PW.createDirectoryIfMissing True tmpDir
   pure tmpDir
   where
     tmpName = [osp|test|] </> [osp|functional|]
@@ -47,8 +50,7 @@ teardown :: OsPath -> IO ()
 teardown tmpDir = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
   where
     cleanup = do
-      dirExists <- Dir.doesDirectoryExist tmpDir
-      when dirExists (Dir.removeDirectoryRecursive tmpDir)
+      PW.removeDirectoryRecursiveIfExists_ tmpDir
 
     doNothing =
       putStrLn

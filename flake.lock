@@ -122,6 +122,47 @@
         "type": "github"
       }
     },
+    "monad-effects": {
+      "inputs": {
+        "algebra-simple": [
+          "algebra-simple"
+        ],
+        "bounds": [
+          "bounds"
+        ],
+        "exception-utils": [
+          "exception-utils"
+        ],
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "fs-utils": [
+          "fs-utils"
+        ],
+        "nix-hs-utils": [
+          "nix-hs-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "smart-math": [
+          "smart-math"
+        ]
+      },
+      "locked": {
+        "lastModified": 1732663456,
+        "narHash": "sha256-w5iNu2DlPrVQvfJXW/n/NlmuE1/WTRH9hVQdicXbKJA=",
+        "owner": "tbidne",
+        "repo": "monad-effects",
+        "rev": "7cc259bce3becc2c72bed1e8dd6f46ecc41efe70",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "repo": "monad-effects",
+        "type": "github"
+      }
+    },
     "nix-hs-utils": {
       "locked": {
         "lastModified": 1730953801,
@@ -205,6 +246,7 @@
         "exception-utils": "exception-utils",
         "flake-parts": "flake-parts",
         "fs-utils": "fs-utils",
+        "monad-effects": "monad-effects",
         "nix-hs-utils": "nix-hs-utils",
         "nixpkgs": "nixpkgs",
         "relative-time": "relative-time",

@@ -26,9 +26,13 @@ module Pacer.Prelude
     TextBuilder,
     builderToLazyText,
 
-    -- * File IO
-    readFileUtf8,
-    writeFileUtf8,
+#if !MIN_VERSION_base(4, 21, 0)
+
+    -- * Bitraversable
+    firstA,
+    secondA,
+
+#endif
 
     -- * Singletons
     fromSingI,
@@ -52,6 +56,7 @@ module Pacer.Prelude
     throwMapLeft,
     errorLeft,
     errorMapLeft,
+
     -- ** Misc
     displayExceptiont,
 
@@ -73,6 +78,10 @@ module Pacer.Prelude
 
     -- * Dev / Debug
     todo,
+    traceFile,
+    traceFileA,
+    traceFileLine,
+    traceFileLineA,
 
     -- * OS
     Os (..),
@@ -116,9 +125,15 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
+import Control.Monad.Catch as X (MonadThrow (throwM))
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
 import Data.Bifunctor as X (Bifunctor (bimap, first, second))
+#if MIN_VERSION_base(4, 21, 0)
+import Data.Bitraversable as X (Bitraversable (bitraverse), firstA, secondA)
+#else
+import Data.Bitraversable as X (Bitraversable (bitraverse))
+#endif
 import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.ByteString.Lazy qualified as BSL
@@ -205,13 +220,30 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word32)
+import Effects.FileSystem.FileReader as X
+  ( MonadFileReader,
+    readFileUtf8ThrowM,
+  )
+import Effects.FileSystem.FileWriter as X
+  ( MonadFileWriter (writeBinaryFile),
+    appendFileUtf8,
+    writeFileUtf8,
+  )
+import Effects.FileSystem.PathWriter as X
+  ( MonadPathWriter
+      ( createDirectoryIfMissing
+      ),
+  )
+import Effects.Optparse as X (MonadOptparse (execParser))
+import Effects.System.Terminal as X (MonadTerminal (putStrLn), putTextLn)
 import FileSystem.IO as X (readBinaryFileIO, writeBinaryFileIO)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
+import FileSystem.OsPath qualified as OsPath
 import FileSystem.UTF8 as X (decodeUtf8ThrowM, encodeUtf8)
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum)
 import GHC.Err as X (error, undefined)
 import GHC.Exception (errorCallWithCallStackException)
-import GHC.Exts (RuntimeRep, TYPE, raise#)
+import GHC.Exts (RuntimeRep, TYPE, raise#, seq)
 import GHC.Float as X (Double, Float)
 import GHC.Generics as X (Generic)
 import GHC.Integer as X (Integer)
@@ -285,7 +317,9 @@ import Numeric.Data.Positive.Algebra.Internal as X
         UnsafePositive
       ),
   )
-import System.IO as X (IO, putStrLn)
+import System.FilePath (FilePath)
+import System.IO as X (IO)
+import System.IO.Unsafe (unsafePerformIO)
 import Text.Read as X (readMaybe)
 import Text.Read qualified as TR
 
@@ -303,11 +337,24 @@ failLeft :: (MonadFail m) => Either String a -> m a
 failLeft (Left str) = fail str
 failLeft (Right x) = pure x
 
-throwMapLeft :: (Exception e) => (a -> e) -> Either a b -> IO b
+throwMapLeft ::
+  ( HasCallStack,
+    Exception e,
+    MonadThrow m
+  ) =>
+  (a -> e) ->
+  Either a b ->
+  m b
 throwMapLeft f = throwLeft . first f
 
-throwLeft :: (Exception e) => Either e a -> IO a
-throwLeft (Left ex) = throwIO ex
+throwLeft ::
+  ( HasCallStack,
+    Exception e,
+    MonadThrow m
+  ) =>
+  Either e a ->
+  m a
+throwLeft (Left ex) = throwM ex
 throwLeft (Right x) = pure x
 
 showt :: (Show a) => a -> Text
@@ -356,9 +403,29 @@ type Tuple4 = (,,,)
 
 #endif
 
+-- | Placeholder for unwritten code.
 todo :: forall {r :: RuntimeRep} (a :: TYPE r). (HasCallStack) => a
 todo = raise# (errorCallWithCallStackException "Prelude.todo: not yet implemented" ?callStack)
 {-# WARNING todo "todo remains in code" #-}
+
+-- | Traces to a file.
+traceFile :: FilePath -> Text -> a -> a
+traceFile path txt x = writeFn `seq` x
+  where
+    io = appendFileUtf8 (OsPath.unsafeEncode path) txt
+    writeFn = unsafePerformIO io
+
+-- | Traces to a file in an Applicative.
+traceFileA :: (Applicative f) => FilePath -> Text -> f ()
+traceFileA f t = traceFile f t (pure ())
+
+-- | Traces to a file with newline.
+traceFileLine :: FilePath -> Text -> a -> a
+traceFileLine path txt = traceFile path (txt <> "\n")
+
+-- | Traces to a file with newline in an Applicative.
+traceFileLineA :: (Applicative f) => FilePath -> Text -> f ()
+traceFileLineA p t = traceFileLine p t (pure ())
 
 -- | Positive Double.
 type PDouble = Positive Double
@@ -400,12 +467,6 @@ readFail tyStr s = case TR.readMaybe s of
 listToNESeq :: (HasCallStack) => List a -> NESeq a
 listToNESeq = NESeq.fromList . NE.fromList
 
-readFileUtf8 :: OsPath -> IO Text
-readFileUtf8 = decodeUtf8ThrowM <=< readBinaryFileIO
-
-writeFileUtf8 :: OsPath -> Text -> IO ()
-writeFileUtf8 p = writeBinaryFileIO p . encodeUtf8
-
 -- | Bidirectional pattern synonym for NESet <-> NESeq
 pattern SetToSeqNE :: (Ord a) => NESeq a -> NESet a
 pattern SetToSeqNE x <- (NESeq.fromList . NESet.toList -> x)
@@ -413,6 +474,14 @@ pattern SetToSeqNE x <- (NESeq.fromList . NESet.toList -> x)
     SetToSeqNE x = NESet.fromList (toNonEmpty x)
 
 {-# COMPLETE SetToSeqNE #-}
+
+#if !MIN_VERSION_base(4, 21, 0)
+firstA :: (Bitraversable t, Applicative f) => (a -> f c) -> t a d -> f (t c d)
+firstA f = bitraverse f pure
+
+secondA :: (Bitraversable t, Applicative f) => (b -> f d) -> t c b -> f (t c d)
+secondA = bitraverse pure
+#endif
 
 data Os
   = Linux

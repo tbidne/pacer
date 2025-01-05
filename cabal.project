@@ -41,6 +41,16 @@ source-repository-package
 
 source-repository-package
     type: git
+    location: https://github.com/tbidne/monad-effects.git
+    tag: 7cc259bce3becc2c72bed1e8dd6f46ecc41efe70
+    subdir:
+      lib/effects-fs
+      lib/effects-ioref
+      lib/effects-optparse
+      lib/effects-terminal
+
+source-repository-package
+    type: git
     location: https://github.com/tbidne/smart-math.git
     tag: 641b6b5cf5708c7a27af3b2d94a5947bc24449ef
 

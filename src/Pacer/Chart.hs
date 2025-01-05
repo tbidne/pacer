@@ -31,7 +31,6 @@ import Pacer.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Chart.Data.Run (SomeRuns)
 import Pacer.Exception (TomlE (MkTomlE))
 import Pacer.Prelude
-import System.Directory.OsPath qualified as Dir
 import System.OsPath qualified as OsPath
 import TOML (DecodeTOML, decode)
 
@@ -77,25 +76,39 @@ instance Monoid ChartParamsArgs where
 
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.
-createChartsJsonFile :: ChartParamsFinal -> IO ()
+createChartsJsonFile ::
+  forall m.
+  ( HasCallStack,
+    MonadFileReader m,
+    MonadFileWriter m,
+    MonadPathWriter m,
+    MonadThrow m
+  ) =>
+  ChartParamsFinal ->
+  m ()
 createChartsJsonFile params = do
   bs <- createChartsJsonBS (Just params.runsPath) (Just params.chartRequestsPath)
 
   let outFile = params.outJsonPath
       (dir, _) = OsPath.splitFileName outFile
 
-  Dir.createDirectoryIfMissing True dir
+  createDirectoryIfMissing True dir
 
-  writeBinaryFileIO params.outJsonPath (toStrictByteString bs)
+  writeBinaryFile params.outJsonPath (toStrictByteString bs)
 
 -- | Given file paths to runs and chart requests, returns a lazy
 -- json-encoded bytestring of a chart array.
 createChartsJsonBS ::
+  forall m.
+  ( HasCallStack,
+    MonadFileReader m,
+    MonadThrow m
+  ) =>
   -- | Path to runs.toml. Defaults to 'defRunsPath'.
   Maybe OsPath ->
   -- | Path to chart-requests.toml. Defaults to 'defChartRequestsPath'.
   Maybe OsPath ->
-  IO LazyByteString
+  m LazyByteString
 createChartsJsonBS mRunsTomlPath mChartRequestsPath =
   AsnPretty.encodePretty' cfg <$> createChartSeq runsTomlPath chartRequestsPath
   where
@@ -111,23 +124,28 @@ createChartsJsonBS mRunsTomlPath mChartRequestsPath =
 -- | Given file paths to runs and chart requests, generates a sequence of
 -- charts.
 createChartSeq ::
+  forall m.
+  ( HasCallStack,
+    MonadFileReader m,
+    MonadThrow m
+  ) =>
   -- | Path to runs.toml
   OsPath ->
   -- | Path to chart-requests.toml
   OsPath ->
-  IO (Seq Chart)
+  m (Seq Chart)
 createChartSeq runsPath chartRequestsPath = do
   runs <- readDecodeToml @(SomeRuns Double) runsPath
   chartRequests <- readDecodeToml @(ChartRequests Double) chartRequestsPath
 
   throwLeft (Chart.mkCharts runs chartRequests)
   where
-    readDecodeToml :: forall a. (DecodeTOML a) => OsPath -> IO a
+    readDecodeToml :: forall a. (DecodeTOML a, HasCallStack) => OsPath -> m a
     readDecodeToml path = do
-      contents <- readFileUtf8 path
+      contents <- readFileUtf8ThrowM path
       case decode contents of
         Right t -> pure t
-        Left err -> throwIO $ MkTomlE path err
+        Left err -> throwM $ MkTomlE path err
 
 -- | Advances the ChartParams phase, filling in missing values with defaults.
 advancePhase :: ChartParamsArgs -> ChartParamsFinal

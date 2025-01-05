@@ -3,11 +3,20 @@
 -- @since 0.1
 module Main (main) where
 
+import Control.Exception.Annotation.Utils
+  ( setUncaughtExceptionDisplayInnerMatch,
+  )
 import Pacer.Driver (runApp)
-import System.IO (IO)
+import Pacer.Exception qualified as PEx
+import System.IO (IO, putStrLn)
 
 -- | Executable entry-point.
 --
 -- @since 0.1
 main :: IO ()
-main = runApp
+main = do
+  setUncaughtExceptionDisplayInnerMatch
+    PEx.knownExceptions
+    putStrLn
+
+  runApp
