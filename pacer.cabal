@@ -79,31 +79,38 @@ library
     Pacer.Exception
     Pacer.Prelude
     Pacer.Utils
+    Pacer.Web
+    Pacer.Web.Paths
+    Pacer.Web.Utils
 
   build-depends:
-    , aeson                 >=2.0       && <2.3
-    , aeson-pretty          ^>=0.8.9
-    , algebra-simple        ^>=0.1
-    , base                  >=4.14.0.0  && <4.21
-    , bytestring            >=0.10.12   && <0.13
-    , containers            >=0.6.3.1   && <0.8
-    , effects-fs            ^>=0.1
-    , effects-optparse      ^>=0.1
-    , effects-terminal      ^>=0.1
-    , exception-utils       ^>=0.1
-    , exceptions            ^>=0.10.4
-    , filepath              >=1.4.100.1 && <1.6
-    , fs-utils              ^>=0.1
-    , megaparsec            >=7.0.5     && <9.7
-    , nonempty-containers   >=0.3.4.2   && <0.4
-    , optparse-applicative  >=0.15      && <0.19
-    , relative-time         ^>=0.1
-    , singletons            ^>=3.0.3
-    , smart-math            ^>=0.1
-    , text                  >=1.2.3.2   && <2.2
-    , text-display          >=0.0.3.0   && <0.6
-    , time                  >=1.9.3     && <1.15
-    , toml-reader           >=0.2.0.0   && <0.3.0.0
+    , aeson                  >=2.0      && <2.3
+    , aeson-pretty           ^>=0.8.9
+    , algebra-simple         ^>=0.1
+    , base                   >=4.14.0.0 && <4.21
+    , bytestring             >=0.10.12  && <0.13
+    , containers             >=0.6.3.1  && <0.8
+    , effects-fs             ^>=0.1
+    , effects-ioref          ^>=0.1
+    , effects-optparse       ^>=0.1
+    , effects-terminal       ^>=0.1
+    , effects-typed-process  ^>=0.1
+    , exception-utils        ^>=0.1
+    , exceptions             ^>=0.10.4
+    , filepath               >=1.5      && <1.6
+    , fs-utils               ^>=0.1
+    , megaparsec             >=7.0.5    && <9.7
+    , nonempty-containers    >=0.3.4.2  && <0.4
+    , optparse-applicative   >=0.15     && <0.19
+    , path                   ^>=0.9.6
+    , relative-time          ^>=0.1
+    , singletons             ^>=3.0.3
+    , smart-math             ^>=0.1
+    , template-haskell       >=2.21     && <2.23
+    , text                   >=1.2.3.2  && <2.2
+    , text-display           >=0.0.3.0  && <0.6
+    , time                   >=1.9.3    && <1.15
+    , toml-reader            >=0.2.0.0  && <0.3.0.0
 
   -- tuple syntax
   if impl(ghc >=9.10.1)

@@ -196,7 +196,7 @@ testGoldenParams goldenParams =
 
     writeActualFile :: ByteString -> IO ()
     writeActualFile =
-      writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
+      writeBinaryFile (FS.OsPath.unsafeEncode actualPath)
         . (<> "\n")
 
     actualPath = outputPathStart <> ".actual"

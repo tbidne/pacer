@@ -4,8 +4,7 @@ module Pacer.Driver
   )
 where
 
-import FileSystem.OsPath qualified as OsPath
-import Pacer.Chart (ChartParamsArgs)
+import Pacer.Chart (ChartParams)
 import Pacer.Chart qualified as Chart
 import Pacer.Config.Args (Args (command), parserInfo)
 import Pacer.Config.Args.Command
@@ -35,10 +34,13 @@ runApp ::
   ( HasCallStack,
     MonadFileReader m,
     MonadFileWriter m,
-    MonadPathWriter m,
+    MonadIORef m,
+    MonadMask m,
     MonadOptparse m,
+    MonadPathReader m,
+    MonadPathWriter m,
     MonadTerminal m,
-    MonadThrow m
+    MonadTypedProcess m
   ) =>
   m ()
 runApp = do
@@ -53,29 +55,16 @@ handleChart ::
   ( HasCallStack,
     MonadFileReader m,
     MonadFileWriter m,
+    MonadIORef m,
+    MonadMask m,
+    MonadPathReader m,
     MonadPathWriter m,
     MonadTerminal m,
-    MonadThrow m
+    MonadTypedProcess m
   ) =>
-  ChartParamsArgs ->
+  ChartParams ->
   m ()
-handleChart chartParamsArgs = do
-  Chart.createChartsJsonFile chartParamsFinal
-  putTextLn msg
-  where
-    chartParamsFinal = Chart.advancePhase chartParamsArgs
-
-    msg =
-      mconcat
-        [ "Successfully created charts.\n",
-          "  - runs: '",
-          packText $ OsPath.decodeLenient chartParamsFinal.runsPath,
-          "'\n  - chart-requests: '",
-          packText $ OsPath.decodeLenient chartParamsFinal.chartRequestsPath,
-          "'\n  - output: '",
-          packText $ OsPath.decodeLenient chartParamsFinal.outJsonPath,
-          "'"
-        ]
+handleChart = Chart.createCharts
 
 handleConvert ::
   forall m a.

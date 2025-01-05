@@ -1,5 +1,5 @@
 import { Chart, ChartOptions } from "chart.js/auto";
-import * as charts from "../data/input/charts.json";
+import * as charts from "../data/charts.json";
 import { PChart, PChartExtra, PChartOpts, PYAxisElem, PYOptT } from "./types";
 import { appendCanvasId, format_opts_seconds, format_seconds } from "./utils";
 

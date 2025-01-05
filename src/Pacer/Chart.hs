@@ -1,22 +1,15 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Chart
   ( -- * Params
     ChartParams (..),
-    ChartPhase (..),
-    ChartParamsArgs,
-    ChartParamsFinal,
-    advancePhase,
 
     -- * Functions
+    createCharts,
     createChartsJsonFile,
     createChartsJsonBS,
-
-    -- * Default paths
-    defChartRequestsPath,
-    defRunsPath,
-    defOutJsonPath,
   )
 where
 
@@ -25,54 +18,196 @@ import Data.Aeson.Encode.Pretty
     Indent (Spaces),
   )
 import Data.Aeson.Encode.Pretty qualified as AsnPretty
+import Effects.FileSystem.PathReader qualified as PR
+import Effects.FileSystem.PathWriter
+  ( CopyDirConfig (MkCopyDirConfig),
+    Overwrite (OverwriteNone),
+    TargetName (TargetNameLiteral),
+  )
+import Effects.FileSystem.PathWriter qualified as PW
+import Effects.Process.Typed qualified as TP
+import FileSystem.OsPath (decodeThrowM)
+import FileSystem.Path qualified as Path
+import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
 import Pacer.Chart.Data.Chart (Chart)
 import Pacer.Chart.Data.Chart qualified as Chart
 import Pacer.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Chart.Data.Run (SomeRuns)
-import Pacer.Exception (TomlE (MkTomlE))
+import Pacer.Exception (NpmE (MkNpmE), TomlE (MkTomlE))
 import Pacer.Prelude
+import Pacer.Web qualified as Web
+import Pacer.Web.Paths qualified as WPaths
+import System.IO (FilePath)
+import System.IO.Error qualified as Error
 import System.OsPath qualified as OsPath
 import TOML (DecodeTOML, decode)
 
--- | Phase for 'ChartParams'.
-data ChartPhase
-  = ChartArgs
-  | ChartFinal
+-- | Chart command params.
+data ChartParams = MkChartParams
+  { -- | If true, copies clean install of web dir and installs node deps.
+    cleanInstall :: Bool,
+    -- | Optional path to directory with runs.toml and chart-requests.toml.
+    dataDir :: Maybe OsPath,
+    -- | If true, stops the build after generating the intermediate json
+    -- file.
+    json :: Bool
+  }
   deriving stock (Eq, Show)
 
--- | Type familiy for evolving optional params.
-type MaybePhaseF :: ChartPhase -> Type -> Type
-type family MaybePhaseF p a where
-  MaybePhaseF ChartArgs a = Maybe a
-  MaybePhaseF ChartFinal a = a
+createCharts ::
+  ( HasCallStack,
+    MonadFileReader m,
+    MonadFileWriter m,
+    MonadIORef m,
+    MonadMask m,
+    MonadPathReader m,
+    MonadPathWriter m,
+    MonadTerminal m,
+    MonadTypedProcess m
+  ) =>
+  ChartParams ->
+  m ()
+createCharts params = do
+  -- get data dir
+  dataDir <- case params.dataDir of
+    Nothing -> getXdgConfigPath
+    Just p -> Path.parseAbsDir <=< PR.canonicalizePath $ p
 
--- | Params for making charts. The parameter is so we can re-use this type
--- for when providing paths are optional (CLI) and when they are mandatory
--- ('createChartsJsonFile', after filling in missing values with defaults).
-type ChartParams :: ChartPhase -> Type
-data ChartParams p = MkChartParams
-  { -- | Path to input chart-requests.toml file.
-    chartRequestsPath :: MaybePhaseF p OsPath,
-    -- | Path to output charts.json file.
-    outJsonPath :: MaybePhaseF p OsPath,
-    -- | Path to input runs.toml file.
-    runsPath :: MaybePhaseF p OsPath
-  }
+  (runsPath, chartRequestsPath) <- do
+    let r = dataDir <</>> runsName
+        c = dataDir <</>> chartRequestsName
 
-deriving stock instance (Eq (MaybePhaseF p OsPath)) => Eq (ChartParams p)
+    assertExists [r, c]
 
-deriving stock instance (Show (MaybePhaseF p OsPath)) => Show (ChartParams p)
+    pure (r, c)
 
-type ChartParamsArgs = ChartParams ChartArgs
+  cwdOsPath <- PR.getCurrentDirectory
+  cwdPath <- Path.parseAbsDir cwdOsPath
 
-type ChartParamsFinal = ChartParams ChartFinal
+  if params.json
+    then do
+      -- params.json is active, so stop after json generation
+      let jsonPath = cwdPath <</>> jsonName
+      createChartsJsonFile runsPath chartRequestsPath jsonPath
 
-instance Semigroup ChartParamsArgs where
-  MkChartParams x1 x2 x3 <> MkChartParams y1 y2 y3 =
-    MkChartParams (x1 <|> y1) (x2 <|> y2) (x3 <|> y3)
+      putTextLn "Successfully created charts.json"
+    else do
+      -- 1. Check that node exists
+      --
+      -- It is very important we use findExecutable to find the exe, rather
+      -- than relying on it being on the PATH via 'npm'. Otherwise windows on
+      -- CI dies with mysterious errors about not being able to find certain
+      -- files.
+      npmPath <-
+        PR.findExecutable npmName >>= \case
+          Just npmPath -> pure npmPath
+          Nothing -> do
+            throwPathIOError
+              npmName
+              "createCharts"
+              Error.doesNotExistErrorType
+              "Required npm executable not found. Please add it to the PATH."
 
-instance Monoid ChartParamsArgs where
-  mempty = MkChartParams empty empty empty
+      -- 2. Create web dir
+      Web.ensureWebDirExists params.cleanInstall
+
+      webDir <- WPaths.getWebPath
+      let webDataDir = webDir <</>> WPaths.dataDir
+
+      -- 3. Create json file at expected location
+      PW.createDirectoryIfMissing True (pathToOsPath webDataDir)
+      let jsonPath = webDataDir <</>> jsonName
+
+      createChartsJsonFile runsPath chartRequestsPath jsonPath
+
+      let setCurrDir = PW.setCurrentDirectory . pathToOsPath
+          -- set cwd to webDir, return prev curr dir.
+          cwdWeb = cwdPath <$ setCurrDir webDir
+
+      -- 5. Build web. Change current dir to web, use bracket to restore prev
+      -- dir after we are done.
+      bracket cwdWeb setCurrDir $ \currDir -> do
+        let nodeModulesPath = currDir <</>> nodeModulesDir
+            nodeModulesOsPath = pathToOsPath nodeModulesPath
+
+        nodeModulesExists <- PR.doesDirectoryExist nodeModulesOsPath
+
+        let buildNode = not nodeModulesExists || params.cleanInstall
+
+        npmPathStr <- decodeThrowM npmPath
+
+        -- 5.1 Only install if one of the following two is true:
+        --
+        -- i. node_modules does not exist.
+        -- ii. reinstallNodeModules is true.
+        when buildNode $ do
+          -- if cleanInstall is true, we need to delete it first.
+          when (nodeModulesExists && params.cleanInstall)
+            $ PW.removePathForcibly nodeModulesOsPath
+
+          runNpm npmPathStr ["install", "--save"]
+
+        -- 5.2 Build the html/hs
+        runNpm npmPathStr ["run", "start"]
+
+      -- 6. Copy the build products to current directory
+      let destDir = cwdPath <</>> [reldir|build|]
+          destDirOsPath = pathToOsPath destDir
+          webDistDir = webDir <</>> WPaths.distDir
+
+      -- first remove directory if it already exists
+      PW.removeDirectoryRecursiveIfExists_ destDirOsPath
+
+      -- NOTE: We copy the files individually rather than simply move the
+      -- directory for an arguably silly reason: on windows CI, the "XDG"
+      -- path (build dir) is apparently on a different drive from the working
+      -- directory, and move therefore dies with an error (evidently this is
+      -- illegal).
+      --
+      -- There build dir is about 1mb anyway, hence the copy is cheap, so
+      -- it seems reasonable.
+      PW.copyDirectoryRecursiveConfig
+        copyConfig
+        (pathToOsPath webDistDir)
+        cwdOsPath
+
+      putTextLn "Successfully created charts in build/ directory"
+  where
+    copyConfig =
+      MkCopyDirConfig
+        { overwrite = OverwriteNone,
+          targetName = TargetNameLiteral [osp|build|]
+        }
+
+    assertExists ps =
+      for_ ps $ \p -> do
+        let p' = pathToOsPath p
+        exists <- PR.doesFileExist p'
+        unless exists $ do
+          throwPathIOError
+            p'
+            "createCharts"
+            Error.doesNotExistErrorType
+            "Required file does not exist."
+
+{- ORMOLU_DISABLE -}
+
+runNpm ::
+  ( HasCallStack,
+    MonadThrow m,
+    MonadTypedProcess m
+  ) =>
+  FilePath ->
+  List String ->
+  m ()
+runNpm npmPathStr args = do
+  let npmCmd = TP.proc npmPathStr args
+  (ec1, stdout1, stderr1) <- TP.readProcess npmCmd
+  case ec1 of
+    ExitSuccess -> pure ()
+    ExitFailure i -> throwM $ MkNpmE npmName args i (stdout1 <> "\n" <> stderr1)
+
+{- ORMOLU_ENABLE -}
 
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.
@@ -84,17 +219,20 @@ createChartsJsonFile ::
     MonadPathWriter m,
     MonadThrow m
   ) =>
-  ChartParamsFinal ->
+  Path Abs File ->
+  Path Abs File ->
+  Path Abs File ->
   m ()
-createChartsJsonFile params = do
-  bs <- createChartsJsonBS (Just params.runsPath) (Just params.chartRequestsPath)
+createChartsJsonFile runsPath requestsPath outJson = do
+  bs <- createChartsJsonBS runsPath requestsPath
 
-  let outFile = params.outJsonPath
-      (dir, _) = OsPath.splitFileName outFile
+  let (dir, _) = OsPath.splitFileName outJson'
 
   createDirectoryIfMissing True dir
 
-  writeBinaryFile params.outJsonPath (toStrictByteString bs)
+  writeBinaryFile outJson' (toStrictByteString bs)
+  where
+    outJson' = pathToOsPath outJson
 
 -- | Given file paths to runs and chart requests, returns a lazy
 -- json-encoded bytestring of a chart array.
@@ -105,16 +243,13 @@ createChartsJsonBS ::
     MonadThrow m
   ) =>
   -- | Path to runs.toml. Defaults to 'defRunsPath'.
-  Maybe OsPath ->
+  Path Abs File ->
   -- | Path to chart-requests.toml. Defaults to 'defChartRequestsPath'.
-  Maybe OsPath ->
+  Path Abs File ->
   m LazyByteString
-createChartsJsonBS mRunsTomlPath mChartRequestsPath =
-  AsnPretty.encodePretty' cfg <$> createChartSeq runsTomlPath chartRequestsPath
+createChartsJsonBS runsPath chartRequestsPath =
+  AsnPretty.encodePretty' cfg <$> createChartSeq runsPath chartRequestsPath
   where
-    chartRequestsPath = fromMaybe defChartRequestsPath mChartRequestsPath
-    runsTomlPath = fromMaybe defRunsPath mRunsTomlPath
-
     cfg =
       AsnPretty.defConfig
         { confIndent = Spaces 2,
@@ -130,13 +265,13 @@ createChartSeq ::
     MonadThrow m
   ) =>
   -- | Path to runs.toml
-  OsPath ->
+  Path Abs File ->
   -- | Path to chart-requests.toml
-  OsPath ->
+  Path Abs File ->
   m (Seq Chart)
 createChartSeq runsPath chartRequestsPath = do
-  runs <- readDecodeToml @(SomeRuns Double) runsPath
-  chartRequests <- readDecodeToml @(ChartRequests Double) chartRequestsPath
+  runs <- readDecodeToml @(SomeRuns Double) (pathToOsPath runsPath)
+  chartRequests <- readDecodeToml @(ChartRequests Double) (pathToOsPath chartRequestsPath)
 
   throwLeft (Chart.mkCharts runs chartRequests)
   where
@@ -147,20 +282,22 @@ createChartSeq runsPath chartRequestsPath = do
         Right t -> pure t
         Left err -> throwM $ MkTomlE path err
 
--- | Advances the ChartParams phase, filling in missing values with defaults.
-advancePhase :: ChartParamsArgs -> ChartParamsFinal
-advancePhase paramsArgs =
-  MkChartParams
-    { chartRequestsPath = fromMaybe defChartRequestsPath paramsArgs.chartRequestsPath,
-      outJsonPath = fromMaybe defOutJsonPath paramsArgs.outJsonPath,
-      runsPath = fromMaybe defRunsPath paramsArgs.runsPath
-    }
+runsName :: Path Rel File
+runsName = [relfile|runs.toml|]
 
-defChartRequestsPath :: OsPath
-defChartRequestsPath = [ospPathSep|backend/data/input/chart-requests.toml|]
+chartRequestsName :: Path Rel File
+chartRequestsName = [relfile|chart-requests.toml|]
 
-defOutJsonPath :: OsPath
-defOutJsonPath = [ospPathSep|web/data/input/charts.json|]
+jsonName :: Path Rel File
+jsonName = [relfile|charts.json|]
 
-defRunsPath :: OsPath
-defRunsPath = [ospPathSep|backend/data/input/runs.toml|]
+nodeModulesDir :: Path Rel Dir
+nodeModulesDir = [reldir|node_modules|]
+
+npmName :: OsPath
+
+#if WINDOWS
+npmName = [osp|npm.cmd|]
+#else
+npmName = [osp|npm|]
+#endif

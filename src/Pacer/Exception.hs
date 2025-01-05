@@ -1,6 +1,7 @@
 module Pacer.Exception
   ( -- * Exceptions
     CreateChartE (..),
+    NpmE (..),
     TomlE (..),
 
     -- ** Commands
@@ -16,7 +17,9 @@ where
 
 import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
 import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
+import Data.List qualified as L
 import FileSystem.OsPath (decodeLenient)
+import FileSystem.UTF8 (decodeUtf8Lenient)
 import GHC.TypeLits (symbolVal)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
@@ -134,6 +137,20 @@ instance Exception TomlE where
         decodeLenient p,
         "': ",
         displayException err
+      ]
+
+data NpmE = MkNpmE OsPath (List String) Int LazyByteString
+  deriving stock (Show)
+
+instance Exception NpmE where
+  displayException (MkNpmE exeName args i t) =
+    mconcat
+      [ "Command '",
+        L.intercalate " " (decodeLenient exeName : args),
+        "' exited with error code ",
+        show i,
+        ": ",
+        unpackText $ decodeUtf8Lenient $ toStrictByteString t
       ]
 
 displayInnerMatchKnown :: (Exception e) => e -> String

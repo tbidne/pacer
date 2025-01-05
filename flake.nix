@@ -81,11 +81,13 @@
         { pkgs, ... }:
         let
           hlib = pkgs.haskell.lib;
-          ghc-version = "ghc982";
+          ghc-version = "ghc9101";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides =
               final: prev:
-              { }
+              {
+                path = hlib.dontCheck prev.path_0_9_6;
+              }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
                 "bounds"
@@ -99,6 +101,7 @@
                 "effects-ioref"
                 "effects-optparse"
                 "effects-terminal"
+                "effects-typed-process"
               ];
           };
           compilerPkgs = {
@@ -110,33 +113,26 @@
           };
 
           mkPkg =
-            includeWeb: returnShellEnv:
+            returnShellEnv:
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
               name = "pacer";
               root = ./.;
 
-              devTools =
-                if includeWeb then
-                  (nix-hs-utils.mkDevTools (compilerPkgs // { nixFmt = "nixfmt"; })) ++ webDeps
-                else
-                  null;
+              # TODO: Once hlint is back to working with our GHC we can
+              # use nix-hs-utils.mkDevTools ++ webDeps.
+              devTools = [
+                (hlib.dontCheck compiler.cabal-fmt)
+                (hlib.dontCheck compiler.haskell-language-server)
+                pkgs.nixfmt-rfc-style
+              ] ++ webDeps;
             };
 
           webDeps = [ pkgs.nodejs_23 ];
         in
         {
-          packages.default = mkPkg false false;
-
-          devShells = {
-            backend = mkPkg false true;
-
-            default = mkPkg true true;
-
-            web = pkgs.mkShell {
-              buildInputs = webDeps;
-            };
-          };
+          packages.default = mkPkg false;
+          devShells.default = mkPkg true;
 
           apps = {
             format = nix-hs-utils.mergeApps {
@@ -153,12 +149,16 @@
 
             lint = nix-hs-utils.mergeApps {
               apps = [
-                (nix-hs-utils.lint (compilerPkgs // pkgsMkDrv))
+                # TODO: We require GHC 9.10+ since we need filepath >= 1.5,
+                # but hlint is sadly not compatible yet. Hence it is disabled
+                # for now.
+                #
+                #(nix-hs-utils.lint (compilerPkgs // pkgsMkDrv))
                 (nix-hs-utils.lint-yaml pkgsMkDrv)
               ];
             };
 
-            lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
+            #lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
           };
         };
       systems = [

@@ -21,11 +21,12 @@ module Functional.Prelude
   )
 where
 
+import Control.Exception (throwIO)
 import Control.Monad.Reader (MonadReader, ReaderT (runReaderT), asks)
-import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Word (Word8)
+import Effects.FileSystem.PathReader qualified as PR
 import FileSystem.OsPath (decodeLenient, unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
@@ -45,7 +46,7 @@ import Hedgehog as X
     (===),
   )
 import Pacer.Driver (runApp)
-import Pacer.Exception (displayInnerMatchKnown)
+import Pacer.Exception (TomlE (MkTomlE), displayInnerMatchKnown)
 import Pacer.Prelude as X hiding (IO)
 import System.Environment (withArgs)
 import System.IO as X (IO)
@@ -78,13 +79,29 @@ newtype FuncIO a = MkFuncIO {unFuncIO :: ReaderT FuncEnv IO a}
     ( Applicative,
       Functor,
       Monad,
-      MonadIO,
-      MonadOptparse,
-      MonadReader FuncEnv,
-      MonadThrow,
+      MonadCatch,
       MonadFileReader,
-      MonadPathWriter
+      MonadIO,
+      MonadIORef,
+      MonadMask,
+      MonadOptparse,
+      MonadPathWriter,
+      MonadPathReader,
+      MonadReader FuncEnv,
+      MonadTypedProcess
     )
+
+-- HACK: The 'Duplicate date error' chart test throws a TomlE, which is
+-- a problem for the golden tests because it includes a non-deterministic
+-- absolute path. Thus we override MonadThrow s.t. -- in this case -- we
+-- make the path relative. If this ends up being flaky, we can simply use the
+-- file name, which should be good enough.
+instance MonadThrow FuncIO where
+  throwM e = case fromException (toException e) of
+    Just (MkTomlE p err) -> liftIO $ do
+      p' <- PR.makeRelativeToCurrentDirectory p
+      throwIO $ MkTomlE p' err
+    Nothing -> liftIO $ throwIO e
 
 runFuncIO :: FuncIO a -> IO FuncEnv
 runFuncIO m = do
@@ -145,7 +162,7 @@ runArgs mIdx args expected = do
 
 runException :: forall e. (Exception e) => TestName -> Text -> List String -> TestTree
 runException desc expected args = testCase desc $ do
-  eFuncEnv <- try @e $ withArgs args $ runFuncIO runApp
+  eFuncEnv <- try @_ @e $ withArgs args $ runFuncIO runApp
   eResult <- secondA (\x -> readIORef x.logsRef) eFuncEnv
 
   case eResult of
@@ -214,12 +231,9 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
         { mkArgs =
             const
               [ "chart",
-                "--runs",
-                runsPath,
-                "--chart-requests",
-                chartRequestsPath,
-                "--json",
-                "charts.json"
+                "--data",
+                dataDir,
+                "--json"
               ],
           -- The chart tests will all write an output file charts.json
           outFileName = Just [osp|charts.json|],
@@ -230,8 +244,7 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
     -- These are always based on the testName, since all Os's share the same
     -- CLI inputs.
     basePath = [ospPathSep|test/functional/data|]
-    chartRequestsPath = unsafeDecode $ basePath </> testName <> [osp|_chart-requests.toml|]
-    runsPath = unsafeDecode $ basePath </> testName <> [osp|_runs.toml|]
+    dataDir = unsafeDecode $ basePath </> testName
 
 testGoldenParams :: IO OsPath -> GoldenParams -> TestTree
 testGoldenParams getTestDir goldenParams = do
@@ -276,7 +289,7 @@ testGoldenParams getTestDir goldenParams = do
 
     writeActualFile :: ByteString -> IO ()
     writeActualFile =
-      writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
+      writeBinaryFile (FS.OsPath.unsafeEncode actualPath)
         . (<> "\n")
 
     actualPath = outputPathStart <> ".actual"

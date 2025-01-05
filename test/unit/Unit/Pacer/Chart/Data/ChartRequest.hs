@@ -22,9 +22,9 @@ testParseExampleChartRequestsToml = testGoldenParams params
         { testDesc = "Parses example runs.toml",
           testName = [osp|testParseExampleChartRequestsToml|],
           runner = do
-            contents <- decodeUtf8ThrowM =<< readBinaryFileIO path
+            contents <- decodeUtf8ThrowM =<< readBinaryFile path
             case decode @(ChartRequests Double) contents of
               Right result -> pure $ pShowBS result
-              Left err -> throwIO err
+              Left err -> throwM err
         }
     path = [ospPathSep|data/input/example/chart-requests.toml|]

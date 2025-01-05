@@ -38,57 +38,66 @@ jobs:
         with:
           node-version: 23.x
 
-      - name: Configure backend
+      - name: Configure
         run: cabal configure --enable-tests --ghc-options -Werror
 
-      - name: Compile backend
+      - name: Build
         run: cabal build exe:pacer
 
-      - name: Backend unit tests
-        id: backend-unit
+      - name: Unit tests
+        id: unit
         run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000'
 
       - uses: actions/upload-artifact@v3
-        name: Backend unit tests upload
-        if: ${{ failure() && steps.backend-unit.conclusion == 'failure' }}
+        name: Unit tests upload
+        if: ${{ failure() && steps.unit.conclusion == 'failure' }}
         with:
-          name: backend-unit-tests-artifacts
+          name: unit-tests-artifacts
           path: |
             test/unit/goldens
 
-      - name: Backend functional tests
-        id: backend-functional
+      - name: Functional tests
+        id: functional
         run: cabal test pacer:functional
 
       - uses: actions/upload-artifact@v3
-        name: Backend functional tests upload
-        if: ${{ failure() && steps.backend-functional.conclusion == 'failure' }}
+        name: Functional tests upload
+        if: ${{ failure() && steps.functional.conclusion == 'failure' }}
         with:
-          name: backend-functional-tests-artifacts
+          name: functional-tests-artifacts
           path: |
             test/functional/goldens
 
-      # yamllint disable rule:line-length
-      - name: Generate charts json with backend
-        run: |
-          cabal run pacer -- chart --runs data/input/example/runs.toml --chart-requests data/input/example/chart-requests.toml
-      # yamllint enable rule:line-length
-      - name: Install web dependencies
-        run: |
-          cd web
-          npm install
+      - name: Generate charts html/hs
 
-      # TODO: It would be nice if we could test that the html page actually
-      # does what we want because it is possible for webpack to succeed yet
-      # the page is broken.
-      #
-      # It may be possible to require 0 console errors, though of course that
-      # could be overly restrictive.
+        # TODO: It would be nice if we could test that the html page actually
+        # does what we want because it is possible for webpack to succeed yet
+        # the page is broken.
+        #
+        # It may be possible to require 0 console errors, though of course that
+        # could be overly restrictive.
+        run: cabal run pacer -- chart --data data/input/example
 
-      - name: Build frontend
-        run: |
-          cd web
-          npx webpack
+  nix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "macos-latest"
+          - "ubuntu-latest"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup nix
+        uses: cachix/install-nix-action@v25
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Compile & Test
+        run: nix build -L
+
   lint:
     runs-on: "ubuntu-latest"
     steps:
@@ -107,8 +116,9 @@ jobs:
 
       - name: HLint
         run: nix run .#lint
-
-      # Don't usually want this in CI, but we have this here to test that
-      # it actually runs.
-      - name: Refactor
-        run: nix run .#lint-refactor
+# TODO: Re-enable once hlint is working with ghc 9.10.
+#
+# Don't usually want this in CI, but we have this here to test that
+# it actually runs.
+# - name: Refactor
+#   run: nix run .#lint-refactor

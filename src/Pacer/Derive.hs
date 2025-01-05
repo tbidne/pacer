@@ -71,8 +71,7 @@ deriveSomePace (MkSomeDistance sdist distance) duration =
 
 -- | Given a distance and pace, derives the duration.
 deriveDuration ::
-  ( MSemigroup a
-  ) =>
+  (MSemigroup a) =>
   -- | Distance.
   Distance d a ->
   -- | Pace.

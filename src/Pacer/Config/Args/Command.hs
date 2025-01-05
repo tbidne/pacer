@@ -26,7 +26,7 @@ import FileSystem.OsPath qualified as OsPath
 import Options.Applicative (Parser)
 import Options.Applicative qualified as OA
 import Options.Applicative.Types (ReadM)
-import Pacer.Chart (ChartParams (MkChartParams), ChartParamsArgs)
+import Pacer.Chart (ChartParams (MkChartParams))
 import Pacer.Chart qualified as Chart
 import Pacer.Class.Parser qualified as P
 import Pacer.Config.Args.Utils qualified as Utils
@@ -52,7 +52,7 @@ import Pacer.Prelude
 -- | Possible commands
 data Command a
   = -- | Generate charts
-    Chart ChartParamsArgs
+    Chart ChartParams
   | -- | Converts a quantity.
     Convert (DistancePaceArgs a)
   | -- | Given 2 of distance, duration, and pace, derives the 3rd.
@@ -196,7 +196,7 @@ cmdParser =
         ]
     )
   where
-    chartTxt = Utils.mkCommandDesc "Generates charts json file"
+    chartTxt = Utils.mkCommandDesc "Generates charts."
     convertTxt =
       Utils.mkCommandDesc
         "Converts a quantity. Requires exactly one quantity and the unit."
@@ -376,20 +376,41 @@ derivePaceOptUnitsParser = paceOptUnitsParserHelp helpTxt
           "allowed."
         ]
 
-chartParamsArgsParser :: Parser ChartParamsArgs
+chartParamsArgsParser :: Parser ChartParams
 chartParamsArgsParser = do
-  chartRequestsPath <- chartRequestsPathParser
-  runsPath <- runsPathParser
-  outJsonPath <- outJsonPathParser
+  cleanInstall <- cleanInstallParser
+  dataDir <- dataDirParser
+  json <- jsonParser
 
   pure
     $ MkChartParams
-      { chartRequestsPath,
-        runsPath,
-        outJsonPath
+      { cleanInstall,
+        dataDir,
+        json
       }
 
-chartRequestsPathParser :: Parser (Maybe OsPath)
+dataDirParser :: Parser (Maybe OsPath)
+dataDirParser =
+  OA.optional
+    $ OA.option
+      read
+      ( mconcat
+          [ OA.short 'd',
+            OA.long "data",
+            OA.metavar "PATH",
+            Utils.mkHelp
+              $ mconcat
+                [ "Path to data directory i.e. where we search for runs.toml ",
+                  "and chart-requests.toml. If not given, defaults to the ",
+                  "XDG config e.g. ~/.config/pacer/."
+                ]
+          ]
+      )
+  where
+    read :: ReadM OsPath
+    read = OA.str >>= OsPath.encodeFail
+
+{-chartRequestsPathParser :: Parser (Maybe OsPath)
 chartRequestsPathParser =
   OA.optional
     $ OA.option
@@ -429,28 +450,31 @@ runsPathParser =
       )
   where
     read :: ReadM OsPath
-    read = OA.str >>= OsPath.encodeFail
+    read = OA.str >>= OsPath.encodeFail-}
 
-outJsonPathParser :: Parser (Maybe OsPath)
-outJsonPathParser =
-  OA.optional
-    $ OA.option
-      read
-      ( mconcat
-          [ OA.short 'j',
-            OA.long "json",
-            OA.metavar "PATH",
-            Utils.mkHelp
-              $ mconcat
-                [ "Path to generated json file. If not given, defaults to '",
-                  OsPath.decodeLenient Chart.defOutJsonPath,
-                  "'"
-                ]
-          ]
-      )
-  where
-    read :: ReadM OsPath
-    read = OA.str >>= OsPath.encodeFail
+jsonParser :: Parser Bool
+jsonParser =
+  OA.switch
+    ( mconcat
+        [ OA.short 'j',
+          OA.long "json",
+          Utils.mkHelp
+            $ mconcat
+              [ "If active, stops after generating the intermediate json ",
+                "file. Primarily used for testing."
+              ]
+        ]
+    )
+
+cleanInstallParser :: Parser Bool
+cleanInstallParser =
+  OA.switch
+    ( mconcat
+        [ OA.short 'c',
+          OA.long "clean",
+          Utils.mkHelp "If active, cleans prior build files."
+        ]
+    )
 
 paceOptUnitsParser ::
   forall a.

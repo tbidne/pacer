@@ -2,12 +2,17 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 {- ORMOLU_DISABLE -}
 
 module Pacer.Prelude
-  ( -- * ByteString
+  ( -- * Functor
+    (<<$>>),
+
+    -- * ByteString
     LazyByteString,
     toStrictByteString,
     fromStrictByteString,
@@ -33,6 +38,10 @@ module Pacer.Prelude
     secondA,
 
 #endif
+
+    -- * XDG
+    getXdgCachePath,
+    getXdgConfigPath,
 
     -- * Singletons
     fromSingI,
@@ -107,11 +116,8 @@ import Control.Applicative as X
   )
 import Control.Category as X (Category ((.)), (<<<), (>>>))
 import Control.Exception as X
-  ( Exception (displayException),
+  ( Exception (displayException, fromException, toException),
     SomeException,
-    catch,
-    throwIO,
-    try,
   )
 import Control.Exception.Utils as X (TextException, throwText, trySync)
 import Control.Monad as X
@@ -125,7 +131,13 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
-import Control.Monad.Catch as X (MonadThrow (throwM))
+import Control.Monad.Catch as X
+  ( MonadCatch (catch),
+    MonadMask,
+    MonadThrow (throwM),
+    bracket,
+    try,
+  )
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
 import Data.Bifunctor as X (Bifunctor (bimap, first, second))
@@ -221,7 +233,7 @@ import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word32)
 import Effects.FileSystem.FileReader as X
-  ( MonadFileReader,
+  ( MonadFileReader (readBinaryFile),
     readFileUtf8ThrowM,
   )
 import Effects.FileSystem.FileWriter as X
@@ -229,16 +241,46 @@ import Effects.FileSystem.FileWriter as X
     appendFileUtf8,
     writeFileUtf8,
   )
+import Effects.FileSystem.PathReader as X
+  ( MonadPathReader
+      ( getXdgDirectory
+      ),
+    XdgDirectory (XdgCache, XdgConfig),
+  )
 import Effects.FileSystem.PathWriter as X
   ( MonadPathWriter
       ( createDirectoryIfMissing
       ),
   )
+import Effects.IORef as X
+  ( IORef,
+    MonadIORef
+      ( modifyIORef',
+        newIORef,
+        readIORef,
+        writeIORef
+      ),
+  )
 import Effects.Optparse as X (MonadOptparse (execParser))
+import Effects.Process.Typed as X (MonadTypedProcess)
 import Effects.System.Terminal as X (MonadTerminal (putStrLn), putTextLn)
-import FileSystem.IO as X (readBinaryFileIO, writeBinaryFileIO)
+import FileSystem.IO as X (throwPathIOError)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import FileSystem.OsPath qualified as OsPath
+import FileSystem.Path as X
+  ( Abs,
+    Dir,
+    File,
+    Path,
+    Rel,
+    absdirPathSep,
+    absfilePathSep,
+    pathToOsPath,
+    reldirPathSep,
+    relfilePathSep,
+    (<</>>),
+  )
+import FileSystem.Path qualified as Path
 import FileSystem.UTF8 as X (decodeUtf8ThrowM, encodeUtf8)
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum)
 import GHC.Err as X (error, undefined)
@@ -317,11 +359,22 @@ import Numeric.Data.Positive.Algebra.Internal as X
         UnsafePositive
       ),
   )
+import OsPath as X
+  ( absdir,
+    absfile,
+    reldir,
+    relfile,
+  )
 import System.FilePath (FilePath)
 import System.IO as X (IO)
 import System.IO.Unsafe (unsafePerformIO)
 import Text.Read as X (readMaybe)
 import Text.Read qualified as TR
+
+(<<$>>) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
+(<<$>>) = fmap . fmap
+
+infixl 4 <<$>>
 
 errorMapLeft :: (HasCallStack) => (a -> String) -> Either a b -> b
 errorMapLeft f = errorLeft . first f
@@ -482,6 +535,25 @@ firstA f = bitraverse f pure
 secondA :: (Bitraversable t, Applicative f) => (b -> f d) -> t c b -> f (t c d)
 secondA = bitraverse pure
 #endif
+-- | Xdg cache dir.
+getXdgCachePath ::
+  ( HasCallStack,
+    MonadPathReader m,
+    MonadThrow m
+  ) =>
+  m (Path Abs Dir)
+getXdgCachePath =
+  getXdgDirectory XdgCache [osp|pacer|] >>= Path.parseAbsDir
+
+-- | Xdg config dir.
+getXdgConfigPath ::
+  ( HasCallStack,
+    MonadPathReader m,
+    MonadThrow m
+  ) =>
+  m (Path Abs Dir)
+getXdgConfigPath =
+  getXdgDirectory XdgConfig [osp|pacer|] >>= Path.parseAbsDir
 
 data Os
   = Linux

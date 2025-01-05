@@ -21,9 +21,9 @@ testParseExampleRunsToml = testGoldenParams params
         { testDesc = "Parses example runs.toml",
           testName = [osp|testParseExampleRunsToml|],
           runner = do
-            contents <- decodeUtf8ThrowM =<< readBinaryFileIO path
+            contents <- decodeUtf8ThrowM =<< readBinaryFile path
             case decode @(SomeRuns Double) contents of
               Right result -> pure $ pShowBS result
-              Left err -> throwIO err
+              Left err -> throwM err
         }
     path = [ospPathSep|data/input/example/runs.toml|]

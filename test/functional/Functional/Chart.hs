@@ -22,22 +22,17 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = \testDir ->
+        { mkArgs = \_ ->
             [ "chart",
-              "--runs",
-              runsPath,
-              "--chart-requests",
-              chartRequestsPath,
-              "--json",
-              unsafeDecode (mkJsonPath testDir)
+              "--data",
+              dataDir,
+              "--json"
             ],
-          outFileName = Just [osp|testExampleChart_charts.json|],
+          outFileName = Just [osp|charts.json|],
           testDesc = "Generates example",
           testName = [osp|testExampleChart|]
         }
-    runsPath = unsafeDecode [osp|data/input/example/runs.toml|]
-    chartRequestsPath = unsafeDecode [osp|data/input/example/chart-requests.toml|]
-    mkJsonPath testDir = testDir </> [ospPathSep|testExampleChart_charts.json|]
+    dataDir = unsafeDecode [osp|data/input/example/|]
 
 testSimple :: IO OsPath -> TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]
