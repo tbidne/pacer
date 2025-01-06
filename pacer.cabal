@@ -1,19 +1,29 @@
-cabal-version: 2.4
-name:          pacer
-version:       0.1
-tested-with:   GHC ==9.8.2 || ==9.10.1
-copyright:     2024 Thomas Bidne
-author:        Thomas Bidne
-maintainer:    tbidne@protonmail.com
-homepage:      https://github.com/tbidne/pacer/
-bug-reports:   https://github.com/tbidne/pacer/issues
-synopsis:      A tool for runners.
+cabal-version:      2.4
+name:               pacer
+version:            0.1
+license:            MIT
+license-file:       LICENSE
+tested-with:        GHC ==9.10.1
+copyright:          2024-2025 Thomas Bidne
+author:             Thomas Bidne
+maintainer:         tbidne@protonmail.com
+homepage:           https://github.com/tbidne/pacer/
+bug-reports:        https://github.com/tbidne/pacer/issues
+synopsis:           A tool for runners.
 description:
   Pacer is an executable that produces graphs based on user running data.
   It also provides a CLI interface for common running calculations e.g.
   deriving a pace from distance and duration.
 
-category:      Graphics
+category:           Graphics
+extra-source-files:
+  cabal.project
+  examples/*.toml
+  examples/chart.png
+  LICENSE
+  README.md
+
+extra-doc-files:    CHANGELOG.md
 
 source-repository head
   type:     git
@@ -32,6 +42,7 @@ common common-lang
     OverloadedRecordDot
     OverloadedStrings
     PatternSynonyms
+    RequiredTypeArguments
     TypeAbstractions
     TypeFamilyDependencies
 
@@ -43,12 +54,6 @@ common common-lang
 
   else
     cpp-options: -DLINUX -DPOSIX
-
-  -- NOTE: Once we unconditionally require GHC 9.10+, not only can we remove
-  -- this and the conditional on ghc-experimental, we can also remove
-  -- MIN_VERSION_base(4, 20, 0)
-  if impl(ghc >=9.10.1)
-    cpp-options: -DGHC_gte_9_10
 
   default-language:   GHC2021
 
@@ -88,7 +93,7 @@ library
     , aeson                  >=2.0      && <2.3
     , aeson-pretty           ^>=0.8.9
     , algebra-simple         ^>=0.1
-    , base                   >=4.14.0.0 && <4.21
+    , base                   >=4.20.0.0 && <4.22
     , bytestring             >=0.10.12  && <0.13
     , containers             >=0.6.3.1  && <0.8
     , effects-fs             ^>=0.1
@@ -100,6 +105,7 @@ library
     , exceptions             ^>=0.10.4
     , filepath               >=1.5      && <1.6
     , fs-utils               ^>=0.1
+    , ghc-experimental       ^>=0.1.0.0
     , megaparsec             >=7.0.5    && <9.7
     , nonempty-containers    >=0.3.4.2  && <0.4
     , optparse-applicative   >=0.15     && <0.19
@@ -112,10 +118,6 @@ library
     , text-display           >=0.0.3.0  && <0.6
     , time                   >=1.9.3    && <1.15
     , toml-reader            >=0.2.0.0  && <0.3.0.0
-
-  -- tuple syntax
-  if impl(ghc >=9.10.1)
-    build-depends: ghc-experimental ^>=0.1.0.0
 
   hs-source-dirs:  src
 

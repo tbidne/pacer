@@ -196,7 +196,8 @@ cmdParser =
         ]
     )
   where
-    chartTxt = Utils.mkCommandDesc "Generates charts."
+    chartTxt =
+      Utils.mkCommandDesc "Generates charts. Requires npm to be installed."
     convertTxt =
       Utils.mkCommandDesc
         "Converts a quantity. Requires exactly one quantity and the unit."
@@ -409,48 +410,6 @@ dataDirParser =
   where
     read :: ReadM OsPath
     read = OA.str >>= OsPath.encodeFail
-
-{-chartRequestsPathParser :: Parser (Maybe OsPath)
-chartRequestsPathParser =
-  OA.optional
-    $ OA.option
-      read
-      ( mconcat
-          [ OA.short 'c',
-            OA.long "chart-requests",
-            OA.metavar "PATH",
-            Utils.mkHelp
-              $ mconcat
-                [ "Path to chart-requests toml file. If not given, defaults to '",
-                  OsPath.decodeLenient Chart.defChartRequestsPath,
-                  "'"
-                ]
-          ]
-      )
-  where
-    read :: ReadM OsPath
-    read = OA.str >>= OsPath.encodeFail
-
-runsPathParser :: Parser (Maybe OsPath)
-runsPathParser =
-  OA.optional
-    $ OA.option
-      read
-      ( mconcat
-          [ OA.short 'r',
-            OA.long "runs",
-            OA.metavar "PATH",
-            Utils.mkHelp
-              $ mconcat
-                [ "Path to runs toml file. If not given, defaults to '",
-                  OsPath.decodeLenient Chart.defRunsPath,
-                  "'"
-                ]
-          ]
-      )
-  where
-    read :: ReadM OsPath
-    read = OA.str >>= OsPath.encodeFail-}
 
 jsonParser :: Parser Bool
 jsonParser =

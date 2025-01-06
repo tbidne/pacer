@@ -32,7 +32,7 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
           testDesc = "Generates example",
           testName = [osp|testExampleChart|]
         }
-    dataDir = unsafeDecode [osp|data/input/example/|]
+    dataDir = unsafeDecode [osp|examples|]
 
 testSimple :: IO OsPath -> TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]

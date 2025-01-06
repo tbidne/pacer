@@ -159,7 +159,9 @@ displayInnerMatchKnown = Ex.Ann.Utils.displayInnerMatch knownExceptions
 knownExceptions :: List ExceptionProxy
 knownExceptions =
   [ MkExceptionProxy @CreateChartE Proxy,
+    MkExceptionProxy @CommandConvertE Proxy,
     MkExceptionProxy @CommandDeriveE Proxy,
     MkExceptionProxy @CommandScaleE Proxy,
+    MkExceptionProxy @NpmE Proxy,
     MkExceptionProxy @TomlE Proxy
   ]

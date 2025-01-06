@@ -46,16 +46,6 @@ module Pacer.Prelude
     -- * Singletons
     fromSingI,
 
-#if !MIN_VERSION_base(4, 20, 0)
-
-    -- * Anti-punning aliases
-    List,
-    Tuple2,
-    Tuple3,
-    Tuple4,
-
-#endif
-
     -- * Errors
     -- ** Either
     failLeft,
@@ -170,8 +160,7 @@ import Data.Functor as X
     (<&>),
   )
 import Data.Int as X (Int)
-import Numeric.Data.Fraction.Algebra as X (Fraction)
-#if MIN_VERSION_base(4, 20, 0)
+import Data.Kind as X (Constraint, Type)
 import Data.List as X
   ( List,
     elem,
@@ -180,12 +169,8 @@ import Data.List as X
     sortOn,
     zip,
     zipWith,
-    (++)
+    (++),
   )
-#else
-import Data.List as X (elem, filter, replicate, sortOn, zip, zipWith, (++))
-#endif
-import Data.Kind as X (Constraint, Type)
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe as X
@@ -219,16 +204,14 @@ import Data.String as X (IsString, String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
 import Data.Text.Display as X (Display (displayBuilder), display)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder qualified as TLB
 import Data.Time.Calendar as X (Day)
 import Data.Time.LocalTime as X (LocalTime, ZonedTime)
 import Data.Traversable as X (Traversable (sequenceA, traverse), for)
 import Data.Tuple as X (fst, snd)
-#if MIN_VERSION_base(4, 20, 0)
 import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
-#endif
-import Data.Text.Encoding (encodeUtf8)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word32)
@@ -352,6 +335,7 @@ import Numeric.Convert.Real as X
     fromℝ,
     toℝ,
   )
+import Numeric.Data.Fraction.Algebra as X (Fraction)
 import Numeric.Data.Positive.Algebra as X (mkPositive, unsafePositive, (+!))
 import Numeric.Data.Positive.Algebra.Internal as X
   ( Positive
@@ -439,22 +423,6 @@ type TextBuilder = TLB.Builder
 
 builderToLazyText :: TextBuilder -> TL.Text
 builderToLazyText = TLB.toLazyText
-
-#if !MIN_VERSION_base(4, 20, 0)
-
--- | Alias for [].
-type List = []
-
--- | Alias for (,).
-type Tuple2 = (,)
-
--- | Alias for (,,).
-type Tuple3 = (,,)
-
--- | Alias for (,,,).
-type Tuple4 = (,,,)
-
-#endif
 
 -- | Placeholder for unwritten code.
 todo :: forall {r :: RuntimeRep} (a :: TYPE r). (HasCallStack) => a

@@ -155,7 +155,7 @@
           "font": {
             "size": 24
           },
-          "text": "Runs by distance 2"
+          "text": "Runs by distance and pace"
         },
         "tooltip": {
           "backgroundColor": "rgba(204, 204, 204, 0.75)",

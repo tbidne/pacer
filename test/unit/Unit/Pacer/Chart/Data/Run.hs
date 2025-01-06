@@ -26,4 +26,4 @@ testParseExampleRunsToml = testGoldenParams params
               Right result -> pure $ pShowBS result
               Left err -> throwM err
         }
-    path = [ospPathSep|data/input/example/runs.toml|]
+    path = [ospPathSep|examples/runs.toml|]

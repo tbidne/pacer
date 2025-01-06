@@ -1,10 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE CPP #-}
 
-#if GHC_gte_9_10
-{-# LANGUAGE RequiredTypeArguments #-}
-#endif
-
 {- ORMOLU_DISABLE -}
 
 -- | Units for distance.
@@ -17,11 +13,7 @@ module Pacer.Data.Distance.Units
 
     -- * Conversion
     ConvertDistance (..),
-
-#if GHC_gte_9_10
     convertDistance,
-#endif
-
     convertToMeters_,
     convertToKilometers_
   )
@@ -178,7 +170,6 @@ convertToKilometers_ ::
   ConvertedDistance a Kilometer
 convertToKilometers_ = convertDistance_ @_ @Kilometer
 
-#if GHC_gte_9_10
 -- | Converts distance with visible forall.
 convertDistance ::
   forall e ->
@@ -187,4 +178,3 @@ convertDistance ::
   a ->
   ConvertedDistance a e
 convertDistance e @a = convertDistance_ @a @e
-#endif

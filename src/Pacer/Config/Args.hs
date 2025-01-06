@@ -62,7 +62,8 @@ parserInfo =
     desc =
       Chunk.paragraph
         $ mconcat
-          [ "Pacer includes several commands useful for runners."
+          [ "Pacer includes several commands useful for runners, including ",
+            "the ability to generate graphic charts based on running data."
           ]
 
 argsParser ::

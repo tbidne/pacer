@@ -4,7 +4,7 @@ y-axis = 'distance'
 description = 'This is some runs plotted by distance.'
 
 [[charts]]
-title = 'Runs by distance 2'
+title = 'Runs by distance and pace'
 y-axis = 'distance'
 y1-axis = 'pace'
 description = 'The same runs as before, but in miles.'

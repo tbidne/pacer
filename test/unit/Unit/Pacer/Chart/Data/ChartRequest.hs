@@ -27,4 +27,4 @@ testParseExampleChartRequestsToml = testGoldenParams params
               Right result -> pure $ pShowBS result
               Left err -> throwM err
         }
-    path = [ospPathSep|data/input/example/chart-requests.toml|]
+    path = [ospPathSep|examples/chart-requests.toml|]
