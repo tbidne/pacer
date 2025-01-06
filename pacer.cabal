@@ -44,6 +44,12 @@ common common-lang
   else
     cpp-options: -DLINUX -DPOSIX
 
+  -- NOTE: Once we unconditionally require GHC 9.10+, not only can we remove
+  -- this and the conditional on ghc-experimental, we can also remove
+  -- MIN_VERSION_base(4, 20, 0)
+  if impl(ghc >=9.10.1)
+    cpp-options: -DGHC_gte_9_10
+
   default-language:   GHC2021
 
 library

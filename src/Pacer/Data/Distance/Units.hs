@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE CPP #-}
 
-#if MIN_VERSION_base(4, 20, 0)
+#if GHC_gte_9_10
 {-# LANGUAGE RequiredTypeArguments #-}
 #endif
 
@@ -18,7 +18,7 @@ module Pacer.Data.Distance.Units
     -- * Conversion
     ConvertDistance (..),
 
-#if MIN_VERSION_base(4, 20, 0)
+#if GHC_gte_9_10
     convertDistance,
 #endif
 
@@ -178,7 +178,7 @@ convertToKilometers_ ::
   ConvertedDistance a Kilometer
 convertToKilometers_ = convertDistance_ @_ @Kilometer
 
-#if MIN_VERSION_base(4, 20, 0)
+#if GHC_gte_9_10
 -- | Converts distance with visible forall.
 convertDistance ::
   forall e ->
