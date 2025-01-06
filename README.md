@@ -20,6 +20,7 @@
 - [Building](#building)
   - [Cabal](#cabal)
   - [Nix](#nix)
+- [FAQ](#faq)
 
 # Introduction
 
@@ -304,3 +305,7 @@ Then include this in the `systemPackages`:
   ];
 }
 ```
+
+# FAQ
+
+See [faq.md](documentation/faq.md).
