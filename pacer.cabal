@@ -77,6 +77,7 @@ library
     Pacer.Derive
     Pacer.Driver
     Pacer.Exception
+    Pacer.Log
     Pacer.Prelude
     Pacer.Utils
     Pacer.Web

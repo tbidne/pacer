@@ -10,6 +10,7 @@ where
 import Data.List (and)
 import Effects.FileSystem.PathReader qualified as PR
 import Effects.FileSystem.PathWriter qualified as PW
+import Pacer.Log qualified as Log
 import Pacer.Prelude
 import Pacer.Web.Paths qualified as WPaths
 
@@ -19,6 +20,7 @@ ensureWebDirExists ::
     MonadFileWriter m,
     MonadPathReader m,
     MonadPathWriter m,
+    MonadTerminal m,
     MonadThrow m
   ) =>
   Bool ->
@@ -32,6 +34,7 @@ ensureWebDirExists cleanInstall = do
   let copyFiles = not exists || cleanInstall
 
   when copyFiles $ do
+    Log.debug "Copying web source"
     when cleanInstall (PW.removePathForcibly webOsPath)
     writeWebDir webPath
 

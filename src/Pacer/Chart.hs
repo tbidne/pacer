@@ -26,7 +26,7 @@ import Effects.FileSystem.PathWriter
   )
 import Effects.FileSystem.PathWriter qualified as PW
 import Effects.Process.Typed qualified as TP
-import FileSystem.OsPath (decodeThrowM)
+import FileSystem.OsPath (decodeLenient, decodeThrowM)
 import FileSystem.Path qualified as Path
 import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
 import Pacer.Chart.Data.Chart (Chart)
@@ -34,6 +34,7 @@ import Pacer.Chart.Data.Chart qualified as Chart
 import Pacer.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Chart.Data.Run (SomeRuns)
 import Pacer.Exception (NpmE (MkNpmE), TomlE (MkTomlE))
+import Pacer.Log qualified as Log
 import Pacer.Prelude
 import Pacer.Web qualified as Web
 import Pacer.Web.Paths qualified as WPaths
@@ -89,8 +90,6 @@ createCharts params = do
       -- params.json is active, so stop after json generation
       let jsonPath = cwdPath <</>> jsonName
       createChartsJsonFile runsPath chartRequestsPath jsonPath
-
-      putTextLn "Successfully created charts.json"
     else do
       -- 1. Check that node exists
       --
@@ -121,13 +120,14 @@ createCharts params = do
       createChartsJsonFile runsPath chartRequestsPath jsonPath
 
       let setCurrDir = PW.setCurrentDirectory . pathToOsPath
-          -- set cwd to webDir, return prev curr dir.
-          cwdWeb = cwdPath <$ setCurrDir webDir
+          restorePrevDir = const (PW.setCurrentDirectory cwdOsPath)
+          -- set cwd to webDir, return webDir.
+          cwdWeb = setCurrDir webDir $> webDir
 
       -- 5. Build web. Change current dir to web, use bracket to restore prev
       -- dir after we are done.
-      bracket cwdWeb setCurrDir $ \currDir -> do
-        let nodeModulesPath = currDir <</>> nodeModulesDir
+      bracket cwdWeb restorePrevDir $ \newCurrDir -> do
+        let nodeModulesPath = newCurrDir <</>> nodeModulesDir
             nodeModulesOsPath = pathToOsPath nodeModulesPath
 
         nodeModulesExists <- PR.doesDirectoryExist nodeModulesOsPath
@@ -145,9 +145,11 @@ createCharts params = do
           when (nodeModulesExists && params.cleanInstall)
             $ PW.removePathForcibly nodeModulesOsPath
 
+          Log.debug "Installing node dependencies"
           runNpm npmPathStr ["install", "--save"]
 
-        -- 5.2 Build the html/hs
+        -- 5.2 Build the html/js
+        Log.debug "Building charts"
         runNpm npmPathStr ["run", "start"]
 
       -- 6. Copy the build products to current directory
@@ -171,13 +173,20 @@ createCharts params = do
         (pathToOsPath webDistDir)
         cwdOsPath
 
-      putTextLn "Successfully created charts in build/ directory"
+      Log.info
+        $ mconcat
+          [ "Successfully created charts in '",
+            packText (decodeLenient buildDest),
+            "' directory"
+          ]
   where
     copyConfig =
       MkCopyDirConfig
         { overwrite = OverwriteNone,
-          targetName = TargetNameLiteral [osp|build|]
+          targetName = TargetNameLiteral buildDest
         }
+
+    buildDest = [osp|build|]
 
     assertExists ps =
       for_ ps $ \p -> do
@@ -217,6 +226,7 @@ createChartsJsonFile ::
     MonadFileReader m,
     MonadFileWriter m,
     MonadPathWriter m,
+    MonadTerminal m,
     MonadThrow m
   ) =>
   Path Abs File ->
@@ -226,13 +236,15 @@ createChartsJsonFile ::
 createChartsJsonFile runsPath requestsPath outJson = do
   bs <- createChartsJsonBS runsPath requestsPath
 
-  let (dir, _) = OsPath.splitFileName outJson'
+  let (dir, _) = OsPath.splitFileName outJsonOsPath
 
   createDirectoryIfMissing True dir
 
-  writeBinaryFile outJson' (toStrictByteString bs)
+  writeBinaryFile outJsonOsPath (toStrictByteString bs)
+
+  Log.debug $ "Wrote json file: " <> packText (decodeLenient outJsonOsPath)
   where
-    outJson' = pathToOsPath outJson
+    outJsonOsPath = pathToOsPath outJson
 
 -- | Given file paths to runs and chart requests, returns a lazy
 -- json-encoded bytestring of a chart array.
