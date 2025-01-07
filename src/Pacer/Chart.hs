@@ -139,7 +139,7 @@ createCharts params = do
         -- 5.1 Only install if one of the following two is true:
         --
         -- i. node_modules does not exist.
-        -- ii. reinstallNodeModules is true.
+        -- ii. cleanInstall is true.
         when buildNode $ do
           -- if cleanInstall is true, we need to delete it first.
           when (nodeModulesExists && params.cleanInstall)
@@ -283,7 +283,8 @@ createChartSeq ::
   m (Seq Chart)
 createChartSeq runsPath chartRequestsPath = do
   runs <- readDecodeToml @(SomeRuns Double) (pathToOsPath runsPath)
-  chartRequests <- readDecodeToml @(ChartRequests Double) (pathToOsPath chartRequestsPath)
+  chartRequests <-
+    readDecodeToml @(ChartRequests Double) (pathToOsPath chartRequestsPath)
 
   throwLeft (Chart.mkCharts runs chartRequests)
   where
