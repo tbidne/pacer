@@ -86,10 +86,21 @@ newtype FuncIO a = MkFuncIO {unFuncIO :: ReaderT FuncEnv IO a}
       MonadMask,
       MonadOptparse,
       MonadPathWriter,
-      MonadPathReader,
       MonadReader FuncEnv,
       MonadTypedProcess
     )
+
+instance MonadPathReader FuncIO where
+  canonicalizePath = liftIO . PR.canonicalizePath
+  doesFileExist = liftIO . PR.doesFileExist
+  getCurrentDirectory = liftIO PR.getCurrentDirectory
+
+  getXdgDirectory d p =
+    pure $ [ospPathSep|test/functional/data/xdg|] </> dirName </> p
+    where
+      dirName = case d of
+        XdgConfig -> [osp|config|]
+        other -> error $ "Unexpected xdg type: " ++ show other
 
 -- HACK: The 'Duplicate date error' chart test throws a TomlE, which is
 -- a problem for the golden tests because it includes a non-deterministic

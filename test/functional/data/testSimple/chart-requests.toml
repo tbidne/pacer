@@ -1,6 +1,7 @@
 [[charts]]
 title = 'Runs by distance'
 y-axis = 'distance'
+description = 'Simple charts'
 
 [[charts]]
 title = 'Runs by duration'

@@ -15,3 +15,10 @@ distance = 'marathon'
 duration = '3h20m'
 labels = ['official', 'marathon']
 title= 'Some Marathon'
+
+[[runs]]
+datetime = 2024-10-26
+distance = 'half-marathon'
+duration = '1h40m'
+labels = ['official', 'half-marathon']
+title= 'Some half marathon'

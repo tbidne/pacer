@@ -24,7 +24,7 @@
       ]
     },
     "extra": {
-      "description": "Simple charts"
+      "description": "This is some runs plotted by distance."
     },
     "options": {
       "maintainAspectRatio": false,
@@ -106,10 +106,130 @@
       "yAxes": [
         {
           "data": [
-            1230,
-            9654,
-            12000,
-            6000
+            3.107520198881293,
+            20,
+            26.22436295835923,
+            13.112181479179615
+          ],
+          "fill": false,
+          "label": "distance",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y"
+        },
+        {
+          "data": [
+            395.81399999999996,
+            482.7,
+            457.5897618201209,
+            457.5897618201209
+          ],
+          "fill": false,
+          "label": "pace",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y1"
+        }
+      ]
+    },
+    "extra": {
+      "description": "The same runs as before, but in miles."
+    },
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
+        "title": {
+          "align": "center",
+          "color": "#c3c3c3",
+          "display": true,
+          "font": {
+            "size": 24
+          },
+          "text": "Runs by distance and pace"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
+        }
+      },
+      "pointHitRadius": 20,
+      "responsive": true,
+      "scales": {
+        "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "datetime"
+          },
+          "type": "timeseries"
+        },
+        "y": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "mi"
+          }
+        },
+        "y1": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "right",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "pace /mi"
+          }
+        }
+      }
+    }
+  },
+  {
+    "datasets": {
+      "xAxis": [
+        "2024-10-25T12:00:00-08:00"
+      ],
+      "yAxes": [
+        {
+          "data": [
+            12000
           ],
           "fill": false,
           "label": "duration",
@@ -119,13 +239,10 @@
         },
         {
           "data": [
-            5,
-            32.18,
-            42.195,
-            21.0975
+            284.3938855314611
           ],
           "fill": false,
-          "label": "distance",
+          "label": "pace",
           "pointHoverRadius": 20,
           "tension": 0,
           "yAxisID": "y1"
@@ -148,7 +265,7 @@
           "font": {
             "size": 24
           },
-          "text": "Runs by duration"
+          "text": "Marathons"
         },
         "tooltip": {
           "backgroundColor": "rgba(204, 204, 204, 0.75)",
@@ -213,7 +330,7 @@
             "font": {
               "size": 16
             },
-            "text": "km"
+            "text": "pace /km"
           }
         }
       }
@@ -222,16 +339,100 @@
   {
     "datasets": {
       "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
+        "2024-10-26"
+      ],
+      "yAxes": [
+        {
+          "data": [
+            284.3938855314611
+          ],
+          "fill": false,
+          "label": "pace",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y"
+        }
+      ]
+    },
+    "extra": {},
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
+        "title": {
+          "align": "center",
+          "color": "#c3c3c3",
+          "display": true,
+          "font": {
+            "size": 24
+          },
+          "text": "Official non-marathons"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
+        }
+      },
+      "pointHitRadius": 20,
+      "responsive": true,
+      "scales": {
+        "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "datetime"
+          },
+          "type": "timeseries"
+        },
+        "y": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "pace /km"
+          }
+        }
+      }
+    }
+  },
+  {
+    "datasets": {
+      "xAxis": [
         "2024-10-25T12:00:00-08:00",
         "2024-10-26"
       ],
       "yAxes": [
         {
           "data": [
-            246,
-            300,
             284.3938855314611,
             284.3938855314611
           ],
@@ -259,7 +460,7 @@
           "font": {
             "size": 24
           },
-          "text": "Runs by pace"
+          "text": "Marathons and half-marathons"
         },
         "tooltip": {
           "backgroundColor": "rgba(204, 204, 204, 0.75)",
