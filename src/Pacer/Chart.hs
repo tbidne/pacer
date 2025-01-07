@@ -51,7 +51,11 @@ data ChartParams = MkChartParams
     dataDir :: Maybe OsPath,
     -- | If true, stops the build after generating the intermediate json
     -- file.
-    json :: Bool
+    json :: Bool,
+    -- | Optional path to chart-requests.toml.
+    mChartRequestsPath :: Maybe OsPath,
+    -- | Optional path to runs.toml.
+    mRunsPath :: Maybe OsPath
   }
   deriving stock (Eq, Show)
 
@@ -68,19 +72,8 @@ createCharts ::
   ) =>
   ChartParams ->
   m ()
-createCharts params = do
-  -- get data dir
-  dataDir <- case params.dataDir of
-    Nothing -> getXdgConfigPath
-    Just p -> Path.parseAbsDir <=< PR.canonicalizePath $ p
-
-  (runsPath, chartRequestsPath) <- do
-    let r = dataDir <</>> runsName
-        c = dataDir <</>> chartRequestsName
-
-    assertExists [r, c]
-
-    pure (r, c)
+createCharts @m params = do
+  (chartRequestsPath, runsPath) <- getChartInputs
 
   cwdOsPath <- PR.getCurrentDirectory
   cwdPath <- Path.parseAbsDir cwdOsPath
@@ -188,18 +181,62 @@ createCharts params = do
 
     buildDest = [osp|build|]
 
-    assertExists ps =
-      for_ ps $ \p -> do
-        let p' = pathToOsPath p
-        exists <- PR.doesFileExist p'
-        unless exists $ do
-          throwPathIOError
-            p'
-            "createCharts"
-            Error.doesNotExistErrorType
-            "Required file does not exist."
+    -- Retrieves (Tuple2 chart-requests-path runs-path)
+    getChartInputs :: m (Path Abs File, Path Abs File)
+    getChartInputs = do
+      (mDataDir1, chartRequestsPath) <-
+        getChartInput chartRequestsName Nothing params.mChartRequestsPath
 
-{- ORMOLU_DISABLE -}
+      (_, runsPath) <-
+        getChartInput runsName mDataDir1 params.mRunsPath
+
+      pure (chartRequestsPath, runsPath)
+
+    -- For @getChartInput fileName mDataDir mInputOsPath@, we use its direct
+    -- mInputOsPath if it exists. Otherwise we retrive the path based on the
+    -- data directory and fileName.
+    --
+    -- Since we intend to call this function for each needed file, we take
+    -- the data directory as an input so that we only find it once.
+    getChartInput ::
+      -- Expected file_name e.g. runs.toml
+      Path Rel File ->
+      -- Maybe data_directory.
+      Maybe (Path Abs Dir) ->
+      -- Maybe file.
+      Maybe OsPath ->
+      -- Tuple2 (Maybe data_directory) file
+      m (Tuple2 (Maybe (Path Abs Dir)) (Path Abs File))
+    getChartInput fileName mDataDir mInputOsPath = do
+      case mInputOsPath of
+        -- 1. Input path was explicitly given, use it.
+        Just inputOsPath -> do
+          inputPath <- parseCanonicalAbsFile inputOsPath
+          pure (mDataDir, inputPath)
+        -- 2. No input direct path, need to derive it from the data dir.
+        Nothing -> do
+          dataDir <- case mDataDir of
+            -- 2.1. Data dir already found, use it.
+            Just dataDir -> pure dataDir
+            Nothing -> case params.dataDir of
+              -- 2.1.1. Data dir given on the params, use it.
+              Just p -> parseCanonicalAbsDir p
+              -- 2.1.1. Data dir not given, use XDG.
+              Nothing -> getXdgConfigPath
+
+          let filePath = dataDir <</>> fileName
+          assertExists filePath
+          pure (Just dataDir, filePath)
+
+    assertExists p = do
+      let p' = pathToOsPath p
+      exists <- PR.doesFileExist p'
+      unless exists $ do
+        throwPathIOError
+          p'
+          "createCharts"
+          Error.doesNotExistErrorType
+          "Required file does not exist."
 
 runNpm ::
   ( HasCallStack,
@@ -211,12 +248,10 @@ runNpm ::
   m ()
 runNpm npmPathStr args = do
   let npmCmd = TP.proc npmPathStr args
-  (ec1, stdout1, stderr1) <- TP.readProcess npmCmd
-  case ec1 of
+  (ec, stdout, stderr) <- TP.readProcess npmCmd
+  case ec of
     ExitSuccess -> pure ()
-    ExitFailure i -> throwM $ MkNpmE npmName args i (stdout1 <> "\n" <> stderr1)
-
-{- ORMOLU_ENABLE -}
+    ExitFailure i -> throwM $ MkNpmE npmName args i (stdout <> "\n" <> stderr)
 
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.

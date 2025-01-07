@@ -75,6 +75,10 @@ module Pacer.Prelude
     -- * Foldable
     listToNESeq,
 
+    -- * File IO
+    parseCanonicalAbsDir,
+    parseCanonicalAbsFile,
+
     -- * Dev / Debug
     todo,
     traceFile,
@@ -230,6 +234,7 @@ import Effects.FileSystem.PathReader as X
       ),
     XdgDirectory (XdgCache, XdgConfig),
   )
+import Effects.FileSystem.PathReader qualified as PR
 import Effects.FileSystem.PathWriter as X
   ( MonadPathWriter
       ( createDirectoryIfMissing
@@ -503,6 +508,7 @@ firstA f = bitraverse f pure
 secondA :: (Bitraversable t, Applicative f) => (b -> f d) -> t c b -> f (t c d)
 secondA = bitraverse pure
 #endif
+
 -- | Xdg cache dir.
 getXdgCachePath ::
   ( HasCallStack,
@@ -511,7 +517,7 @@ getXdgCachePath ::
   ) =>
   m (Path Abs Dir)
 getXdgCachePath =
-  getXdgDirectory XdgCache [osp|pacer|] >>= Path.parseAbsDir
+  getXdgDirectory XdgCache [osp|pacer|] >>= parseCanonicalAbsDir
 
 -- | Xdg config dir.
 getXdgConfigPath ::
@@ -521,7 +527,23 @@ getXdgConfigPath ::
   ) =>
   m (Path Abs Dir)
 getXdgConfigPath =
-  getXdgDirectory XdgConfig [osp|pacer|] >>= Path.parseAbsDir
+  getXdgDirectory XdgConfig [osp|pacer|] >>= parseCanonicalAbsDir
+
+parseCanonicalAbsDir ::
+  ( HasCallStack,
+    MonadPathReader m,
+    MonadThrow m
+  ) =>
+  OsPath -> m (Path Abs Dir)
+parseCanonicalAbsDir = PR.canonicalizePath >=> Path.parseAbsDir
+
+parseCanonicalAbsFile ::
+  ( HasCallStack,
+    MonadPathReader m,
+    MonadThrow m
+  ) =>
+  OsPath -> m (Path Abs File)
+parseCanonicalAbsFile = PR.canonicalizePath >=> Path.parseAbsFile
 
 data Os
   = Linux

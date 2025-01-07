@@ -197,7 +197,11 @@ cmdParser =
     )
   where
     chartTxt =
-      Utils.mkCommandDesc "Generates charts. Requires npm to be installed."
+      Utils.mkCommandDesc
+        $ mconcat
+          [ "Generates charts based on a chart-requests file and a runs ",
+            "file. Requires npm to be installed."
+          ]
     convertTxt =
       Utils.mkCommandDesc
         "Converts a quantity. Requires exactly one quantity and the unit."
@@ -391,35 +395,60 @@ derivePaceOptUnitsParser = paceOptUnitsParserHelp helpTxt
 
 chartParamsArgsParser :: Parser ChartParams
 chartParamsArgsParser = do
+  mChartRequestsPath <- mChartRequestsParser
   cleanInstall <- cleanInstallParser
   dataDir <- dataDirParser
   json <- jsonParser
+  mRunsPath <- mRunsParser
 
   pure
     $ MkChartParams
-      { cleanInstall,
+      { mChartRequestsPath,
+        cleanInstall,
         dataDir,
-        json
+        json,
+        mRunsPath
       }
 
+mChartRequestsParser :: Parser (Maybe OsPath)
+mChartRequestsParser = mOsPathParser Nothing "chart-requests" "PATH" helpTxt
+  where
+    helpTxt = "Optional path to chart-requests file. Overrides --data-dir."
+
+mRunsParser :: Parser (Maybe OsPath)
+mRunsParser = mOsPathParser Nothing "runs" "PATH" helpTxt
+  where
+    helpTxt = "Optional path to runs file. Overrides --data-dir."
+
 dataDirParser :: Parser (Maybe OsPath)
-dataDirParser =
+dataDirParser = mOsPathParser (Just 'd') "data" "PATH" helpTxt
+  where
+    helpTxt =
+      mconcat
+        [ "Path to data directory i.e. where we search for chart-requests ",
+          "file and runs file. If not given, defaults to the ",
+          "XDG config e.g. ~/.config/pacer/."
+        ]
+
+mOsPathParser ::
+  Maybe Char ->
+  String ->
+  String ->
+  String ->
+  Parser (Maybe OsPath)
+mOsPathParser mShort long metavar helpTxt =
   OA.optional
     $ OA.option
       read
       ( mconcat
-          [ OA.short 'd',
-            OA.long "data",
-            OA.metavar "PATH",
-            Utils.mkHelp
-              $ mconcat
-                [ "Path to data directory i.e. where we search for runs.toml ",
-                  "and chart-requests.toml. If not given, defaults to the ",
-                  "XDG config e.g. ~/.config/pacer/."
-                ]
-          ]
+          $ [ OA.long long,
+              OA.metavar metavar,
+              Utils.mkHelp helpTxt
+            ]
+          ++ shortXs
       )
   where
+    shortXs = maybe [] ((: []) . OA.short) mShort
     read :: ReadM OsPath
     read = OA.str >>= OsPath.encodeFail
 

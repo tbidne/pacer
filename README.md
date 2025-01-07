@@ -12,7 +12,7 @@
 
 ### Table of Contents
 - [Introduction](#introduction)
-- [Usage](#usage)
+- [Commands](#commands)
   - [Chart](#chart)
   - [Convert](#convert)
   - [Derive](#derive)
@@ -24,37 +24,13 @@
 
 # Introduction
 
-Pacer is a CLI application that provides commands useful for runners.
+Pacer is a CLI application that provides commands useful for runners. Pacer offers roughly two different services:
 
-# Usage
+1. Taking running data and generating graphical charts e.g. plotting runs by distance (`chart` command).
 
-```
-Pacer: A tool for runners.
+2. Performing convenient calculations (e.g. deriving pace from a distance and duration).
 
-Usage: pacer COMMAND
-
-  Pacer includes several commands useful for runners, including the ability to
-  generate graphic charts based on running data.
-
-Available options:
-  -h,--help                Show this help text
-
-Available commands:
-  chart                    Generates charts. Requires npm to be installed.
-
-  convert                  Converts a quantity. Requires exactly one quantity
-                           and the unit.
-
-  derive                   Given two quantities, derives the third. For
-                           instance, given a distance and a duration, derives
-                           the pace.
-
-  scale                    Scales a quantity. Requires exactly one quantity and
-                           the scale factor.
-
-
-Version: 0.1
-```
+# Commands
 
 ## Chart
 
@@ -80,20 +56,27 @@ Charts are generated from two inputs:
 ### Usage
 
 ```
-Usage: pacer chart [-c|--clean] [-d|--data PATH] [-j|--json]
+Usage: pacer chart [--chart-requests PATH] [-c|--clean] [-d|--data PATH]
+                   [-j|--json] [--runs PATH]
 
-  Generates charts. Requires npm to be installed.
+  Generates charts based on a chart-requests file and a runs file. Requires npm
+  to be installed.
 
 
 Available options:
+  --chart-requests PATH    Optional path to chart-requests file. Overrides
+                           --data-dir.
+
   -c,--clean               If active, cleans prior build files.
 
   -d,--data PATH           Path to data directory i.e. where we search for
-                           runs.toml and chart-requests.toml. If not given,
+                           chart-requests file and runs file. If not given,
                            defaults to the XDG config e.g. ~/.config/pacer/.
 
   -j,--json                If active, stops after generating the intermediate
                            json file. Primarily used for testing.
+
+  --runs PATH              Optional path to runs file. Overrides --data-dir.
 
   -h,--help                Show this help text
 ```
