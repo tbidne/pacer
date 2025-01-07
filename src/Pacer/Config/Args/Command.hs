@@ -358,6 +358,18 @@ durationParser =
 -- | Represents the pace. For some conversions, the units are optional,
 -- hence we only require the underlying Duration (a Pace is just a duration
 -- with a unit, after all).
+--
+-- It is arguably simpler to require a unit for pace, and make the user
+-- use --duration for when they don't want a unit (e.g. convert or scale).
+-- So why do we allow no units? Consider deriving duration:
+--
+--     derive --distance '10 km' --pace 5m30s
+--
+-- Requring the user to type '/km' on the pace is redundant (hence annoying).
+-- Futhermore, we cannot replace this with '--duration 5m30s', since that has
+-- an entirely different meaning. Therefore it makes sense to have the units
+-- optional here, so we might as well make the units optional wherever
+-- sensible.
 type PaceOptUnits a = Either (SomePace (Positive a)) (Seconds (Positive a))
 
 derivePaceOptUnitsParser ::

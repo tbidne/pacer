@@ -11,7 +11,7 @@
 
 Pacer defines several quantities that require the user to specify the units. In general, we have:
 
-- **distance:** `meters`, `kilometers`, and `miles`. Short versions can also be specified i.e. `m`, `km`, and `mi`. There are also several built-in values:
+- **distance:** `meters`, `kilometers`, and `miles`. Short versions can also be specified: `m`, `km`, and `mi`. There are also several built-in values:
 
   - `marathon`
   - `half-marathon` or `hmarathon`
@@ -20,7 +20,7 @@ Pacer defines several quantities that require the user to specify the units. In 
 
 - **duration:** "time strings" like `1h2m3s` for `1 hour, 2 minutes, and 3 seconds`. Each component is optional e.g. `1h3s` or `2m`.
 
-- **pace:** `<duration> /<distance>` e.g. `5m30s /km`. Note that `meters` are not allowed with paces. Only `kilometers` or `miles`. In cases where the context is clear, the trailing unit is not required. Also note that because paces are always given in terms of `1 km` or `1 mi`, the full versions are *singular*, not plural e.g. `4m /kilometer`.
+- **pace:** `<duration> /<distance>` e.g. `5m30s /km`. Note that `meters` are not allowed with paces; only `kilometers` or `miles`. In cases where the context is clear, the trailing unit is not required. Also note that because paces are always given in terms of `1 km` or `1 mi`, the full versions are *singular*, not plural e.g. `4m /kilometer`.
 
 Parsing is designed to be moderately flexible, so numeric values can optionally be separated from the units by whitespace (quotes are then required) e.g. `'4 km'` or `4km`.
 

@@ -147,7 +147,7 @@ $ pacer convert --pace '5m20s /mi' --unit km
 
 > [!WARNING]
 >
-> With convert, pace __must__ include units i.e. either /km or /mi. Furthermore, pace cannot be given in meters or converted to meters; only kilometers and meters are allowed.
+> With convert, pace __must__ include units i.e. either `/km` or `/mi`. Furthermore, pace cannot be given in meters or converted to meters; only kilometers and meters are allowed.
 
 ## Derive
 
@@ -198,7 +198,7 @@ $ pacer derive --pace '5m45s /mi' --duration 20m
 
 > [!NOTE]
 >
-> Builtin values like 'marathon' assume unit `kilometers`, if nothing else is given.
+> Built-in values like 'marathon' assume unit `kilometers`, if nothing else is given.
 
 ## Scale
 
