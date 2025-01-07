@@ -84,12 +84,12 @@ handleConvert dpArgs =
     ConvertDistance dist ->
       case toSing unit of
         SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
-          let dist' = DistU.convertDistance_ @_ @e dist
+          let dist' = DistU.convertDistance e dist
           putTextLn $ display dist'
     ConvertPace pace -> case unit of
       Meter -> throwM PEx.CommandConvertPaceMeters
-      Kilometer -> putTextLn $ display $ DistU.convertDistance_ @_ @Kilometer pace
-      Mile -> putTextLn $ display $ DistU.convertDistance_ @_ @Mile pace
+      Kilometer -> putTextLn $ display $ DistU.convertDistance Kilometer pace
+      Mile -> putTextLn $ display $ DistU.convertDistance Mile pace
   where
     unit = dpArgs.unit
 
@@ -115,7 +115,7 @@ handleDerive ddpArgs =
         Nothing -> putTextLn $ display dist
         Just unit -> case toSing unit of
           SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
-            let dist' = DistU.convertDistance_ @_ @e dist
+            let dist' = DistU.convertDistance e dist
             putTextLn $ display dist'
     DeriveDuration paceOptUnits dist -> do
       when (isJust ddpArgs.mUnit)
@@ -127,7 +127,7 @@ handleDerive ddpArgs =
               MkSomeDistance sdist distx ->
                 case sdist of
                   SMeter ->
-                    let disty = DistU.convertDistance_ distx
+                    let disty = DistU.convertDistance Kilometer distx
                      in Derive.deriveDuration disty (MkPace @Kilometer paceDuration)
                   SKilometer -> Derive.deriveDuration distx (MkPace paceDuration)
                   SMile -> Derive.deriveDuration distx (MkPace paceDuration)
@@ -138,8 +138,8 @@ handleDerive ddpArgs =
         Nothing -> putTextLn $ display pace
         Just unit -> case unit of
           Meter -> throwM PEx.CommandDerivePaceMeters
-          Kilometer -> putTextLn $ display $ DistU.convertDistance_ @_ @Kilometer pace
-          Mile -> putTextLn $ display $ DistU.convertDistance_ @_ @Mile pace
+          Kilometer -> putTextLn $ display $ DistU.convertDistance Kilometer pace
+          Mile -> putTextLn $ display $ DistU.convertDistance Mile pace
 
 handleScale ::
   forall m a.
@@ -163,7 +163,7 @@ handleScale ddpArgs scaleFactor =
         Nothing -> putTextLn $ display distScaled
         Just unit -> case toSing unit of
           SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
-            let distScaled' = DistU.convertDistance_ @_ @e distScaled
+            let distScaled' = DistU.convertDistance e distScaled
             putTextLn $ display distScaled'
     ScaleDuration duration -> do
       when (isJust ddpArgs.mUnit)
@@ -181,11 +181,11 @@ handleScale ddpArgs scaleFactor =
               Kilometer ->
                 putTextLn
                   $ display
-                  $ DistU.convertDistance_ @_ @Kilometer paceScaled
+                  $ DistU.convertDistance Kilometer paceScaled
               Mile ->
                 putTextLn
                   $ display
-                  $ DistU.convertDistance_ @_ @Mile paceScaled
+                  $ DistU.convertDistance Mile paceScaled
         Right duration -> do
           when (isJust ddpArgs.mUnit) $ do
             let example = Dur.toTimeString duration <> " /km"

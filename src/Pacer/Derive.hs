@@ -62,7 +62,7 @@ deriveSomePace ::
 deriveSomePace (MkSomeDistance sdist distance) duration =
   case sdist of
     SMeter ->
-      let distanceKm = DistU.convertToKilometers_ distance
+      let distanceKm = DistU.convertToKilometers distance
        in hideDistance $ derivePace distanceKm duration
     SKilometer ->
       hideDistance $ derivePace distance duration
@@ -94,13 +94,13 @@ deriveSomeDuration ::
   Seconds a
 deriveSomeDuration
   (MkSomeDistance sdistance distance)
-  (MkSomePace space pace) =
+  (MkSomePace @distUnit space pace) =
     deriveDuration distance' pace
     where
       distance' =
         withSingI sdistance
           $ withSingI space
-          $ DistU.convertDistance_ distance
+          $ DistU.convertDistance distUnit distance
 
 -- | Given a duration and pace, derives the distance.
 deriveDistance ::

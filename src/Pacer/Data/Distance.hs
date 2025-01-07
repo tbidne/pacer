@@ -31,7 +31,7 @@ import Pacer.Data.Distance.Units
   ( ConvertDistance (ConvertedDistance, convertDistance_),
     DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
-    convertToMeters_,
+    convertToMeters,
   )
 import Pacer.Prelude
 import Text.Megaparsec qualified as MP
@@ -214,7 +214,7 @@ data SomeDistance a where
 deriving stock instance Functor SomeDistance
 
 instance (FromInteger a, MetricSpace a, MGroup a) => Eq (SomeDistance a) where
-  t1 == t2 = convertToMeters_ t1 == convertToMeters_ t2
+  t1 == t2 = convertToMeters t1 == convertToMeters t2
 
 instance
   ( FromInteger a,
@@ -224,7 +224,7 @@ instance
   ) =>
   Ord (SomeDistance a)
   where
-  t1 <= t2 = convertToMeters_ t1 <= convertToMeters_ t2
+  t1 <= t2 = convertToMeters t1 <= convertToMeters t2
 
 instance HasField "unSomeDistance" (SomeDistance a) a where
   getField (MkSomeDistance _ (MkDistance x)) = x
@@ -283,19 +283,19 @@ instance (FromRational a) => FromRational (SomeDistance a) where
   fromQ = MkSomeDistance SMeter . fromQ
 
 instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomeDistance a) where
-  toQ = toQ . convertToMeters_
+  toQ = toQ . convertToMeters
 
 instance (FromReal a) => FromReal (SomeDistance a) where
   fromR = MkSomeDistance SMeter . fromR
 
 instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomeDistance a) where
-  toR = toR . convertToMeters_
+  toR = toR . convertToMeters
 
 instance (FromInteger a) => FromInteger (SomeDistance a) where
   fromZ = MkSomeDistance SMeter . fromZ
 
 instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomeDistance a) where
-  toZ = toZ . convertToMeters_
+  toZ = toZ . convertToMeters
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
@@ -365,7 +365,7 @@ liftSomeDist2 ::
   SomeDistance a ->
   SomeDistance a
 liftSomeDist2 f x y =
-  hideDistance (convertToMeters_ x `f` convertToMeters_ y)
+  hideDistance (convertToMeters x `f` convertToMeters y)
 
 -- NOTE: Values hardcoded rather than multiplied by factor to avoid some
 -- (minor) float rounding.

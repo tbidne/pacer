@@ -58,7 +58,7 @@ testCalculateDistance =
             MkSomeDistance s dist -> case s of
               SMeter ->
                 MkSomeDistance SKilometer
-                  $ DistU.convertDistance_ @_ @Kilometer dist
+                  $ DistU.convertDistance Kilometer dist
               _ -> MkSomeDistance s dist
 
           distDispTxt = display distOut'
@@ -193,7 +193,7 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
         withSingI
           s
           ( Derive.derivePace
-              (DistU.convertDistance_ @_ @Kilometer d)
+              (DistU.convertDistance Kilometer d)
               duration
           ).unPace
       SKilometer ->

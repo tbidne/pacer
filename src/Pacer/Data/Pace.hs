@@ -334,19 +334,19 @@ instance (FromRational a) => FromRational (SomePace a) where
   fromQ = MkSomePace SKilometer . fromQ
 
 instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomePace a) where
-  toQ = toQ . DistU.convertToKilometers_
+  toQ = toQ . DistU.convertToKilometers
 
 instance (FromInteger a) => FromInteger (SomePace a) where
   fromZ = MkSomePace SKilometer . fromℤ
 
 instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomePace a) where
-  toZ = toZ . DistU.convertToKilometers_
+  toZ = toZ . DistU.convertToKilometers
 
 instance (FromReal a) => FromReal (SomePace a) where
   fromR = MkSomePace SKilometer . fromR
 
 instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
-  toR = toR . DistU.convertToKilometers_
+  toR = toR . DistU.convertToKilometers
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
@@ -452,4 +452,4 @@ applySomePace2 ::
   SomePace a ->
   r
 applySomePace2 f p1 p2 =
-  DistU.convertToKilometers_ p1 `f` DistU.convertToKilometers_ p2
+  DistU.convertToKilometers p1 `f` DistU.convertToKilometers p2

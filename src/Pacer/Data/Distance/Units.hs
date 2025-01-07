@@ -14,8 +14,8 @@ module Pacer.Data.Distance.Units
     -- * Conversion
     ConvertDistance (..),
     convertDistance,
-    convertToMeters_,
-    convertToKilometers_
+    convertToMeters,
+    convertToKilometers
   )
 where
 
@@ -160,15 +160,15 @@ class ConvertDistance a e where
   convertDistance_ :: a -> ConvertedDistance a e
 
 -- | Convert to meters.
-convertToMeters_ :: (ConvertDistance a Meter) => a -> ConvertedDistance a Meter
-convertToMeters_ = convertDistance_ @_ @Meter
+convertToMeters :: (ConvertDistance a Meter) => a -> ConvertedDistance a Meter
+convertToMeters = convertDistance Meter
 
 -- | Convert to kilometers.
-convertToKilometers_ ::
+convertToKilometers ::
   (ConvertDistance a Kilometer) =>
   a ->
   ConvertedDistance a Kilometer
-convertToKilometers_ = convertDistance_ @_ @Kilometer
+convertToKilometers = convertDistance Kilometer
 
 -- | Converts distance with visible forall.
 convertDistance ::

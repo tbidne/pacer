@@ -461,7 +461,7 @@ deriveSomePace ::
   SomeRun a ->
   SomePace a
 deriveSomePace (MkSomeRun sr r) = case sr of
-  SMeter -> hideDistance $ derivePace (DistU.convertToKilometers_ r)
+  SMeter -> hideDistance $ derivePace (DistU.convertToKilometers r)
   SKilometer -> hideDistance $ derivePace r
   SMile -> hideDistance $ derivePace r
 
@@ -472,4 +472,4 @@ applySomeRun2 ::
   SomeRun a ->
   r
 applySomeRun2 f p1 p2 =
-  DistU.convertToMeters_ p1 `f` DistU.convertToMeters_ p2
+  DistU.convertToMeters p1 `f` DistU.convertToMeters p2

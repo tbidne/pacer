@@ -190,18 +190,18 @@ mkChartData
         YAxisDistance ->
           withSingI s $ toℝ $ case finalDistUnit of
             -- NOTE: [Brackets with OverloadedRecordDot]
-            Meter -> (DistU.convertToKilometers_ r).distance.unDistance
-            Kilometer -> (DistU.convertToKilometers_ r).distance.unDistance
-            Mile -> (DistU.convertDistance_ @_ @Mile r).distance.unDistance
+            Meter -> (DistU.convertToKilometers r).distance.unDistance
+            Kilometer -> (DistU.convertToKilometers r).distance.unDistance
+            Mile -> (DistU.convertDistance Mile r).distance.unDistance
         YAxisDuration -> toℝ r.duration.unDuration
         YAxisPace ->
           withSingI s $ toℝ $ case finalDistUnit of
-            Meter -> runToPace (DistU.convertToKilometers_ r)
-            Kilometer -> runToPace (DistU.convertToKilometers_ r)
+            Meter -> runToPace (DistU.convertToKilometers r)
+            Kilometer -> runToPace (DistU.convertToKilometers r)
             -- TODO: Previously this was converting to Kilometers, but that
             -- was almost certainly a bug that tests did not catch.
             -- Let's write one.
-            Mile -> runToPace (DistU.convertDistance_ @_ @Mile r)
+            Mile -> runToPace (DistU.convertDistance Mile r)
           where
             runToPace runUnits =
               (Run.derivePace runUnits).unPace.unDuration
@@ -236,7 +236,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
       withSingI sr $ (opToFun op) r.distance fDist'
       where
         fDist' :: Distance runDist (Positive a)
-        fDist' = withSingI sr $ DistU.convertDistance_ @_ @runDist fDist
+        fDist' = withSingI sr $ DistU.convertDistance runDist fDist
 
     applyDur :: SomeRun a -> FilterOp -> Seconds (Positive a) -> Bool
     applyDur (MkSomeRun _ r) op = (opToFun op) r.duration
@@ -249,7 +249,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
           -- 2. convert filterPace to runPace's units
           withSingI srp
             $ withSingI sfp
-            $ case DistU.convertDistance_ @_ @runDist fPace of
+            $ case DistU.convertDistance runDist fPace of
               fPace' -> (opToFun op) runPace ((.unPositive) <$> fPace')
 
     opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
