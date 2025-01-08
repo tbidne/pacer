@@ -176,20 +176,18 @@ instance (ToReal a) => ToReal (Pace d a) where
 
 instance
   ( FromInteger a,
-    PaceDistF d,
-    PaceDistF e,
     MGroup a,
-    SingI d,
-    SingI e
+    SingI d
   ) =>
-  ConvertDistance (Pace d a) e
+  ConvertDistance (Pace d a)
   where
   type ConvertedDistance (Pace d a) e = Pace e a
+  type ToConstraints (Pace d a) e = PaceDistF e
 
-  convertDistance_ :: Pace d a -> Pace e a
+  convertDistance_ :: (PaceDistF e, SingI e) => Pace d a -> Pace e a
   -- Note this is backwards from distance (.% fromBase) . (.* toBase) because
   -- our units are a divisor, not a multiplier (i.e. 4 /km vs. 4 km).
-  convertDistance_ = MkPace . (.* fromBase) . (.% toBase) . (.unPace)
+  convertDistance_ @e = MkPace . (.* fromBase) . (.% toBase) . (.unPace)
     where
       toBase = singFactor @_ @d
       fromBase = singFactor @_ @e
@@ -354,15 +352,14 @@ instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
 
 instance
   ( FromInteger a,
-    MGroup a,
-    PaceDistF e,
-    SingI e
+    MGroup a
   ) =>
-  ConvertDistance (SomePace a) e
+  ConvertDistance (SomePace a)
   where
   type ConvertedDistance (SomePace a) e = Pace e a
+  type ToConstraints (SomePace a) e = PaceDistF e
 
-  convertDistance_ :: SomePace a -> Pace e a
+  convertDistance_ :: (PaceDistF e, SingI e) => SomePace a -> Pace e a
   convertDistance_ (MkSomePace s p) = withSingI s $ convertDistance_ p
 
 instance (MMonoid a) => HasDistance (SomePace a) where

@@ -111,61 +111,25 @@ instance SingKind DistanceUnit where
 --                                 Conversion                                --
 -------------------------------------------------------------------------------
 
--- NOTE: [ConvertDistance and constraints]
---
--- The simplest way to define ConvertDistance is something like:
---
---     class ConvertDistance a where
---       type ToConstraints (e :: DistanceUnit) a :: Constraint
---       type ConvertedDistance (e :: DistanceUnit) a
---
---       convertDistance_ :: (SingI e, ToConstraints e a) => a -> ConvertedDistance e a
---
--- Alas, while this works for most types, unfortunately it does not work for
--- Pace, because Pace must also include PaceDistF on its return type e.
--- We cannot include type constraints on e directly, so a workaround is:
---
---     class ConvertDistance a where
---       type ToConstraints (e :: DistanceUnit) a :: Constraint
---       type ConvertedDistance (e :: DistanceUnit) a
---
---       convertDistance :: (SingI e, ToConstraints e a) => Proxy e -> a -> ConvertedDistance e a
---
--- That is, we include a second type family for possible constraints. Most
--- types would leave this as () (empty constraint), but Pace would have:
---
---     instance (FromInteger a, PaceDistF d, Semifield a, SingI d) => ConvertDistance (Pace d a) where
---       type ToConstraints e (Pace d a) = (PaceDistF e)
---       type ConvertDistance e (Pace d a) = Pace e a
---
---       convertDistance :: forall e. (PaceDistF e, SingI e) => Proxy e -> Pace d a -> Pace e a
---       convertDistance _ = MkPace . (.% fromBase) . (.* toBase) . (.unPace)
---         where
---           toBase = singFactor @_ @d
---           fromBase = singFactor @_ @e
---
--- The Proxy is due to needing to pass e into fromBase (cannot be inferred,
--- apparently), and unforunately we cannot use TypeAbstraction to recover
--- the type until at least GHC 9.10 (e.g. convertDistance @e).
---
--- Due to the Proxy and forall weirdness, we instead go with the simpler MPTC
--- solution. Once we require GHC 9.10+, we can try the associated type
--- solution.
-
 -- | Common interface for converting distance units.
-type ConvertDistance :: Type -> DistanceUnit -> Constraint
-class ConvertDistance a e where
-  type ConvertedDistance a e
+type ConvertDistance :: Type -> Constraint
+class ConvertDistance a where
+  type ConvertedDistance a (e :: DistanceUnit)
+  type ToConstraints a (e :: DistanceUnit) :: Constraint
 
-  convertDistance_ :: a -> ConvertedDistance a e
+  convertDistance_ :: (SingI e, ToConstraints a e) => a -> ConvertedDistance a e
 
 -- | Convert to meters.
-convertToMeters :: (ConvertDistance a Meter) => a -> ConvertedDistance a Meter
+convertToMeters ::
+  ( ConvertDistance a,
+    ToConstraints a Meter
+  ) =>
+  a -> ConvertedDistance a Meter
 convertToMeters = convertDistance Meter
 
 -- | Convert to kilometers.
 convertToKilometers ::
-  (ConvertDistance a Kilometer) =>
+  (ConvertDistance a, ToConstraints a Kilometer) =>
   a ->
   ConvertedDistance a Kilometer
 convertToKilometers = convertDistance Kilometer
@@ -173,8 +137,9 @@ convertToKilometers = convertDistance Kilometer
 -- | Converts distance with visible forall.
 convertDistance ::
   forall e ->
+  (SingI e) =>
   forall a.
-  (ConvertDistance a e) =>
+  (ConvertDistance a, ToConstraints a e) =>
   a ->
   ConvertedDistance a e
 convertDistance e @a = convertDistance_ @a @e

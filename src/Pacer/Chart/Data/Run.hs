@@ -166,12 +166,12 @@ instance
     Ord a,
     Semifield a,
     Show a,
-    SingI dist,
-    SingI e
+    SingI dist
   ) =>
-  ConvertDistance (Run dist a) e
+  ConvertDistance (Run dist a)
   where
   type ConvertedDistance (Run dist a) e = Run e a
+  type ToConstraints (Run dist a) _ = ()
 
   convertDistance_ r =
     MkRun
@@ -289,12 +289,12 @@ instance
   ( FromInteger a,
     Ord a,
     Semifield a,
-    Show a,
-    SingI e
+    Show a
   ) =>
-  ConvertDistance (SomeRun a) e
+  ConvertDistance (SomeRun a)
   where
   type ConvertedDistance (SomeRun a) e = Run e a
+  type ToConstraints (SomeRun a) _ = ()
 
   convertDistance_ (MkSomeRun s x) = withSingI s convertDistance_ x
 

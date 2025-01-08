@@ -28,7 +28,7 @@ where
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Units (singFactor)
 import Pacer.Data.Distance.Units
-  ( ConvertDistance (ConvertedDistance, convertDistance_),
+  ( ConvertDistance (ConvertedDistance, ToConstraints, convertDistance_),
     DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
     convertToMeters,
@@ -141,10 +141,11 @@ instance (ToReal a) => ToReal (Distance d a) where
 --                                    Units                                  --
 -------------------------------------------------------------------------------
 
-instance (FromInteger a, MGroup a, SingI d, SingI e) => ConvertDistance (Distance d a) e where
+instance (FromInteger a, MGroup a, SingI d) => ConvertDistance (Distance d a) where
   type ConvertedDistance (Distance d a) e = Distance e a
+  type ToConstraints (Distance d a) _ = ()
 
-  convertDistance_ :: Distance d a -> Distance e a
+  convertDistance_ :: forall e. (SingI e) => Distance d a -> Distance e a
   convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . (.unDistance)
     where
       toBase = singFactor @_ @d
@@ -301,10 +302,11 @@ instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomeDistance a) wh
 --                                    Units                                  --
 -------------------------------------------------------------------------------
 
-instance (FromInteger a, MGroup a, SingI e) => ConvertDistance (SomeDistance a) e where
+instance (FromInteger a, MGroup a) => ConvertDistance (SomeDistance a) where
   type ConvertedDistance (SomeDistance a) e = Distance e a
+  type ToConstraints (SomeDistance a) _ = ()
 
-  convertDistance_ :: SomeDistance a -> Distance e a
+  convertDistance_ :: (SingI e) => SomeDistance a -> Distance e a
   convertDistance_ (MkSomeDistance s x) = withSingI s convertDistance_ x
 
 instance HasDistance (SomeDistance a) where
