@@ -148,7 +148,8 @@ testNoNpmFailure = testCase "No npm failure" $ do
   where
     expectedErr =
       mconcat
-        [ "npm: createCharts: does not exist (Required npm executable not ",
+        [ npmStr,
+          ": createCharts: does not exist (Required npm executable not ",
           "found. Please add it to the PATH.)"
         ]
     params =
@@ -407,3 +408,8 @@ runCreateCharts coreEnv = runMockChartIO coreEnv . Chart.createCharts
 
 runCreateChartsEx :: (Exception e) => CoreEnv -> ChartParams -> IO (RefsEnv, e)
 runCreateChartsEx coreEnv = runMockChartIOEx coreEnv . Chart.createCharts
+
+npmStr :: String
+npmStr = case currentOs of
+  Windows -> "npm.cmd"
+  _ -> "npm"
