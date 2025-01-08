@@ -256,7 +256,13 @@ instance MonadPathReader MockChartIO where
     [osp|pacer|] -> pure True
     [osp|node_modules|] -> asks (.coreEnv.nodeModulesExists)
     [osp|web|] -> pure True
-    other -> error $ "doesDirectoryExist: unexpected: " ++ show other
+    other -> do
+      -- we need the current directory to return true, but it can be
+      -- non-deterministic e.g. for out-of-tree builds, hence this check.
+      currDir <- liftIO $ PR.getCurrentDirectory
+      if p == currDir
+        then pure True
+        else error $ "doesDirectoryExist: unexpected: " ++ show other
     where
       dirName = L.last $ OsPath.splitDirectories p
 
