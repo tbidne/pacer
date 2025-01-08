@@ -23,10 +23,12 @@ ensureWebDirExists ::
     MonadTerminal m,
     MonadThrow m
   ) =>
+  -- | Path to web path dir. This should be WPaths.getWebPath, though we
+  -- take it as a parameter to save a function call.
+  Path Abs Dir ->
   Bool ->
   m ()
-ensureWebDirExists cleanInstall = do
-  webPath <- WPaths.getWebPath
+ensureWebDirExists webPath cleanInstall = do
   let webOsPath = pathToOsPath webPath
 
   exists <- webDirExists webPath

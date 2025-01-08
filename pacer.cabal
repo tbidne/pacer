@@ -137,6 +137,7 @@ test-suite unit
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:
+    Unit.Pacer.Chart
     Unit.Pacer.Chart.Data.ChartRequest
     Unit.Pacer.Chart.Data.Run
     Unit.Pacer.Data.Distance
@@ -149,14 +150,21 @@ test-suite unit
 
   build-depends:
     , base
+    , containers
+    , effects-fs
+    , effects-terminal
+    , effects-typed-process
+    , filepath
     , fs-utils
-    , hedgehog        >=1.0.2    && <1.5
+    , hedgehog               >=1.0.2    && <1.5
+    , mtl                    >=2.2.1    && <2.4
     , pacer
-    , pretty-simple   ^>=4.1.2.0
-    , tasty           >=1.1.0.3  && <1.6
-    , tasty-golden    ^>=2.3.1.1
-    , tasty-hedgehog  >=1.0.0.2  && <1.5
-    , tasty-hunit     >=0.9      && <0.11
+    , pretty-simple          ^>=4.1.2.0
+    , tasty                  >=1.1.0.3  && <1.6
+    , tasty-golden           ^>=2.3.1.1
+    , tasty-hedgehog         >=1.0.0.2  && <1.5
+    , tasty-hunit            >=0.9      && <0.11
+    , text
     , toml-reader
 
   hs-source-dirs: test/unit
@@ -181,7 +189,7 @@ test-suite functional
     , filepath
     , fs-utils
     , hedgehog
-    , mtl             >=2.2.1 && <2.4
+    , mtl
     , pacer
     , tasty
     , tasty-golden

@@ -101,9 +101,9 @@ createCharts @m params = do
               "Required npm executable not found. Please add it to the PATH."
 
       -- 2. Create web dir
-      Web.ensureWebDirExists params.cleanInstall
-
       webDir <- WPaths.getWebPath
+      Web.ensureWebDirExists webDir params.cleanInstall
+
       let webDataDir = webDir <</>> WPaths.dataDir
 
       -- 3. Create json file at expected location

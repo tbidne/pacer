@@ -1,0 +1,4 @@
+[[charts]]
+title = 'Runs by distance'
+y-axis = 'distance'
+description = 'This uses the XDG directory.'
