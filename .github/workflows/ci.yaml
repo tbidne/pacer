@@ -75,7 +75,10 @@ jobs:
         #
         # It may be possible to require 0 console errors, though of course that
         # could be overly restrictive.
-        run: cabal run pacer -- chart --data examples
+        run: |
+          cabal run pacer -- chart --data examples
+          # Let's test it overwrites successfully
+          cabal run pacer -- chart --data examples
 
   nix:
     strategy:
