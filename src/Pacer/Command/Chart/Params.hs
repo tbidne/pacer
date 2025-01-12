@@ -38,6 +38,8 @@ import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import System.IO.Error qualified as Error
 
+-- See NOTE: [User Path]
+
 type PathF :: ConfigPhase -> Type -> Type
 type family PathF p t where
   PathF ConfigPhaseArgs _ = Maybe OsPath

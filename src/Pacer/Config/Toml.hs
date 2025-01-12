@@ -7,6 +7,12 @@ import FileSystem.OsPath qualified as OsPath
 import Pacer.Prelude
 import TOML (DecodeTOML (tomlDecoder), getFieldOptWith)
 
+-- NOTE: [User Path]
+--
+-- Paths that come from users must be OsPath and not Path since the
+-- latter requires us to enforce that the user typed either an absolute or
+-- relative path, but not both, but that is overly restrictive.
+
 -- | Toml configuration.
 data Toml = MkToml
   { -- | Optional path to directory with runs.toml and chart-requests.toml.
