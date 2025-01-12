@@ -1,4 +1,4 @@
-module Pacer.Chart.Data.ChartExtra
+module Pacer.Command.Chart.Data.ChartExtra
   ( ChartExtra (..),
     mkChartExtra,
   )
@@ -6,7 +6,7 @@ where
 
 import Data.Aeson (ToJSON)
 import Data.Aeson qualified as Asn
-import Pacer.Chart.Data.ChartRequest (ChartRequest (description))
+import Pacer.Command.Chart.Data.ChartRequest (ChartRequest (description))
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 

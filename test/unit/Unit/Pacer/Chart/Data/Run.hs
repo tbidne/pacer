@@ -2,14 +2,14 @@
 
 module Unit.Pacer.Chart.Data.Run (tests) where
 
-import Pacer.Chart.Data.Run (SomeRuns)
+import Pacer.Command.Chart.Data.Run (SomeRuns)
 import TOML (decode)
 import Unit.Prelude
 
 tests :: TestTree
 tests =
   testGroup
-    "Pacer.Chart.Data.Run"
+    "Pacer.Command.Chart.Data.Run"
     [ testParseExampleRunsToml
     ]
 

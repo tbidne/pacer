@@ -25,14 +25,18 @@ import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Pacer.Class.Parser qualified as P
-import Pacer.Config.Args.Command (Command, cmdParser)
+import Pacer.Command qualified as Command
+import Pacer.Config.Phase (ConfigPhase (ConfigPhaseArgs))
+import Pacer.Config.Utils qualified as Utils
 import Pacer.Prelude
 import Paths_pacer qualified as Paths
 
 -- | CLI args.
-newtype Args a = MkArgs
+data Args a = MkArgs
   { -- | Command to run.
-    command :: Command a
+    command :: Command.Command ConfigPhaseArgs a,
+    -- | Optional toml config.
+    configPath :: Maybe OsPath
   }
   deriving stock (Eq, Show)
 
@@ -77,9 +81,22 @@ argsParser ::
   Parser (Args a)
 argsParser =
   MkArgs
-    <$> cmdParser
+    <$> Command.parser
+    <*> configParser
     <**> OA.helper
     <**> version
+
+configParser :: Parser (Maybe OsPath)
+configParser =
+  OA.optional
+    $ OA.option
+      Utils.readOsPath
+    $ mconcat
+      [ OA.short 'c',
+        OA.long "config",
+        OA.metavar "PATH",
+        Utils.mkHelp "Path to optional toml config."
+      ]
 
 version :: Parser (a -> a)
 version = OA.infoOption versNum (OA.long "version" <> OA.short 'v' <> OA.hidden)

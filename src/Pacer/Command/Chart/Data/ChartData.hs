@@ -1,4 +1,4 @@
-module Pacer.Chart.Data.ChartData
+module Pacer.Command.Chart.Data.ChartData
   ( ChartData (..),
     ChartY (..),
     ChartY1 (..),
@@ -13,7 +13,7 @@ import Data.List (all)
 import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
-import Pacer.Chart.Data.ChartRequest
+import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (filters, title, y1Axis, yAxis),
     ChartRequests (unChartRequests),
     FilterExpr,
@@ -26,14 +26,14 @@ import Pacer.Chart.Data.ChartRequest
       ),
     eval,
   )
-import Pacer.Chart.Data.Run
+import Pacer.Command.Chart.Data.Run
   ( Run (datetime, distance, duration),
     RunTimestamp,
     SomeRun (MkSomeRun),
     SomeRuns (MkSomeRuns),
     SomeRunsKey (MkSomeRunsKey, unSomeRunsKey),
   )
-import Pacer.Chart.Data.Run qualified as Run
+import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),

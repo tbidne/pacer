@@ -1,4 +1,4 @@
-module Pacer.Chart.Data.ChartOptions
+module Pacer.Command.Chart.Data.ChartOptions
   ( ChartOptions (..),
     mkChartOptions,
   )
@@ -7,7 +7,7 @@ where
 import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON))
 import Data.Aeson qualified as Asn
 import Data.Aeson.Types (Pair)
-import Pacer.Chart.Data.ChartRequest
+import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (title, y1Axis, yAxis),
     YAxisType
       ( YAxisDistance,

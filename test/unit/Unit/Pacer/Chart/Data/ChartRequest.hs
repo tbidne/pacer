@@ -3,14 +3,14 @@
 
 module Unit.Pacer.Chart.Data.ChartRequest (tests) where
 
-import Pacer.Chart.Data.ChartRequest
+import Pacer.Command.Chart.Data.ChartRequest
 import TOML (decode)
 import Unit.Prelude
 
 tests :: TestTree
 tests =
   testGroup
-    "Pacer.Chart.Data.ChartRequest"
+    "Pacer.Command.Chart.Data.ChartRequest"
     [ testParseExampleChartRequestsToml
     ]
 

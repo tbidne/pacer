@@ -4,6 +4,7 @@ module Unit.Pacer.Derive
   )
 where
 
+import Pacer.Command.Derive qualified as Derive
 import Pacer.Data.Distance (SomeDistance (MkSomeDistance))
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer),
@@ -16,7 +17,6 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration, Hours, Minutes, Seconds)
 import Pacer.Data.Pace (SomePace)
-import Pacer.Derive qualified as Derive
 import Unit.Pacer.Data.Distance qualified as Unit.Distance
 import Unit.Pacer.Data.Duration qualified as Unit.Duration
 import Unit.Prelude

@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Pacer.Chart.Data.Run
+module Pacer.Command.Chart.Data.Run
   ( -- * Run
     Run (..),
     RunTimestamp (..),
@@ -32,6 +32,7 @@ import Data.Time.LocalTime
   )
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
+import Pacer.Command.Derive qualified as Derive
 import Pacer.Data.Distance
   ( Distance,
     DistanceUnit,
@@ -51,7 +52,6 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
-import Pacer.Derive qualified as Derive
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML

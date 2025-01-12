@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Pacer.Chart.Data.ChartRequest
+module Pacer.Command.Chart.Data.ChartRequest
   ( -- * ChartRequest
     ChartRequest (..),
     YAxisType (..),

@@ -1,6 +1,7 @@
 module Pacer.Exception
   ( -- * Exceptions
     CreateChartE (..),
+    FileMissingE (..),
     NpmE (..),
     TomlE (..),
 
@@ -125,6 +126,35 @@ instance Exception CreateChartE where
         unpackText t,
         "' is empty due to all runs being filtered out."
       ]
+
+data FileMissingE = MkFileMissingE
+  { cliDataDir :: Maybe OsPath,
+    expectedFiles :: List (Path Rel File),
+    tomlDataDir :: Maybe OsPath,
+    xdgDir :: Path Abs Dir
+  }
+  deriving stock (Show)
+
+instance Exception FileMissingE where
+  displayException e =
+    mconcat
+      [ "Required file not found. Searched for paths(s) ",
+        Utils.showListF Utils.showPath e.expectedFiles,
+        "in directories:",
+        dirsStr
+      ]
+    where
+      dirsStr =
+        mconcat
+          $ filter
+            (not . L.null)
+            [ displayDir e.cliDataDir,
+              displayDir e.tomlDataDir,
+              displayDir (Just $ pathToOsPath e.xdgDir)
+            ]
+
+      displayDir Nothing = ""
+      displayDir (Just d) = "\n - " <> decodeLenient d
 
 -- | Exception for toml errors that includes the path.
 data TomlE = MkTomlE OsPath TOMLError

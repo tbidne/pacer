@@ -62,24 +62,36 @@ library
   other-modules:   Paths_pacer
   autogen-modules: Paths_pacer
   exposed-modules:
-    Pacer.Chart
-    Pacer.Chart.Data.Chart
-    Pacer.Chart.Data.ChartData
-    Pacer.Chart.Data.ChartExtra
-    Pacer.Chart.Data.ChartOptions
-    Pacer.Chart.Data.ChartRequest
-    Pacer.Chart.Data.Run
     Pacer.Class.Parser
     Pacer.Class.Units
+    Pacer.Command
+    Pacer.Command.Chart
+    Pacer.Command.Chart.Args
+    Pacer.Command.Chart.Data.Chart
+    Pacer.Command.Chart.Data.ChartData
+    Pacer.Command.Chart.Data.ChartExtra
+    Pacer.Command.Chart.Data.ChartOptions
+    Pacer.Command.Chart.Data.ChartRequest
+    Pacer.Command.Chart.Data.Run
+    Pacer.Command.Chart.Params
+    Pacer.Command.Convert
+    Pacer.Command.Convert.Args
+    Pacer.Command.Convert.Params
+    Pacer.Command.Derive
+    Pacer.Command.Derive.Args
+    Pacer.Command.Derive.Params
+    Pacer.Command.Scale
+    Pacer.Command.Scale.Args
+    Pacer.Command.Scale.Params
     Pacer.Config.Args
-    Pacer.Config.Args.Command
-    Pacer.Config.Args.Utils
+    Pacer.Config.Phase
+    Pacer.Config.Toml
+    Pacer.Config.Utils
     Pacer.Data.Distance
     Pacer.Data.Distance.Units
     Pacer.Data.Duration
     Pacer.Data.Duration.Units
     Pacer.Data.Pace
-    Pacer.Derive
     Pacer.Driver
     Pacer.Exception
     Pacer.Log

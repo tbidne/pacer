@@ -1,4 +1,4 @@
-module Pacer.Chart.Data.Chart
+module Pacer.Command.Chart.Data.Chart
   ( Chart (..),
     mkChart,
     mkCharts,
@@ -7,17 +7,17 @@ where
 
 import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON))
 import Data.Aeson qualified as Asn
-import Pacer.Chart.Data.ChartData (ChartData)
-import Pacer.Chart.Data.ChartData qualified as ChartData
-import Pacer.Chart.Data.ChartExtra (ChartExtra)
-import Pacer.Chart.Data.ChartExtra qualified as ChartExtra
-import Pacer.Chart.Data.ChartOptions (ChartOptions)
-import Pacer.Chart.Data.ChartOptions qualified as ChartOptions
-import Pacer.Chart.Data.ChartRequest
+import Pacer.Command.Chart.Data.ChartData (ChartData)
+import Pacer.Command.Chart.Data.ChartData qualified as ChartData
+import Pacer.Command.Chart.Data.ChartExtra (ChartExtra)
+import Pacer.Command.Chart.Data.ChartExtra qualified as ChartExtra
+import Pacer.Command.Chart.Data.ChartOptions (ChartOptions)
+import Pacer.Command.Chart.Data.ChartOptions qualified as ChartOptions
+import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (unit),
     ChartRequests (unChartRequests),
   )
-import Pacer.Chart.Data.Run (SomeRuns)
+import Pacer.Command.Chart.Data.Run (SomeRuns)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
 import Pacer.Prelude

@@ -21,17 +21,19 @@ import Effects.FileSystem.PathWriter
   )
 import Effects.Process.Typed (MonadTypedProcess (readProcess), ProcessConfig)
 import Effects.System.Terminal (MonadTerminal (putStr))
-import Pacer.Chart
+import Pacer.Command.Chart qualified as Chart
+import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
+        chartRequestsPath,
         cleanInstall,
         dataDir,
         json,
-        mChartRequestsPath,
-        mRunsPath
+        runsPath
       ),
+    ChartParamsArgs,
   )
-import Pacer.Chart qualified as Chart
+import Pacer.Command.Chart.Params qualified as ChartParams
 import System.Exit (ExitCode (ExitSuccess))
 import System.OsPath qualified as OsPath
 import Test.Tasty.HUnit (assertEqual)
@@ -40,7 +42,7 @@ import Unit.Prelude
 tests :: TestTree
 tests =
   testGroup
-    "Pacer.Chart"
+    "Pacer.Command.Chart"
     [ successTests,
       failureTests
     ]
@@ -65,8 +67,8 @@ testDefault = testCase "Default" $ do
         { cleanInstall = False,
           dataDir = Nothing,
           json = False,
-          mChartRequestsPath = Nothing,
-          mRunsPath = Nothing
+          chartRequestsPath = Nothing,
+          runsPath = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -84,8 +86,8 @@ testJson = testCase "With --json" $ do
         { cleanInstall = False,
           dataDir = Nothing,
           json = True,
-          mChartRequestsPath = Nothing,
-          mRunsPath = Nothing
+          chartRequestsPath = Nothing,
+          runsPath = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -104,8 +106,8 @@ testPathNodeModExists = testCase "node_modules exists" $ do
         { cleanInstall = False,
           dataDir = Nothing,
           json = False,
-          mChartRequestsPath = Nothing,
-          mRunsPath = Nothing
+          chartRequestsPath = Nothing,
+          runsPath = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -123,8 +125,8 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
         { cleanInstall = True,
           dataDir = Nothing,
           json = False,
-          mChartRequestsPath = Nothing,
-          mRunsPath = Nothing
+          chartRequestsPath = Nothing,
+          runsPath = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -157,8 +159,8 @@ testNoNpmFailure = testCase "No npm failure" $ do
         { cleanInstall = False,
           dataDir = Nothing,
           json = False,
-          mChartRequestsPath = Nothing,
-          mRunsPath = Nothing
+          chartRequestsPath = Nothing,
+          runsPath = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -409,11 +411,15 @@ runMockChartIOEx @e coreEnv m = do
     Left ex -> pure (refsEnv, ex)
     Right _ -> assertFailure $ "Expected exception, received none"
 
-runCreateCharts :: CoreEnv -> ChartParams -> IO RefsEnv
-runCreateCharts coreEnv = runMockChartIO coreEnv . Chart.createCharts
+runCreateCharts :: CoreEnv -> ChartParamsArgs -> IO RefsEnv
+runCreateCharts coreEnv params = runMockChartIO coreEnv $ do
+  params' <- ChartParams.evolvePhase params Nothing
+  Chart.createCharts $ params'
 
-runCreateChartsEx :: (Exception e) => CoreEnv -> ChartParams -> IO (RefsEnv, e)
-runCreateChartsEx coreEnv = runMockChartIOEx coreEnv . Chart.createCharts
+runCreateChartsEx :: (Exception e) => CoreEnv -> ChartParamsArgs -> IO (RefsEnv, e)
+runCreateChartsEx coreEnv params = runMockChartIOEx coreEnv $ do
+  params' <- ChartParams.evolvePhase params Nothing
+  Chart.createCharts $ params'
 
 npmStr :: String
 npmStr = case currentOs of

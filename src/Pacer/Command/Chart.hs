@@ -1,12 +1,12 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE UndecidableInstances #-}
 
-module Pacer.Chart
-  ( -- * Params
-    ChartParams (..),
+-- | Chart functionality.
+module Pacer.Command.Chart
+  ( -- * Top level command
+    handle,
 
-    -- * Functions
+    -- * Low level functions
     createCharts,
     createChartsJsonFile,
     createChartsJsonBS,
@@ -29,13 +29,18 @@ import Effects.Process.Typed qualified as TP
 import FileSystem.OsPath (decodeLenient, decodeThrowM)
 import FileSystem.Path qualified as Path
 import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
-import Pacer.Chart.Data.Chart (Chart)
-import Pacer.Chart.Data.Chart qualified as Chart
-import Pacer.Chart.Data.ChartRequest (ChartRequests)
-import Pacer.Chart.Data.Run (SomeRuns)
+import Pacer.Command.Chart.Data.Chart (Chart)
+import Pacer.Command.Chart.Data.Chart qualified as Chart
+import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
+import Pacer.Command.Chart.Data.Run (SomeRuns)
+import Pacer.Command.Chart.Params
+  ( ChartParams (chartRequestsPath, cleanInstall, json, runsPath),
+    ChartParamsFinal,
+  )
 import Pacer.Exception (NpmE (MkNpmE), TomlE (MkTomlE))
 import Pacer.Log qualified as Log
 import Pacer.Prelude
+import Pacer.Utils qualified as Utils
 import Pacer.Web qualified as Web
 import Pacer.Web.Paths qualified as WPaths
 import System.IO (FilePath)
@@ -43,21 +48,21 @@ import System.IO.Error qualified as Error
 import System.OsPath qualified as OsPath
 import TOML (DecodeTOML, decode)
 
--- | Chart command params.
-data ChartParams = MkChartParams
-  { -- | If true, copies clean install of web dir and installs node deps.
-    cleanInstall :: Bool,
-    -- | Optional path to directory with runs.toml and chart-requests.toml.
-    dataDir :: Maybe OsPath,
-    -- | If true, stops the build after generating the intermediate json
-    -- file.
-    json :: Bool,
-    -- | Optional path to chart-requests.toml.
-    mChartRequestsPath :: Maybe OsPath,
-    -- | Optional path to runs.toml.
-    mRunsPath :: Maybe OsPath
-  }
-  deriving stock (Eq, Show)
+-- | Handles chart command.
+handle ::
+  ( HasCallStack,
+    MonadFileReader m,
+    MonadFileWriter m,
+    MonadIORef m,
+    MonadMask m,
+    MonadPathReader m,
+    MonadPathWriter m,
+    MonadTerminal m,
+    MonadTypedProcess m
+  ) =>
+  ChartParamsFinal ->
+  m ()
+handle = createCharts
 
 createCharts ::
   ( HasCallStack,
@@ -70,19 +75,20 @@ createCharts ::
     MonadTerminal m,
     MonadTypedProcess m
   ) =>
-  ChartParams ->
+  ChartParamsFinal ->
   m ()
-createCharts @m params = do
-  (chartRequestsPath, runsPath) <- getChartInputs
-
+createCharts params = do
   cwdOsPath <- PR.getCurrentDirectory
   cwdPath <- Path.parseAbsDir cwdOsPath
+
+  Log.debug $ "Using chart-requests: " <> (packText $ Utils.showPath params.chartRequestsPath)
+  Log.debug $ "Using runs: " <> (packText $ Utils.showPath params.runsPath)
 
   if params.json
     then do
       -- params.json is active, so stop after json generation
       let jsonPath = cwdPath <</>> jsonName
-      createChartsJsonFile runsPath chartRequestsPath jsonPath
+      createChartsJsonFile params.runsPath params.chartRequestsPath jsonPath
     else do
       -- 1. Check that node exists
       --
@@ -110,7 +116,7 @@ createCharts @m params = do
       PW.createDirectoryIfMissing True (pathToOsPath webDataDir)
       let jsonPath = webDataDir <</>> jsonName
 
-      createChartsJsonFile runsPath chartRequestsPath jsonPath
+      createChartsJsonFile params.runsPath params.chartRequestsPath jsonPath
 
       let setCurrDir = PW.setCurrentDirectory . pathToOsPath
           restorePrevDir = const (PW.setCurrentDirectory cwdOsPath)
@@ -180,63 +186,6 @@ createCharts @m params = do
         }
 
     buildDest = [osp|build|]
-
-    -- Retrieves (Tuple2 chart-requests-path runs-path)
-    getChartInputs :: m (Path Abs File, Path Abs File)
-    getChartInputs = do
-      (mDataDir1, chartRequestsPath) <-
-        getChartInput chartRequestsName Nothing params.mChartRequestsPath
-
-      (_, runsPath) <-
-        getChartInput runsName mDataDir1 params.mRunsPath
-
-      pure (chartRequestsPath, runsPath)
-
-    -- For @getChartInput fileName mDataDir mInputOsPath@, we use its direct
-    -- mInputOsPath if it exists. Otherwise we retrive the path based on the
-    -- data directory and fileName.
-    --
-    -- Since we intend to call this function for each needed file, we take
-    -- the data directory as an input so that we only find it once.
-    getChartInput ::
-      -- Expected file_name e.g. runs.toml
-      Path Rel File ->
-      -- Maybe data_directory.
-      Maybe (Path Abs Dir) ->
-      -- Maybe file.
-      Maybe OsPath ->
-      -- Tuple2 (Maybe data_directory) file
-      m (Tuple2 (Maybe (Path Abs Dir)) (Path Abs File))
-    getChartInput fileName mDataDir mInputOsPath = do
-      case mInputOsPath of
-        -- 1. Input path was explicitly given, use it.
-        Just inputOsPath -> do
-          inputPath <- parseCanonicalAbsFile inputOsPath
-          pure (mDataDir, inputPath)
-        -- 2. No input direct path, need to derive it from the data dir.
-        Nothing -> do
-          dataDir <- case mDataDir of
-            -- 2.1. Data dir already found, use it.
-            Just dataDir -> pure dataDir
-            Nothing -> case params.dataDir of
-              -- 2.1.1. Data dir given on the params, use it.
-              Just p -> parseCanonicalAbsDir p
-              -- 2.1.1. Data dir not given, use XDG.
-              Nothing -> getXdgConfigPath
-
-          let filePath = dataDir <</>> fileName
-          assertExists filePath
-          pure (Just dataDir, filePath)
-
-    assertExists p = do
-      let p' = pathToOsPath p
-      exists <- PR.doesFileExist p'
-      unless exists $ do
-        throwPathIOError
-          p'
-          "createCharts"
-          Error.doesNotExistErrorType
-          "Required file does not exist."
 
 runNpm ::
   ( HasCallStack,
@@ -329,12 +278,6 @@ createChartSeq runsPath chartRequestsPath = do
       case decode contents of
         Right t -> pure t
         Left err -> throwM $ MkTomlE path err
-
-runsName :: Path Rel File
-runsName = [relfile|runs.toml|]
-
-chartRequestsName :: Path Rel File
-chartRequestsName = [relfile|chart-requests.toml|]
 
 jsonName :: Path Rel File
 jsonName = [relfile|charts.json|]
