@@ -42,12 +42,12 @@ mChartRequestsParser :: Parser (Maybe OsPath)
 mChartRequestsParser =
   mOsPathParser Nothing "chart-requests" "PATH" helpTxt
   where
-    helpTxt = "Optional path to chart-requests file. Overrides --data-dir."
+    helpTxt = "Optional path to chart-requests file. Overrides --data."
 
 mRunsParser :: Parser (Maybe OsPath)
 mRunsParser = mOsPathParser Nothing "runs" "PATH" helpTxt
   where
-    helpTxt = "Optional path to runs file. Overrides --data-dir."
+    helpTxt = "Optional path to runs file. Overrides --data."
 
 dataDirParser :: Parser (Maybe OsPath)
 dataDirParser = mOsPathParser (Just 'd') "data" "PATH" helpTxt

@@ -65,7 +65,7 @@ Usage: pacer chart [--chart-requests PATH] [-c|--clean] [-d|--data PATH]
 
 Available options:
   --chart-requests PATH    Optional path to chart-requests file. Overrides
-                           --data-dir.
+                           --data.
 
   -c,--clean               If active, cleans prior build files.
 
@@ -76,7 +76,7 @@ Available options:
   -j,--json                If active, stops after generating the intermediate
                            json file. Primarily used for testing.
 
-  --runs PATH              Optional path to runs file. Overrides --data-dir.
+  --runs PATH              Optional path to runs file. Overrides --data.
 
   -h,--help                Show this help text
 ```
