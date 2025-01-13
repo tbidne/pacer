@@ -17,6 +17,7 @@ module Pacer.Web.Paths
   )
 where
 
+import FileSystem.IO (readBinaryFileIO)
 import Language.Haskell.TH (Code, Q)
 import Pacer.Prelude
 import Pacer.Web.Utils qualified as WUtils
@@ -24,7 +25,7 @@ import Pacer.Web.Utils qualified as WUtils
 -- | Reads the web directory at compile-time.
 readWebDirTH :: Code Q (List (Tuple2 (Path Rel File) ByteString))
 readWebDirTH = WUtils.liftIOToTH $ for webInternalFiles $ \fileName -> do
-  c <- readBinaryFile (pathToOsPath $ webDir <</>> fileName)
+  c <- readBinaryFileIO (pathToOsPath $ webDir <</>> fileName)
   pure (fileName, c)
 
 -- | List of all paths used in frontend build.
@@ -70,8 +71,7 @@ distDir = [reldir|dist|]
 -- | Web destination dir.
 getWebPath ::
   ( HasCallStack,
-    MonadPathReader m,
-    MonadThrow m
+    PathReader :> es
   ) =>
-  m (Path Abs Dir)
+  Eff es (Path Abs Dir)
 getWebPath = (<</>> webDir) <$> getXdgCachePath

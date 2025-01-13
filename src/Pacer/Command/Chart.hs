@@ -18,14 +18,14 @@ import Data.Aeson.Encode.Pretty
     Indent (Spaces),
   )
 import Data.Aeson.Encode.Pretty qualified as AsnPretty
-import Effects.FileSystem.PathReader qualified as PR
-import Effects.FileSystem.PathWriter
+import Effectful.FileSystem.PathReader.Dynamic qualified as PR
+import Effectful.FileSystem.PathWriter.Dynamic
   ( CopyDirConfig (MkCopyDirConfig),
     Overwrite (OverwriteNone),
     TargetName (TargetNameLiteral),
   )
-import Effects.FileSystem.PathWriter qualified as PW
-import Effects.Process.Typed qualified as TP
+import Effectful.FileSystem.PathWriter.Dynamic qualified as PW
+import Effectful.Process.Typed.Dynamic qualified as TP
 import FileSystem.OsPath (decodeLenient, decodeThrowM)
 import FileSystem.Path qualified as Path
 import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
@@ -51,32 +51,28 @@ import TOML (DecodeTOML, decode)
 -- | Handles chart command.
 handle ::
   ( HasCallStack,
-    MonadFileReader m,
-    MonadFileWriter m,
-    MonadIORef m,
-    MonadMask m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadTerminal m,
-    MonadTypedProcess m
+    FileReader :> es,
+    FileWriter :> es,
+    PathReader :> es,
+    PathWriter :> es,
+    Terminal :> es,
+    TypedProcess :> es
   ) =>
   ChartParamsFinal ->
-  m ()
+  Eff es ()
 handle = createCharts
 
 createCharts ::
   ( HasCallStack,
-    MonadFileReader m,
-    MonadFileWriter m,
-    MonadIORef m,
-    MonadMask m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadTerminal m,
-    MonadTypedProcess m
+    FileReader :> es,
+    FileWriter :> es,
+    PathReader :> es,
+    PathWriter :> es,
+    Terminal :> es,
+    TypedProcess :> es
   ) =>
   ChartParamsFinal ->
-  m ()
+  Eff es ()
 createCharts params = do
   cwdOsPath <- PR.getCurrentDirectory
   cwdPath <- Path.parseAbsDir cwdOsPath
@@ -189,12 +185,11 @@ createCharts params = do
 
 runNpm ::
   ( HasCallStack,
-    MonadThrow m,
-    MonadTypedProcess m
+    TypedProcess :> es
   ) =>
   FilePath ->
   List String ->
-  m ()
+  Eff es ()
 runNpm npmPathStr args = do
   let npmCmd = TP.proc npmPathStr args
   (ec, stdout, stderr) <- TP.readProcess npmCmd
@@ -205,18 +200,17 @@ runNpm npmPathStr args = do
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.
 createChartsJsonFile ::
-  forall m.
+  forall es.
   ( HasCallStack,
-    MonadFileReader m,
-    MonadFileWriter m,
-    MonadPathWriter m,
-    MonadTerminal m,
-    MonadThrow m
+    FileReader :> es,
+    FileWriter :> es,
+    PathWriter :> es,
+    Terminal :> es
   ) =>
   Path Abs File ->
   Path Abs File ->
   Path Abs File ->
-  m ()
+  Eff es ()
 createChartsJsonFile runsPath requestsPath outJson = do
   bs <- createChartsJsonBS runsPath requestsPath
 
@@ -233,16 +227,15 @@ createChartsJsonFile runsPath requestsPath outJson = do
 -- | Given file paths to runs and chart requests, returns a lazy
 -- json-encoded bytestring of a chart array.
 createChartsJsonBS ::
-  forall m.
+  forall es.
   ( HasCallStack,
-    MonadFileReader m,
-    MonadThrow m
+    FileReader :> es
   ) =>
   -- | Path to runs.toml. Defaults to 'defRunsPath'.
   Path Abs File ->
   -- | Path to chart-requests.toml. Defaults to 'defChartRequestsPath'.
   Path Abs File ->
-  m LazyByteString
+  Eff es LazyByteString
 createChartsJsonBS runsPath chartRequestsPath =
   AsnPretty.encodePretty' cfg <$> createChartSeq runsPath chartRequestsPath
   where
@@ -255,16 +248,15 @@ createChartsJsonBS runsPath chartRequestsPath =
 -- | Given file paths to runs and chart requests, generates a sequence of
 -- charts.
 createChartSeq ::
-  forall m.
+  forall es.
   ( HasCallStack,
-    MonadFileReader m,
-    MonadThrow m
+    FileReader :> es
   ) =>
   -- | Path to runs.toml
   Path Abs File ->
   -- | Path to chart-requests.toml
   Path Abs File ->
-  m (Seq Chart)
+  Eff es (Seq Chart)
 createChartSeq runsPath chartRequestsPath = do
   runs <- readDecodeToml @(SomeRuns Double) (pathToOsPath runsPath)
   chartRequests <-
@@ -272,7 +264,7 @@ createChartSeq runsPath chartRequestsPath = do
 
   throwLeft (Chart.mkCharts runs chartRequests)
   where
-    readDecodeToml :: forall a. (DecodeTOML a, HasCallStack) => OsPath -> m a
+    readDecodeToml :: forall a. (DecodeTOML a, HasCallStack) => OsPath -> Eff es a
     readDecodeToml path = do
       contents <- readFileUtf8ThrowM path
       case decode contents of

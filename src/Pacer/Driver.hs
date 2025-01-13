@@ -6,7 +6,7 @@ module Pacer.Driver
   )
 where
 
-import Effects.FileSystem.PathReader qualified as PR
+import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Pacer.Command (Command (Chart, Convert, Derive, Scale), evolvePhase)
 import Pacer.Command.Chart qualified as Chart
 import Pacer.Command.Convert qualified as Convert
@@ -19,18 +19,16 @@ import TOML qualified
 
 runApp ::
   ( HasCallStack,
-    MonadFileReader m,
-    MonadFileWriter m,
-    MonadIORef m,
-    MonadMask m,
-    MonadOptparse m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadTerminal m,
-    MonadTypedProcess m
+    FileReader :> es,
+    FileWriter :> es,
+    Optparse :> es,
+    PathReader :> es,
+    PathWriter :> es,
+    Terminal :> es,
+    TypedProcess :> es
   ) =>
-  m ()
-runApp @m = do
+  Eff es ()
+runApp @es = do
   args <- execParser (parserInfo @Double)
 
   mToml <- do
@@ -53,7 +51,7 @@ runApp @m = do
     Derive params -> Derive.handle params
     Scale params -> Scale.handle params
   where
-    readToml :: Path b t -> m Toml
+    readToml :: Path b t -> Eff es Toml
     readToml path = do
       c <- readFileUtf8ThrowM (pathToOsPath path)
       throwLeft $ TOML.decode c

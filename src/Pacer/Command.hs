@@ -66,13 +66,12 @@ deriving stock instance
 -- | Evolve phase.
 evolvePhase ::
   ( HasCallStack,
-    MonadPathReader m,
-    MonadTerminal m,
-    MonadThrow m
+    PathReader :> es,
+    Terminal :> es
   ) =>
   CommandPhaseArgs a ->
   Maybe Toml ->
-  m (CommandPhaseFinal a)
+  Eff es (CommandPhaseFinal a)
 evolvePhase cmd mToml = case cmd of
   Chart params -> Chart <$> Chart.evolvePhase params mToml
   Convert params -> Convert <$> Convert.evolvePhase params

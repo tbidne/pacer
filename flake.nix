@@ -35,8 +35,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    monad-effects = {
-      url = "github:tbidne/monad-effects";
+    effectful-libs = {
+      url = "github:tbidne/effectful-libs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -45,7 +45,6 @@
       inputs.bounds.follows = "bounds";
       inputs.exception-utils.follows = "exception-utils";
       inputs.fs-utils.follows = "fs-utils";
-      inputs.smart-math.follows = "smart-math";
     };
 
     smart-math = {
@@ -86,6 +85,8 @@
             overrides =
               final: prev:
               {
+                effectful-core = prev.effectful-core_2_5_0_0;
+                effectful = prev.effectful_2_5_0_0;
                 path = hlib.dontCheck prev.path_0_9_6;
               }
               // nix-hs-utils.mkLibs inputs final [
@@ -96,12 +97,12 @@
                 "smart-math"
                 "relative-time"
               ]
-              // nix-hs-utils.mkRelLibs "${inputs.monad-effects}/lib" final [
-                "effects-fs"
-                "effects-ioref"
-                "effects-optparse"
-                "effects-terminal"
-                "effects-typed-process"
+              // nix-hs-utils.mkRelLibs "${inputs.effectful-libs}/lib" final [
+                "fs-effectful"
+                "ioref-effectful"
+                "optparse-effectful"
+                "terminal-effectful"
+                "typed-process-dynamic-effectful"
               ];
           };
           compilerPkgs = {

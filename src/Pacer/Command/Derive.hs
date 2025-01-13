@@ -47,19 +47,18 @@ import Pacer.Prelude
 
 -- | Handles derive command.
 handle ::
-  forall m a.
+  forall es a.
   ( Display a,
     FromInteger a,
     HasCallStack,
-    MonadTerminal m,
-    MonadThrow m,
     Ord a,
     Semifield a,
     Show a,
+    Terminal :> es,
     ToRational a
   ) =>
   DeriveParamsFinal a ->
-  m ()
+  Eff es ()
 handle params = case params.quantity of
   DeriveDistance duration pace -> do
     let dist = deriveSomeDistance ((.unPositive) <$> duration) pace

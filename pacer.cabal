@@ -102,34 +102,35 @@ library
     Pacer.Web.Utils
 
   build-depends:
-    , aeson                  >=2.0      && <2.3
-    , aeson-pretty           ^>=0.8.9
-    , algebra-simple         ^>=0.1
-    , base                   >=4.20.0.0 && <4.22
-    , bytestring             >=0.10.12  && <0.13
-    , containers             >=0.6.3.1  && <0.8
-    , effects-fs             ^>=0.1
-    , effects-ioref          ^>=0.1
-    , effects-optparse       ^>=0.1
-    , effects-terminal       ^>=0.1
-    , effects-typed-process  ^>=0.1
-    , exception-utils        ^>=0.1
-    , exceptions             ^>=0.10.4
-    , filepath               >=1.5      && <1.6
-    , fs-utils               ^>=0.1
-    , ghc-experimental       ^>=0.1.0.0
-    , megaparsec             >=7.0.5    && <9.7
-    , nonempty-containers    >=0.3.4.2  && <0.4
-    , optparse-applicative   >=0.15     && <0.19
-    , path                   ^>=0.9.6
-    , relative-time          ^>=0.1
-    , singletons             ^>=3.0.3
-    , smart-math             ^>=0.1
-    , template-haskell       >=2.21     && <2.23
-    , text                   >=1.2.3.2  && <2.2
-    , text-display           >=0.0.3.0  && <0.6
-    , time                   >=1.9.3    && <1.15
-    , toml-reader            >=0.2.0.0  && <0.3.0.0
+    , aeson                            >=2.0      && <2.3
+    , aeson-pretty                     ^>=0.8.9
+    , algebra-simple                   ^>=0.1
+    , base                             >=4.20.0.0 && <4.22
+    , bytestring                       >=0.10.12  && <0.13
+    , containers                       >=0.6.3.1  && <0.8
+    , effectful                        ^>=2.5.0.0
+    , exception-utils                  ^>=0.1
+    , exceptions                       ^>=0.10.4
+    , filepath                         >=1.5      && <1.6
+    , fs-effectful                     ^>=0.1
+    , fs-utils                         ^>=0.1
+    , ghc-experimental                 ^>=0.1.0.0
+    , ioref-effectful                  ^>=0.1
+    , megaparsec                       >=7.0.5    && <9.7
+    , nonempty-containers              >=0.3.4.2  && <0.4
+    , optparse-applicative             >=0.15     && <0.19
+    , optparse-effectful               ^>=0.1
+    , path                             ^>=0.9.6
+    , relative-time                    ^>=0.1
+    , singletons                       ^>=3.0.3
+    , smart-math                       ^>=0.1
+    , template-haskell                 >=2.21     && <2.23
+    , terminal-effectful               ^>=0.1
+    , text                             >=1.2.3.2  && <2.2
+    , text-display                     >=0.0.3.0  && <0.6
+    , time                             >=1.9.3    && <1.15
+    , toml-reader                      >=0.2.0.0  && <0.3.0.0
+    , typed-process-dynamic-effectful  ^>=0.1
 
   hs-source-dirs:  src
 
@@ -163,21 +164,20 @@ test-suite unit
   build-depends:
     , base
     , containers
-    , effects-fs
-    , effects-terminal
-    , effects-typed-process
     , filepath
+    , fs-effectful
     , fs-utils
-    , hedgehog               >=1.0.2    && <1.5
-    , mtl                    >=2.2.1    && <2.4
+    , hedgehog                         >=1.0.2    && <1.5
     , pacer
-    , pretty-simple          ^>=4.1.2.0
-    , tasty                  >=1.1.0.3  && <1.6
-    , tasty-golden           ^>=2.3.1.1
-    , tasty-hedgehog         >=1.0.0.2  && <1.5
-    , tasty-hunit            >=0.9      && <0.11
+    , pretty-simple                    ^>=4.1.2.0
+    , tasty                            >=1.1.0.3  && <1.6
+    , tasty-golden                     ^>=2.3.1.1
+    , tasty-hedgehog                   >=1.0.0.2  && <1.5
+    , tasty-hunit                      >=0.9      && <0.11
+    , terminal-effectful
     , text
     , toml-reader
+    , typed-process-dynamic-effectful
 
   hs-source-dirs: test/unit
   ghc-options:    -threaded -with-rtsopts=-N
@@ -196,17 +196,17 @@ test-suite functional
   build-depends:
     , base
     , containers
-    , effects-fs
-    , env-guard       ^>=0.2
+    , env-guard           ^>=0.2
     , filepath
+    , fs-effectful
     , fs-utils
     , hedgehog
-    , mtl
     , pacer
     , tasty
     , tasty-golden
     , tasty-hedgehog
     , tasty-hunit
+    , terminal-effectful
 
   hs-source-dirs: test/functional
   ghc-options:    -threaded

@@ -219,40 +219,67 @@ import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word32)
-import Effects.FileSystem.FileReader as X
-  ( MonadFileReader (readBinaryFile),
-    readFileUtf8ThrowM,
+import Effectful as X
+  ( Dispatch (Dynamic),
+    DispatchOf,
+    Eff,
+    Effect,
+    IOE,
+    raise,
+    runEff,
+    type (:>),
   )
-import Effects.FileSystem.FileWriter as X
-  ( MonadFileWriter (writeBinaryFile),
+import Effectful.Dispatch.Dynamic as X
+  ( interpret,
+    interpret_,
+    reinterpret,
+    reinterpret_,
+    send,
+  )
+import Effectful.FileSystem.FileReader.Dynamic as X
+  ( FileReader,
+    readBinaryFile,
+    readFileUtf8ThrowM,
+    runFileReader,
+  )
+import Effectful.FileSystem.FileWriter.Dynamic as X
+  ( FileWriter,
     appendFileUtf8,
+    runFileWriter,
+    writeBinaryFile,
     writeFileUtf8,
   )
-import Effects.FileSystem.PathReader as X
-  ( MonadPathReader
-      ( getXdgDirectory
-      ),
+import Effectful.FileSystem.PathReader.Dynamic as X
+  ( PathReader,
     XdgDirectory (XdgCache, XdgConfig),
+    getXdgDirectory,
+    runPathReader,
   )
-import Effects.FileSystem.PathReader qualified as PR
-import Effects.FileSystem.PathWriter as X
-  ( MonadPathWriter
-      ( createDirectoryIfMissing
-      ),
+import Effectful.FileSystem.PathReader.Dynamic qualified as PR
+import Effectful.FileSystem.PathWriter.Dynamic as X
+  ( PathWriter,
+    createDirectoryIfMissing,
+    runPathWriter,
   )
-import Effects.IORef as X
+import Effectful.IORef.Static as X
   ( IORef,
-    MonadIORef
-      ( modifyIORef',
-        newIORef,
-        readIORef,
-        writeIORef
-      ),
+    IORefE,
+    modifyIORef',
+    newIORef,
+    readIORef,
+    runIORef,
+    writeIORef,
   )
-import Effects.Optparse as X (MonadOptparse (execParser))
-import Effects.Process.Typed as X (MonadTypedProcess)
-import Effects.System.Terminal as X (MonadTerminal (putStrLn), putTextLn)
-import FileSystem.IO as X (throwPathIOError)
+import Effectful.Optparse.Static as X (Optparse, execParser, runOptparse)
+import Effectful.Process.Typed.Dynamic as X (TypedProcess, runTypedProcess)
+import Effectful.Reader.Static as X (Reader, ask, asks, local, runReader)
+import Effectful.Terminal.Dynamic as X
+  ( Terminal,
+    putStrLn,
+    putTextLn,
+    runTerminal,
+  )
+import FileSystem.IO as X (appendBinaryFileIO, throwPathIOError)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import FileSystem.OsPath qualified as OsPath
 import FileSystem.Path as X
@@ -270,6 +297,7 @@ import FileSystem.Path as X
   )
 import FileSystem.Path qualified as Path
 import FileSystem.UTF8 as X (decodeUtf8ThrowM, encodeUtf8)
+import FileSystem.UTF8 qualified as UTF8
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum)
 import GHC.Err as X (error, undefined)
 import GHC.Exception (errorCallWithCallStackException)
@@ -438,7 +466,7 @@ todo = raise# (errorCallWithCallStackException "Prelude.todo: not yet implemente
 traceFile :: FilePath -> Text -> a -> a
 traceFile path txt x = writeFn `seq` x
   where
-    io = appendFileUtf8 (OsPath.unsafeEncode path) txt
+    io = appendBinaryFileIO (OsPath.unsafeEncode path) (UTF8.encodeUtf8 txt)
     writeFn = unsafePerformIO io
 
 -- | Traces to a file in an Applicative.
@@ -512,37 +540,35 @@ secondA = bitraverse pure
 -- | Xdg cache dir.
 getXdgCachePath ::
   ( HasCallStack,
-    MonadPathReader m,
-    MonadThrow m
+    PathReader :> es
   ) =>
-  m (Path Abs Dir)
+  Eff es (Path Abs Dir)
 getXdgCachePath =
   getXdgDirectory XdgCache [osp|pacer|] >>= parseCanonicalAbsDir
 
 -- | Xdg config dir.
 getXdgConfigPath ::
   ( HasCallStack,
-    MonadPathReader m,
-    MonadThrow m
+    PathReader :> es
   ) =>
-  m (Path Abs Dir)
+  Eff es (Path Abs Dir)
 getXdgConfigPath =
   getXdgDirectory XdgConfig [osp|pacer|] >>= parseCanonicalAbsDir
 
 parseCanonicalAbsDir ::
   ( HasCallStack,
-    MonadPathReader m,
-    MonadThrow m
+    PathReader :> es
   ) =>
-  OsPath -> m (Path Abs Dir)
+  OsPath ->
+  Eff es (Path Abs Dir)
 parseCanonicalAbsDir = PR.canonicalizePath >=> Path.parseAbsDir
 
 parseCanonicalAbsFile ::
   ( HasCallStack,
-    MonadPathReader m,
-    MonadThrow m
+    PathReader :> es
   ) =>
-  OsPath -> m (Path Abs File)
+  OsPath ->
+  Eff es (Path Abs File)
 parseCanonicalAbsFile = PR.canonicalizePath >=> Path.parseAbsFile
 
 data Os

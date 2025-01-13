@@ -1,26 +1,43 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC -Wno-missing-methods #-}
 
 module Unit.Pacer.Chart (tests) where
 
 import Control.Exception (IOException)
-import Control.Monad.Reader (MonadReader, ReaderT (runReaderT), asks)
+import Data.IORef qualified as Ref
 import Data.List qualified as L
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Word (Word8)
-import Effects.FileSystem.PathReader (MonadPathReader (canonicalizePath))
-import Effects.FileSystem.PathReader qualified as PR
-import Effects.FileSystem.PathWriter
-  ( MonadPathWriter
-      ( createDirectory,
-        removePathForcibly,
-        setCurrentDirectory
+import Effectful.FileSystem.FileReader.Dynamic (FileReader (ReadBinaryFile))
+import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
+import Effectful.FileSystem.PathReader.Dynamic
+  ( PathReader
+      ( CanonicalizePath,
+        DoesDirectoryExist,
+        DoesFileExist,
+        FindExecutable,
+        GetCurrentDirectory,
+        GetXdgDirectory,
+        ListDirectory,
+        PathIsSymbolicLink
       ),
   )
-import Effects.Process.Typed (MonadTypedProcess (readProcess), ProcessConfig)
-import Effects.System.Terminal (MonadTerminal (putStr))
+import Effectful.FileSystem.PathReader.Static qualified as PRS
+import Effectful.FileSystem.PathWriter.Dynamic
+  ( PathWriter
+      ( CreateDirectory,
+        CreateDirectoryIfMissing,
+        RemovePathForcibly,
+        SetCurrentDirectory
+      ),
+  )
+import Effectful.Process.Typed.Dynamic
+  ( ProcessConfig,
+    TypedProcess (ReadProcess),
+  )
+import Effectful.Terminal.Dynamic (Terminal (PutStr, PutStrLn))
+import FileSystem.IO (readBinaryFileIO)
 import Pacer.Command.Chart qualified as Chart
 import Pacer.Command.Chart.Params
   ( ChartParams
@@ -186,7 +203,7 @@ assertEnvRefs refsEnv expecteds = do
 
 assertRefs :: (Eq a, Show a) => List (Tuple3 String (IORef a) a) -> IO ()
 assertRefs xs = for_ xs $ \(desc, ref, expected) -> do
-  result <- readIORef ref
+  result <- Ref.readIORef ref
   let msg =
         mconcat
           [ desc,
@@ -216,59 +233,55 @@ data ChartEnv = MkChartEnv
     refsEnv :: RefsEnv
   }
 
-newtype MockChartIO a = MkMockChartIO {unMockChartIO :: ReaderT ChartEnv IO a}
-  deriving newtype
-    ( Applicative,
-      Functor,
-      Monad,
-      MonadCatch,
-      MonadIO,
-      MonadIORef,
-      MonadMask,
-      MonadReader ChartEnv,
-      MonadThrow
-    )
-
-instance MonadFileReader MockChartIO where
-  readBinaryFile p =
+runFileReaderMock :: (IOE :> es) => Eff (FileReader : es) a -> Eff es a
+runFileReaderMock = interpret_ $ \case
+  ReadBinaryFile p ->
     if fileName `Set.member` knownFiles
-      then liftIO $ readBinaryFile p
+      then liftIO $ readBinaryFileIO p
       else error $ "readBinaryFile: unexpected: " ++ show fileName
     where
       (_dir, fileName) = OsPath.splitFileName p
-
       knownFiles =
         Set.fromList
           [ [osp|chart-requests.toml|],
             [osp|runs.toml|]
           ]
 
-instance MonadFileWriter MockChartIO where
-  writeBinaryFile _ _ = incIORef (.refsEnv.numFileWriterCalls)
+runFileWriterMock ::
+  ( IORefE :> es,
+    Reader ChartEnv :> es
+  ) =>
+  Eff (FileWriter : es) a ->
+  Eff es a
+runFileWriterMock = interpret_ $ \case
+  WriteBinaryFile _ _ -> incIORef (.refsEnv.numFileWriterCalls)
+  _ -> error "runFileWriterMock: unimplemented"
 
-instance MonadPathReader MockChartIO where
+runPathReaderMock ::
+  (IOE :> es, IORefE :> es, Reader ChartEnv :> es) =>
+  Eff (PathReader : es) a ->
+  Eff es a
+runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   -- Real IO since otherwise parsing the absolute path will fail.
   -- Alternatively, we could override MonadThrow to catch the parse
   -- exception, like in the functional tests.
-  canonicalizePath = liftIO . PR.makeAbsolute
-
-  doesDirectoryExist p = case dirName of
+  CanonicalizePath p -> PRS.canonicalizePath p
+  DoesDirectoryExist p -> case dirName of
     [osp|build|] -> pure False
     [osp|dist|] -> pure True
     [osp|pacer|] -> pure True
-    [osp|node_modules|] -> asks (.coreEnv.nodeModulesExists)
+    [osp|node_modules|] -> asks @ChartEnv (.coreEnv.nodeModulesExists)
     [osp|web|] -> pure True
     other -> do
       -- we need the current directory to return true, but it can be
       -- non-deterministic e.g. for out-of-tree builds, hence this check.
-      currDir <- liftIO $ PR.getCurrentDirectory
+      currDir <- PRS.getCurrentDirectory
       if p == currDir
         then pure True
         else error $ "doesDirectoryExist: unexpected: " ++ show other
     where
       dirName = L.last $ OsPath.splitDirectories p
-
-  doesFileExist p =
+  DoesFileExist p ->
     if fileName `Set.member` knownFiles
       then pure True
       else error $ "doesFileExist: unexpected: '" ++ show fileName ++ "'"
@@ -290,74 +303,119 @@ instance MonadPathReader MockChartIO where
             [osp|utils.ts|],
             [osp|webpack.config.js|]
           ]
-
-  findExecutable [osp|npm|] =
-    asks (.coreEnv.npmExists) <&> \case
-      True -> Just [osp|npm_exe|]
-      False -> Nothing
-  findExecutable [osp|npm.cmd|] =
-    asks (.coreEnv.npmExists) <&> \case
-      True -> Just [osp|npm_exe|]
-      False -> Nothing
-  findExecutable p = error $ "findExecutable: unexpected: " ++ show p
-
-  getCurrentDirectory = liftIO PR.getCurrentDirectory
-
-  getXdgDirectory XdgCache p =
-    incIORef (.refsEnv.numXdgCacheCalls)
-      $> ([ospPathSep|test/unit/data/xdg/cache|] </> p)
-  getXdgDirectory XdgConfig p =
-    incIORef (.refsEnv.numXdgConfigCalls)
-      $> ([ospPathSep|test/unit/data/xdg/config|] </> p)
-  getXdgDirectory other _ =
-    error $ "getXdgDirectory: unexpected: " ++ show other
-
-  listDirectory p = case dirName of
+  FindExecutable p -> case p of
+    [osp|npm|] ->
+      asks @ChartEnv (.coreEnv.npmExists) <&> \case
+        True -> Just [osp|npm_exe|]
+        False -> Nothing
+    [osp|npm.cmd|] ->
+      asks @ChartEnv (.coreEnv.npmExists) <&> \case
+        True -> Just [osp|npm_exe|]
+        False -> Nothing
+    _ -> error $ "findExecutable: unexpected: " ++ show p
+  GetCurrentDirectory -> PRS.getCurrentDirectory
+  GetXdgDirectory xdg p -> case xdg of
+    XdgCache ->
+      incIORef (.refsEnv.numXdgCacheCalls)
+        $> ([ospPathSep|test/unit/data/xdg/cache|] </> p)
+    XdgConfig ->
+      incIORef (.refsEnv.numXdgConfigCalls)
+        $> ([ospPathSep|test/unit/data/xdg/config|] </> p)
+    other ->
+      error $ "getXdgDirectory: unexpected: " ++ show other
+  ListDirectory p -> case dirName of
     [osp|dist|] -> pure []
     other -> error $ "listDirectory: unexpected: " ++ show other
     where
       dirName = L.last $ OsPath.splitDirectories p
+  PathIsSymbolicLink _ -> pure False
+  _ -> error "runPathReaderMock: unimplemented"
 
-  pathIsSymbolicLink _ = pure False
-
-instance MonadPathWriter MockChartIO where
-  createDirectory _ = pure ()
-  createDirectoryIfMissing _ _ = pure ()
-
+runPathWriterMock ::
+  ( IORefE :> es,
+    Reader ChartEnv :> es
+  ) =>
+  Eff (PathWriter : es) a ->
+  Eff es a
+runPathWriterMock = interpret_ $ \case
+  CreateDirectory _ -> pure ()
+  CreateDirectoryIfMissing _ _ -> pure ()
   -- Needed when node_modules exists
-  removePathForcibly _ = incIORef (.refsEnv.numRemoveDirectoryCalls)
-  setCurrentDirectory _ = pure ()
+  RemovePathForcibly _ -> incIORef (.refsEnv.numRemoveDirectoryCalls)
+  SetCurrentDirectory _ -> pure ()
+  _ -> error "runPathWriterMock: unimplemented"
 
-instance MonadTerminal MockChartIO where
-  putStr _ = pure ()
+runTerminalMock :: Eff (Terminal : es) a -> Eff es a
+runTerminalMock = interpret_ $ \case
+  PutStr _ -> pure ()
+  PutStrLn _ -> pure ()
+  _ -> error "runTerminalMock: unimplemented"
 
-instance MonadTypedProcess MockChartIO where
-  readProcess pc = case processConfigToCmd pc of
+runTypedProcessMock ::
+  ( IORefE :> es,
+    Reader ChartEnv :> es
+  ) =>
+  Eff (TypedProcess : es) a ->
+  Eff es a
+runTypedProcessMock = interpret_ $ \case
+  ReadProcess pc -> case processConfigToCmd pc of
     "Raw command: npm_exe install --save" ->
       incIORef (.refsEnv.numNpmInstallCalls) $> mockResult
     "Raw command: npm_exe run start" ->
       incIORef (.refsEnv.numNpmBuildCalls) $> mockResult
     other -> error $ "readProcess: unexpected: " ++ other
-    where
-      processConfigToCmd :: ProcessConfig i o e -> String
-      processConfigToCmd = unpackText . T.strip . packText . show
+  _ -> error "runTypedProcessMock: unimplemented"
+  where
+    processConfigToCmd :: ProcessConfig i o e -> String
+    processConfigToCmd = unpackText . T.strip . packText . show
 
-      mockResult = (ExitSuccess, "stdout", "stderr")
+    mockResult :: (ExitCode, LazyByteString, LazyByteString)
+    mockResult = (ExitSuccess, "stdout", "stderr")
 
-incIORef :: (ChartEnv -> IORef Word8) -> MockChartIO ()
+incIORef ::
+  ( IORefE :> es,
+    Reader ChartEnv :> es
+  ) =>
+  (ChartEnv -> IORef Word8) ->
+  Eff es ()
 incIORef toRef = asks toRef >>= \r -> modifyIORef' r (+ 1)
+
+type TestEffects =
+  [ FileReader,
+    FileWriter,
+    PathReader,
+    PathWriter,
+    Terminal,
+    TypedProcess,
+    IORefE,
+    Reader ChartEnv,
+    IOE
+  ]
+
+runTestEff :: ChartEnv -> Eff TestEffects a -> IO a
+runTestEff env m =
+  runEff
+    . runReader env
+    . runIORef
+    . runTypedProcessMock
+    . runTerminalMock
+    . runPathWriterMock
+    . runPathReaderMock
+    . runFileWriterMock
+    . runFileReaderMock
+    $ m
 
 runMockChartIO ::
   CoreEnv ->
-  MockChartIO a ->
+  Eff TestEffects a ->
   IO RefsEnv
 runMockChartIO coreEnv m = do
-  numFileWriterCalls <- newIORef 0
-  numNpmBuildCalls <- newIORef 0
-  numNpmInstallCalls <- newIORef 0
-  numRemoveDirectoryCalls <- newIORef 0
-  numXdgCacheCalls <- newIORef 0
-  numXdgConfigCalls <- newIORef 0
+  numFileWriterCalls <- Ref.newIORef 0
+  numNpmBuildCalls <- Ref.newIORef 0
+  numNpmInstallCalls <- Ref.newIORef 0
+  numRemoveDirectoryCalls <- Ref.newIORef 0
+  numXdgCacheCalls <- Ref.newIORef 0
+  numXdgConfigCalls <- Ref.newIORef 0
 
   let refsEnv =
         MkRefsEnv
@@ -374,21 +432,21 @@ runMockChartIO coreEnv m = do
             refsEnv
           }
 
-  _ <- runReaderT (unMockChartIO m) env
+  _ <- runTestEff env m
   pure refsEnv
 
 runMockChartIOEx ::
   (Exception e) =>
   CoreEnv ->
-  MockChartIO a ->
+  Eff TestEffects a ->
   IO (Tuple2 RefsEnv e)
 runMockChartIOEx @e coreEnv m = do
-  numFileWriterCalls <- newIORef 0
-  numNpmBuildCalls <- newIORef 0
-  numNpmInstallCalls <- newIORef 0
-  numRemoveDirectoryCalls <- newIORef 0
-  numXdgCacheCalls <- newIORef 0
-  numXdgConfigCalls <- newIORef 0
+  numFileWriterCalls <- Ref.newIORef 0
+  numNpmBuildCalls <- Ref.newIORef 0
+  numNpmInstallCalls <- Ref.newIORef 0
+  numRemoveDirectoryCalls <- Ref.newIORef 0
+  numXdgCacheCalls <- Ref.newIORef 0
+  numXdgConfigCalls <- Ref.newIORef 0
 
   let refsEnv =
         MkRefsEnv
@@ -405,8 +463,7 @@ runMockChartIOEx @e coreEnv m = do
             refsEnv
           }
 
-  eResult <- try @_ @e $ runReaderT (unMockChartIO m) env
-
+  eResult <- try @_ @e $ runTestEff env m
   case eResult of
     Left ex -> pure (refsEnv, ex)
     Right _ -> assertFailure $ "Expected exception, received none"

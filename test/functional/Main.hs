@@ -3,8 +3,8 @@
 
 module Main (main) where
 
-import Effects.FileSystem.PathReader qualified as PR
-import Effects.FileSystem.PathWriter qualified as PW
+import Effectful.FileSystem.PathReader.Static qualified as PRS
+import Effectful.FileSystem.PathWriter.Static qualified as PWS
 import FileSystem.OsPath (decodeLenient)
 import Functional.Chart qualified
 import Functional.Convert qualified
@@ -33,15 +33,15 @@ main =
         ]
 
 setup :: IO OsPath
-setup = do
-  rootTmpDir <- (</> [osp|pacer|]) <$> PR.getTemporaryDirectory
+setup = runSetup $ do
+  rootTmpDir <- (</> [osp|pacer|]) <$> PRS.getTemporaryDirectory
   let tmpDir = rootTmpDir </> tmpName
 
   -- Make sure we delete any leftover files from a previous run, so tests
   -- have a clean environment.
-  PW.removeDirectoryRecursiveIfExists_ tmpDir
+  PWS.removeDirectoryRecursiveIfExists_ tmpDir
 
-  PW.createDirectoryIfMissing True tmpDir
+  PWS.createDirectoryIfMissing True tmpDir
   pure tmpDir
   where
     tmpName = [osp|test|] </> [osp|functional|]
@@ -49,11 +49,19 @@ setup = do
 teardown :: OsPath -> IO ()
 teardown tmpDir = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
   where
-    cleanup = do
-      PW.removeDirectoryRecursiveIfExists_ tmpDir
+    cleanup = runSetup $ do
+      PWS.removeDirectoryRecursiveIfExists_ tmpDir
 
     doNothing =
-      putStrLn
+      runSetup
+        $ putStrLn
         $ "*** Not cleaning up tmp dir: '"
         <> decodeLenient tmpDir
         <> "'"
+
+runSetup :: Eff [Terminal, PWS.PathWriter, PRS.PathReader, IOE] a -> IO a
+runSetup =
+  runEff
+    . PRS.runPathReader
+    . PWS.runPathWriter
+    . runTerminal

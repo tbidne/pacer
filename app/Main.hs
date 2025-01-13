@@ -8,6 +8,7 @@ import Control.Exception.Annotation.Utils
   )
 import Pacer.Driver (runApp)
 import Pacer.Exception qualified as PEx
+import Pacer.Prelude hiding (IO, putStrLn)
 import System.IO (IO, putStrLn)
 
 -- | Executable entry-point.
@@ -19,4 +20,14 @@ main = do
     PEx.knownExceptions
     putStrLn
 
-  runApp
+  runner runApp
+  where
+    runner =
+      runEff
+        . runFileReader
+        . runFileWriter
+        . runOptparse
+        . runPathReader
+        . runPathWriter
+        . runTerminal
+        . runTypedProcess

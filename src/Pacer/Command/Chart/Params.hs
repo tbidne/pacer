@@ -16,7 +16,7 @@ module Pacer.Command.Chart.Params
   )
 where
 
-import Effects.FileSystem.PathReader qualified as PR
+import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import FileSystem.OsPath qualified as OsPath
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
@@ -87,14 +87,13 @@ deriving stock instance
 -- | Evolve chart params' phase.
 evolvePhase ::
   ( HasCallStack,
-    MonadPathReader m,
-    MonadTerminal m,
-    MonadThrow m
+    PathReader :> es,
+    Terminal :> es
   ) =>
   ChartParamsArgs ->
   Maybe Toml ->
-  m ChartParamsFinal
-evolvePhase @m params mToml = do
+  Eff es ChartParamsFinal
+evolvePhase @es params mToml = do
   (chartRequestsPath, runsPath) <- getChartInputs
 
   assertExists chartRequestsPath
@@ -110,7 +109,7 @@ evolvePhase @m params mToml = do
       }
   where
     -- Retrieves (Tuple2 chart-requests-path runs-path)
-    getChartInputs :: m (Path Abs File, Path Abs File)
+    getChartInputs :: Eff es (Path Abs File, Path Abs File)
     getChartInputs = do
       (mXdgDir, chartRequestsPath) <-
         getChartInput
@@ -138,7 +137,7 @@ evolvePhase @m params mToml = do
       -- Toml selector.
       (Toml -> Maybe OsPath) ->
       -- Tuple2 (Maybe xgd_directory) file
-      m (Tuple2 (Maybe (Path Abs Dir)) (Path Abs File))
+      Eff es (Tuple2 (Maybe (Path Abs Dir)) (Path Abs File))
     getChartInput mXdgDir fileNames mInputOsPath tomlSel = do
       -- 1. Try Cli first.
       findCliPath >>= \case
@@ -150,7 +149,7 @@ evolvePhase @m params mToml = do
             -- 3. Finally, fall back to xdg.
             Nothing -> findXdgPath
       where
-        findCliPath :: m (Maybe (Path Abs File))
+        findCliPath :: Eff es (Maybe (Path Abs File))
         findCliPath = do
           case mInputOsPath of
             -- 1.1 Cli path exists, use it.
@@ -160,7 +159,7 @@ evolvePhase @m params mToml = do
               -- 1.2 Try Cli.data-dir/path
               join <$> for params.dataDir (parseCanonicalAbsDir >=> findFirstMatch)
 
-        findTomlPath :: m (Maybe (Path Abs File))
+        findTomlPath :: Eff es (Maybe (Path Abs File))
         findTomlPath =
           case mToml >>= tomlSel of
             -- 2.1. Toml.path exists, use it
@@ -172,7 +171,7 @@ evolvePhase @m params mToml = do
                 findFirstMatch tomlDataDirPath
               Nothing -> pure Nothing
 
-        findXdgPath :: m (Maybe (Path Abs Dir), Path Abs File)
+        findXdgPath :: Eff es (Maybe (Path Abs Dir), Path Abs File)
         findXdgPath = do
           -- 3. Fallback to xdg
           xdgDir <- maybe getXdgConfigPath pure mXdgDir
@@ -189,7 +188,7 @@ evolvePhase @m params mToml = do
                     xdgDir
                   }
 
-        findFirstMatch :: Path Abs Dir -> m (Maybe (Path Abs File))
+        findFirstMatch :: Path Abs Dir -> Eff es (Maybe (Path Abs File))
         findFirstMatch dataDir = do
           Log.debug msg
           go fileNames

@@ -42,6 +42,7 @@ module Unit.Prelude
   )
 where
 
+import FileSystem.IO (writeBinaryFileIO)
 import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
   ( Gen,
@@ -196,7 +197,7 @@ testGoldenParams goldenParams =
 
     writeActualFile :: ByteString -> IO ()
     writeActualFile =
-      writeBinaryFile (FS.OsPath.unsafeEncode actualPath)
+      writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
         . (<> "\n")
 
     actualPath = outputPathStart <> ".actual"

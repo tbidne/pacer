@@ -16,18 +16,17 @@ import Pacer.Prelude
 
 -- | Handles scale command.
 handle ::
-  forall m a.
+  forall es a.
   ( FromInteger a,
     HasCallStack,
-    MonadTerminal m,
-    MonadThrow m,
     Ord a,
     Semifield a,
     Show a,
+    Terminal :> es,
     ToRational a
   ) =>
   ScaleParamsFinal a ->
-  m ()
+  Eff es ()
 handle params = case params.quantity of
   ScaleDistance dist -> do
     let distScaled = dist .* params.factor
@@ -65,5 +64,5 @@ handle params = case params.quantity of
 
         handleDisplay $ duration .* params.factor
   where
-    handleDisplay :: forall x. (Display x) => x -> m ()
+    handleDisplay :: forall x. (Display x) => x -> Eff es ()
     handleDisplay = putTextLn . display

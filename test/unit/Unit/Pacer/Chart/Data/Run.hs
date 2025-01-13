@@ -2,6 +2,7 @@
 
 module Unit.Pacer.Chart.Data.Run (tests) where
 
+import FileSystem.IO (readBinaryFileIO)
 import Pacer.Command.Chart.Data.Run (SomeRuns)
 import TOML (decode)
 import Unit.Prelude
@@ -21,7 +22,7 @@ testParseExampleRunsToml = testGoldenParams params
         { testDesc = "Parses example runs.toml",
           testName = [osp|testParseExampleRunsToml|],
           runner = do
-            contents <- decodeUtf8ThrowM =<< readBinaryFile path
+            contents <- decodeUtf8ThrowM =<< readBinaryFileIO path
             case decode @(SomeRuns Double) contents of
               Right result -> pure $ pShowBS result
               Left err -> throwM err

@@ -21,12 +21,22 @@ module Functional.Prelude
   )
 where
 
-import Control.Exception (throwIO)
-import Control.Monad.Reader (MonadReader, ReaderT (runReaderT), asks)
+import Data.IORef qualified as Ref
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Word (Word8)
-import Effects.FileSystem.PathReader qualified as PR
+import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
+import Effectful.FileSystem.PathReader.Dynamic
+  ( PathReader
+      ( CanonicalizePath,
+        DoesFileExist,
+        GetCurrentDirectory,
+        GetXdgDirectory
+      ),
+  )
+import Effectful.FileSystem.PathReader.Static qualified as PRS
+import Effectful.Terminal.Dynamic (Terminal (PutStrLn))
+import FileSystem.IO (writeBinaryFileIO)
 import FileSystem.OsPath (decodeLenient, unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
 import Hedgehog as X
@@ -74,73 +84,98 @@ data FuncEnv = MkFuncEnv
     outFilesMapRef :: IORef (Map OsPath ByteString)
   }
 
-newtype FuncIO a = MkFuncIO {unFuncIO :: ReaderT FuncEnv IO a}
-  deriving newtype
-    ( Applicative,
-      Functor,
-      Monad,
-      MonadCatch,
-      MonadFileReader,
-      MonadIO,
-      MonadIORef,
-      MonadMask,
-      MonadOptparse,
-      MonadPathWriter,
-      MonadReader FuncEnv,
-      MonadTypedProcess
-    )
-
-instance MonadPathReader FuncIO where
-  canonicalizePath = liftIO . PR.canonicalizePath
-  doesFileExist = liftIO . PR.doesFileExist
-  getCurrentDirectory = liftIO PR.getCurrentDirectory
-
-  getXdgDirectory d p =
+runPathReaderMock :: (IOE :> es) => Eff (PathReader : es) a -> Eff es a
+runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
+  CanonicalizePath p -> PRS.canonicalizePath p
+  DoesFileExist p -> PRS.doesFileExist p
+  GetCurrentDirectory -> PRS.getCurrentDirectory
+  GetXdgDirectory d p ->
     pure $ [ospPathSep|test/functional/data/xdg|] </> dirName </> p
     where
       dirName = case d of
         XdgConfig -> [osp|config|]
         other -> error $ "Unexpected xdg type: " ++ show other
+  _ -> error "runPathReaderMock: unimplemented"
 
--- HACK: The 'Duplicate date error' chart test throws a TomlE, which is
--- a problem for the golden tests because it includes a non-deterministic
--- absolute path. Thus we override MonadThrow s.t. -- in this case -- we
--- make the path relative. If this ends up being flaky, we can simply use the
--- file name, which should be good enough.
-instance MonadThrow FuncIO where
-  throwM e = case fromException (toException e) of
-    Just (MkTomlE p err) -> liftIO $ do
-      p' <- PR.makeRelativeToCurrentDirectory p
-      throwIO $ MkTomlE p' err
-    Nothing -> liftIO $ throwIO e
+type TestEffects =
+  [ FileReader,
+    FileWriter,
+    Optparse,
+    PathReader,
+    PathWriter,
+    Terminal,
+    TypedProcess,
+    IORefE,
+    Reader FuncEnv,
+    IOE
+  ]
 
-runFuncIO :: FuncIO a -> IO FuncEnv
+runTestEff :: FuncEnv -> Eff TestEffects a -> IO a
+runTestEff env m = do
+  runEff
+    . runReader @FuncEnv env
+    . runIORef
+    . runTypedProcess
+    . runTerminalMock
+    . runPathWriter
+    . runPathReaderMock
+    . runOptparse
+    . runFileWriterMock
+    . runFileReader
+    $ m
+    `catch` \(MkTomlE p err) -> do
+      -- HACK: The 'Duplicate date error' chart test throws a TomlE, which is
+      -- a problem for the golden tests because it includes a non-deterministic
+      -- absolute path. Thus we override MonadThrow s.t. -- in this case -- we
+      -- make the path relative. If this ends up being flaky, we can simply use
+      -- the file name, which should be good enough.
+      p' <- makeRelativeToCurrentDirectoryIO p
+      throwM $ MkTomlE p' err
+  where
+    makeRelativeToCurrentDirectoryIO =
+      liftIO
+        . runEff
+        . PRS.runPathReader
+        . PRS.makeRelativeToCurrentDirectory
+
+runFuncIO :: Eff TestEffects a -> IO FuncEnv
 runFuncIO m = do
-  logsRef <- newIORef ""
-  outFilesMapRef <- newIORef Map.empty
+  logsRef <- Ref.newIORef ""
+  outFilesMapRef <- Ref.newIORef Map.empty
   let env =
         MkFuncEnv
           { logsRef,
             outFilesMapRef
           }
 
-  _ <- runReaderT (unFuncIO m) env
+  _ <- runTestEff env m
   pure env
 
-instance MonadFileWriter FuncIO where
-  -- When a test tries to write a file, record it in the map i.e.
-  --
-  -- writeBinaryFile p bs --> Map.insert p bs
-  writeBinaryFile path bs = do
-    outFilesMapRef <- asks (.outFilesMapRef)
-    liftIO $ modifyIORef' outFilesMapRef (Map.insert fileName bs)
+runFileWriterMock ::
+  ( IORefE :> es,
+    Reader FuncEnv :> es
+  ) =>
+  Eff (FileWriter : es) a ->
+  Eff es a
+runFileWriterMock = interpret_ $ \case
+  WriteBinaryFile path bs -> do
+    outFilesMapRef <- asks @FuncEnv (.outFilesMapRef)
+    modifyIORef' outFilesMapRef (Map.insert fileName bs)
     where
       fileName = OsPath.takeFileName path
+  _ -> error "runFileWriterMock: unimplemented"
 
-instance MonadTerminal FuncIO where
-  putStrLn s = do
-    logsRef <- asks (.logsRef)
-    liftIO $ modifyIORef' logsRef (<> packText s)
+runTerminalMock ::
+  ( IORefE :> es,
+    Reader FuncEnv :> es
+  ) =>
+  Eff (Terminal : es) a ->
+  Eff es a
+runTerminalMock = interpret_ $ \case
+  PutStrLn s -> do
+    logsRef <- asks @FuncEnv (.logsRef)
+    modifyIORef' logsRef (<> packText s)
+  _ -> error "runTerminalMock: unimplemented"
 
 runMultiArgs :: (a -> List String) -> List (Word8, (a, Text)) -> IO ()
 runMultiArgs mkArgs vals =
@@ -151,7 +186,7 @@ runMultiArgs mkArgs vals =
 runArgs :: Maybe Word8 -> List String -> Text -> IO ()
 runArgs mIdx args expected = do
   funcEnv <- withArgs args $ runFuncIO runApp
-  result <- readIORef funcEnv.logsRef
+  result <- Ref.readIORef funcEnv.logsRef
 
   let (idxTxt, indentTxt) = case mIdx of
         Just idx -> (showt idx <> ". ", "   ")
@@ -174,7 +209,7 @@ runArgs mIdx args expected = do
 runException :: forall e. (Exception e) => TestName -> Text -> List String -> TestTree
 runException desc expected args = testCase desc $ do
   eFuncEnv <- try @_ @e $ withArgs args $ runFuncIO runApp
-  eResult <- secondA (\x -> readIORef x.logsRef) eFuncEnv
+  eResult <- secondA (\x -> Ref.readIORef x.logsRef) eFuncEnv
 
   case eResult of
     Right r -> assertFailure $ unpackText $ "Expected exception, received: " <> r
@@ -270,12 +305,12 @@ testGoldenParams getTestDir goldenParams = do
         case goldenParams.outFileName of
           -- No out file, golden test uses the logs (stdout)
           Nothing -> do
-            bs <- encodeUtf8 <$> readIORef funcEnv.logsRef
+            bs <- encodeUtf8 <$> Ref.readIORef funcEnv.logsRef
             writeActualFile bs
           -- We expect a file to have been written to a given path. This is
           -- what the golden test is based on.
           Just expectedName -> do
-            outFilesMap <- readIORef funcEnv.outFilesMapRef
+            outFilesMap <- Ref.readIORef funcEnv.outFilesMapRef
             case Map.lookup expectedName outFilesMap of
               -- Found the write attempt in our env's map. Write it to compare
               -- it with the golden expectation.
@@ -300,7 +335,7 @@ testGoldenParams getTestDir goldenParams = do
 
     writeActualFile :: ByteString -> IO ()
     writeActualFile =
-      writeBinaryFile (FS.OsPath.unsafeEncode actualPath)
+      writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
         . (<> "\n")
 
     actualPath = outputPathStart <> ".actual"

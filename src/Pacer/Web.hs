@@ -8,8 +8,8 @@ module Pacer.Web
 where
 
 import Data.List (and)
-import Effects.FileSystem.PathReader qualified as PR
-import Effects.FileSystem.PathWriter qualified as PW
+import Effectful.FileSystem.PathReader.Dynamic qualified as PR
+import Effectful.FileSystem.PathWriter.Dynamic qualified as PW
 import Pacer.Log qualified as Log
 import Pacer.Prelude
 import Pacer.Web.Paths qualified as WPaths
@@ -17,17 +17,16 @@ import Pacer.Web.Paths qualified as WPaths
 -- | Writes the web directory if it does not exist.
 ensureWebDirExists ::
   ( HasCallStack,
-    MonadFileWriter m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadTerminal m,
-    MonadThrow m
+    FileWriter :> es,
+    PathReader :> es,
+    PathWriter :> es,
+    Terminal :> es
   ) =>
   -- | Path to web path dir. This should be WPaths.getWebPath, though we
   -- take it as a parameter to save a function call.
   Path Abs Dir ->
   Bool ->
-  m ()
+  Eff es ()
 ensureWebDirExists webPath cleanInstall = do
   let webOsPath = pathToOsPath webPath
 
@@ -41,7 +40,7 @@ ensureWebDirExists webPath cleanInstall = do
     writeWebDir webPath
 
 -- | Determines if the web dir exists.
-webDirExists :: (HasCallStack, MonadPathReader m) => Path Abs Dir -> m Bool
+webDirExists :: (HasCallStack, PathReader :> es) => Path Abs Dir -> Eff es Bool
 webDirExists webPath = do
   let webOsPath = pathToOsPath webPath
   dstExists <- PR.doesDirectoryExist webOsPath
@@ -59,10 +58,11 @@ webDirExists webPath = do
 -- | Writes the web directory.
 writeWebDir ::
   ( HasCallStack,
-    MonadFileWriter m,
-    MonadPathWriter m
+    FileWriter :> es,
+    PathWriter :> es
   ) =>
-  Path Abs Dir -> m ()
+  Path Abs Dir ->
+  Eff es ()
 writeWebDir webPath = do
   let webOsPath = pathToOsPath webPath
 
