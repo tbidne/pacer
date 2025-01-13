@@ -24,10 +24,12 @@ main = do
   where
     runner =
       runEff
+        . runConcurrent
         . runFileReader
         . runFileWriter
         . runOptparse
         . runPathReader
         . runPathWriter
         . runTerminal
+        . runTime
         . runTypedProcess

@@ -26,6 +26,8 @@ import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Pacer.Class.Parser qualified as P
 import Pacer.Command qualified as Command
+import Pacer.Config.Logging (LogLevelParam)
+import Pacer.Config.Logging qualified as Logging
 import Pacer.Config.Phase (ConfigPhase (ConfigPhaseArgs))
 import Pacer.Config.Utils qualified as Utils
 import Pacer.Prelude
@@ -36,7 +38,9 @@ data Args a = MkArgs
   { -- | Command to run.
     command :: Command.Command ConfigPhaseArgs a,
     -- | Optional toml config.
-    configPath :: Maybe OsPath
+    configPath :: Maybe OsPath,
+    -- | Optional logging.
+    logLevel :: Maybe LogLevelParam
   }
   deriving stock (Eq, Show)
 
@@ -83,6 +87,7 @@ argsParser =
   MkArgs
     <$> Command.parser
     <*> configParser
+    <*> OA.optional Logging.parser
     <**> OA.helper
     <**> version
 

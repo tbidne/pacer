@@ -32,6 +32,7 @@ import Effectful.FileSystem.PathWriter.Dynamic
         SetCurrentDirectory
       ),
   )
+import Effectful.Logger.Dynamic (Logger (LoggerLog))
 import Effectful.Process.Typed.Dynamic
   ( ProcessConfig,
     TypedProcess (ReadProcess),
@@ -345,6 +346,10 @@ runPathWriterMock = interpret_ $ \case
   SetCurrentDirectory _ -> pure ()
   _ -> error "runPathWriterMock: unimplemented"
 
+runLoggerMock :: Eff (Logger : es) a -> Eff es a
+runLoggerMock = interpret_ $ \case
+  LoggerLog _ _ _ _ -> pure ()
+
 runTerminalMock :: Eff (Terminal : es) a -> Eff es a
 runTerminalMock = interpret_ $ \case
   PutStr _ -> pure ()
@@ -387,6 +392,8 @@ type TestEffects =
     PathWriter,
     Terminal,
     TypedProcess,
+    Logger,
+    LoggerNS,
     IORefE,
     Reader ChartEnv,
     IOE
@@ -397,6 +404,8 @@ runTestEff env m =
   runEff
     . runReader env
     . runIORef
+    . runLoggerNS mempty
+    . runLoggerMock
     . runTypedProcessMock
     . runTerminalMock
     . runPathWriterMock

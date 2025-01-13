@@ -98,10 +98,14 @@
                 "relative-time"
               ]
               // nix-hs-utils.mkRelLibs "${inputs.effectful-libs}/lib" final [
+                "concurrent-effectful"
                 "fs-effectful"
                 "ioref-effectful"
+                "logger-effectful"
+                "logger-ns-effectful"
                 "optparse-effectful"
                 "terminal-effectful"
+                "time-effectful"
                 "typed-process-dynamic-effectful"
               ];
           };

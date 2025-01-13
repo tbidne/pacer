@@ -35,7 +35,7 @@ import Effectful.FileSystem.PathReader.Dynamic
       ),
   )
 import Effectful.FileSystem.PathReader.Static qualified as PRS
-import Effectful.Terminal.Dynamic (Terminal (PutStrLn))
+import Effectful.Terminal.Dynamic (Terminal (PutStr, PutStrLn))
 import FileSystem.IO (writeBinaryFileIO)
 import FileSystem.OsPath (decodeLenient, unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
@@ -106,6 +106,8 @@ type TestEffects =
     Terminal,
     TypedProcess,
     IORefE,
+    Time,
+    Concurrent,
     Reader FuncEnv,
     IOE
   ]
@@ -114,6 +116,8 @@ runTestEff :: FuncEnv -> Eff TestEffects a -> IO a
 runTestEff env m = do
   runEff
     . runReader @FuncEnv env
+    . runConcurrent
+    . runTime
     . runIORef
     . runTypedProcess
     . runTerminalMock
@@ -172,6 +176,9 @@ runTerminalMock ::
   Eff (Terminal : es) a ->
   Eff es a
 runTerminalMock = interpret_ $ \case
+  PutStr s -> do
+    logsRef <- asks @FuncEnv (.logsRef)
+    modifyIORef' logsRef (<> packText s)
   PutStrLn s -> do
     logsRef <- asks @FuncEnv (.logsRef)
     modifyIORef' logsRef (<> packText s)

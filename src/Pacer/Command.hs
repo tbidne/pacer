@@ -3,6 +3,8 @@
 module Pacer.Command
   ( -- * Type
     Command (..),
+    CommandPhaseArgs,
+    CommandPhaseFinal,
 
     -- * Evolving
     evolvePhase,
@@ -66,8 +68,9 @@ deriving stock instance
 -- | Evolve phase.
 evolvePhase ::
   ( HasCallStack,
-    PathReader :> es,
-    Terminal :> es
+    Logger :> es,
+    LoggerNS :> es,
+    PathReader :> es
   ) =>
   CommandPhaseArgs a ->
   Maybe Toml ->

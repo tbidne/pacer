@@ -4,6 +4,7 @@ module Pacer.Config.Toml
 where
 
 import FileSystem.OsPath qualified as OsPath
+import Pacer.Config.Logging (LogLevelParam)
 import Pacer.Prelude
 import TOML (DecodeTOML (tomlDecoder), getFieldOptWith)
 
@@ -19,6 +20,8 @@ data Toml = MkToml
     dataDir :: Maybe OsPath,
     -- | Optional path to chart-requests.toml.
     chartRequestsPath :: Maybe OsPath,
+    -- | Optional logging.
+    logLevel :: Maybe LogLevelParam,
     -- | Optional path to runs.toml.
     runsPath :: Maybe OsPath
   }
@@ -28,12 +31,14 @@ instance DecodeTOML Toml where
   tomlDecoder = do
     dataDir <- TOML.getFieldOptWith decodeOsPath "data"
     chartRequestsPath <- TOML.getFieldOptWith decodeOsPath "chart-requests"
+    logLevel <- TOML.getFieldOptWith tomlDecoder "log-level"
     runsPath <- TOML.getFieldOptWith decodeOsPath "runs"
 
     pure
       $ MkToml
         { dataDir,
           chartRequestsPath,
+          logLevel,
           runsPath
         }
     where

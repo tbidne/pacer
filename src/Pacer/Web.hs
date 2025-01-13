@@ -10,7 +10,7 @@ where
 import Data.List (and)
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.FileSystem.PathWriter.Dynamic qualified as PW
-import Pacer.Log qualified as Log
+import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Prelude
 import Pacer.Web.Paths qualified as WPaths
 
@@ -18,16 +18,17 @@ import Pacer.Web.Paths qualified as WPaths
 ensureWebDirExists ::
   ( HasCallStack,
     FileWriter :> es,
+    Logger :> es,
+    LoggerNS :> es,
     PathReader :> es,
-    PathWriter :> es,
-    Terminal :> es
+    PathWriter :> es
   ) =>
   -- | Path to web path dir. This should be WPaths.getWebPath, though we
   -- take it as a parameter to save a function call.
   Path Abs Dir ->
   Bool ->
   Eff es ()
-ensureWebDirExists webPath cleanInstall = do
+ensureWebDirExists webPath cleanInstall = addNamespace "ensureWebDirExists" $ do
   let webOsPath = pathToOsPath webPath
 
   exists <- webDirExists webPath
@@ -35,7 +36,7 @@ ensureWebDirExists webPath cleanInstall = do
   let copyFiles = not exists || cleanInstall
 
   when copyFiles $ do
-    Log.debug "Copying web source"
+    $(Logger.logDebug) "Copying web source"
     when cleanInstall (PW.removePathForcibly webOsPath)
     writeWebDir webPath
 

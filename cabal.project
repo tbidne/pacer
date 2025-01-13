@@ -44,10 +44,14 @@ source-repository-package
     location: https://github.com/tbidne/effectful-libs.git
     tag: 0ffc603026f6632a39deb84530612192c1247a1f
     subdir:
+      lib/concurrent-effectful
       lib/fs-effectful
       lib/ioref-effectful
+      lib/logger-effectful
+      lib/logger-ns-effectful
       lib/optparse-effectful
       lib/terminal-effectful
+      lib/time-effectful
       lib/typed-process-dynamic-effectful
 
 source-repository-package

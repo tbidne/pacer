@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Chart functionality.
 module Pacer.Command.Chart
@@ -25,6 +26,7 @@ import Effectful.FileSystem.PathWriter.Dynamic
     TargetName (TargetNameLiteral),
   )
 import Effectful.FileSystem.PathWriter.Dynamic qualified as PW
+import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.Process.Typed.Dynamic qualified as TP
 import FileSystem.OsPath (decodeLenient, decodeThrowM)
 import FileSystem.Path qualified as Path
@@ -38,7 +40,6 @@ import Pacer.Command.Chart.Params
     ChartParamsFinal,
   )
 import Pacer.Exception (NpmE (MkNpmE), TomlE (MkTomlE))
-import Pacer.Log qualified as Log
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import Pacer.Web qualified as Web
@@ -53,9 +54,10 @@ handle ::
   ( HasCallStack,
     FileReader :> es,
     FileWriter :> es,
+    Logger :> es,
+    LoggerNS :> es,
     PathReader :> es,
     PathWriter :> es,
-    Terminal :> es,
     TypedProcess :> es
   ) =>
   ChartParamsFinal ->
@@ -66,25 +68,26 @@ createCharts ::
   ( HasCallStack,
     FileReader :> es,
     FileWriter :> es,
+    Logger :> es,
+    LoggerNS :> es,
     PathReader :> es,
     PathWriter :> es,
-    Terminal :> es,
     TypedProcess :> es
   ) =>
   ChartParamsFinal ->
   Eff es ()
-createCharts params = do
+createCharts params = addNamespace "createCharts" $ do
   cwdOsPath <- PR.getCurrentDirectory
   cwdPath <- Path.parseAbsDir cwdOsPath
 
-  Log.debug $ "Using chart-requests: " <> (packText $ Utils.showPath params.chartRequestsPath)
-  Log.debug $ "Using runs: " <> (packText $ Utils.showPath params.runsPath)
+  $(Logger.logInfo) $ "Using chart-requests: " <> (Utils.showtPath params.chartRequestsPath)
+  $(Logger.logInfo) $ "Using runs: " <> (Utils.showtPath params.runsPath)
 
   if params.json
     then do
       -- params.json is active, so stop after json generation
       let jsonPath = cwdPath <</>> jsonName
-      createChartsJsonFile params.runsPath params.chartRequestsPath jsonPath
+      createChartsJsonFile True params.runsPath params.chartRequestsPath jsonPath
     else do
       -- 1. Check that node exists
       --
@@ -112,7 +115,7 @@ createCharts params = do
       PW.createDirectoryIfMissing True (pathToOsPath webDataDir)
       let jsonPath = webDataDir <</>> jsonName
 
-      createChartsJsonFile params.runsPath params.chartRequestsPath jsonPath
+      createChartsJsonFile False params.runsPath params.chartRequestsPath jsonPath
 
       let setCurrDir = PW.setCurrentDirectory . pathToOsPath
           restorePrevDir = const (PW.setCurrentDirectory cwdOsPath)
@@ -140,11 +143,11 @@ createCharts params = do
           when (nodeModulesExists && params.cleanInstall)
             $ PW.removePathForcibly nodeModulesOsPath
 
-          Log.debug "Installing node dependencies"
+          $(Logger.logDebug) "Installing node dependencies"
           runNpm npmPathStr ["install", "--save"]
 
         -- 5.2 Build the html/js
-        Log.debug "Building charts"
+        $(Logger.logDebug) "Building charts"
         runNpm npmPathStr ["run", "start"]
 
       -- 6. Copy the build products to current directory
@@ -168,7 +171,7 @@ createCharts params = do
         (pathToOsPath webDistDir)
         cwdOsPath
 
-      Log.info
+      $(Logger.logInfo)
         $ mconcat
           [ "Successfully created charts in '",
             packText (decodeLenient buildDest),
@@ -204,23 +207,30 @@ createChartsJsonFile ::
   ( HasCallStack,
     FileReader :> es,
     FileWriter :> es,
-    PathWriter :> es,
-    Terminal :> es
+    Logger :> es,
+    LoggerNS :> es,
+    PathWriter :> es
   ) =>
+  -- | Level to log the success message at.
+  Bool ->
   Path Abs File ->
   Path Abs File ->
   Path Abs File ->
   Eff es ()
-createChartsJsonFile runsPath requestsPath outJson = do
-  bs <- createChartsJsonBS runsPath requestsPath
+createChartsJsonFile logInfoLvl runsPath requestsPath outJson =
+  addNamespace "createChartsJsonFile" $ do
+    bs <- createChartsJsonBS runsPath requestsPath
 
-  let (dir, _) = OsPath.splitFileName outJsonOsPath
+    let (dir, _) = OsPath.splitFileName outJsonOsPath
 
-  createDirectoryIfMissing True dir
+    createDirectoryIfMissing True dir
 
-  writeBinaryFile outJsonOsPath (toStrictByteString bs)
+    writeBinaryFile outJsonOsPath (toStrictByteString bs)
 
-  Log.debug $ "Wrote json file: " <> packText (decodeLenient outJsonOsPath)
+    let msg = "Wrote json file: " <> Utils.showtOsPath outJsonOsPath
+    if logInfoLvl
+      then $(Logger.logInfo) msg
+      else $(Logger.logDebug) msg
   where
     outJsonOsPath = pathToOsPath outJson
 

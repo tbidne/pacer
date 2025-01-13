@@ -229,6 +229,7 @@ import Effectful as X
     runEff,
     type (:>),
   )
+import Effectful.Concurrent as X (Concurrent, runConcurrent)
 import Effectful.Dispatch.Dynamic as X
   ( interpret,
     interpret_,
@@ -270,15 +271,24 @@ import Effectful.IORef.Static as X
     runIORef,
     writeIORef,
   )
+import Effectful.Logger.Dynamic as X (Logger)
+import Effectful.LoggerNS.Static as X
+  ( LoggerNS,
+    Namespace,
+    addNamespace,
+    runLoggerNS,
+  )
 import Effectful.Optparse.Static as X (Optparse, execParser, runOptparse)
 import Effectful.Process.Typed.Dynamic as X (TypedProcess, runTypedProcess)
 import Effectful.Reader.Static as X (Reader, ask, asks, local, runReader)
 import Effectful.Terminal.Dynamic as X
   ( Terminal,
     putStrLn,
+    putText,
     putTextLn,
     runTerminal,
   )
+import Effectful.Time.Dynamic as X (Time, runTime)
 import FileSystem.IO as X (appendBinaryFileIO, throwPathIOError)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import FileSystem.OsPath qualified as OsPath

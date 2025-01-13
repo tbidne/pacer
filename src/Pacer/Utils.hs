@@ -7,7 +7,9 @@ module Pacer.Utils
     getFieldOptArrayOf,
 
     -- * Show
+    showtOsPath,
     showPath,
+    showtPath,
     showListF,
 
     -- * Misc
@@ -36,8 +38,14 @@ encodeMaybe (k, Just v) = [k .= v]
 
 type PaceMetersErrMsg = "Meters are disallowed in Pace; use km or mi."
 
+showtOsPath :: OsPath -> Text
+showtOsPath = packText . OsPath.decodeLenient
+
 showPath :: Path b t -> String
 showPath = OsPath.decodeLenient . pathToOsPath
+
+showtPath :: Path b t -> Text
+showtPath = showtOsPath . pathToOsPath
 
 showListF :: (IsString b, Semigroup b) => (a -> b) -> List a -> b
 showListF _ [] = "[]"

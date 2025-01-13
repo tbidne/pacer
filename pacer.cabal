@@ -84,6 +84,8 @@ library
     Pacer.Command.Scale.Args
     Pacer.Command.Scale.Params
     Pacer.Config.Args
+    Pacer.Config.Env
+    Pacer.Config.Logging
     Pacer.Config.Phase
     Pacer.Config.Toml
     Pacer.Config.Utils
@@ -94,7 +96,6 @@ library
     Pacer.Data.Pace
     Pacer.Driver
     Pacer.Exception
-    Pacer.Log
     Pacer.Prelude
     Pacer.Utils
     Pacer.Web
@@ -116,6 +117,8 @@ library
     , fs-utils                         ^>=0.1
     , ghc-experimental                 ^>=0.1.0.0
     , ioref-effectful                  ^>=0.1
+    , logger-effectful                 ^>=0.1
+    , logger-ns-effectful              ^>=0.1
     , megaparsec                       >=7.0.5    && <9.7
     , nonempty-containers              >=0.3.4.2  && <0.4
     , optparse-applicative             >=0.15     && <0.19
@@ -129,6 +132,7 @@ library
     , text                             >=1.2.3.2  && <2.2
     , text-display                     >=0.0.3.0  && <0.6
     , time                             >=1.9.3    && <1.15
+    , time-effectful                   ^>=0.1
     , toml-reader                      >=0.2.0.0  && <0.3.0.0
     , typed-process-dynamic-effectful  ^>=0.1
 
@@ -168,6 +172,7 @@ test-suite unit
     , fs-effectful
     , fs-utils
     , hedgehog                         >=1.0.2    && <1.5
+    , logger-effectful
     , pacer
     , pretty-simple                    ^>=4.1.2.0
     , tasty                            >=1.1.0.3  && <1.6
