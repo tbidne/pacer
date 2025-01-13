@@ -140,7 +140,7 @@ instance Exception FileMissingE where
     mconcat
       [ "Required file not found. Searched for paths(s) ",
         Utils.showListF Utils.showPath e.expectedFiles,
-        "in directories:",
+        " in directories:",
         dirsStr
       ]
     where
@@ -192,6 +192,7 @@ knownExceptions =
     MkExceptionProxy @CommandConvertE Proxy,
     MkExceptionProxy @CommandDeriveE Proxy,
     MkExceptionProxy @CommandScaleE Proxy,
+    MkExceptionProxy @FileMissingE Proxy,
     MkExceptionProxy @NpmE Proxy,
     MkExceptionProxy @TomlE Proxy
   ]
