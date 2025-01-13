@@ -28,3 +28,10 @@ y-axis = 'pace'
 title = 'Marathons and half-marathons'
 filters = ['or (label half-marathon) (label marathon)']
 y-axis = 'pace'
+
+# Longer runs
+[[charts]]
+title = 'Long runs'
+filters = ['distance >= 25 km']
+y-axis = 'distance'
+y1-axis = 'pace'

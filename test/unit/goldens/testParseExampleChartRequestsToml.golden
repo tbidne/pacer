@@ -58,5 +58,22 @@ MkChartRequests
             , yAxis = YAxisPace
             , y1Axis = Nothing
             }
+        , MkChartRequest
+            { description = Nothing
+            , filters =
+                [ Atom
+                    ( FilterDistance MkFilterOp >= _
+                        ( MkSomeDistance SKilometer
+                            ( MkDistance
+                                ( UnsafePositive 25.0 ) Kilometer
+                            )
+                        )
+                    )
+                ]
+            , title = "Long runs"
+            , unit = Nothing
+            , yAxis = YAxisDistance
+            , y1Axis = Just YAxisPace
+            }
         ]
     }
