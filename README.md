@@ -257,6 +257,16 @@ The current "blessed" version is `ghc-9.10.1`.
 
 Once you have `cabal` and `ghc`, `pacer` can be built locally with `cabal build` or installed globally (e.g. `~/.local/bin/pacer`) with `cabal install`.
 
+For further reproducibility, optional freeze files can be used e.g.
+
+```sh
+cabal build --project-file cabal.ghc9101.project
+```
+
+> [!NOTE]
+>
+> Freeze files are provided for only select compilers.
+
 ## Nix
 
 ### Prerequisites
