@@ -127,12 +127,10 @@ data Expr a
   = -- | "expr"
     Atom a
   | -- | "not (expr)"
-    Not (Expr a) -- "not (expr)"
-  | -- | "or (expr) (expr)""
+    Not (Expr a)
+  | -- | "or (expr) (expr)"
     Or (Expr a) (Expr a)
-  | -- | To keep the expression simple, we don't actually parse AND
-    --  (AND is represented by multiple filters). Its inclusion here is purely
-    -- to represent Xor.
+  | -- | "and (expr) (expr)"
     And (Expr a) (Expr a)
   deriving stock (Eq, Show)
 
@@ -154,6 +152,7 @@ instance (Parser a) => Parser (Expr a) where
         MP.choice
           [ parseNot,
             parseOr,
+            parseAnd,
             parseXor,
             parseAtom
           ]
@@ -182,6 +181,14 @@ instance (Parser a) => Parser (Expr a) where
         f2 <- parseFilter
         MPC.char ')'
         pure $ Or f1 f2
+
+      parseAnd = do
+        MPC.string "and ("
+        f1 <- parseFilter
+        MPC.string ") ("
+        f2 <- parseFilter
+        MPC.char ')'
+        pure $ And f1 f2
 
       parseXor = do
         MPC.string "xor ("

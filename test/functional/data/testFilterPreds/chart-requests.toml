@@ -17,3 +17,8 @@ filters = ['pace < 3m30s /km']
 title = 'Specific duration runs'
 y-axis = 'duration'
 filters = ['duration > 40m', 'duration < 3h']
+
+[[charts]]
+title = 'Specific duration runs using and'
+y-axis = 'duration'
+filters = ['and (duration > 40m) (duration < 3h)']

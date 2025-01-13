@@ -356,6 +356,96 @@
         }
       }
     }
+  },
+  {
+    "datasets": {
+      "xAxis": [
+        "2024-10-17",
+        "2024-10-18"
+      ],
+      "yAxes": [
+        {
+          "data": [
+            2520,
+            9000
+          ],
+          "fill": false,
+          "label": "duration",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y"
+        }
+      ]
+    },
+    "extra": {},
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
+        "title": {
+          "align": "center",
+          "color": "#c3c3c3",
+          "display": true,
+          "font": {
+            "size": 24
+          },
+          "text": "Specific duration runs using and"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
+        }
+      },
+      "pointHitRadius": 20,
+      "responsive": true,
+      "scales": {
+        "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "datetime"
+          },
+          "type": "timeseries"
+        },
+        "y": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "time"
+          }
+        }
+      }
+    }
   }
 ]
 

@@ -4,10 +4,77 @@
 
 ### Table of Contents
 
-- [What units are available?](#what-units-are-available)
-- [What is NPM, and why do I need it?](#what-is-npm-and-why-do-i-need-it)
 
-## What units are available?
+- [Charts](#charts)
+  - [How do chart filters work?](#how-do-chart-filters-work)
+- [Running](#running)
+  - [What is NPM, and why do I need it?](#what-is-npm-and-why-do-i-need-it)
+- [Misc](#misc)
+  - [What units are available?](#what-units-are-available)
+
+## Charts
+
+### How do chart filters work?
+
+Chart requests allow us to filter runs based on some criteria. In general, `filters` contains a list of filters, where a run must satisfy all filters to be included. We have the following filter "atoms":
+
+- `label <lbl>`: The run must have the label `lbl` (case-sensitive).
+- `distance <op> <val>`: The run must have `distance <op> <val>` e.g. `distance > 5 km`.
+- `duration <op> <val>`: The run must have `duration <op> <val>` e.g. `duration < 2h`.
+- `pace <op> <val>`: The run must have `pace <op> <val>` e.g. `pace <= 4m30s /km`.
+
+`<op>` can be one of:
+
+- `<=`
+- `<`
+- `=`
+- `>=`
+- `>`
+
+Filters also support basic boolean logic i.e.
+
+- `not (expr)`: `expr` must be false.
+- `or (expr1) (expr2)`: `expr1` and/or `expr2` must be true.
+- `and (expr1) (expr2)`: `expr1` and `expr2` must be true.
+- `xor (expr1) (expr2)`: Exactly one of `expr1` and `expr2` must be true.
+
+where `expr` is either an atom or another expression.
+
+For example, we can have:
+
+```toml
+[[charts]]
+title = 'Races and long runs'
+filters = ['or (label official_race) (label marathon)', 'distance >= 25 km']
+y-axis = 'distance'
+```
+
+In this case, we will take all runs that satisfy **all** of the following criteria:
+
+- Has label `official_race` and/or `marathon`.
+- Has `distance >= 25 km`.
+
+> [!TIP]
+>
+> Technically, there is no need to have a separate `and (expr1) (expr2)` expression, as we can encode `and` with multiple filters. Nevertheless we include the redundant functionality, as it may make some expressions simpler.
+
+## Running
+
+### What is NPM, and why do I need it?
+
+[NPM](https://en.wikipedia.org/wiki/Npm) is the "node package manager", and the `chart` command requires it to be installed, since we use `node` to build the charts. See https://nodejs.org/en/download for installation instructions.
+
+To test installation, verify that `npm -v` works and returns some version:
+
+```
+# The version does not necessarily have to be the same.
+$ npm -v
+10.9.0
+```
+
+## Misc
+
+### What units are available?
 
 Pacer defines several quantities that require the user to specify the units. In general, we have:
 
@@ -24,7 +91,7 @@ Pacer defines several quantities that require the user to specify the units. In 
 
 Parsing is designed to be moderately flexible, so numeric values can optionally be separated from the units by whitespace (quotes are then required) e.g. `'4 km'` or `4km`.
 
-### Examples
+#### Examples
 
 ```
 --distance 5m
@@ -52,16 +119,4 @@ $ pacer derive --distance 42km --pace 5m
 #
 $ pacer scale --pace 5m -k 0.9
 4'30"
-```
-
-## What is NPM, and why do I need it?
-
-[NPM](https://en.wikipedia.org/wiki/Npm) is the "node package manager", and the `chart` command requires it to be installed, since we use `node` to build the charts. See https://nodejs.org/en/download for installation instructions.
-
-To test installation, verify that `npm -v` works and returns some version:
-
-```
-# The version does not necessarily have to be the same.
-$ npm -v
-10.9.0
 ```
