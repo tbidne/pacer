@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Unit.Pacer.Chart (tests) where
+module Unit.Pacer.Command.Chart (tests) where
 
 import Control.Exception (IOException)
 import Data.IORef qualified as Ref

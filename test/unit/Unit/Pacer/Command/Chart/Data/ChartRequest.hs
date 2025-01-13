@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unit.Pacer.Chart.Data.ChartRequest (tests) where
+module Unit.Pacer.Command.Chart.Data.ChartRequest (tests) where
 
 import FileSystem.IO (readBinaryFileIO)
 import Pacer.Command.Chart.Data.ChartRequest

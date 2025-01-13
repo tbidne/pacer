@@ -154,14 +154,14 @@ test-suite unit
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:
-    Unit.Pacer.Chart
-    Unit.Pacer.Chart.Data.ChartRequest
-    Unit.Pacer.Chart.Data.Run
+    Unit.Pacer.Command.Chart
+    Unit.Pacer.Command.Chart.Data.ChartRequest
+    Unit.Pacer.Command.Chart.Data.Run
+    Unit.Pacer.Command.Derive
     Unit.Pacer.Data.Distance
     Unit.Pacer.Data.Distance.Units
     Unit.Pacer.Data.Duration
     Unit.Pacer.Data.Pace
-    Unit.Pacer.Derive
     Unit.Prelude
     Unit.Utils
 
@@ -192,11 +192,11 @@ test-suite functional
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:
-    Functional.Chart
-    Functional.Convert
-    Functional.Derive
+    Functional.Pacer.Command.Chart
+    Functional.Pacer.Command.Convert
+    Functional.Pacer.Command.Derive
     Functional.Prelude
-    Functional.Scale
+    Functional.Pacer.Command.Scale
 
   build-depends:
     , base

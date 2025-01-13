@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Functional.Chart (tests) where
+module Functional.Pacer.Command.Chart (tests) where
 
 import FileSystem.OsPath (unsafeDecode)
 import Functional.Prelude
@@ -8,7 +8,7 @@ import Functional.Prelude
 tests :: IO OsPath -> TestTree
 tests getTestDir =
   testGroup
-    "Pacer.Chart"
+    "Pacer.Command.Chart"
     [ basicTests getTestDir,
       pathTests getTestDir
     ]

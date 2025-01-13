@@ -1,4 +1,4 @@
-module Unit.Pacer.Derive
+module Unit.Pacer.Command.Derive
   ( -- * Tests
     tests,
   )

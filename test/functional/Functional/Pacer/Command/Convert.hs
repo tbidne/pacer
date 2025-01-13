@@ -1,4 +1,4 @@
-module Functional.Convert (tests) where
+module Functional.Pacer.Command.Convert (tests) where
 
 import Functional.Prelude
 import Pacer.Exception (CommandConvertE)
@@ -6,7 +6,7 @@ import Pacer.Exception (CommandConvertE)
 tests :: TestTree
 tests =
   testGroup
-    "Convert"
+    "Pacer.Command.Convert"
     [ convertDistanceTests,
       convertPaceTests,
       argsErrorTests

@@ -1,4 +1,4 @@
-module Functional.Derive (tests) where
+module Functional.Pacer.Command.Derive (tests) where
 
 import Functional.Prelude
 import Pacer.Exception (CommandDeriveE)
@@ -6,7 +6,7 @@ import Pacer.Exception (CommandDeriveE)
 tests :: TestTree
 tests =
   testGroup
-    "Derive"
+    "Pacer.Command.Derive"
     [ distanceTests,
       durationTests,
       paceTests,

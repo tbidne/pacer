@@ -1,4 +1,4 @@
-module Functional.Scale (tests) where
+module Functional.Pacer.Command.Scale (tests) where
 
 import Functional.Prelude
 import Pacer.Exception (CommandScaleE)
@@ -6,7 +6,7 @@ import Pacer.Exception (CommandScaleE)
 tests :: TestTree
 tests =
   testGroup
-    "Scale"
+    "Pacer.Command.Scale"
     [ scaleDistanceTests,
       scaleDurationTests,
       scalePaceTests,

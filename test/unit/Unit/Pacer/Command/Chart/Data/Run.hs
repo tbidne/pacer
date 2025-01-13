@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unit.Pacer.Chart.Data.Run (tests) where
+module Unit.Pacer.Command.Chart.Data.Run (tests) where
 
 import FileSystem.IO (readBinaryFileIO)
 import Pacer.Command.Chart.Data.Run (SomeRuns)
