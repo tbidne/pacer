@@ -26,7 +26,7 @@
 
 Pacer is a CLI application that provides commands useful for runners. Pacer offers roughly two different services:
 
-1. Taking running data and generating graphical charts e.g. plotting runs by distance (`chart` command).
+1. Taking running data and generating graphical charts e.g. plotting runs by distance.
 
 2. Performing convenient calculations (e.g. deriving pace from a distance and duration).
 
@@ -51,7 +51,7 @@ Charts are generated from two inputs:
 
 > [!IMPORTANT]
 >
-> The `chart` command requires npm (nodejs) to be installed: https://nodejs.org/en/download
+> The `chart` command requires `npm` (nodejs) to be installed: https://nodejs.org/en/download
 
 ### Usage
 
@@ -97,7 +97,7 @@ See the `examples/` director for more information.
 
 ## Convert
 
-The `convert` command converts quanities to different units.
+The `convert` command converts quantities to different units.
 
 ### Usage
 
@@ -130,7 +130,7 @@ $ pacer convert --pace '5m20s /mi' --unit km
 
 > [!WARNING]
 >
-> With convert, pace __must__ include units i.e. either `/km` or `/mi`. Furthermore, pace cannot be given in meters or converted to meters; only kilometers and meters are allowed.
+> With convert, pace __must__ include units i.e. either `/km` or `/mi`. Furthermore, pace cannot be given in meters nor converted to meters; only kilometers and miles are allowed.
 
 ## Derive
 
@@ -181,7 +181,7 @@ $ pacer derive --pace '5m45s /mi' --duration 20m
 
 > [!NOTE]
 >
-> Built-in values like 'marathon' assume unit `kilometers`, if nothing else is given.
+> Built-in values like `marathon` assume unit `kilometers`, if nothing else is given.
 
 ## Scale
 
