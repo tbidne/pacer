@@ -1,0 +1,51 @@
+---
+resolver: nightly-2025-02-09
+packages:
+  - .
+ghc-options:
+  "$locals": -Wall -Wcompat
+    -Widentities
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wmissing-deriving-strategies
+    -Wmissing-export-lists
+    -Wmissing-exported-signatures
+    -Wmissing-home-modules
+    -Wpartial-fields
+    -Wprepositive-qualified-module
+    -Wredundant-constraints
+    -Wunused-binds
+    -Wunused-packages
+    -Wunused-type-patterns
+    -Wno-missing-import-lists
+    -Wno-unticked-promoted-constructors
+extra-deps:
+  - env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
+  - text-display-0.0.5.2@sha256:6e6a5bf1c83dfa6c34692ed5d8ea87f1bd385984309b42c302f2156f4d82477b,2670
+  - git: https://github.com/tbidne/algebra-simple.git
+    commit: 37ec7127fbd0f591d4539e4bf72a0badd7569181
+  - git: https://github.com/tbidne/bounds.git
+    commit: b7ca541cfdd8564bcebe5d38456fe7abf77885b8
+  - git: https://github.com/tbidne/effectful-libs.git
+    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    subdirs:
+      - lib/concurrent-effectful
+      - lib/fs-effectful
+      - lib/ioref-effectful
+      - lib/logger-effectful
+      - lib/logger-ns-effectful
+      - lib/optparse-effectful
+      - lib/terminal-effectful
+      - lib/time-effectful
+      - lib/typed-process-dynamic-effectful
+  - git: https://github.com/tbidne/exception-utils.git
+    commit: e28b28ae3bc90a0336abf69eff28369b790f4e13
+  - git: https://github.com/tbidne/fs-utils.git
+    commit: e2273c91c411e1fe12347524065855ba8e34a481
+  - git: https://github.com/tbidne/relative-time.git
+    commit: 6bd6c1208bcda9f5d5ecb7ff45fafb91929cdea8
+  - git: https://github.com/tbidne/smart-math.git
+    commit: a39c02ec6a5a9c4b551baffafd75f26be74dd457
+allow-newer: true
+allow-newer-deps:
+  - path

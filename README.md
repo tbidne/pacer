@@ -23,6 +23,7 @@
   - [Scale](#scale)
 - [Building](#building)
   - [Cabal](#cabal)
+  - [Stack](#stack)
   - [Nix](#nix)
 - [FAQ](#faq)
 
@@ -271,6 +272,18 @@ cabal build --project-file cabal.ghc9101.project
 > [!NOTE]
 >
 > Freeze files are provided for only select compilers.
+
+## Stack
+
+### Prerequisites
+
+* [`stack 3.1.1+`](https://docs.haskellstack.org/en/stable/)
+
+Like `cabal` and `ghc`, `stack` can be installed with [`ghcup`](https://www.haskell.org/ghcup/).
+
+### Build Pacer
+
+Once you have `stack`, `pacer` can be built with `stack build` or installed globally (i.e. `~/.local/bin/pacer`) with `stack install`.
 
 ## Nix
 

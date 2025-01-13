@@ -81,6 +81,70 @@ jobs:
           # Let's test it overwrites successfully
           cabal run pacer -- chart --data examples
 
+  stack:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "macos-latest"
+          - "ubuntu-latest"
+          - "windows-latest"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup haskell
+        uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23.x
+
+      - name: Build
+        run: stack build --ghc-options -Werror
+
+      # yamllint disable rule:line-length
+      - name: Unit tests
+        id: unit
+        run: stack test pacer:test:unit --ghc-options -Werror --test-arguments '--hedgehog-tests 1000000'
+      # yamllint enable
+
+      - uses: actions/upload-artifact@v4
+        name: Unit tests upload
+        if: ${{ failure() && steps.unit.conclusion == 'failure' }}
+        with:
+          name: stack-unit-tests-artifacts
+          path: |
+            test/unit/goldens
+
+      - name: Functional tests
+        id: functional
+        run: stack test pacer:test:functional --ghc-options -Werror
+
+      - uses: actions/upload-artifact@v4
+        name: Functional tests upload
+        if: ${{ failure() && steps.functional.conclusion == 'failure' }}
+        with:
+          name: stack-functional-tests-artifacts
+          path: |
+            test/functional/goldens
+
+      - name: Generate charts html/hs
+
+        # TODO: It would be nice if we could test that the html page actually
+        # does what we want because it is possible for webpack to succeed yet
+        # the page is broken.
+        #
+        # It may be possible to require 0 console errors, though of course that
+        # could be overly restrictive.
+        run: |
+          stack run pacer -- chart --data examples
+          # Let's test it overwrites successfully
+          stack run pacer -- chart --data examples
+
   nix:
     strategy:
       fail-fast: false

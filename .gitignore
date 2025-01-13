@@ -7,3 +7,6 @@ cabal.project.local
 
 # pacer output
 /build
+
+# stack
+/.stack-work

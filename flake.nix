@@ -134,11 +134,31 @@
               ] ++ webDeps;
             };
 
+          stack-wrapped = pkgs.symlinkJoin {
+            name = "stack";
+            paths = [ pkgs.stack ];
+            buildInputs = [ pkgs.makeWrapper ];
+            postBuild = ''
+              wrapProgram $out/bin/stack --add-flags "--no-nix --system-ghc"
+            '';
+          };
+
           webDeps = [ pkgs.nodejs_23 ];
         in
         {
           packages.default = mkPkg false;
-          devShells.default = mkPkg true;
+
+          devShells = {
+            default = mkPkg true;
+
+            stack = pkgs.mkShell {
+              buildInputs = [
+                compiler.ghc
+                pkgs.zlib
+                stack-wrapped
+              ];
+            };
+          };
 
           apps = {
             format = nix-hs-utils.mergeApps {
