@@ -30,12 +30,7 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = \_ ->
-            [ "chart",
-              "--data",
-              dataDir,
-              "--json"
-            ],
+        { mkArgs = const ["chart", "--data", dataDir, "--json"],
           outFileName = Just [osp|charts.json|],
           testDesc = "Generates example",
           testName = [osp|testExampleChart|]
@@ -78,10 +73,7 @@ testPathXdg getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = \_ ->
-            [ "chart",
-              "--json"
-            ],
+        { mkArgs = const ["chart", "--json"],
           outFileName = Just [osp|charts.json|],
           testDesc = "No paths uses XDG config",
           testName = [osp|testPathXdg|]
@@ -92,14 +84,15 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
   where
     params =
       MkGoldenParams
-        { mkArgs = \_ ->
-            [ "chart",
-              "--json",
-              "--chart-requests",
-              chartRequestsPath,
-              "--data",
-              dataDir
-            ],
+        { mkArgs =
+            const
+              [ "chart",
+                "--json",
+                "--chart-requests",
+                chartRequestsPath,
+                "--data",
+                dataDir
+              ],
           outFileName = Just [osp|charts.json|],
           testDesc = "--chart-requests overrides --data",
           testName = [osp|testPathChartRequestsOverrideData|]
@@ -117,14 +110,7 @@ testPathRunsOverrideData getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = \_ ->
-            [ "chart",
-              "--json",
-              "--runs",
-              runsPath,
-              "--data",
-              dataDir
-            ],
+        { mkArgs = const ["chart", "--json", "--runs", runsPath, "--data", dataDir],
           outFileName = Just [osp|charts.json|],
           testDesc = "--runs overrides --data",
           testName = [osp|testPathRunsOverrideData|]
@@ -139,12 +125,7 @@ testPathChartRequestsOverrideXdg getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = \_ ->
-            [ "chart",
-              "--json",
-              "--chart-requests",
-              chartRequestsPath
-            ],
+        { mkArgs = const ["chart", "--json", "--chart-requests", chartRequestsPath],
           outFileName = Just [osp|charts.json|],
           testDesc = "--chart-requests overrides XDG",
           testName = [osp|testPathChartRequestsOverrideXdg|]
@@ -158,12 +139,7 @@ testPathRunsOverrideXdg getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = \_ ->
-            [ "chart",
-              "--json",
-              "--runs",
-              runsPath
-            ],
+        { mkArgs = const ["chart", "--json", "--runs", runsPath],
           outFileName = Just [osp|charts.json|],
           testDesc = "--runs overrides XDG",
           testName = [osp|testPathRunsOverrideXdg|]
@@ -176,12 +152,7 @@ testPathConfig getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = \_ ->
-            [ "chart",
-              "--json",
-              "--config",
-              configPath
-            ],
+        { mkArgs = const ["chart", "--json", "--config", configPath],
           outFileName = Just [osp|charts.json|],
           testDesc = "Uses explicit config",
           testName = [osp|testPathConfig|]

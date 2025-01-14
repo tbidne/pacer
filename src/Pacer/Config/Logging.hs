@@ -33,7 +33,6 @@ parser =
         OA.metavar logLvlStr,
         Utils.mkHelp "Optional log level. Defaults to 'info'."
       ]
-  where
 
 parseLogLevel :: (MonadFail m) => Text -> m LogLevelParam
 parseLogLevel = \case

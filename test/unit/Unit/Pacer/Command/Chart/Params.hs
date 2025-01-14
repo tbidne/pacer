@@ -382,7 +382,7 @@ runEvolvePhase xdg params mToml = do
 
 runLoggerMock :: Eff (Logger : es) a -> Eff es a
 runLoggerMock = interpret_ $ \case
-  LoggerLog _ _ _ _ -> pure ()
+  LoggerLog {} -> pure ()
 
 runPathReaderMock ::
   (Reader MockEnv :> es) =>
@@ -402,7 +402,7 @@ runPathReaderMock = interpret_ $ \case
             then rootOsPath </> [ospPathSep|xdg/config|] </> p
             else rootOsPath </> [ospPathSep|bad_xdg/config|] </> p
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
-  _ -> error $ "runPathReaderMock: unimplemented"
+  _ -> error "runPathReaderMock: unimplemented"
 
 goldenRunner :: ChartParamsArgs -> Toml -> IO ByteString
 goldenRunner = goldenRunnerXdg True

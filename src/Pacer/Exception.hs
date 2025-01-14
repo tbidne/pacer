@@ -196,7 +196,7 @@ instance Exception NpmE where
   displayException (MkNpmE exeName args i t) =
     mconcat
       [ "Command '",
-        L.intercalate " " (decodeLenient exeName : args),
+        L.unwords (decodeLenient exeName : args),
         "' exited with error code ",
         show i,
         ": ",
