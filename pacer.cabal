@@ -43,6 +43,7 @@ common common-lang
     OverloadedStrings
     PatternSynonyms
     RequiredTypeArguments
+    StrictData
     TypeAbstractions
     TypeFamilyDependencies
 
