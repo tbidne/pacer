@@ -1,23 +1,21 @@
 module Pacer.Config.Env
-  ( Env (..),
-    mkEnv,
+  ( mkLogEnv,
   )
 where
 
 import Effectful.Logger.Dynamic (LogLevel (LevelInfo))
 import Pacer.Config.Args (Args (logLevel))
+import Pacer.Config.Env.Types (LogEnv (MkLogEnv, logLevel, logNamespace))
 import Pacer.Config.Logging (LogLevelParam (LogNone, LogSome))
 import Pacer.Config.Toml (Toml (logLevel))
 import Pacer.Prelude
 
-data Env = MkEnv
-  { logLevel :: Maybe LogLevel,
-    logNamespace :: Namespace
-  }
-  deriving stock (Eq, Show)
-
-mkEnv :: Args a -> Maybe Toml -> Env
-mkEnv args mToml = MkEnv logLevel mempty
+mkLogEnv :: Args a -> Maybe Toml -> LogEnv
+mkLogEnv args mToml =
+  MkLogEnv
+    { logLevel,
+      logNamespace = mempty
+    }
   where
     logLevel = case args.logLevel <|> (mToml >>= (.logLevel)) of
       Nothing -> Just LevelInfo

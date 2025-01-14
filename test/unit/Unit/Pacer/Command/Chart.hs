@@ -52,6 +52,7 @@ import Pacer.Command.Chart.Params
     ChartParamsArgs,
   )
 import Pacer.Command.Chart.Params qualified as ChartParams
+import Pacer.Config.Env.Types (CachedPaths)
 import System.Exit (ExitCode (ExitSuccess))
 import System.OsPath qualified as OsPath
 import Test.Tasty.HUnit (assertEqual)
@@ -90,7 +91,8 @@ testDefault = testCase "Default" $ do
         }
     coreEnv =
       MkCoreEnv
-        { nodeModulesExists = False,
+        { cachedPaths = mempty,
+          nodeModulesExists = False,
           npmExists = True
         }
 
@@ -109,7 +111,8 @@ testJson = testCase "With --json" $ do
         }
     coreEnv =
       MkCoreEnv
-        { nodeModulesExists = False,
+        { cachedPaths = mempty,
+          nodeModulesExists = False,
           -- npm is False since it doesn't need to exist w/ --json
           npmExists = False
         }
@@ -129,7 +132,8 @@ testPathNodeModExists = testCase "node_modules exists" $ do
         }
     coreEnv =
       MkCoreEnv
-        { nodeModulesExists = True,
+        { cachedPaths = mempty,
+          nodeModulesExists = True,
           npmExists = True
         }
 
@@ -148,7 +152,8 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
         }
     coreEnv =
       MkCoreEnv
-        { nodeModulesExists = True,
+        { cachedPaths = mempty,
+          nodeModulesExists = True,
           npmExists = True
         }
 
@@ -182,7 +187,8 @@ testNoNpmFailure = testCase "No npm failure" $ do
         }
     coreEnv =
       MkCoreEnv
-        { nodeModulesExists = False,
+        { cachedPaths = mempty,
+          nodeModulesExists = False,
           npmExists = False
         }
 
@@ -216,7 +222,8 @@ assertRefs xs = for_ xs $ \(desc, ref, expected) -> do
   assertEqual msg expected result
 
 data CoreEnv = MkCoreEnv
-  { nodeModulesExists :: Bool,
+  { cachedPaths :: CachedPaths,
+    nodeModulesExists :: Bool,
     npmExists :: Bool
   }
 
@@ -396,12 +403,14 @@ type TestEffects =
     LoggerNS,
     IORefE,
     Reader ChartEnv,
+    State CachedPaths,
     IOE
   ]
 
 runTestEff :: ChartEnv -> Eff TestEffects a -> IO a
 runTestEff env m =
   runEff
+    . evalState env.coreEnv.cachedPaths
     . runReader env
     . runIORef
     . runLoggerNS mempty

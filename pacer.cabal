@@ -86,6 +86,7 @@ library
     Pacer.Command.Scale.Params
     Pacer.Config.Args
     Pacer.Config.Env
+    Pacer.Config.Env.Types
     Pacer.Config.Logging
     Pacer.Config.Phase
     Pacer.Config.Toml

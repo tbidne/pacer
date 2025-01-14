@@ -25,6 +25,7 @@ import Pacer.Command.Derive.Args qualified as Derive
 import Pacer.Command.Derive.Params qualified as Derive
 import Pacer.Command.Scale.Args qualified as Scale
 import Pacer.Command.Scale.Params qualified as Scale
+import Pacer.Config.Env.Types (CachedPaths)
 import Pacer.Config.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
 import Pacer.Config.Toml (Toml)
 import Pacer.Config.Utils qualified as Utils
@@ -70,7 +71,8 @@ evolvePhase ::
   ( HasCallStack,
     Logger :> es,
     LoggerNS :> es,
-    PathReader :> es
+    PathReader :> es,
+    State CachedPaths :> es
   ) =>
   CommandPhaseArgs a ->
   Maybe Toml ->

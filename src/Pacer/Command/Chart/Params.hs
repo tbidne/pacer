@@ -21,6 +21,7 @@ import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
+import Pacer.Config.Env.Types (CachedPaths, getCachedXdgConfigPath)
 import Pacer.Config.Phase
   ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
   )
@@ -89,7 +90,8 @@ evolvePhase ::
   ( HasCallStack,
     Logger :> es,
     LoggerNS :> es,
-    PathReader :> es
+    PathReader :> es,
+    State CachedPaths :> es
   ) =>
   ChartParamsArgs ->
   Maybe Toml ->
@@ -112,18 +114,16 @@ evolvePhase @es params mToml = do
     -- Retrieves (Tuple2 chart-requests-path runs-path)
     getChartInputs :: Eff es (Path Abs File, Path Abs File)
     getChartInputs = do
-      (mXdgDir, chartRequestsPath) <-
+      chartRequestsPath <-
         getChartInput
           "chart-requests"
-          Nothing
           [chartRequestsName]
           params.chartRequestsPath
           (.chartRequestsPath)
 
-      (_, runsPath) <-
+      runsPath <-
         getChartInput
           "runs"
-          mXdgDir
           [runsName]
           params.runsPath
           (.runsPath)
@@ -133,26 +133,24 @@ evolvePhase @es params mToml = do
     getChartInput ::
       -- Text description
       Text ->
-      -- Maybe xgd_directory. We take this as a param
-      Maybe (Path Abs Dir) ->
       -- Expected file_name(s) e.g. runs.toml
       List (Path Rel File) ->
       -- Maybe file.
       Maybe OsPath ->
       -- Toml selector.
       (Toml -> Maybe OsPath) ->
-      -- Tuple2 (Maybe xgd_directory) file
-      Eff es (Tuple2 (Maybe (Path Abs Dir)) (Path Abs File))
-    getChartInput desc mXdgDir fileNames mInputOsPath tomlSel =
+      -- Tuple2 file
+      Eff es (Path Abs File)
+    getChartInput desc fileNames mInputOsPath tomlSel =
       addNamespace "getChartInput" $ addNamespace desc $ do
         -- 1. Try Cli first.
         findCliPath >>= \case
-          Just p -> pure (mXdgDir, p)
+          Just p -> pure p
           Nothing -> do
             $(Logger.logDebug) "No cli path(s) found, checking toml"
             -- 2. Try Toml next.
             findTomlPath >>= \case
-              Just p -> pure (mXdgDir, p)
+              Just p -> pure p
               -- 3. Finally, fall back to xdg.
               Nothing -> do
                 $(Logger.logDebug) "No toml path(s) found, falling back to xdg"
@@ -180,14 +178,14 @@ evolvePhase @es params mToml = do
                 findFirstMatch tomlDataDirPath
               Nothing -> pure Nothing
 
-        findXdgPath :: Eff es (Maybe (Path Abs Dir), Path Abs File)
+        findXdgPath :: Eff es (Path Abs File)
         findXdgPath = addNamespace "findXdgPath" $ do
           -- 3. Fallback to xdg
-          xdgDir <- maybe getXdgConfigPath pure mXdgDir
+          xdgDir <- getCachedXdgConfigPath
           mXdgPath <- findFirstMatch xdgDir
 
           case mXdgPath of
-            Just xdgPath -> pure $ (Just xdgDir, xdgPath)
+            Just xdgPath -> pure xdgPath
             Nothing ->
               throwM
                 $ MkChartFileMissingE

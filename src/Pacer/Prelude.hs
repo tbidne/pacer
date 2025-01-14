@@ -282,6 +282,15 @@ import Effectful.LoggerNS.Static as X
 import Effectful.Optparse.Static as X (Optparse, execParser, runOptparse)
 import Effectful.Process.Typed.Dynamic as X (TypedProcess, runTypedProcess)
 import Effectful.Reader.Static as X (Reader, ask, asks, local, runReader)
+import Effectful.State.Static.Local as X
+  ( State,
+    evalState,
+    get,
+    gets,
+    modify,
+    put,
+    runState,
+  )
 import Effectful.Terminal.Dynamic as X
   ( Terminal,
     putStrLn,

@@ -22,6 +22,7 @@ import Pacer.Command.Chart.Params
     ChartParamsFinal,
   )
 import Pacer.Command.Chart.Params qualified as Params
+import Pacer.Config.Env.Types (CachedPaths)
 import Pacer.Config.Toml
   ( Toml
       ( MkToml,
@@ -274,7 +275,8 @@ testEvolvePhaseMissingEx =
         }
 
 data MockEnv = MkMockEnv
-  { knownFiles :: Set OsPath,
+  { cachedPaths :: CachedPaths,
+    knownFiles :: Set OsPath,
     -- Returns xdg dir w/ expected files iff xdg is true
     xdg :: Bool
   }
@@ -286,7 +288,8 @@ runEvolvePhase xdg params mToml = do
   where
     env =
       MkMockEnv
-        { knownFiles =
+        { cachedPaths = mempty,
+          knownFiles =
             Set.fromList
               $ (root </>)
               <$> [ [ospPathSep|cli-cr.toml|],
@@ -305,6 +308,7 @@ runEvolvePhase xdg params mToml = do
 
     runner =
       runEff
+        . evalState env.cachedPaths
         . runReader @MockEnv env
         . runPathReaderMock
         . runLoggerMock

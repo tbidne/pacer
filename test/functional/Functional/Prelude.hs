@@ -81,20 +81,28 @@ infix 1 <@=?>
 
 data FuncEnv = MkFuncEnv
   { logsRef :: IORef Text,
-    outFilesMapRef :: IORef (Map OsPath ByteString)
+    outFilesMapRef :: IORef (Map OsPath ByteString),
+    xdgConfigCallsRef :: IORef Word8
   }
 
-runPathReaderMock :: (IOE :> es) => Eff (PathReader : es) a -> Eff es a
+runPathReaderMock ::
+  ( IOE :> es,
+    IORefE :> es,
+    Reader FuncEnv :> es
+  ) =>
+  Eff (PathReader : es) a ->
+  Eff es a
 runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   CanonicalizePath p -> PRS.canonicalizePath p
   DoesFileExist p -> PRS.doesFileExist p
   GetCurrentDirectory -> PRS.getCurrentDirectory
-  GetXdgDirectory d p ->
-    pure $ [ospPathSep|test/functional/data/xdg|] </> dirName </> p
+  GetXdgDirectory d p -> case d of
+    XdgConfig -> do
+      incIORef (.xdgConfigCallsRef)
+      pure $ baseName </> [osp|config|] </> p
+    other -> error $ "Unexpected xdg type: " ++ show other
     where
-      dirName = case d of
-        XdgConfig -> [osp|config|]
-        other -> error $ "Unexpected xdg type: " ++ show other
+      baseName = [ospPathSep|test/functional/data/xdg|]
   _ -> error "runPathReaderMock: unimplemented"
 
 type TestEffects =
@@ -130,9 +138,9 @@ runTestEff env m = do
     `catch` \(MkTomlE p err) -> do
       -- HACK: The 'Duplicate date error' chart test throws a TomlE, which is
       -- a problem for the golden tests because it includes a non-deterministic
-      -- absolute path. Thus we override MonadThrow s.t. -- in this case -- we
-      -- make the path relative. If this ends up being flaky, we can simply use
-      -- the file name, which should be good enough.
+      -- absolute path. Thus we catch the exception and make the path
+      -- relative. If this ends up being flaky, we can simply use the file
+      -- name, which should be good enough.
       p' <- makeRelativeToCurrentDirectoryIO p
       throwM $ MkTomlE p' err
   where
@@ -146,13 +154,26 @@ runFuncIO :: Eff TestEffects a -> IO FuncEnv
 runFuncIO m = do
   logsRef <- Ref.newIORef ""
   outFilesMapRef <- Ref.newIORef Map.empty
+  xdgConfigCallsRef <- Ref.newIORef 0
   let env =
         MkFuncEnv
           { logsRef,
-            outFilesMapRef
+            outFilesMapRef,
+            xdgConfigCallsRef
           }
 
-  _ <- runTestEff env m
+  -- temporarily catch the exception, so we can verify assertions that we
+  -- always want to be true.
+  eResult <- trySync $ runTestEff env m
+
+  xdgConfigCalls <- Ref.readIORef xdgConfigCallsRef
+  assertBool
+    ("xdg config calls should be <= 1: " ++ show xdgConfigCalls)
+    (xdgConfigCalls <= 1)
+
+  -- rethrow the exception if it exists.
+  firstA throwM eResult
+
   pure env
 
 runFileWriterMock ::
@@ -347,3 +368,11 @@ testGoldenParams getTestDir goldenParams = do
 
     actualPath = outputPathStart <> ".actual"
     goldenPath = outputPathStart <> ".golden"
+
+incIORef ::
+  ( IORefE :> es,
+    Reader FuncEnv :> es
+  ) =>
+  (FuncEnv -> IORef Word8) ->
+  Eff es ()
+incIORef toRef = asks toRef >>= \r -> modifyIORef' r (+ 1)

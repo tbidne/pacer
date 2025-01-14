@@ -24,8 +24,11 @@ import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
 import Pacer.Config.Args (Args (command, configPath), parserInfo)
-import Pacer.Config.Env (Env)
 import Pacer.Config.Env qualified as Env
+import Pacer.Config.Env.Types
+  ( CachedPaths (MkCachedPaths, xdgConfigPath),
+    LogEnv (logLevel),
+  )
 import Pacer.Config.Toml (Toml)
 import Pacer.Prelude
 import TOML qualified
@@ -58,7 +61,7 @@ runCommand ::
   ) =>
   Config ->
   Eff es ()
-runCommand (cmd, mToml, env) = runner $ do
+runCommand (cmd, mToml, cachedPaths, logEnv) = runner $ do
   command <- Command.evolvePhase cmd mToml
   case command of
     Chart params -> Chart.handle params
@@ -67,7 +70,8 @@ runCommand (cmd, mToml, env) = runner $ do
     Scale params -> Scale.handle params
   where
     runner =
-      runReader env
+      evalState cachedPaths
+        . runReader logEnv
         . runLoggerNS mempty
         . runLogger
 
@@ -82,10 +86,15 @@ withEnv ::
 withEnv onEnv = getConfiguration >>= onEnv
 
 type Config =
-  Tuple3
+  Tuple4
+    -- Command to run, before evolution
     (CommandPhaseArgs Double)
+    -- Possible toml config
     (Maybe Toml)
-    Env
+    -- Cached paths
+    CachedPaths
+    -- Logging env
+    LogEnv
 
 getConfiguration ::
   ( HasCallStack,
@@ -97,7 +106,7 @@ getConfiguration ::
 getConfiguration @es = do
   args <- execParser (parserInfo @Double)
 
-  mToml <- do
+  (mXdgConfig, mToml) <- do
     case args.configPath of
       Nothing -> do
         xdgConfig <- getXdgConfigPath
@@ -105,11 +114,17 @@ getConfiguration @es = do
 
         exists <- PR.doesFileExist (pathToOsPath path)
         if exists
-          then Just <$> readToml path
-          else pure Nothing
-      Just p -> Just <$> (parseCanonicalAbsFile p >>= readToml)
+          then (Just xdgConfig,) . Just <$> readToml path
+          else pure (Just xdgConfig, Nothing)
+      Just p -> (Nothing,) . Just <$> (parseCanonicalAbsFile p >>= readToml)
 
-  pure (args.command, mToml, Env.mkEnv args mToml)
+  let cachedPaths =
+        MkCachedPaths
+          { xdgConfigPath = mXdgConfig
+          }
+      logEnv = Env.mkLogEnv args mToml
+
+  pure (args.command, mToml, cachedPaths, logEnv)
   where
     readToml :: Path b t -> Eff es Toml
     readToml path = do
@@ -120,7 +135,7 @@ runLogger ::
   ( HasCallStack,
     Concurrent :> es,
     LoggerNS :> es,
-    Reader Env :> es,
+    Reader LogEnv :> es,
     Terminal :> es,
     Time :> es
   ) =>
@@ -128,7 +143,7 @@ runLogger ::
   Eff es a
 runLogger = interpret_ $ \case
   LoggerLog _loc _logSrc lvl msg -> do
-    mLogLevel <- asks @Env (.logLevel)
+    mLogLevel <- asks @LogEnv (.logLevel)
     case mLogLevel of
       Nothing -> pure ()
       Just logLevel -> do
