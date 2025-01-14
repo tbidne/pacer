@@ -1,0 +1,7 @@
+MkChartParams
+  { cleanInstall = False
+  , chartRequestsPath = "C:\root\config-data\rel-cr.toml"
+  , dataDir = ()
+  , json = False
+  , runsPath = "C:\root\config-data\rel-runs.toml"
+  }

@@ -1,5 +1,6 @@
 module Pacer.Config.Toml
   ( Toml (..),
+    TomlWithPath (..),
   )
 where
 
@@ -7,6 +8,15 @@ import FileSystem.OsPath qualified as OsPath
 import Pacer.Config.Logging (LogLevelParam)
 import Pacer.Prelude
 import TOML (DecodeTOML (tomlDecoder), getFieldOptWith)
+
+-- | Toml with its parent directory.
+data TomlWithPath = MkTomlWithPath
+  { -- | Directory containing the toml file. Used for resolving relative paths.
+    dirPath :: Path Abs Dir,
+    -- | Toml config.
+    toml :: Toml
+  }
+  deriving stock (Eq, Show)
 
 -- NOTE: [User Path]
 --

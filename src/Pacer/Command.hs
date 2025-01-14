@@ -27,7 +27,7 @@ import Pacer.Command.Scale.Args qualified as Scale
 import Pacer.Command.Scale.Params qualified as Scale
 import Pacer.Config.Env.Types (CachedPaths)
 import Pacer.Config.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
-import Pacer.Config.Toml (Toml)
+import Pacer.Config.Toml (TomlWithPath)
 import Pacer.Config.Utils qualified as Utils
 import Pacer.Prelude
 
@@ -75,7 +75,7 @@ evolvePhase ::
     State CachedPaths :> es
   ) =>
   CommandPhaseArgs a ->
-  Maybe Toml ->
+  Maybe TomlWithPath ->
   Eff es (CommandPhaseFinal a)
 evolvePhase cmd mToml = case cmd of
   Chart params -> Chart <$> Chart.evolvePhase params mToml

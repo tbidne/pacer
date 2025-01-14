@@ -69,7 +69,8 @@ pathTests getTestDir =
       testPathChartRequestsOverrideData getTestDir,
       testPathRunsOverrideData getTestDir,
       testPathChartRequestsOverrideXdg getTestDir,
-      testPathRunsOverrideXdg getTestDir
+      testPathRunsOverrideXdg getTestDir,
+      testPathConfig getTestDir
     ]
 
 testPathXdg :: IO OsPath -> TestTree
@@ -169,6 +170,24 @@ testPathRunsOverrideXdg getTestDir = testGoldenParams getTestDir params
         }
     runsPath =
       unsafeDecode [ospPathSep|test/functional/data/testSimple/runs.toml|]
+
+testPathConfig :: IO OsPath -> TestTree
+testPathConfig getTestDir = testGoldenParams getTestDir params
+  where
+    params =
+      MkGoldenParams
+        { mkArgs = \_ ->
+            [ "chart",
+              "--json",
+              "--config",
+              configPath
+            ],
+          outFileName = Just [osp|charts.json|],
+          testDesc = "Uses explicit config",
+          testName = [osp|testPathConfig|]
+        }
+
+    configPath = unsafeDecode [ospPathSep|examples/config.toml|]
 
 -- TODO: Would be nice to have an e2e test for chart generation i.e. actually
 -- invoke node and generate a real html page.

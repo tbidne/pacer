@@ -19,13 +19,17 @@ where
 
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
+import FileSystem.Path qualified as Path
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
 import Pacer.Config.Env.Types (CachedPaths, getCachedXdgConfigPath)
 import Pacer.Config.Phase
   ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
   )
-import Pacer.Config.Toml (Toml (chartRequestsPath, dataDir, runsPath))
+import Pacer.Config.Toml
+  ( Toml (chartRequestsPath, dataDir, runsPath),
+    TomlWithPath (dirPath, toml),
+  )
 import Pacer.Exception
   ( ChartFileMissingE
       ( MkChartFileMissingE,
@@ -38,6 +42,7 @@ import Pacer.Exception
   )
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
+import System.OsPath qualified as OsPath
 
 -- See NOTE: [User Path]
 
@@ -94,9 +99,9 @@ evolvePhase ::
     State CachedPaths :> es
   ) =>
   ChartParamsArgs ->
-  Maybe Toml ->
+  Maybe TomlWithPath ->
   Eff es ChartParamsFinal
-evolvePhase @es params mToml = do
+evolvePhase @es params mTomlWithPath = do
   (chartRequestsPath, runsPath) <- getChartInputs
 
   assertExists chartRequestsPath
@@ -168,15 +173,28 @@ evolvePhase @es params mToml = do
 
         findTomlPath :: Eff es (Maybe (Path Abs File))
         findTomlPath = addNamespace "findTomlPath"
-          $ case mToml >>= tomlSel of
-            -- 2.1. Toml.path exists, use it
-            Just p -> Just <$> parseCanonicalAbsFile p
-            Nothing -> case mToml >>= (.dataDir) of
-              -- 2.2. Toml.data-dir/path exists, try it
-              Just tomlDataDirOsPath -> do
-                tomlDataDirPath <- parseCanonicalAbsDir tomlDataDirOsPath
-                findFirstMatch tomlDataDirPath
-              Nothing -> pure Nothing
+          $ case mTomlWithPath of
+            Just tomlWithPath -> case tomlSel tomlWithPath.toml of
+              -- 2.1. Toml.path exists, use it
+              Just p ->
+                Just
+                  <$> handleTomlPath
+                    Path.parseAbsFile
+                    Path.parseRelFile
+                    tomlWithPath.dirPath
+                    p
+              Nothing -> case tomlWithPath.toml.dataDir of
+                Just dataDir -> do
+                  -- 2.2. Toml.data-dir/path exists, try it
+                  tomlDataDirPath <-
+                    handleTomlPath
+                      Path.parseAbsDir
+                      Path.parseRelDir
+                      tomlWithPath.dirPath
+                      dataDir
+                  findFirstMatch tomlDataDirPath
+                Nothing -> pure Nothing
+            Nothing -> pure Nothing
 
         findXdgPath :: Eff es (Path Abs File)
         findXdgPath = addNamespace "findXdgPath" $ do
@@ -191,7 +209,7 @@ evolvePhase @es params mToml = do
                 $ MkChartFileMissingE
                   { cliDataDir = params.dataDir,
                     expectedFiles = fileNames,
-                    tomlDataDir = mToml >>= (.dataDir),
+                    tomlDataDir = mTomlWithPath >>= \t -> t.toml.dataDir,
                     xdgDir
                   }
 
@@ -215,6 +233,27 @@ evolvePhase @es params mToml = do
                   " in: ",
                   Utils.showtPath dataDir
                 ]
+
+    -- Handles toml config path, resolving any relative paths. Polymorphic
+    -- over file/dir path.
+    handleTomlPath ::
+      -- Absolute parser.
+      (OsPath -> Eff es (Path Abs t)) ->
+      -- Relative parser.
+      (OsPath -> Eff es (Path Rel t)) ->
+      -- Dir containing the toml config.
+      Path Abs Dir ->
+      -- Path to resolve
+      OsPath ->
+      Eff es (Path Abs t)
+    handleTomlPath absParser relParser tomlDir otherPath =
+      if OsPath.isAbsolute otherPath
+        -- Path is absolute, just parse it.
+        then absParser otherPath
+        -- Path is relative, parse and combine with tomlDir.
+        else do
+          relFile <- relParser otherPath
+          pure $ tomlDir <</>> relFile
 
     assertExists :: (HasCallStack) => Path b t -> Eff es ()
     assertExists p = do

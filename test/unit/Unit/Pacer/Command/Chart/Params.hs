@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Pacer.Command.Chart.Params (tests) where
@@ -31,6 +32,7 @@ import Pacer.Config.Toml
         logLevel,
         runsPath
       ),
+    TomlWithPath (MkTomlWithPath, dirPath, toml),
   )
 import Unit.Prelude
 
@@ -48,8 +50,10 @@ successTests =
     "Success"
     [ testEvolvePhaseCliPaths,
       testEvolvePhaseCliData,
-      testEvolvePhaseConfigPaths,
-      testEvolvePhaseConfigData,
+      testEvolvePhaseConfigAbsPaths,
+      testEvolvePhaseConfigRelPaths,
+      testEvolvePhaseConfigAbsData,
+      testEvolvePhaseConfigRelData,
       testEvolvePhaseXdgPaths
     ]
 
@@ -104,12 +108,12 @@ testEvolvePhaseCliData =
           runsPath = Just [osp|config-runs.toml|]
         }
 
-testEvolvePhaseConfigPaths :: TestTree
-testEvolvePhaseConfigPaths =
+testEvolvePhaseConfigAbsPaths :: TestTree
+testEvolvePhaseConfigAbsPaths =
   testGoldenParamsOs
     $ MkGoldenParams
-      { testDesc = "Uses config paths",
-        testName = [osp|testEvolvePhaseConfigPaths|],
+      { testDesc = "Uses config absolute paths",
+        testName = [osp|testEvolvePhaseConfigAbsPaths|],
         runner = goldenRunner params toml
       }
   where
@@ -126,18 +130,46 @@ testEvolvePhaseConfigPaths =
 
     toml =
       MkToml
-        { chartRequestsPath = Just [osp|config-cr.toml|],
+        { chartRequestsPath = Just $ rootOsPath </> [osp|config-cr.toml|],
           dataDir = Just [osp|config-data|],
           logLevel = Nothing,
-          runsPath = Just [osp|config-runs.toml|]
+          runsPath = Just $ rootOsPath </> [osp|config-runs.toml|]
         }
 
-testEvolvePhaseConfigData :: TestTree
-testEvolvePhaseConfigData =
+testEvolvePhaseConfigRelPaths :: TestTree
+testEvolvePhaseConfigRelPaths =
   testGoldenParamsOs
     $ MkGoldenParams
-      { testDesc = "Uses config data",
-        testName = [osp|testEvolvePhaseConfigData|],
+      { testDesc = "Uses config relative paths",
+        testName = [osp|testEvolvePhaseConfigRelPaths|],
+        runner = goldenRunner params toml
+      }
+  where
+    params =
+      MkChartParams
+        { cleanInstall = False,
+          chartRequestsPath = Nothing,
+          -- Even with --data specified, we will skip to toml since the
+          -- former contains no paths.
+          dataDir = Just [osp|no-data|],
+          json = False,
+          runsPath = Nothing
+        }
+
+    toml =
+      MkToml
+        { chartRequestsPath = Just [osp|rel-cr.toml|],
+          dataDir = Just [osp|config-data|],
+          logLevel = Nothing,
+          runsPath = Just [osp|rel-runs.toml|]
+        }
+
+testEvolvePhaseConfigAbsData :: TestTree
+testEvolvePhaseConfigAbsData =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Uses config absolute data",
+        testName = [osp|testEvolvePhaseConfigAbsData|],
         runner = goldenRunner params toml
       }
   where
@@ -155,7 +187,35 @@ testEvolvePhaseConfigData =
     toml =
       MkToml
         { chartRequestsPath = Nothing,
-          dataDir = Just [osp|config-data|],
+          dataDir = Just $ rootOsPath </> [osp|config-data|],
+          logLevel = Nothing,
+          runsPath = Nothing
+        }
+
+testEvolvePhaseConfigRelData :: TestTree
+testEvolvePhaseConfigRelData =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Uses config relative data",
+        testName = [osp|testEvolvePhaseConfigRelData|],
+        runner = goldenRunner params toml
+      }
+  where
+    params =
+      MkChartParams
+        { cleanInstall = False,
+          chartRequestsPath = Nothing,
+          -- Even with --data specified, we will skip to toml since the
+          -- former contains no paths.
+          dataDir = Just [osp|no-data|],
+          json = False,
+          runsPath = Nothing
+        }
+
+    toml =
+      MkToml
+        { chartRequestsPath = Nothing,
+          dataDir = Just [osp|./|],
           logLevel = Nothing,
           runsPath = Nothing
         }
@@ -282,7 +342,11 @@ data MockEnv = MkMockEnv
   }
   deriving stock (Eq, Show)
 
-runEvolvePhase :: Bool -> ChartParamsArgs -> Maybe Toml -> IO ChartParamsFinal
+runEvolvePhase ::
+  Bool ->
+  ChartParamsArgs ->
+  Maybe TomlWithPath ->
+  IO ChartParamsFinal
 runEvolvePhase xdg params mToml = do
   runner $ Params.evolvePhase params mToml
   where
@@ -291,7 +355,7 @@ runEvolvePhase xdg params mToml = do
         { cachedPaths = mempty,
           knownFiles =
             Set.fromList
-              $ (root </>)
+              $ (rootOsPath </>)
               <$> [ [ospPathSep|cli-cr.toml|],
                     [ospPathSep|cli-runs.toml|],
                     [ospPathSep|cli-data/chart-requests.toml|],
@@ -300,6 +364,8 @@ runEvolvePhase xdg params mToml = do
                     [ospPathSep|config-runs.toml|],
                     [ospPathSep|config-data/chart-requests.toml|],
                     [ospPathSep|config-data/runs.toml|],
+                    [ospPathSep|config-data/rel-cr.toml|],
+                    [ospPathSep|config-data/rel-runs.toml|],
                     [ospPathSep|xdg/config/pacer/chart-requests.toml|],
                     [ospPathSep|xdg/config/pacer/runs.toml|]
                   ],
@@ -323,7 +389,7 @@ runPathReaderMock ::
   Eff (PathReader : es) a ->
   Eff es a
 runPathReaderMock = interpret_ $ \case
-  CanonicalizePath p -> pure $ root </> p
+  CanonicalizePath p -> pure $ rootOsPath </> p
   DoesFileExist p -> do
     knownFiles <- asks @MockEnv (.knownFiles)
     pure $ p `Set.member` knownFiles
@@ -333,8 +399,8 @@ runPathReaderMock = interpret_ $ \case
         xdg <- asks @MockEnv (.xdg)
         pure
           $ if xdg
-            then root </> [ospPathSep|xdg/config|] </> p
-            else root </> [ospPathSep|bad_xdg/config|] </> p
+            then rootOsPath </> [ospPathSep|xdg/config|] </> p
+            else rootOsPath </> [ospPathSep|bad_xdg/config|] </> p
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
   _ -> error $ "runPathReaderMock: unimplemented"
 
@@ -343,14 +409,28 @@ goldenRunner = goldenRunnerXdg True
 
 goldenRunnerXdg :: Bool -> ChartParamsArgs -> Toml -> IO ByteString
 goldenRunnerXdg xdg params toml = do
-  trySync (runEvolvePhase xdg params (Just toml)) <&> \case
+  let tomlPath =
+        MkTomlWithPath
+          { dirPath = rootPath <</>> [reldir|config-data|],
+            toml
+          }
+  trySync (runEvolvePhase xdg params (Just tomlPath)) <&> \case
     Right x -> pShowBS x
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
     Left ex -> encodeUtf8 $ packText $ Ann.displayInner ex
 
-root :: OsPath
-root =
-  if isPosix
-    then [osp|/root|]
-    else [osp|C:\root|]
+rootOsPath :: OsPath
+rootOsPath = pathToOsPath rootPath
+
+{- ORMOLU_DISABLE -}
+
+rootPath :: Path Abs Dir
+rootPath =
+#if POSIX
+  [absdir|/root|]
+#else
+  [absdir|C:\root|]
+#endif
+
+{- ORMOLU_ENABLE -}

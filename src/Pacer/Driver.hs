@@ -14,6 +14,7 @@ import Effectful.Logger.Dynamic (Logger (LoggerLog))
 import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.LoggerNS.Static
 import Effectful.LoggerNS.Static qualified as LoggerNS
+import FileSystem.Path qualified as Path
 import Pacer.Command
   ( Command (Chart, Convert, Derive, Scale),
     CommandPhaseArgs,
@@ -29,8 +30,9 @@ import Pacer.Config.Env.Types
   ( CachedPaths (MkCachedPaths, xdgConfigPath),
     LogEnv (logLevel),
   )
-import Pacer.Config.Toml (Toml)
+import Pacer.Config.Toml (Toml, TomlWithPath (MkTomlWithPath, toml))
 import Pacer.Prelude
+import System.OsPath qualified as FP
 import TOML qualified
 
 runApp ::
@@ -90,7 +92,7 @@ type Config =
     -- Command to run, before evolution
     (CommandPhaseArgs Double)
     -- Possible toml config
-    (Maybe Toml)
+    (Maybe TomlWithPath)
     -- Cached paths
     CachedPaths
     -- Logging env
@@ -106,23 +108,36 @@ getConfiguration ::
 getConfiguration @es = do
   args <- execParser (parserInfo @Double)
 
+  -- Get toml and xdg config, if necessary.
   (mXdgConfig, mToml) <- do
     case args.configPath of
+      -- No config path, try xdg
       Nothing -> do
         xdgConfig <- getXdgConfigPath
         let path = xdgConfig <</>> [relfile|config.toml|]
 
         exists <- PR.doesFileExist (pathToOsPath path)
         if exists
-          then (Just xdgConfig,) . Just <$> readToml path
+          then do
+            toml <- readToml path
+            let tomlPath = MkTomlWithPath xdgConfig toml
+            pure $ (Just xdgConfig, Just tomlPath)
           else pure (Just xdgConfig, Nothing)
-      Just p -> (Nothing,) . Just <$> (parseCanonicalAbsFile p >>= readToml)
+      -- Config path exists, use it.
+      Just configPath -> do
+        absPath <- parseCanonicalAbsFile configPath
+        toml <- readToml absPath
+
+        absTomlDir <- Path.parseAbsDir $ FP.takeDirectory (pathToOsPath absPath)
+
+        let tomlPath = MkTomlWithPath absTomlDir toml
+        pure (Nothing, Just tomlPath)
 
   let cachedPaths =
         MkCachedPaths
           { xdgConfigPath = mXdgConfig
           }
-      logEnv = Env.mkLogEnv args mToml
+      logEnv = Env.mkLogEnv args (mToml <&> (.toml))
 
   pure (args.command, mToml, cachedPaths, logEnv)
   where
