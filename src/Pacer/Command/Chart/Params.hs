@@ -26,17 +26,17 @@ import Pacer.Config.Phase
   )
 import Pacer.Config.Toml (Toml (chartRequestsPath, dataDir, runsPath))
 import Pacer.Exception
-  ( FileMissingE
-      ( MkFileMissingE,
+  ( ChartFileMissingE
+      ( MkChartFileMissingE,
         cliDataDir,
         expectedFiles,
         tomlDataDir,
         xdgDir
       ),
+    FileNotFoundE (MkFileNotFoundE),
   )
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
-import System.IO.Error qualified as Error
 
 -- See NOTE: [User Path]
 
@@ -190,7 +190,7 @@ evolvePhase @es params mToml = do
             Just xdgPath -> pure $ (Just xdgDir, xdgPath)
             Nothing ->
               throwM
-                $ MkFileMissingE
+                $ MkChartFileMissingE
                   { cliDataDir = params.dataDir,
                     expectedFiles = fileNames,
                     tomlDataDir = mToml >>= (.dataDir),
@@ -218,15 +218,11 @@ evolvePhase @es params mToml = do
                   Utils.showtPath dataDir
                 ]
 
+    assertExists :: (HasCallStack) => Path b t -> Eff es ()
     assertExists p = do
       let p' = pathToOsPath p
       exists <- PR.doesFileExist p'
-      unless exists $ do
-        throwPathIOError
-          p'
-          "createCharts"
-          Error.doesNotExistErrorType
-          "Required file does not exist."
+      unless exists $ throwM (MkFileNotFoundE p')
 
     runsName :: Path Rel File
     runsName = [relfile|runs.toml|]

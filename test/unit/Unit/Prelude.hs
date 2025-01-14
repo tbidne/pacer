@@ -206,4 +206,9 @@ testGoldenParams goldenParams =
 -- Note that an alternative to pretty-simple would be to use aeson's
 -- ToJSON and print that. Of course that requires ToJSON instances.
 pShowBS :: (Show a) => a -> ByteString
-pShowBS = encodeUtf8 . toStrictText . Pretty.pShowNoColor
+pShowBS = encodeUtf8 . toStrictText . Pretty.pShowOpt opts
+  where
+    opts =
+      Pretty.defaultOutputOptionsNoColor
+        { Pretty.outputOptionsIndentAmount = 2
+        }

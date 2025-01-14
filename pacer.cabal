@@ -157,6 +157,7 @@ test-suite unit
     Unit.Pacer.Command.Chart
     Unit.Pacer.Command.Chart.Data.ChartRequest
     Unit.Pacer.Command.Chart.Data.Run
+    Unit.Pacer.Command.Chart.Params
     Unit.Pacer.Command.Derive
     Unit.Pacer.Data.Distance
     Unit.Pacer.Data.Distance.Units
@@ -168,6 +169,7 @@ test-suite unit
   build-depends:
     , base
     , containers
+    , exception-utils
     , filepath
     , fs-effectful
     , fs-utils
@@ -195,8 +197,8 @@ test-suite functional
     Functional.Pacer.Command.Chart
     Functional.Pacer.Command.Convert
     Functional.Pacer.Command.Derive
-    Functional.Prelude
     Functional.Pacer.Command.Scale
+    Functional.Prelude
 
   build-depends:
     , base

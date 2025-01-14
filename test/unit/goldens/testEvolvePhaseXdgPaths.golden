@@ -1,0 +1,7 @@
+MkChartParams
+  { cleanInstall = False
+  , chartRequestsPath = "/root/xdg/config/pacer/chart-requests.toml"
+  , dataDir = ()
+  , json = False
+  , runsPath = "/root/xdg/config/pacer/runs.toml"
+  }
