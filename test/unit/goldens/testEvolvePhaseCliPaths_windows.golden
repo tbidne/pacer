@@ -1,0 +1,7 @@
+MkChartParams
+  { cleanInstall = False
+  , chartRequestsPath = "C:\root\cli-cr.toml"
+  , dataDir = ()
+  , json = False
+  , runsPath = "C:\root\cli-runs.toml"
+  }

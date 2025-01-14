@@ -54,7 +54,7 @@ successTests =
 
 testEvolvePhaseCliPaths :: TestTree
 testEvolvePhaseCliPaths =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Uses CLI paths",
         testName = [osp|testEvolvePhaseCliPaths|],
@@ -79,7 +79,7 @@ testEvolvePhaseCliPaths =
 
 testEvolvePhaseCliData :: TestTree
 testEvolvePhaseCliData =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Uses CLI data",
         testName = [osp|testEvolvePhaseCliData|],
@@ -105,7 +105,7 @@ testEvolvePhaseCliData =
 
 testEvolvePhaseConfigPaths :: TestTree
 testEvolvePhaseConfigPaths =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Uses config paths",
         testName = [osp|testEvolvePhaseConfigPaths|],
@@ -133,7 +133,7 @@ testEvolvePhaseConfigPaths =
 
 testEvolvePhaseConfigData :: TestTree
 testEvolvePhaseConfigData =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Uses config data",
         testName = [osp|testEvolvePhaseConfigData|],
@@ -161,7 +161,7 @@ testEvolvePhaseConfigData =
 
 testEvolvePhaseXdgPaths :: TestTree
 testEvolvePhaseXdgPaths =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Uses xdg paths",
         testName = [osp|testEvolvePhaseXdgPaths|],
@@ -200,7 +200,7 @@ failureTests =
 
 testEvolvePhaseCliPathsEx :: TestTree
 testEvolvePhaseCliPathsEx =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Exception for unknown CLI paths",
         testName = [osp|testEvolvePhaseCliPathsEx|],
@@ -225,7 +225,7 @@ testEvolvePhaseCliPathsEx =
 
 testEvolvePhaseConfigPathsEx :: TestTree
 testEvolvePhaseConfigPathsEx =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Exception for unknown config paths",
         testName = [osp|testEvolvePhaseConfigPathsEx|],
@@ -250,7 +250,7 @@ testEvolvePhaseConfigPathsEx =
 
 testEvolvePhaseMissingEx :: TestTree
 testEvolvePhaseMissingEx =
-  testGoldenParams
+  testGoldenParamsOs
     $ MkGoldenParams
       { testDesc = "Exception for missing paths",
         testName = [osp|testEvolvePhaseMissingEx|],
@@ -288,17 +288,18 @@ runEvolvePhase xdg params mToml = do
       MkMockEnv
         { knownFiles =
             Set.fromList
-              [ [osp|/root/cli-cr.toml|],
-                [osp|/root/cli-runs.toml|],
-                [osp|/root/cli-data/chart-requests.toml|],
-                [osp|/root/cli-data/runs.toml|],
-                [osp|/root/config-cr.toml|],
-                [osp|/root/config-runs.toml|],
-                [osp|/root/config-data/chart-requests.toml|],
-                [osp|/root/config-data/runs.toml|],
-                [osp|/root/xdg/config/pacer/chart-requests.toml|],
-                [osp|/root/xdg/config/pacer/runs.toml|]
-              ],
+              $ (root </>)
+              <$> [ [ospPathSep|cli-cr.toml|],
+                    [ospPathSep|cli-runs.toml|],
+                    [ospPathSep|cli-data/chart-requests.toml|],
+                    [ospPathSep|cli-data/runs.toml|],
+                    [ospPathSep|config-cr.toml|],
+                    [ospPathSep|config-runs.toml|],
+                    [ospPathSep|config-data/chart-requests.toml|],
+                    [ospPathSep|config-data/runs.toml|],
+                    [ospPathSep|xdg/config/pacer/chart-requests.toml|],
+                    [ospPathSep|xdg/config/pacer/runs.toml|]
+                  ],
           xdg
         }
 
@@ -318,7 +319,7 @@ runPathReaderMock ::
   Eff (PathReader : es) a ->
   Eff es a
 runPathReaderMock = interpret_ $ \case
-  CanonicalizePath p -> pure $ [osp|/root|] </> p
+  CanonicalizePath p -> pure $ root </> p
   DoesFileExist p -> do
     knownFiles <- asks @MockEnv (.knownFiles)
     pure $ p `Set.member` knownFiles
@@ -328,8 +329,8 @@ runPathReaderMock = interpret_ $ \case
         xdg <- asks @MockEnv (.xdg)
         pure
           $ if xdg
-            then [osp|/root/xdg/config|] </> p
-            else [osp|/root/bad_xdg/config|] </> p
+            then root </> [ospPathSep|xdg/config|] </> p
+            else root </> [ospPathSep|bad_xdg/config|] </> p
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
   _ -> error $ "runPathReaderMock: unimplemented"
 
@@ -343,3 +344,9 @@ goldenRunnerXdg xdg params toml = do
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
     Left ex -> encodeUtf8 $ packText $ Ann.displayInner ex
+
+root :: OsPath
+root =
+  if isPosix
+    then [osp|/root|]
+    else [osp|C:\root|]

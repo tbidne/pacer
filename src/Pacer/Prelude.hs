@@ -92,6 +92,7 @@ module Pacer.Prelude
     currentOsStr,
     isPosix,
     posixWindowsStr,
+    posixWindowsOsPath,
 
     -- * Misc
     pattern SetToSeqNE,
@@ -603,6 +604,12 @@ isPosix :: Bool
 isPosix = case currentOs of
   Windows -> False
   _ -> True
+
+posixWindowsOsPath :: OsPath
+posixWindowsOsPath =
+  if isPosix
+    then [osp|posix|]
+    else [osp|windows|]
 
 posixWindowsStr :: String
 posixWindowsStr =

@@ -17,6 +17,7 @@ module Unit.Prelude
     -- * Golden
     GoldenParams (..),
     testGoldenParams,
+    testGoldenParamsOs,
 
     -- * Parsing
     parseOrDie,
@@ -180,6 +181,14 @@ data GoldenParams = MkGoldenParams
     testName :: OsPath,
     runner :: IO ByteString
   }
+
+testGoldenParamsOs :: GoldenParams -> TestTree
+testGoldenParamsOs goldenParams = testGoldenParams goldenParams'
+  where
+    goldenParams' =
+      goldenParams
+        { testName = goldenParams.testName <> ([osp|_|] <> posixWindowsOsPath)
+        }
 
 testGoldenParams :: GoldenParams -> TestTree
 testGoldenParams goldenParams =

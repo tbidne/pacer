@@ -1,0 +1,4 @@
+Required chart file not found. Searched for paths(s) [chart-requests.toml] in directories:
+ - some-dir
+ - some-config-data
+ - C:\root\bad_xdg\config\pacer\
