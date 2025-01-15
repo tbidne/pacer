@@ -32,11 +32,8 @@ source-repository head
 common common-lang
   default-extensions:
     ApplicativeDo
-    DataKinds
-    DerivingStrategies
     DerivingVia
     DuplicateRecordFields
-    LambdaCase
     LexicalNegation
     NoImplicitPrelude
     OverloadedRecordDot
@@ -56,7 +53,7 @@ common common-lang
   else
     cpp-options: -DLINUX -DPOSIX
 
-  default-language:   GHC2021
+  default-language:   GHC2024
 
 library
   import:          common-lang
