@@ -3,7 +3,6 @@
 
 module Unit.Pacer.Command.Chart.Params (tests) where
 
-import Control.Exception.Annotation.Utils qualified as Ann
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Effectful.FileSystem.PathReader.Dynamic
@@ -34,6 +33,7 @@ import Pacer.Config.Toml
       ),
     TomlWithPath (MkTomlWithPath, dirPath, toml),
   )
+import Pacer.Exception qualified as Ex
 import Unit.Prelude
 
 tests :: TestTree
@@ -418,7 +418,7 @@ goldenRunnerXdg xdg params toml = do
     Right x -> pShowBS x
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
-    Left ex -> encodeUtf8 $ packText $ Ann.displayInner ex
+    Left ex -> encodeUtf8 $ packText $ Ex.displayInnerMatchKnown ex
 
 rootOsPath :: OsPath
 rootOsPath = pathToOsPath rootPath

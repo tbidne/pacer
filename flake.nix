@@ -21,6 +21,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    effectful-libs = {
+      url = "github:tbidne/effectful-libs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
+      inputs.exception-utils.follows = "exception-utils";
+      inputs.fs-utils.follows = "fs-utils";
+    };
+
     exception-utils = {
       url = "github:tbidne/exception-utils";
       inputs.flake-parts.follows = "flake-parts";
@@ -35,30 +47,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    effectful-libs = {
-      url = "github:tbidne/effectful-libs";
+    relative-time = {
+      url = "github:tbidne/relative-time";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
-      inputs.exception-utils.follows = "exception-utils";
-      inputs.fs-utils.follows = "fs-utils";
     };
 
     smart-math = {
       url = "github:tbidne/smart-math";
-      inputs.flake-parts.follows = "flake-parts";
-      inputs.nix-hs-utils.follows = "nix-hs-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-
-      inputs.algebra-simple.follows = "algebra-simple";
-      inputs.bounds.follows = "bounds";
-    };
-
-    relative-time = {
-      url = "github:tbidne/relative-time/convert";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";

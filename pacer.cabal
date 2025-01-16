@@ -3,7 +3,7 @@ name:               pacer
 version:            0.1
 license:            MIT
 license-file:       LICENSE
-tested-with:        GHC ==9.10.1
+tested-with:        GHC ==9.10.1 || ==9.12.1
 copyright:          2024-2025 Thomas Bidne
 author:             Thomas Bidne
 maintainer:         tbidne@protonmail.com
@@ -114,11 +114,11 @@ library
     , filepath                         >=1.5      && <1.6
     , fs-effectful                     ^>=0.1
     , fs-utils                         ^>=0.1
-    , ghc-experimental                 ^>=0.1.0.0
+    , ghc-experimental                 >=0.1.0.0  && <9.1202
     , ioref-effectful                  ^>=0.1
     , logger-effectful                 ^>=0.1
     , logger-ns-effectful              ^>=0.1
-    , megaparsec                       >=7.0.5    && <9.7
+    , megaparsec                       >=7.0.5    && <9.8
     , nonempty-containers              >=0.3.4.2  && <0.4
     , optparse-applicative             >=0.15     && <0.19
     , optparse-effectful               ^>=0.1
@@ -126,10 +126,10 @@ library
     , relative-time                    ^>=0.1
     , singletons                       ^>=3.0.3
     , smart-math                       ^>=0.1
-    , template-haskell                 >=2.21     && <2.23
+    , template-haskell                 >=2.21     && <2.24
     , terminal-effectful               ^>=0.1
     , text                             >=1.2.3.2  && <2.2
-    , text-display                     >=0.0.3.0  && <0.6
+    , text-display                     >=0.0.3.0  && <1.1
     , time                             >=1.9.3    && <1.15
     , time-effectful                   ^>=0.1
     , toml-reader                      >=0.2.0.0  && <0.3.0.0
@@ -168,11 +168,10 @@ test-suite unit
   build-depends:
     , base
     , containers
-    , exception-utils
     , filepath
     , fs-effectful
     , fs-utils
-    , hedgehog                         >=1.0.2    && <1.5
+    , hedgehog                         >=1.0.2    && <1.6
     , logger-effectful
     , pacer
     , pretty-simple                    ^>=4.1.2.0

@@ -1,3 +1,5 @@
+index-state: 2025-01-16T06:55:53Z
+
 packages: pacer.cabal
 
 package pacer
@@ -22,27 +24,17 @@ package pacer
 source-repository-package
     type: git
     location: https://github.com/tbidne/algebra-simple.git
-    tag: 074ec817e7be495e36b94c071f010204bc547351
+    tag: 973852fc69a3bb7c0477dafcc933c14ec4cb0f75
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/bounds.git
-    tag: fb05a7288020d2bca0dbe45cd43d2c030f5a238c
-
-source-repository-package
-    type: git
-    location: https://github.com/tbidne/exception-utils.git
-    tag: 9ecb81e4a16f62736dbe7f90cb1983e7212b0c0f
-
-source-repository-package
-    type: git
-    location: https://github.com/tbidne/fs-utils.git
-    tag: b9b28c24983e2e8cfd559fe00c7d8d1c9b69caa9
+    tag: b7ca541cfdd8564bcebe5d38456fe7abf77885b8
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/effectful-libs.git
-    tag: 0ffc603026f6632a39deb84530612192c1247a1f
+    tag: 63713ede9a37754dff857900cc3fb38884c6afde
     subdir:
       lib/concurrent-effectful
       lib/fs-effectful
@@ -56,13 +48,26 @@ source-repository-package
 
 source-repository-package
     type: git
-    location: https://github.com/tbidne/smart-math.git
-    tag: 641b6b5cf5708c7a27af3b2d94a5947bc24449ef
+    location: https://github.com/tbidne/exception-utils.git
+    tag: d9d3d6061d9ad16d9840a4e5e9cdc36a498a2a82
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/fs-utils.git
+    tag: e2273c91c411e1fe12347524065855ba8e34a481
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/relative-time.git
-    tag: 923df56587a58f390512e204754140c7741acd8b
+    tag: 6bd6c1208bcda9f5d5ecb7ff45fafb91929cdea8
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/smart-math.git
+    tag: d1b9dceac83d677f55798cee2c98b0fc1f54e6f9
 
 optimization: 2
 test-show-details: direct
+
+allow-newer: path:hashable
+allow-newer: unix-compat:time

@@ -17,6 +17,7 @@ module Pacer.Exception
   )
 where
 
+import Control.Exception (SomeException (SomeException))
 import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
 import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
 import Data.List qualified as L
@@ -204,16 +205,20 @@ instance Exception NpmE where
       ]
 
 displayInnerMatchKnown :: (Exception e) => e -> String
-displayInnerMatchKnown = Ex.Ann.Utils.displayInnerMatch knownExceptions
+displayInnerMatchKnown e =
+  if Ex.Ann.Utils.matchesException knownExceptions e
+    then case toException e of
+      SomeException innerEx -> displayException innerEx
+    else displayException e
 
 knownExceptions :: List ExceptionProxy
 knownExceptions =
-  [ MkExceptionProxy @ChartFileMissingE Proxy,
-    MkExceptionProxy @CommandConvertE Proxy,
-    MkExceptionProxy @CommandDeriveE Proxy,
-    MkExceptionProxy @CommandScaleE Proxy,
-    MkExceptionProxy @CreateChartE Proxy,
-    MkExceptionProxy @FileNotFoundE Proxy,
-    MkExceptionProxy @NpmE Proxy,
-    MkExceptionProxy @TomlE Proxy
+  [ MkExceptionProxy @ChartFileMissingE,
+    MkExceptionProxy @CommandConvertE,
+    MkExceptionProxy @CommandDeriveE,
+    MkExceptionProxy @CommandScaleE,
+    MkExceptionProxy @CreateChartE,
+    MkExceptionProxy @FileNotFoundE,
+    MkExceptionProxy @NpmE,
+    MkExceptionProxy @TomlE
   ]
