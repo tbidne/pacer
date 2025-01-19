@@ -21,6 +21,17 @@ MkChartRequests
       , filters =
         [ Atom
           ( FilterLabel "marathon" )
+        , Atom
+          ( FilterDate MkFilterOp >= _
+            ( MomentYear
+              ( MkYear
+                { unYear = UnsafeInterval
+                  ( Closed 1950 )
+                  ( Closed 2099 ) 2024
+                }
+              )
+            )
+          )
         ]
       , title = "Marathons"
       , unit = Nothing

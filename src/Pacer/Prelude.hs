@@ -110,6 +110,7 @@ import Control.Applicative as X
     (<**>),
   )
 import Control.Category as X (Category ((.)), (<<<), (>>>))
+import Control.DeepSeq as X (NFData)
 import Control.Exception as X
   ( Exception (displayException, fromException, toException),
     SomeException,

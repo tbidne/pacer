@@ -3,7 +3,6 @@
 module Pacer.Command.Chart.Data.Run
   ( -- * Run
     Run (..),
-    RunTimestamp (..),
 
     -- ** Functions
     derivePace,
@@ -20,18 +19,13 @@ module Pacer.Command.Chart.Data.Run
   )
 where
 
-import Data.Aeson (ToJSON (toJSON))
 import Data.Map.NonEmpty (NEMap)
 import Data.Map.NonEmpty qualified as NEMap
 import Data.Set.NonEmpty qualified as NESet
-import Data.Time qualified as Time
-import Data.Time.Format qualified as Format
-import Data.Time.LocalTime
-  ( LocalTime (LocalTime),
-    ZonedTime (ZonedTime),
-  )
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
+import Pacer.Command.Chart.Data.Time (Timestamp)
+import Pacer.Command.Chart.Data.Time qualified as Time
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Data.Distance
   ( Distance,
@@ -61,80 +55,6 @@ import TOML
 import TOML qualified
 
 -------------------------------------------------------------------------------
---                                RunTimestamp                               --
--------------------------------------------------------------------------------
-
--- | Timestamp for runs.
-data RunTimestamp
-  = RunDay Day
-  | RunLocalTime LocalTime
-  | RunZonedTime ZonedTime
-  deriving stock (Show)
-
--------------------------------------------------------------------------------
---                                Base Classes                               --
--------------------------------------------------------------------------------
-
-instance Eq RunTimestamp where
-  RunDay d1 == t2 = d1 == toDay t2
-  RunLocalTime (LocalTime d1 _) == RunDay d2 = d1 == d2
-  RunLocalTime l1 == RunLocalTime l2 = l1 == l2
-  RunLocalTime l1 == RunZonedTime (ZonedTime l2 _) = l1 == l2
-  RunZonedTime (ZonedTime (LocalTime d1 _) _) == RunDay d2 = d1 == d2
-  RunZonedTime (ZonedTime l1 _) == RunLocalTime l2 = l1 == l2
-  RunZonedTime z1 == RunZonedTime z2 =
-    Time.zonedTimeToUTC z1 == Time.zonedTimeToUTC z2
-
-instance Ord RunTimestamp where
-  RunDay d1 <= t2 = d1 <= toDay t2
-  RunLocalTime (LocalTime d1 _) <= RunDay d2 = d1 <= d2
-  RunLocalTime l1 <= RunLocalTime l2 = l1 <= l2
-  RunLocalTime l1 <= RunZonedTime (ZonedTime l2 _) = l1 <= l2
-  RunZonedTime (ZonedTime (LocalTime d1 _) _) <= RunDay d2 = d1 <= d2
-  RunZonedTime (ZonedTime l1 _) <= RunLocalTime l2 = l1 <= l2
-  RunZonedTime z1 <= RunZonedTime z2 =
-    Time.zonedTimeToUTC z1 <= Time.zonedTimeToUTC z2
-
--------------------------------------------------------------------------------
---                               Serialization                               --
--------------------------------------------------------------------------------
-
-instance DecodeTOML RunTimestamp where
-  tomlDecoder =
-    RunDay
-      <$> tomlDecoder
-      <|> RunLocalTime
-      <$> tomlDecoder
-      <|> RunZonedTime
-      <$> tomlDecoder
-
-instance ToJSON RunTimestamp where
-  toJSON (RunDay d) = toJSON d
-  toJSON (RunLocalTime lt) = toJSON lt
-  toJSON (RunZonedTime zt) = toJSON zt
-
--------------------------------------------------------------------------------
---                                    Misc                                   --
--------------------------------------------------------------------------------
-
-toDay :: RunTimestamp -> Day
-toDay (RunDay d) = d
-toDay (RunLocalTime (LocalTime d _)) = d
-toDay (RunZonedTime (ZonedTime (LocalTime d _) _)) = d
-
-fmtRunTimestamp :: RunTimestamp -> Text
-fmtRunTimestamp =
-  packText <<< \case
-    RunDay d -> Format.formatTime l dfmt d
-    RunLocalTime lt -> Format.formatTime l (dfmt ++ tfmt) lt
-    RunZonedTime zt -> Format.formatTime l (dfmt ++ tfmt ++ zfmt) zt
-  where
-    dfmt = "%Y-%m-%d"
-    tfmt = "T%H:%M:%S"
-    zfmt = "%z"
-    l = Format.defaultTimeLocale
-
--------------------------------------------------------------------------------
 --                                    Run                                    --
 -------------------------------------------------------------------------------
 
@@ -142,7 +62,7 @@ fmtRunTimestamp =
 type Run :: DistanceUnit -> Type -> Type
 data Run dist a = MkRun
   { -- | The start time of the run.
-    datetime :: RunTimestamp,
+    datetime :: Timestamp,
     -- | The run's total distance.
     distance :: Distance dist (Positive a),
     -- | The run's total duration.
@@ -395,11 +315,11 @@ instance
               [ "Found overlapping timestamps\n - ",
                 fmtTitle mTitle1,
                 ": ",
-                fmtRunTimestamp ts1,
+                Time.fmtTimestamp ts1,
                 "\n - ",
                 fmtTitle mTitle2,
                 ": ",
-                fmtRunTimestamp ts2
+                Time.fmtTimestamp ts2
               ]
         Right mp ->
           pure $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
@@ -440,12 +360,12 @@ instance
           fmtTitle Nothing = "<no title>"
           fmtTitle (Just t) = t
 
-type TitleAndTime = Tuple2 RunTimestamp (Maybe Text)
+type TitleAndTime = Tuple2 Timestamp (Maybe Text)
 
 type SomeRunsAcc a =
   Either
     (Tuple2 TitleAndTime TitleAndTime)
-    (NEMap RunTimestamp (SomeRunsKey a))
+    (NEMap Timestamp (SomeRunsKey a))
 
 -------------------------------------------------------------------------------
 --                                    Misc                                   --

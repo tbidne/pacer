@@ -32,9 +32,11 @@ source-repository head
 common common-lang
   default-extensions:
     ApplicativeDo
+    DeriveAnyClass
     DerivingVia
     DuplicateRecordFields
     LexicalNegation
+    MultiWayIf
     NoImplicitPrelude
     OverloadedRecordDot
     OverloadedStrings
@@ -71,6 +73,7 @@ library
     Pacer.Command.Chart.Data.ChartOptions
     Pacer.Command.Chart.Data.ChartRequest
     Pacer.Command.Chart.Data.Run
+    Pacer.Command.Chart.Data.Time
     Pacer.Command.Chart.Params
     Pacer.Command.Convert
     Pacer.Command.Convert.Args
@@ -108,6 +111,7 @@ library
     , base                             >=4.20.0.0 && <4.22
     , bytestring                       >=0.10.12  && <0.13
     , containers                       >=0.6.3.1  && <0.8
+    , deepseq                          >=1.4.6.0  && <1.6
     , effectful                        ^>=2.5.0.0
     , exception-utils                  ^>=0.1
     , exceptions                       ^>=0.10.4
@@ -156,6 +160,7 @@ test-suite unit
     Unit.Pacer.Command.Chart
     Unit.Pacer.Command.Chart.Data.ChartRequest
     Unit.Pacer.Command.Chart.Data.Run
+    Unit.Pacer.Command.Chart.Data.Time
     Unit.Pacer.Command.Chart.Params
     Unit.Pacer.Command.Derive
     Unit.Pacer.Data.Distance
@@ -181,8 +186,10 @@ test-suite unit
     , tasty-hunit                      >=0.9      && <0.11
     , terminal-effectful
     , text
+    , time
     , toml-reader
     , typed-process-dynamic-effectful
+    , tz                               ^>=0.1.3.3
 
   hs-source-dirs: test/unit
   ghc-options:    -threaded -with-rtsopts=-N

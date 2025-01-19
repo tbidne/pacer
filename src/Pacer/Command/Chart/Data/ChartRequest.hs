@@ -21,6 +21,7 @@ import Data.Aeson (ToJSON)
 import Data.Aeson.Types (ToJSON (toJSON))
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
+import Pacer.Command.Chart.Data.Time (Moment)
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
@@ -82,10 +83,11 @@ instance Parser FilterOp where
 
 -- | Ways in which we can filter runs.
 data FilterType a
-  = -- | Filters by label equality.
-    FilterLabel Text
-  | FilterDistance FilterOp (SomeDistance (Positive a))
+  = FilterDistance FilterOp (SomeDistance (Positive a))
   | FilterDuration FilterOp (Seconds (Positive a))
+  | -- | Filters by label equality.
+    FilterLabel Text
+  | FilterDate FilterOp Moment
   | FilterPace FilterOp (SomePace (Positive a))
   deriving stock (Eq, Show)
 
@@ -103,12 +105,21 @@ instance
       [ parseLabel,
         parseDist,
         parseDuration,
-        parsePace
+        parsePace,
+        parseDate
       ]
     where
       parseLabel = do
         void $ MPC.string "label "
         FilterLabel <$> MP.takeWhile1P Nothing (/= ')')
+
+      parseDate = do
+        MPC.string "date"
+        MPC.space1
+        op <- parser
+        MPC.space1
+        m <- parser
+        pure $ FilterDate op m
 
       parseDist = parsePred "distance" FilterDistance
       parseDuration = parsePred "duration" FilterDuration

@@ -24,9 +24,12 @@ where
 
 import Data.Char qualified as Ch
 import Data.Text qualified as T
+import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
+import Data.Word (Word16)
 import Numeric.Data.Fraction.Algebra (mkFraction)
 import Pacer.Prelude
+import Pacer.Utils (EitherString (EitherLeft, EitherRight))
 import Text.Megaparsec (Parsec, (<?>))
 import Text.Megaparsec qualified as MP
 import Text.Read qualified as TR
@@ -38,6 +41,9 @@ type MParser a = Parsec Void Text a
 class Parser a where
   -- | Megaparsec parser for the given type.
   parser :: MParser a
+
+instance Parser Word16 where
+  parser = parseIntegral
 
 instance Parser Double where
   parser = parseDigits
@@ -69,14 +75,70 @@ instance (AMonoid a, Ord a, Parser a, Show a) => Parser (Positive a) where
       Nothing -> fail $ "Parsed non-positive: " ++ show d
       Just x -> pure x
 
+instance Parser LocalTime where
+  parser = do
+    str <- unpackText <$> MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '-')
+    case Format.parseTimeM False Format.defaultTimeLocale fmt str of
+      EitherRight d -> pure d
+      EitherLeft err ->
+        fail
+          $ mconcat
+            [ "Failed parsing localtime from string '",
+              str,
+              "': ",
+              err
+            ]
+    where
+      fmt = "%Y-%m-%dT%H:%M:%S"
+
+instance Parser ZonedTime where
+  parser = do
+    str <- unpackText <$> MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '-')
+    case Format.parseTimeM False Format.defaultTimeLocale fmt str of
+      EitherRight d -> pure d
+      EitherLeft err ->
+        fail
+          $ mconcat
+            [ "Failed parsing zoned time from string '",
+              str,
+              "': ",
+              err
+            ]
+    where
+      fmt = "%Y-%m-%dT%H:%M:%S%z"
+
+instance Parser Day where
+  parser = do
+    str <- unpackText <$> MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '-')
+    case Format.parseTimeM False Format.defaultTimeLocale fmt str of
+      EitherRight d -> pure d
+      EitherLeft err ->
+        fail
+          $ mconcat
+            [ "Failed parsing day from string '",
+              str,
+              "': ",
+              err
+            ]
+    where
+      fmt = "%Y-%m-%d"
+
 -- | Parser combinator for digits with a 'Read' instance.
 parseDigits :: (Read n) => Parsec Void Text n
 parseDigits = parseDigitText >>= readDigits
 
+-- | Parser combinator for digits with a 'Read' instance.
+parseIntegral :: (Read n) => Parsec Void Text n
+parseIntegral = parseIntegralText >>= readDigits
+
 -- | Parser combinator for digits.
 parseDigitText :: Parsec Void Text Text
 parseDigitText =
-  MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '.')
+  MP.takeWhile1P (Just "parseDigitText") (\c -> Ch.isDigit c || c == '.')
+
+-- | Parser combinator for digits.
+parseIntegralText :: Parsec Void Text Text
+parseIntegralText = MP.takeWhile1P (Just "parseIntegralText") Ch.isDigit
 
 -- | Read text like "1d2h3m4s", parse w/ relative time into Fractional
 -- seconds.

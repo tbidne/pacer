@@ -18,7 +18,7 @@ import Pacer.Command.Chart.Data.ChartRequest
     ChartRequests (unChartRequests),
     FilterExpr,
     FilterOp (MkFilterOp),
-    FilterType (FilterDistance, FilterDuration, FilterLabel, FilterPace),
+    FilterType (FilterDate, FilterDistance, FilterDuration, FilterLabel, FilterPace),
     YAxisType
       ( YAxisDistance,
         YAxisDuration,
@@ -28,12 +28,12 @@ import Pacer.Command.Chart.Data.ChartRequest
   )
 import Pacer.Command.Chart.Data.Run
   ( Run (datetime, distance, duration),
-    RunTimestamp,
     SomeRun (MkSomeRun),
     SomeRuns (MkSomeRuns),
     SomeRunsKey (MkSomeRunsKey, unSomeRunsKey),
   )
 import Pacer.Command.Chart.Data.Run qualified as Run
+import Pacer.Command.Chart.Data.Time (Moment (MomentTimestamp), Timestamp)
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
@@ -57,7 +57,7 @@ instance ToJSON ChartData where
 -- | Data for a chart with a single Y axis.
 data ChartY = MkChartY
   { -- | X and Y axis data.
-    values :: NESeq (Tuple2 RunTimestamp Double),
+    values :: NESeq (Tuple2 Timestamp Double),
     -- | Y axis type. This is used for the label on the line itself, __not__
     -- the y-axis (that label is on ChartOptions).
     yType :: YAxisType
@@ -78,7 +78,7 @@ instance ToJSON ChartY where
 -- | Data for a chart with two Y axes.
 data ChartY1 = MkChartY1
   { -- | Data for a chart with two y Axes.
-    values :: NESeq (Tuple3 RunTimestamp Double Double),
+    values :: NESeq (Tuple3 Timestamp Double Double),
     -- | Type of first Y axis.
     yType :: YAxisType,
     -- | Type of second Y axis.
@@ -109,10 +109,10 @@ mkYJson yVal yType yId =
     ]
 
 -- | Accumulator for chart with a single Y axis.
-type AccY = NESeq (Tuple2 RunTimestamp Double)
+type AccY = NESeq (Tuple2 Timestamp Double)
 
 -- | Accumulator for chart with two Y axes.
-type AccY1 = NESeq (Tuple3 RunTimestamp Double Double)
+type AccY1 = NESeq (Tuple3 Timestamp Double Double)
 
 -- | Turns a sequence of runs and chart requests into charts.
 mkChartDatas ::
@@ -224,12 +224,18 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     applyFilter :: SomeRunsKey a -> FilterType a -> Bool
     applyFilter srk (FilterLabel lbl) = applyLabel srk.unSomeRunsKey lbl
+    applyFilter srk (FilterDate op m) = applyDate srk.unSomeRunsKey op m
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeRunsKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeRunsKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeRunsKey op p
 
     applyLabel :: SomeRun a -> Text -> Bool
     applyLabel (MkSomeRun _ r) lbl = lbl `elem` r.labels
+
+    applyDate :: SomeRun a -> FilterOp -> Moment -> Bool
+    applyDate (MkSomeRun _ r) op m = (opToFun op) runMoment m
+      where
+        runMoment = MomentTimestamp r.datetime
 
     applyDist :: SomeRun a -> FilterOp -> SomeDistance (Positive a) -> Bool
     applyDist (MkSomeRun @runDist sr r) op fDist =
