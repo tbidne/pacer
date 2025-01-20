@@ -64,10 +64,6 @@ module Pacer.Prelude
     -- ** Positive
     mkPositiveFail,
 
-    -- ** Fraction
-    ℚNonNeg,
-    ℚPos,
-
     -- ** Floating
     PDouble,
     ɛEq,
@@ -220,7 +216,7 @@ import Data.Tuple as X (fst, snd)
 import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
-import Data.Word as X (Word32)
+import Data.Word as X (Word16, Word32, Word8)
 import Effectful as X
   ( Dispatch (Dynamic),
     DispatchOf,
@@ -504,10 +500,6 @@ traceFileLineA p t = traceFileLine p t (pure ())
 
 -- | Positive Double.
 type PDouble = Positive Double
-
-type ℚNonNeg = Fraction Natural
-
-type ℚPos = Positive (Fraction Natural)
 
 -- | Equality with epsilon check for floating points.
 ɛEq :: (MetricSpace a) => Double -> a -> a -> Bool

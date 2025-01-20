@@ -24,7 +24,6 @@ where
 import Data.IORef qualified as Ref
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.Word (Word8)
 import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
 import Effectful.FileSystem.PathReader.Dynamic
   ( PathReader

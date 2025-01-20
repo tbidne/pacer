@@ -26,8 +26,6 @@ import Data.Char qualified as Ch
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
-import Data.Word (Word16)
-import Numeric.Data.Fraction.Algebra (mkFraction)
 import Pacer.Prelude
 import Pacer.Utils (EitherString (EitherLeft, EitherRight))
 import Text.Megaparsec (Parsec, (<?>))
@@ -47,26 +45,6 @@ instance Parser Word16 where
 
 instance Parser Double where
   parser = parseDigits
-
-instance Parser ℚNonNeg where
-  parser = do
-    -- Parse to double since we want to allow decimal notation, rather than
-    -- Rational's weird fraction notation.
-    x <- parseDigits @Double
-    let n :% d = fromℝ @Rational x
-
-    if n < 0 || d < 0
-      then fail $ "Parsed non-negative fraction from: " ++ show x
-      else do
-        let n' = fromℤ n
-            d' = fromℤ d
-
-        -- Somewhat redundant because of above checks. Alternatively, we could
-        -- create an UnsafeFraction and reduce.
-        case mkFraction n' d' of
-          Just f -> pure f
-          Nothing ->
-            fail $ "Failed making fraction from: " ++ show n ++ " / " ++ show d
 
 instance (AMonoid a, Ord a, Parser a, Show a) => Parser (Positive a) where
   parser = do

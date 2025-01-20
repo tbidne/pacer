@@ -1,5 +1,4 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE ImpredicativeTypes #-}
 
 module Unit.Pacer.Data.Duration
   ( -- * Tests
@@ -14,7 +13,6 @@ module Unit.Pacer.Data.Duration
 where
 
 import Data.List (take)
-import Data.Word (Word8)
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as Parser

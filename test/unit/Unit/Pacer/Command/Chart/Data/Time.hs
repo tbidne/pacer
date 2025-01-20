@@ -12,7 +12,6 @@ import Data.Time
 import Data.Time.Zones qualified as TZ
 import Data.Time.Zones.All (TZLabel)
 import Data.Time.Zones.All qualified as TZ.All
-import Data.Word (Word16, Word8)
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range

@@ -8,7 +8,6 @@ import Data.IORef qualified as Ref
 import Data.List qualified as L
 import Data.Set qualified as Set
 import Data.Text qualified as T
-import Data.Word (Word8)
 import Effectful.FileSystem.FileReader.Dynamic (FileReader (ReadBinaryFile))
 import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
 import Effectful.FileSystem.PathReader.Dynamic

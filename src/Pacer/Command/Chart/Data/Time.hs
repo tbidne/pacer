@@ -21,7 +21,6 @@ import Data.Time (LocalTime (LocalTime), ZonedTime (ZonedTime))
 import Data.Time qualified as Time
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Format qualified as Format
-import Data.Word (Word16)
 import Numeric.Data.Interval.Algebra
   ( Interval,
     IntervalBound (Closed),
