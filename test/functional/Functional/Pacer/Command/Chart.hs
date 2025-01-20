@@ -21,6 +21,7 @@ basicTests getTestDir =
       testSimple getTestDir,
       testFilter getTestDir,
       testFilterPreds getTestDir,
+      testFilterDates getTestDir,
       testFilterEmptyError getTestDir,
       testDuplicateDateError getTestDir
     ]
@@ -45,6 +46,9 @@ testFilter = testChart "Filter example" [osp|testFilter|]
 
 testFilterPreds :: IO OsPath -> TestTree
 testFilterPreds = testChart "Filter predicates example" [osp|testFilterPreds|]
+
+testFilterDates :: IO OsPath -> TestTree
+testFilterDates = testChart "Filters on dates" [osp|testFilterDates|]
 
 testFilterEmptyError :: IO OsPath -> TestTree
 testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]

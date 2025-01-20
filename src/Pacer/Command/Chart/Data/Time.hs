@@ -37,6 +37,34 @@ import Text.Megaparsec.Char qualified as MPC
 -------------------------------------------------------------------------------
 
 -- | Timestamp for runs.
+--
+-- TODO: [Unlawful equality]
+--
+-- x == y reduces x and y to the "lowest common demonator" data before
+-- comparison. For example, the "lcds" of 2010-11 and 2012-08-03 are
+-- 2010-11 and 2012-08, respectively (hence, not equal).
+--
+-- On the other hand, the lcds of 2010 and 2010-08-03 is 2010 and 2010, hence
+-- they are equal. This means, for instance, that Eq is __not__ transitive:
+--
+-- @
+--   "2010-09-12" === "2010" === "2010-09-15"
+--   "2010-09-12" /== "2010-09-15"
+-- @
+--
+-- Thus Ord is also unlawful. We choose this equality for two reasons:
+--
+--   1. Determining Timestamp overlap: We want to enforce that Run timestamps
+--      do not "overlap" i.e. a user cannot supply r1=2010-08-10 and
+--      r2=2010-08-10T14:00:30. If two timestamps overlap, the user must
+--      disambiguate them.
+--
+--   2. Allow general Moment comparisons: We want the user to be able to
+--     specify e.g. "> 2009" and compare this to "2014-04-23".
+--
+-- Thus care must be taken when using either of these instances. It this
+-- proves to be a problem, we could simply offer functions instead of
+-- instances.
 data Timestamp
   = -- | A date like 2010-03-06
     TimestampDate Day
@@ -197,6 +225,8 @@ instance Parser Year where
 -------------------------------------------------------------------------------
 
 -- | Generalized 'Timestamp'.
+--
+-- NOTE: Eq/Ord are unlawful. See TODO: [Unlawful equality].
 data Moment
   = -- | A year like 2013.
     MomentYear Year
@@ -244,7 +274,7 @@ instance Ord Moment where
      in yearMonthLte y1 m1 y2 m2
   MomentTimestamp t1 <= MomentYear y2 =
     let y1 = timestampToYear t1
-     in y1 == y2
+     in y1 <= y2
   MomentTimestamp t1 <= MomentMonth y2 m2 =
     let (y1, m1) = timestampToYearMonth t1
      in yearMonthLte y1 m1 y2 m2
