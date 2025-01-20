@@ -22,3 +22,8 @@ filters = ['duration > 40m', 'duration < 3h']
 title = 'Specific duration runs using and'
 y-axis = 'duration'
 filters = ['and (duration > 40m) (duration < 3h)']
+
+[[charts]]
+title = 'Runs within date range'
+y-axis = 'distance'
+filters = ['and (date >= 2024-10-17) (date < 2024-10-19)']
