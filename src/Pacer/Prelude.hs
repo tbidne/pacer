@@ -192,7 +192,7 @@ import Data.Ord as X
     Ordering (EQ, GT, LT),
   )
 import Data.Proxy as X (Proxy (Proxy))
-import Data.Ratio as X (Ratio, Rational, denominator, numerator, (%))
+import Data.Ratio as X (Ratio, Rational, denominator, numerator)
 import Data.Semigroup as X (Semigroup ((<>)))
 import Data.Sequence as X (Seq ((:<|), (:|>)))
 import Data.Sequence.NonEmpty as X (NESeq ((:<||), (:||>)))

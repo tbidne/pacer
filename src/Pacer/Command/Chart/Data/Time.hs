@@ -39,9 +39,12 @@ import Text.Megaparsec.Char qualified as MPC
 
 -- | Timestamp for runs.
 data Timestamp
-  = TimestampDay Day
-  | TimestampTime LocalTime
-  | TimestampZoned ZonedTime
+  = -- | A date like 2010-03-06
+    TimestampDate Day
+  | -- | A local time like 2010-03-06T14:23:05
+    TimestampTime LocalTime
+  | -- | A zoned time like 2010-03-06T14:23:05+0800
+    TimestampZoned ZonedTime
   deriving stock (Generic, Show)
   deriving anyclass (NFData)
 
@@ -50,21 +53,21 @@ data Timestamp
 -------------------------------------------------------------------------------
 
 instance Eq Timestamp where
-  TimestampDay d1 == t2 = d1 == toDay t2
-  TimestampTime (LocalTime d1 _) == TimestampDay d2 = d1 == d2
+  TimestampDate d1 == t2 = d1 == toDay t2
+  TimestampTime (LocalTime d1 _) == TimestampDate d2 = d1 == d2
   TimestampTime l1 == TimestampTime l2 = l1 == l2
   TimestampTime l1 == TimestampZoned (ZonedTime l2 _) = l1 == l2
-  TimestampZoned (ZonedTime (LocalTime d1 _) _) == TimestampDay d2 = d1 == d2
+  TimestampZoned (ZonedTime (LocalTime d1 _) _) == TimestampDate d2 = d1 == d2
   TimestampZoned (ZonedTime l1 _) == TimestampTime l2 = l1 == l2
   TimestampZoned z1 == TimestampZoned z2 =
     Time.zonedTimeToUTC z1 == Time.zonedTimeToUTC z2
 
 instance Ord Timestamp where
-  TimestampDay d1 <= t2 = d1 <= toDay t2
-  TimestampTime (LocalTime d1 _) <= TimestampDay d2 = d1 <= d2
+  TimestampDate d1 <= t2 = d1 <= toDay t2
+  TimestampTime (LocalTime d1 _) <= TimestampDate d2 = d1 <= d2
   TimestampTime l1 <= TimestampTime l2 = l1 <= l2
   TimestampTime l1 <= TimestampZoned (ZonedTime l2 _) = l1 <= l2
-  TimestampZoned (ZonedTime (LocalTime d1 _) _) <= TimestampDay d2 = d1 <= d2
+  TimestampZoned (ZonedTime (LocalTime d1 _) _) <= TimestampDate d2 = d1 <= d2
   TimestampZoned (ZonedTime l1 _) <= TimestampTime l2 = l1 <= l2
   TimestampZoned z1 <= TimestampZoned z2 =
     Time.zonedTimeToUTC z1 <= Time.zonedTimeToUTC z2
@@ -75,7 +78,7 @@ instance Ord Timestamp where
 
 instance DecodeTOML Timestamp where
   tomlDecoder =
-    TimestampDay
+    TimestampDate
       <$> tomlDecoder
       <|> TimestampTime
       <$> tomlDecoder
@@ -92,11 +95,11 @@ instance Parser Timestamp where
     MP.choice
       [ TimestampZoned <$> MP.try parser,
         TimestampTime <$> MP.try parser,
-        TimestampDay <$> parser
+        TimestampDate <$> parser
       ]
 
 instance ToJSON Timestamp where
-  toJSON (TimestampDay d) = toJSON d
+  toJSON (TimestampDate d) = toJSON d
   toJSON (TimestampTime lt) = toJSON lt
   toJSON (TimestampZoned zt) = toJSON zt
 
@@ -105,14 +108,14 @@ instance ToJSON Timestamp where
 -------------------------------------------------------------------------------
 
 toDay :: Timestamp -> Day
-toDay (TimestampDay d) = d
+toDay (TimestampDate d) = d
 toDay (TimestampTime (LocalTime d _)) = d
 toDay (TimestampZoned (ZonedTime (LocalTime d _) _)) = d
 
 fmtTimestamp :: Timestamp -> Text
 fmtTimestamp =
   packText <<< \case
-    TimestampDay d -> Format.formatTime l dfmt d
+    TimestampDate d -> Format.formatTime l dfmt d
     TimestampTime lt -> Format.formatTime l (dfmt ++ tfmt) lt
     TimestampZoned zt -> Format.formatTime l (dfmt ++ tfmt ++ zfmt) zt
   where
@@ -194,11 +197,22 @@ instance Parser Year where
 --                                 Timestamp                                 --
 -------------------------------------------------------------------------------
 
+-- | Generalized 'Timestamp'.
 data Moment
-  = MomentYear Year
-  | MomentMonth Year Month
-  | -- NOTE: These timestamps should be in between 1950 and 2099. Should we
-    -- enforce this? E.g. with a smart constructor.
+  = -- | A year like 2013.
+    MomentYear Year
+  | -- | A year and month like 2013-08.
+    MomentMonth Year Month
+  | -- A Timestamp.
+    --
+    -- NOTE: These timestamps should be in between 1950 and 2099. Should we
+    -- enforce this? E.g. do not export the bare constructor, and make sure
+    -- parsing enforces this.
+    --
+    -- Probably the most robust course of action would be to make Timestamp
+    -- enforce the constraint, then we'd inherit it here. We'd probably
+    -- want Year and Timestamp defined in the same module so we could share
+    -- the validation.
     MomentTimestamp Timestamp
   deriving stock (Generic, Show)
   deriving anyclass (NFData)
@@ -270,7 +284,7 @@ momentToYear (MomentTimestamp ts) = timestampToYear ts
 
 timestampToYear :: Timestamp -> Year
 timestampToYear = \case
-  (TimestampDay d) -> toYear d
+  (TimestampDate d) -> toYear d
   (TimestampTime (LocalTime d _)) -> toYear d
   (TimestampZoned (ZonedTime (LocalTime d _) _)) -> toYear d
   where
@@ -284,7 +298,7 @@ timestampToYear = \case
 
 timestampToYearMonth :: Timestamp -> Tuple2 Year Month
 timestampToYearMonth = \case
-  (TimestampDay d) -> toYearMonth d
+  (TimestampDate d) -> toYearMonth d
   (TimestampTime (LocalTime d _)) -> toYearMonth d
   (TimestampZoned (ZonedTime (LocalTime d _) _)) -> toYearMonth d
   where

@@ -77,7 +77,7 @@ instance (AMonoid a, Ord a, Parser a, Show a) => Parser (Positive a) where
 
 instance Parser LocalTime where
   parser = do
-    str <- unpackText <$> MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '-')
+    str <- unpackText <$> MP.takeWhile1P Nothing p
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
       EitherRight d -> pure d
       EitherLeft err ->
@@ -89,11 +89,20 @@ instance Parser LocalTime where
               err
             ]
     where
+      p c =
+        Ch.isDigit c
+          || c
+          == '-'
+          || c
+          == 'T'
+          || c
+          == ':'
+
       fmt = "%Y-%m-%dT%H:%M:%S"
 
 instance Parser ZonedTime where
   parser = do
-    str <- unpackText <$> MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '-')
+    str <- unpackText <$> MP.takeWhile1P Nothing p
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
       EitherRight d -> pure d
       EitherLeft err ->
@@ -105,6 +114,19 @@ instance Parser ZonedTime where
               err
             ]
     where
+      p c =
+        Ch.isDigit c
+          || c
+          == '-'
+          || c
+          == 'T'
+          || c
+          == ':'
+          || c
+          == '+'
+          || c
+          == '-'
+
       fmt = "%Y-%m-%dT%H:%M:%S%z"
 
 instance Parser Day where

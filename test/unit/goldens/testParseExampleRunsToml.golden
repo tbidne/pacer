@@ -19,7 +19,7 @@ MkSomeRuns
       [ MkSomeRunsKey
         { unSomeRunsKey = MkSomeRun SKilometer
           ( MkRun
-            { datetime = TimestampDay 2024-10-15
+            { datetime = TimestampDate 2024-10-15
             , distance = MkDistance
               ( UnsafePositive 5.0 ) Kilometer
             , duration = MkDuration
