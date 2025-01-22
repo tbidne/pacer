@@ -135,6 +135,7 @@ momentTests =
     "Moment"
     [ testParseMomentProp,
       testMomentParseCases,
+      testMomentEqLaws,
       testMomentEqOpTotal,
       testMomentEqOpLaws,
       testMomentEqOpCases,
@@ -186,6 +187,27 @@ testMomentParseCases = testCase desc $ do
         assertFailure $ "Expected year/month, received: " ++ show other
       Left err ->
         assertFailure $ "Unexpected parse failure: " ++ unpackText err
+
+testMomentEqLaws :: TestTree
+testMomentEqLaws = testPropertyNamed name desc $ property $ do
+  x <- forAll genMoment
+  y <- forAll genMoment
+  z <- forAll genMoment
+
+  -- reflexivity
+  x .=== x
+
+  -- symmetry
+  (x .== y) === (y .== x)
+
+  -- transitivity
+  when (x == y && y == z) (x === z)
+
+  -- negation
+  (x /= y) === not (x == y)
+  where
+    name = "testMomentEqLaws"
+    desc = "Eq laws"
 
 testMomentEqOpTotal :: TestTree
 testMomentEqOpTotal = testPropertyNamed name desc $ property $ do
