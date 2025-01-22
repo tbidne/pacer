@@ -137,10 +137,6 @@ instance DecodeTOML Timestamp where
       <|> TimestampZoned
       <$> tomlDecoder
 
--- TODO: Why does this fail???
---
--- TOML.decode @Timestamp "2024-10-20T14:30:00"
-
 instance Parser Timestamp where
   -- reuse toml instance since it is already done for us upstream.
   parser = do
