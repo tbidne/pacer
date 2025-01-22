@@ -1,15 +1,22 @@
 module Unit.Pacer.Data.Pace
-  ( tests,
+  ( -- * Tests
+    tests,
+
+    -- * Generators
+    genSomePace,
+    genSomePacePos,
   )
 where
 
 import Hedgehog.Gen qualified as G
 import Pacer.Class.Parser qualified as Parser
-import Pacer.Data.Distance (DistanceUnit (Kilometer, Mile))
+import Pacer.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
+import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Pacer.Data.Duration qualified as D
+import Unit.Pacer.Data.Duration qualified as Duration
 import Unit.Prelude
 
 tests :: TestTree
@@ -164,3 +171,23 @@ genSomePaceText = do
         " /",
         u
       ]
+
+genSomePace :: Gen (SomePace Double)
+genSomePace = do
+  u <- Units.genDistanceUnit
+  seconds <- Duration.genSeconds
+
+  case u of
+    Meter -> pure $ MkSomePace SKilometer (MkPace seconds)
+    Kilometer -> pure $ MkSomePace SKilometer (MkPace seconds)
+    Mile -> pure $ MkSomePace SMile (MkPace seconds)
+
+genSomePacePos :: Gen (SomePace PDouble)
+genSomePacePos = do
+  u <- Units.genDistanceUnit
+  seconds <- Duration.genSecondsPos
+
+  case u of
+    Meter -> pure $ MkSomePace SKilometer (MkPace seconds)
+    Kilometer -> pure $ MkSomePace SKilometer (MkPace seconds)
+    Mile -> pure $ MkSomePace SMile (MkPace seconds)

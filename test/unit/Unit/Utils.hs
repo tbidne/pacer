@@ -4,6 +4,7 @@ module Unit.Utils
     genℕ1,
     genℕMax,
     genDoubleNN,
+    genDouble,
     genDoublePos,
     genDoubleMax,
     genTextDouble,
@@ -51,6 +52,16 @@ genDoublePos = do
 
   case TR.readMaybe t' of
     Just x -> pure $ unsafePositive x
+    Nothing -> error $ "Could not read double: " <> t'
+
+genDouble :: Gen Double
+genDouble = do
+  t <- genTextDoublePos
+
+  let t' = unpackText t
+
+  case TR.readMaybe t' of
+    Just x -> pure x
     Nothing -> error $ "Could not read double: " <> t'
 
 genDoubleMax :: Int -> Gen Double
