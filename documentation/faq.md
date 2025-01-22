@@ -19,6 +19,7 @@
 Chart requests allow us to filter runs based on some criteria. In general, `filters` contains a list of filters, where a run must satisfy all filters to be included. We have the following filter "atoms":
 
 - `label <lbl>`: The run must have the label `lbl` (case-sensitive).
+- `datetime <op> <val>`: The run's `datetime` field must satisfy the condition e.g. `datetime > 2019`.
 - `distance <op> <val>`: The run must have `distance <op> <val>` e.g. `distance > 5 km`.
 - `duration <op> <val>`: The run must have `duration <op> <val>` e.g. `duration < 2h`.
 - `pace <op> <val>`: The run must have `pace <op> <val>` e.g. `pace <= 4m30s /km`.
@@ -45,7 +46,7 @@ For example, we can have:
 ```toml
 [[charts]]
 title = 'Races and long runs'
-filters = ['or (label official_race) (label marathon)', 'distance >= 25 km']
+filters = ['or (label official_race) (label marathon)', 'distance >= 25 km', 'datetime > 2024']
 y-axis = 'distance'
 ```
 
@@ -53,6 +54,7 @@ In this case, we will take all runs that satisfy **all** of the following criter
 
 - Has label `official_race` and/or `marathon`.
 - Has `distance >= 25 km`.
+- Has `datetime > 2024` (i.e. 2025 onwards).
 
 > [!TIP]
 >
