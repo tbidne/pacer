@@ -206,9 +206,6 @@ mkChartData
           withSingI s $ toℝ $ case finalDistUnit of
             Meter -> runToPace (DistU.convertToKilometers r)
             Kilometer -> runToPace (DistU.convertToKilometers r)
-            -- TODO: Previously this was converting to Kilometers, but that
-            -- was almost certainly a bug that tests did not catch.
-            -- Let's write one.
             Mile -> runToPace (DistU.convertDistance Mile r)
           where
             runToPace runUnits =
