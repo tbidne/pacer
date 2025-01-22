@@ -15,8 +15,8 @@ import Pacer.Data.Distance.Units
       ),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Duration, Hours, Minutes, Seconds)
-import Pacer.Data.Pace (SomePace)
+import Pacer.Data.Duration (Duration (MkDuration), Hours, Minutes, Seconds)
+import Pacer.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
 import Unit.Pacer.Data.Distance qualified as Unit.Distance
 import Unit.Pacer.Data.Duration qualified as Unit.Duration
 import Unit.Prelude
@@ -25,7 +25,8 @@ tests :: TestTree
 tests =
   testGroup
     "Pacer.Derive"
-    [ calculateTests
+    [ calculateTests,
+      testRelation
     ]
 
 calculateTests :: TestTree
@@ -213,9 +214,6 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
 -- comparing text versions of floating points. It would be nice if we could
 -- come up with a more robust method e.g. parsing the double and doing an
 -- epsilon check.
---
--- TODO: Another idea, we should have a propery test that checks
--- pace x distance === duration.
 quantities :: List (Tuple3 Text Text Text)
 quantities =
   [ ("4m50s /km", "42.20 km", "3h23m58s"),
@@ -229,3 +227,30 @@ quantities =
     ("7m39s /mi", "13.10 mi", "1h40m13s"),
     ("5m00s /km", "21.10 km", "1h45m30s")
   ]
+
+testRelation :: TestTree
+testRelation = testPropertyNamed name desc $ property $ do
+  dist <- forAll Unit.Distance.genSomeDistancePos
+  duration <- forAll Unit.Duration.genSeconds
+
+  let distN = (.unPositive) <$> dist
+      durationN = (.unPositive) <$> duration
+
+  let paceDerivedN = Derive.deriveSomePace dist durationN
+
+  paceDerived <- case mkPositive <$> paceDerivedN of
+    MkSomePace _ (MkPace (MkDuration Nothing)) -> do
+      annotate $ "Derived pace should be non-zero: " ++ show paceDerivedN
+      failure
+    MkSomePace s (MkPace (MkDuration (Just seconds))) ->
+      pure $ MkSomePace s (MkPace (MkDuration seconds))
+
+  let distDerive =
+        Derive.deriveSomeDistance durationN paceDerived
+      durationDerived = Derive.deriveSomeDuration distN paceDerivedN
+
+  distN === distDerive
+  durationN === durationDerived
+  where
+    name = "testRelation"
+    desc = "Tests distance, duration, pace relationships"

@@ -5,6 +5,7 @@ module Unit.Pacer.Data.Duration
     tests,
 
     -- * Generators
+    genSeconds,
     genDuration,
     genDurationPos,
     genDurationPosText,
@@ -299,6 +300,9 @@ genDuration = do
 
   pure $ case toSing u of
     SomeSing su -> MkSomeDuration su (MkDuration t)
+
+genSeconds :: Gen (Seconds PDouble)
+genSeconds = MkDuration <$> Utils.genDoublePos
 
 genDurationPos :: Gen (SomeDuration PDouble)
 genDurationPos = do
