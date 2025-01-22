@@ -38,9 +38,6 @@ tests =
       momentTests
     ]
 
--- TODO: Consider roundtrip tests, if we implement any non-Show toString
--- functions.
-
 timestampTests :: TestTree
 timestampTests =
   testGroup
