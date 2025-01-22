@@ -22,7 +22,7 @@ MkChartRequests
         [ Atom
           ( FilterLabel "marathon" )
         , Atom
-          ( FilterDate MkFilterOp >= _
+          ( FilterDate FilterOpGte
             ( MomentYear
               ( MkYear
                 { unYear = UnsafeInterval
@@ -73,7 +73,7 @@ MkChartRequests
       { description = Nothing
       , filters =
         [ Atom
-          ( FilterDistance MkFilterOp >= _
+          ( FilterDistance FilterOpGte
             ( MkSomeDistance SKilometer
               ( MkDistance
                 ( UnsafePositive 25.0 ) Kilometer

@@ -63,22 +63,23 @@ instance ToJSON YAxisType where
 
 -- | Operator for filter comparisons. The text field is just so we can have
 -- Eq and Show instances, though they are of arguably little value.
-data FilterOp = MkFilterOp Text (forall a. (Ord a) => a -> a -> Bool)
-
-instance Show FilterOp where
-  show (MkFilterOp txt _) = "MkFilterOp " ++ unpackText txt ++ " _"
-
-instance Eq FilterOp where
-  MkFilterOp t1 _ == MkFilterOp t2 _ = t1 == t2
+-- data FilterOp = MkFilterOp Text (forall a. (Ord a) => a -> a -> Bool)
+data FilterOp
+  = FilterOpEq
+  | FilterOpLte
+  | FilterOpLt
+  | FilterOpGte
+  | FilterOpGt
+  deriving stock (Eq, Show)
 
 instance Parser FilterOp where
   parser =
     MP.choice
-      [ MPC.string "<=" $> MkFilterOp "<=" (<=),
-        MPC.char '<' $> MkFilterOp "<" (<),
-        MPC.char '=' $> MkFilterOp "==" (==),
-        MPC.string ">=" $> MkFilterOp ">=" (>=),
-        MPC.char '>' $> MkFilterOp ">" (>)
+      [ MPC.string "<=" $> FilterOpLte,
+        MPC.char '<' $> FilterOpLt,
+        MPC.char '=' $> FilterOpEq,
+        MPC.string ">=" $> FilterOpGte,
+        MPC.char '>' $> FilterOpGt
       ]
 
 -- | Ways in which we can filter runs.

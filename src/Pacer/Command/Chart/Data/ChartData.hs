@@ -17,7 +17,7 @@ import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (filters, title, y1Axis, yAxis),
     ChartRequests (unChartRequests),
     FilterExpr,
-    FilterOp (MkFilterOp),
+    FilterOp (FilterOpEq, FilterOpGt, FilterOpGte, FilterOpLt, FilterOpLte),
     FilterType (FilterDate, FilterDistance, FilterDuration, FilterLabel, FilterPace),
     YAxisType
       ( YAxisDistance,
@@ -30,10 +30,18 @@ import Pacer.Command.Chart.Data.Run
   ( Run (datetime, distance, duration),
     SomeRun (MkSomeRun),
     SomeRuns (MkSomeRuns),
-    SomeRunsKey (MkSomeRunsKey, unSomeRunsKey),
+    SomeRunsKey (MkSomeRunsKey),
   )
 import Pacer.Command.Chart.Data.Run qualified as Run
-import Pacer.Command.Chart.Data.Time (Moment (MomentTimestamp), Timestamp)
+import Pacer.Command.Chart.Data.Time
+  ( Moment (MomentTimestamp),
+    Timestamp,
+    (.<),
+    (.<=),
+    (.==),
+    (.>),
+    (.>=),
+  )
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
@@ -233,7 +241,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     applyLabel (MkSomeRun _ r) lbl = lbl `elem` r.labels
 
     applyDate :: SomeRun a -> FilterOp -> Moment -> Bool
-    applyDate (MkSomeRun _ r) op m = (opToFun op) runMoment m
+    applyDate (MkSomeRun _ r) op m = (opToMFun op) runMoment m
       where
         runMoment = MomentTimestamp r.datetime
 
@@ -259,7 +267,18 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
               fPace' -> (opToFun op) runPace ((.unPositive) <$> fPace')
 
     opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
-    opToFun (MkFilterOp _ f) = f
+    opToFun FilterOpEq = (==)
+    opToFun FilterOpLte = (<=)
+    opToFun FilterOpLt = (<)
+    opToFun FilterOpGte = (>=)
+    opToFun FilterOpGt = (>)
+
+    opToMFun :: FilterOp -> (Moment -> Moment -> Bool)
+    opToMFun FilterOpEq = (.==)
+    opToMFun FilterOpLte = (.<=)
+    opToMFun FilterOpLt = (.<)
+    opToMFun FilterOpGte = (.>=)
+    opToMFun FilterOpGt = (.>)
 
 i :: Int -> Int
 i = id

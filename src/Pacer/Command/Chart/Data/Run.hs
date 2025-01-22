@@ -19,12 +19,14 @@ module Pacer.Command.Chart.Data.Run
   )
 where
 
-import Data.Map.NonEmpty (NEMap)
-import Data.Map.NonEmpty qualified as NEMap
+import Data.Foldable qualified as F
+import Data.List.NonEmpty ((<|))
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Set.NonEmpty qualified as NESet
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Time (Timestamp)
+import Pacer.Command.Chart.Data.Time qualified as T
 import Pacer.Command.Chart.Data.Time qualified as Time
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Data.Distance
@@ -271,7 +273,7 @@ instance HasDistance (SomeRunsKey a) where
 -------------------------------------------------------------------------------
 
 -- | Holds multiple runs.
-newtype SomeRuns a = MkSomeRuns (NESet (SomeRunsKey a))
+newtype SomeRuns a = MkSomeRuns {unSomeRuns :: (NESet (SomeRunsKey a))}
   deriving stock (Eq, Show)
 
 -------------------------------------------------------------------------------
@@ -307,7 +309,7 @@ instance
     xs <- TOML.getFieldWith (TOML.getArrayOf tomlDecoder) "runs"
     case xs of
       [] -> fail "Received empty list"
-      (y@(MkSomeRun _ r) : ys) -> case eDuplicate of
+      (y@(MkSomeRun _ _) : ys) -> case eDuplicate of
         Left ((ts1, mTitle1), (ts2, mTitle2)) ->
           fail
             $ unpackText
@@ -321,39 +323,44 @@ instance
                 ": ",
                 Time.fmtTimestamp ts2
               ]
-        Right mp ->
-          pure $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
+        Right mp -> pure $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
         where
           -- The logic here is:
           --
-          -- 1. Transform parsed List -> Map Timestamp SomeRunsKey
+          -- 1. Transform parsed List -> NonEmpty (SomeRunsKey a)
           -- 2. If we don't receive any duplicates, transform
-          --      Map Timestamp SomeRunsKey -> Set SomeRunsKey
+          --      NonEmpty (SomeRunsKey a) -> Set (SomeRunsKey a)
           --
           -- Why don't we just immediately used a set, rather than the
-          -- intermediate map? Because given some collision
+          -- intermediate NonEmpty?
           --
-          --   (ts1, r1), (ts2, r2)
+          -- Because Timestamp's Ord will not detect the duplicates we want.
+          -- For instance, the timestamps 2013-10-08 and 2013-10-08T12:14:30
+          -- will compare non-equal (which we need for Eq/Ord to be lawful),
+          -- but we want these to compare Eq for purposes of detecting
+          -- overlaps. Thus we cannot use Timestamp's Ord for this, hence
+          -- Set/Map etc. are out.
           --
-          -- we want to report the timestamps ts1, ts2, and the titles if they
-          -- exist, r1.title and r2.title. But if we just used a
+          -- Instead, we iterate manually, looking for overlaps using the
+          -- bespoke 'T.overlaps' function. Unfortuanately this is O(n^2),
+          -- and it is difficult to see a way around this, as the overlap
+          -- function is inherently intransitive e.g. consider
           --
-          --   Set (SomeRunsKey a)
+          --   x = 2013-10-08T12:14:30
+          --   y = 2013-10-08
+          --   z = 2013-10-08T12:14:40
           --
-          -- all we can do is check for a collision on the timestamp
-          -- (using its Eq/Ord). We would have no way to retrieve the original
-          -- ts2 and r2 because there is no `lookup :: a -> Set a -> Maybe a`.
-          --
-          -- Hence we use a Map to store the entire original, and if all goes
-          -- well, pass it to a Set.
+          -- For overlaps, we want x == y == z and x /= z. It is unclear how
+          -- to preserve this and achieve O(1) (or O(lg n)) lookup. Hopefully
+          -- this does not impact performance too much.
           eDuplicate =
-            foldr go (Right $ NEMap.singleton r.datetime (MkSomeRunsKey y)) ys
+            foldr go (Right $ NonEmpty.singleton (MkSomeRunsKey y)) ys
 
           go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
           go _ (Left collision) = Left collision
-          go someRun@(MkSomeRun _ q) (Right mp) =
-            case NEMap.lookup q.datetime mp of
-              Nothing -> Right $ NEMap.insert q.datetime (MkSomeRunsKey someRun) mp
+          go someRun@(MkSomeRun _ q) (Right someRuns) =
+            case findOverlap someRun someRuns of
+              Nothing -> Right $ (MkSomeRunsKey someRun) <| someRuns
               Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
                 Left ((q.datetime, q.title), (collision.datetime, collision.title))
 
@@ -365,7 +372,13 @@ type TitleAndTime = Tuple2 Timestamp (Maybe Text)
 type SomeRunsAcc a =
   Either
     (Tuple2 TitleAndTime TitleAndTime)
-    (NEMap Timestamp (SomeRunsKey a))
+    (NonEmpty (SomeRunsKey a))
+
+-- | Look for overlaps, O(n).
+findOverlap :: SomeRun a -> NonEmpty (SomeRunsKey a) -> Maybe (SomeRunsKey a)
+findOverlap (MkSomeRun _ r1) = F.find p
+  where
+    p (MkSomeRunsKey (MkSomeRun _ r2)) = T.overlaps r1.datetime r2.datetime
 
 -------------------------------------------------------------------------------
 --                                    Misc                                   --

@@ -1,6 +1,7 @@
 module Pacer.Command.Chart.Data.Time
   ( -- * Timestamp
     Timestamp (..),
+    overlaps,
     fmtTimestamp,
 
     -- * Month
@@ -11,16 +12,29 @@ module Pacer.Command.Chart.Data.Time
 
     -- * Moment
     Moment (..),
+
+    -- ** Operators
+    (.==),
+    (./=),
+    (.<=),
+    (.<),
+    (.>=),
+    (.>),
   )
 where
 
 import Data.Aeson (ToJSON (toJSON))
 import Data.Char qualified as Ch
 import Data.Enum (Enum (fromEnum, toEnum))
-import Data.Time (LocalTime (LocalTime), ZonedTime (ZonedTime))
+import Data.Time
+  ( LocalTime (LocalTime),
+    UTCTime (UTCTime),
+    ZonedTime (ZonedTime),
+  )
 import Data.Time qualified as Time
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Format qualified as Format
+import Data.Time.LocalTime qualified as LT
 import Numeric.Data.Interval.Algebra
   ( Interval,
     IntervalBound (Closed),
@@ -37,34 +51,6 @@ import Text.Megaparsec.Char qualified as MPC
 -------------------------------------------------------------------------------
 
 -- | Timestamp for runs.
---
--- TODO: [Unlawful equality]
---
--- x == y reduces x and y to the "lowest common demonator" data before
--- comparison. For example, the "lcds" of 2010-11 and 2012-08-03 are
--- 2010-11 and 2012-08, respectively (hence, not equal).
---
--- On the other hand, the lcds of 2010 and 2010-08-03 is 2010 and 2010, hence
--- they are equal. This means, for instance, that Eq is __not__ transitive:
---
--- @
---   "2010-09-12" === "2010" === "2010-09-15"
---   "2010-09-12" /== "2010-09-15"
--- @
---
--- Thus Ord is also unlawful. We choose this equality for two reasons:
---
---   1. Determining Timestamp overlap: We want to enforce that Run timestamps
---      do not "overlap" i.e. a user cannot supply r1=2010-08-10 and
---      r2=2010-08-10T14:00:30. If two timestamps overlap, the user must
---      disambiguate them.
---
---   2. Allow general Moment comparisons: We want the user to be able to
---     specify e.g. "> 2009" and compare this to "2014-04-23".
---
--- Thus care must be taken when using either of these instances. It this
--- proves to be a problem, we could simply offer functions instead of
--- instances.
 data Timestamp
   = -- | A date like 2010-03-06
     TimestampDate Day
@@ -79,23 +65,62 @@ data Timestamp
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
 
+-- Eq/Ord is based on the following idea: Data with less precision should
+-- compare less when otherwise equal. For instance,
+--
+--   2013-08-19 < 2013-08-19T12:40:20
+--
+-- This is to allow a total, "sensible" order i.e.
+--
+--   2013-08-19T12:40:20 > 2012-08-19T12:40:20
+--
+-- while also respecting Eq/Ord's laws.
+--
+-- Notice that this means we need to take care to handle timezones. To wit,
+-- we always convert timezones to UTC.
+
+-- Eq: Only identical constructors can be Eq.
+
 instance Eq Timestamp where
-  TimestampDate d1 == t2 = d1 == toDay t2
-  TimestampTime (LocalTime d1 _) == TimestampDate d2 = d1 == d2
+  TimestampDate d1 == TimestampDate d2 = d1 == d2
   TimestampTime l1 == TimestampTime l2 = l1 == l2
-  TimestampTime l1 == TimestampZoned (ZonedTime l2 _) = l1 == l2
-  TimestampZoned (ZonedTime (LocalTime d1 _) _) == TimestampDate d2 = d1 == d2
-  TimestampZoned (ZonedTime l1 _) == TimestampTime l2 = l1 == l2
   TimestampZoned z1 == TimestampZoned z2 =
     Time.zonedTimeToUTC z1 == Time.zonedTimeToUTC z2
+  _ == _ = False
+
+-- Ord: To ensure we respect laws, notice that whenever we have a type
+-- with more precision on the LHS of (<=), we require it to be strictly less
+-- for (<=) to be true.
+--
+-- For instance, in order for
+--
+--   TimestampTime (LocalTime d1) <= TimestampDate d2
+--
+-- we require d1 < d2, __not__ d1 <= d2. This is because we want LocalTimes
+-- to never equal Dates, hence the only time d1 can be less than or equal d2
+-- is when it is strictly less.
 
 instance Ord Timestamp where
-  TimestampDate d1 <= t2 = d1 <= toDay t2
-  TimestampTime (LocalTime d1 _) <= TimestampDate d2 = d1 <= d2
+  TimestampDate d1 <= TimestampDate d2 = d1 <= d2
+  TimestampDate d1 <= TimestampTime (LocalTime d2 _) = d1 <= d2
+  TimestampDate d1 <= TimestampZoned z2 =
+    -- d1 <= d2
+    let UTCTime d2 _ = Time.zonedTimeToUTC z2
+     in d1 <= d2
+  TimestampTime (LocalTime d1 _) <= TimestampDate d2 = d1 < d2
   TimestampTime l1 <= TimestampTime l2 = l1 <= l2
-  TimestampTime l1 <= TimestampZoned (ZonedTime l2 _) = l1 <= l2
-  TimestampZoned (ZonedTime (LocalTime d1 _) _) <= TimestampDate d2 = d1 <= d2
-  TimestampZoned (ZonedTime l1 _) <= TimestampTime l2 = l1 <= l2
+  TimestampTime l1 <= TimestampZoned z2 =
+    -- l1 <= l2
+    let UTCTime d2 diff2 = Time.zonedTimeToUTC z2
+        l2 = LocalTime d2 (LT.timeToTimeOfDay diff2)
+     in l1 <= l2
+  TimestampZoned z1 <= TimestampDate d2 =
+    let UTCTime d1 _ = Time.zonedTimeToUTC z1
+     in d1 < d2
+  TimestampZoned z1 <= TimestampTime l2 =
+    let UTCTime d1 diff1 = Time.zonedTimeToUTC z1
+        l1 = LocalTime d1 (LT.timeToTimeOfDay diff1)
+     in l1 < l2
   TimestampZoned z1 <= TimestampZoned z2 =
     Time.zonedTimeToUTC z1 <= Time.zonedTimeToUTC z2
 
@@ -134,10 +159,20 @@ instance ToJSON Timestamp where
 --                                    Misc                                   --
 -------------------------------------------------------------------------------
 
-toDay :: Timestamp -> Day
-toDay (TimestampDate d) = d
-toDay (TimestampTime (LocalTime d _)) = d
-toDay (TimestampZoned (ZonedTime (LocalTime d _) _)) = d
+-- | Returns true if two timestamps "overlap", essentially a relaxed version
+-- of (==), where two timestamps are considered overlapping when their
+-- "least upper bound" is equal.
+overlaps :: Timestamp -> Timestamp -> Bool
+overlaps (TimestampDate d1) (TimestampDate d2) = d1 == d2
+overlaps (TimestampDate d1) (TimestampTime (LocalTime d2 _)) = d1 == d2
+overlaps (TimestampDate d1) (TimestampZoned (ZonedTime (LocalTime d2 _) _)) = d1 == d2
+overlaps (TimestampTime (LocalTime d1 _)) (TimestampDate d2) = d1 == d2
+overlaps (TimestampTime l1) (TimestampTime l2) = l1 == l2
+overlaps (TimestampTime l1) (TimestampZoned (ZonedTime l2 _)) = l1 == l2
+overlaps (TimestampZoned (ZonedTime (LocalTime d1 _) _)) (TimestampDate d2) = d1 == d2
+overlaps (TimestampZoned (ZonedTime l1 _)) (TimestampTime l2) = l1 == l2
+overlaps (TimestampZoned z1) (TimestampZoned z2) =
+  Time.zonedTimeToUTC z1 == Time.zonedTimeToUTC z2
 
 fmtTimestamp :: Timestamp -> Text
 fmtTimestamp =
@@ -155,6 +190,7 @@ fmtTimestamp =
 --                                   Month                                   --
 -------------------------------------------------------------------------------
 
+-- | Represents a calendar month.
 data Month
   = Jan
   | Feb
@@ -198,6 +234,7 @@ instance Parser Month where
 --                                   Year                                    --
 -------------------------------------------------------------------------------
 
+-- | Represents a year.
 newtype Year = MkYear
   { unYear :: Interval (Closed 1950) (Closed 2099) Word16
   }
@@ -224,9 +261,7 @@ instance Parser Year where
 --                                 Timestamp                                 --
 -------------------------------------------------------------------------------
 
--- | Generalized 'Timestamp'.
---
--- NOTE: Eq/Ord are unlawful. See TODO: [Unlawful equality].
+-- | Generalized 'Timestamp', for run filtering.
 data Moment
   = -- | A year like 2013.
     MomentYear Year
@@ -243,42 +278,12 @@ data Moment
     -- want Year and Timestamp defined in the same module so we could share
     -- the validation.
     MomentTimestamp Timestamp
-  deriving stock (Generic, Show)
+  deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
-
-instance Eq Moment where
-  MomentYear y1 == mt2 = y1 == momentToYear mt2
-  MomentMonth y1 _ == MomentYear y2 = y1 == y2
-  MomentMonth y1 m1 == MomentMonth y2 m2 = y1 == y2 && m1 == m2
-  MomentMonth y1 m1 == MomentTimestamp t2 =
-    let (y2, m2) = timestampToYearMonth t2
-     in y1 == y2 && m1 == m2
-  MomentTimestamp t1 == MomentYear y2 =
-    let y1 = timestampToYear t1
-     in y1 == y2
-  MomentTimestamp t1 == MomentMonth y2 m2 =
-    let (y1, m1) = timestampToYearMonth t1
-     in y1 == y2 && m1 == m2
-  MomentTimestamp t1 == MomentTimestamp t2 = t1 == t2
-
-instance Ord Moment where
-  MomentYear y1 <= mt2 = y1 <= momentToYear mt2
-  MomentMonth y1 _ <= MomentYear y2 = y1 <= y2
-  MomentMonth y1 m1 <= MomentMonth y2 m2 = yearMonthLte y1 m1 y2 m2
-  MomentMonth y1 m1 <= MomentTimestamp t2 =
-    let (y2, m2) = timestampToYearMonth t2
-     in yearMonthLte y1 m1 y2 m2
-  MomentTimestamp t1 <= MomentYear y2 =
-    let y1 = timestampToYear t1
-     in y1 <= y2
-  MomentTimestamp t1 <= MomentMonth y2 m2 =
-    let (y1, m1) = timestampToYearMonth t1
-     in yearMonthLte y1 m1 y2 m2
-  MomentTimestamp t1 <= MomentTimestamp t2 = t1 <= t2
 
 instance Parser Moment where
   parser = do
@@ -300,16 +305,94 @@ instance Parser Moment where
 --                                    Misc                                   --
 -------------------------------------------------------------------------------
 
-yearMonthLte :: Year -> Month -> Year -> Month -> Bool
-yearMonthLte y1 m1 y2 m2
+-- Our general interest in Moment Ord comparisons is when filtering Runs e.g.
+-- we want to filter runs w/ Run.datetime >= Moment. In particular, we need
+-- to compare "low precision" moments like years w/ higher precision
+-- timestamps. For example, we may want to takes runs with a timestamp >=
+-- 2013.
+--
+-- To do this, we introduce the below Eq/Ord inspired functions that compare
+-- based on the "lowest upper bound" e.g. 2013-08-10 and 2013 are compared
+-- via the year, 2013.
+--
+-- Note that this is not lawful (breaks transitivity, specifically), hence
+-- are not part of Eq/Ord instances.
+
+-- | Relaxed equals.
+(.==) :: Moment -> Moment -> Bool
+MomentYear y1 .== MomentYear y2 = y1 == y2
+MomentYear y1 .== MomentMonth y2 _ = y1 == y2
+MomentYear y1 .== MomentTimestamp t2 = y1 == timestampToYear t2
+MomentMonth y1 _ .== MomentYear y2 = y1 == y2
+MomentMonth y1 m1 .== MomentMonth y2 m2 = y1 == y2 && m1 == m2
+MomentMonth y1 m1 .== MomentTimestamp t2 = (y1, m1) == timestampToYearMonth t2
+MomentTimestamp t1 .== MomentYear y2 = timestampToYear t1 == y2
+MomentTimestamp t1 .== MomentMonth y2 m2 = timestampToYearMonth t1 == (y2, m2)
+MomentTimestamp t1 .== MomentTimestamp t2 = overlaps t1 t2
+
+infix 4 .==
+
+-- | Relaxed "not equals".
+(./=) :: Moment -> Moment -> Bool
+x ./= y = not (x .== y)
+
+infix 4 ./=
+
+-- | Relaxes (<=).
+(.<=) :: Moment -> Moment -> Bool
+MomentYear y1 .<= MomentYear y2 = y1 <= y2
+MomentYear y1 .<= MomentMonth y2 _ = y1 <= y2
+MomentYear y1 .<= MomentTimestamp t2 = y1 <= timestampToYear t2
+MomentMonth y1 _ .<= MomentYear y2 = y1 <= y2
+MomentMonth y1 m1 .<= MomentMonth y2 m2
   | y1 < y2 = True
   | y1 == y2 = m1 <= m2
   | otherwise = False
+MomentMonth y1 m1 .<= MomentTimestamp t2 =
+  let (y2, m2) = timestampToYearMonth t2
+   in if
+        | y1 < y2 -> True
+        | y1 == y2 -> m1 <= m2
+        | otherwise -> False
+MomentTimestamp t1 .<= MomentYear y2 = timestampToYear t1 <= y2
+MomentTimestamp t1 .<= MomentMonth y2 m2 =
+  let (y1, m1) = timestampToYearMonth t1
+   in if
+        | y1 < y2 -> True
+        | y1 == y2 -> m1 <= m2
+        | otherwise -> False
+MomentTimestamp t1 .<= MomentTimestamp t2 = tsLte t1 t2
+  where
+    tsLte (TimestampDate d1) (TimestampDate d2) = d1 <= d2
+    tsLte (TimestampDate d1) (TimestampTime (LocalTime d2 _)) = d1 <= d2
+    tsLte (TimestampDate d1) (TimestampZoned (ZonedTime (LocalTime d2 _) _)) = d1 <= d2
+    tsLte (TimestampTime (LocalTime d1 _)) (TimestampDate d2) = d1 <= d2
+    tsLte (TimestampTime l1) (TimestampTime l2) = l1 <= l2
+    tsLte (TimestampTime l1) (TimestampZoned (ZonedTime l2 _)) = l1 <= l2
+    tsLte (TimestampZoned (ZonedTime (LocalTime d1 _) _)) (TimestampDate d2) = d1 <= d2
+    tsLte (TimestampZoned (ZonedTime l1 _)) (TimestampTime l2) = l1 <= l2
+    tsLte (TimestampZoned z1) (TimestampZoned z2) =
+      Time.zonedTimeToUTC z1 <= Time.zonedTimeToUTC z2
 
-momentToYear :: Moment -> Year
-momentToYear (MomentYear y) = y
-momentToYear (MomentMonth y _) = y
-momentToYear (MomentTimestamp ts) = timestampToYear ts
+infix 4 .<=
+
+-- | Relaxes (>=).
+(.>=) :: Moment -> Moment -> Bool
+x .>= y = y .<= x
+
+infix 4 .>=
+
+-- | Relaxes (>).
+(.>) :: Moment -> Moment -> Bool
+x .> y = not (x .<= y)
+
+infix 4 .>
+
+-- | Relaxes (<).
+(.<) :: Moment -> Moment -> Bool
+x .< y = not (y .<= x)
+
+infix 4 .<
 
 timestampToYear :: Timestamp -> Year
 timestampToYear = \case

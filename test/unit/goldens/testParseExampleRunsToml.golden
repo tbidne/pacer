@@ -1,5 +1,5 @@
 MkSomeRuns
-  ( fromList
+  { unSomeRuns = fromList
     ( MkSomeRunsKey
       { unSomeRunsKey = MkSomeRun SKilometer
         ( MkRun
@@ -76,4 +76,4 @@ MkSomeRuns
         }
       ]
     )
-  )
+  }

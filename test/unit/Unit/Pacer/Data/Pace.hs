@@ -152,19 +152,6 @@ testDisplayCases = testCase "Displays expected" $ do
 genPaceText :: Gen Text
 genPaceText = D.genDurationText
 
-{-toTake <- G.integral (R.linear 1 3)
-
-h <- genHours
-m <- genMinutes
-s <- genSeconds
-
-mconcat . fmap snd . sortOn fst . take toTake <$> G.shuffle [h, m, s]
-where
-  genHours :: Gen (Int, Text)
-  genHours = (0,) . (<> "h") <$> Utils.genTextℕ
-  genMinutes = (1,) . (<> "'") <$> Utils.genTextℕ
-  genSeconds = (2,) . (<> "\"") <$> Utils.genTextℕ-}
-
 genSomePaceText :: Gen Text
 genSomePaceText = do
   p <- genPaceText
