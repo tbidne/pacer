@@ -13,7 +13,7 @@ unit = "mi"
 # Only takes runs with label 'marathon'
 [[charts]]
 title = 'Marathons'
-filters = ['label marathon', 'date >= 2024']
+filters = ['label marathon', 'datetime >= 2024']
 y-axis = 'duration'
 y1-axis = 'pace'
 

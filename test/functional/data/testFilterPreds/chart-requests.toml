@@ -26,4 +26,4 @@ filters = ['and (duration > 40m) (duration < 3h)']
 [[charts]]
 title = 'Runs within date range'
 y-axis = 'distance'
-filters = ['and (date >= 2024-10-17) (date < 2024-10-19)']
+filters = ['and (datetime >= 2024-10-17) (datetime < 2024-10-19)']

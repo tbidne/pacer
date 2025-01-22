@@ -1,19 +1,19 @@
 [[charts]]
 title = 'Chart 1'
 y-axis = 'distance'
-filters = ['date > 2023']
+filters = ['datetime > 2023']
 
 [[charts]]
 title = 'Chart 2'
 y-axis = 'distance'
-filters = ['date >= 2023']
+filters = ['datetime >= 2023']
 
 [[charts]]
 title = 'Chart 3'
 y-axis = 'distance'
-filters = ['date < 2024']
+filters = ['datetime < 2024']
 
 [[charts]]
 title = 'Chart 4'
 y-axis = 'distance'
-filters = ['date > 2024-09']
+filters = ['datetime > 2024-09']

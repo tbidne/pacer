@@ -115,7 +115,7 @@ instance
         FilterLabel <$> MP.takeWhile1P Nothing (/= ')')
 
       parseDate = do
-        MPC.string "date"
+        MPC.string "datetime"
         MPC.space1
         op <- parser
         MPC.space1
