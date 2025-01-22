@@ -182,7 +182,7 @@ testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
   rSec === rHr
   where
     name = "testPaceTimeInvariance"
-    desc = "calculatePace is time-invariant"
+    desc = "derivePace is time-invariant"
 
     calcPace ::
       (SingI t) =>
