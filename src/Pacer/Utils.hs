@@ -13,7 +13,6 @@ module Pacer.Utils
     showListF,
 
     -- * Misc
-    EitherString (..),
     PaceMetersErrMsg,
   )
 where
@@ -55,34 +54,3 @@ showListF f xs@(_ : _) = "[" <> go xs
     go [] = "]"
     go [y] = f y <> "]"
     go (y : ys) = f y <> ", " <> go ys
-
--- | Either, specializing Left to String, for the purposes of MonadFail.
-data EitherString a
-  = EitherLeft String
-  | EitherRight a
-  deriving stock (Eq, Functor, Show)
-
-instance Applicative EitherString where
-  pure = EitherRight
-
-  EitherRight f <*> EitherRight x = EitherRight (f x)
-  EitherLeft x <*> _ = EitherLeft x
-  _ <*> EitherLeft x = EitherLeft x
-
-instance Monad EitherString where
-  EitherRight x >>= f = f x
-  EitherLeft x >>= _ = EitherLeft x
-
-instance Foldable EitherString where
-  foldr _ e (EitherLeft _) = e
-  foldr f e (EitherRight x) = f x e
-
-instance Traversable EitherString where
-  sequenceA (EitherLeft x) = pure (EitherLeft x)
-  sequenceA (EitherRight x) = EitherRight <$> x
-
-  traverse _ (EitherLeft x) = pure (EitherLeft x)
-  traverse f (EitherRight x) = EitherRight <$> f x
-
-instance MonadFail EitherString where
-  fail = EitherLeft

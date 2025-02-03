@@ -96,6 +96,7 @@ library
     Pacer.Data.Duration
     Pacer.Data.Duration.Units
     Pacer.Data.Pace
+    Pacer.Data.Result
     Pacer.Driver
     Pacer.Exception
     Pacer.Prelude

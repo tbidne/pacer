@@ -26,8 +26,8 @@ import Data.Char qualified as Ch
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
+import Pacer.Data.Result (Result (Err, Ok))
 import Pacer.Prelude
-import Pacer.Utils (EitherString (EitherLeft, EitherRight))
 import Text.Megaparsec (Parsec, (<?>))
 import Text.Megaparsec qualified as MP
 import Text.Read qualified as TR
@@ -57,8 +57,8 @@ instance Parser LocalTime where
   parser = do
     str <- unpackText <$> MP.takeWhile1P Nothing p
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
-      EitherRight d -> pure d
-      EitherLeft err ->
+      Ok d -> pure d
+      Err err ->
         fail
           $ mconcat
             [ "Failed parsing localtime from string '",
@@ -82,8 +82,8 @@ instance Parser ZonedTime where
   parser = do
     str <- unpackText <$> MP.takeWhile1P Nothing p
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
-      EitherRight d -> pure d
-      EitherLeft err ->
+      Ok d -> pure d
+      Err err ->
         fail
           $ mconcat
             [ "Failed parsing zoned time from string '",
@@ -111,8 +111,8 @@ instance Parser Day where
   parser = do
     str <- unpackText <$> MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '-')
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
-      EitherRight d -> pure d
-      EitherLeft err ->
+      Ok d -> pure d
+      Err err ->
         fail
           $ mconcat
             [ "Failed parsing day from string '",
