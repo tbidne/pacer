@@ -30,6 +30,7 @@ import Pacer.Data.Duration.Units
   ( STimeUnit (SHour, SMinute, SSecond),
     TimeUnit (Hour, Minute, Second),
   )
+import Pacer.Data.Result (Result (Ok))
 import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Prelude
 import Unit.Utils qualified as Utils
@@ -75,14 +76,14 @@ testParseDurationCases = testCase "Parses Duration" $ do
   for_ [(s, uv) | s <- strs, uv <- unitVals] $ \(s, (v, dunit)) -> do
     case toSing dunit of
       SomeSing @TimeUnit @d stime -> withSingI stime $ do
-        Right (mkDurationD @d v) @=? Parser.parse s
-        Right (mkDurationPD @d v) @=? Parser.parse s
+        Ok (mkDurationD @d v) @=? Parser.parse s
+        Ok (mkDurationPD @d v) @=? Parser.parse s
 
   for_ [(s, u) | s <- zstrs, u <- units] $ \(s, dunit) -> do
     case toSing dunit of
       SomeSing @TimeUnit @d stime -> withSingI stime $ do
-        Right (mkDurationD @d 0) @=? Parser.parse s
-        assertLeft "PDouble zero" $ Parser.parse @(Duration d PDouble) s
+        Ok (mkDurationD @d 0) @=? Parser.parse s
+        assertErr "PDouble zero" $ Parser.parse @(Duration d PDouble) s
   where
     -- All the same time value
     strs =
@@ -112,13 +113,13 @@ testParseSomeDurationCases :: TestTree
 testParseSomeDurationCases = testCase "Parses SomeDuration" $ do
   for_ strs $ \s -> do
     -- SomeDuration always stores as seconds
-    Right (mkSomeDurationD SSecond 12600) @=? Parser.parse s
-    Right (mkSomeDurationPD SSecond 12600) @=? Parser.parse s
+    Ok (mkSomeDurationD SSecond 12600) @=? Parser.parse s
+    Ok (mkSomeDurationPD SSecond 12600) @=? Parser.parse s
 
   for_ zstrs $ \s -> do
     -- SomeDuration always stores as seconds
-    Right (mkSomeDurationD SSecond 0) @=? Parser.parse s
-    assertLeft "PDouble zero" $ Parser.parse @(SomeDuration PDouble) s
+    Ok (mkSomeDurationD SSecond 0) @=? Parser.parse s
+    assertErr "PDouble zero" $ Parser.parse @(SomeDuration PDouble) s
   where
     -- All the same time value
     strs =
@@ -144,10 +145,10 @@ testParseSomeDurationCases = testCase "Parses SomeDuration" $ do
 testParseDurationFailureCases :: TestTree
 testParseDurationFailureCases = testCase "Parse failures" $ do
   for_ vals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Seconds Double) t
-    assertLeft d $ Parser.parse @(Seconds PDouble) t
-    assertLeft d $ Parser.parse @(SomeDuration Double) t
-    assertLeft d $ Parser.parse @(SomeDuration PDouble) t
+    assertErr d $ Parser.parse @(Seconds Double) t
+    assertErr d $ Parser.parse @(Seconds PDouble) t
+    assertErr d $ Parser.parse @(SomeDuration Double) t
+    assertErr d $ Parser.parse @(SomeDuration PDouble) t
   where
     vals =
       [ ("Empty", ""),

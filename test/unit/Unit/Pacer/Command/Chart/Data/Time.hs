@@ -28,6 +28,7 @@ import Pacer.Command.Chart.Data.Time
     (.==),
     (.>),
   )
+import Pacer.Data.Result (Result (Err, Ok))
 import Unit.Prelude
 
 tests :: TestTree
@@ -53,9 +54,9 @@ testParseTimestampProp :: TestTree
 testParseTimestampProp = testPropertyNamed name desc $ property $ do
   txt <- forAll genTimestampTxt
   case P.parse @Timestamp txt of
-    Right _ -> pure ()
-    Left err -> do
-      annotate (unpackText err)
+    Ok _ -> pure ()
+    Err err -> do
+      annotate err
       failure
   where
     name = "testParseTimestamp"
@@ -66,10 +67,10 @@ testParseTimestampCases = testCase "Parses cases" $ do
   assertTime "1950-01-01T00:00:00"
   where
     assertTime t = case P.parse @Timestamp t of
-      Left err ->
-        assertFailure $ "Failed parsing time: " ++ unpackText err
-      Right (TimestampTime _) -> pure ()
-      Right bad ->
+      Err err ->
+        assertFailure $ "Failed parsing time: " ++ err
+      Ok (TimestampTime _) -> pure ()
+      Ok bad ->
         assertFailure $ "Expected time, received: " ++ show bad
 
 testTimestampEqLaws :: TestTree
@@ -148,9 +149,9 @@ testParseMomentProp :: TestTree
 testParseMomentProp = testPropertyNamed name desc $ property $ do
   txt <- forAll genMomentTxt
   case P.parse @Moment txt of
-    Right _ -> pure ()
-    Left err -> do
-      annotate (unpackText err)
+    Ok _ -> pure ()
+    Err err -> do
+      annotate err
       failure
   where
     name = "testParseMomentProp"
@@ -168,25 +169,25 @@ testMomentParseCases = testCase desc $ do
     desc = "Parses test cases"
 
     isYear t = case P.parse @Moment t of
-      Right (MomentYear _) -> pure ()
-      Right other ->
+      Ok (MomentYear _) -> pure ()
+      Ok other ->
         assertFailure $ "Expected year, received: " ++ show other
-      Left err ->
-        assertFailure $ "Unexpected parse failure: " ++ unpackText err
+      Err err ->
+        assertFailure $ "Unexpected parse failure: " ++ err
 
     isMonth t = case P.parse @Moment t of
-      Right (MomentMonth _ _) -> pure ()
-      Right other ->
+      Ok (MomentMonth _ _) -> pure ()
+      Ok other ->
         assertFailure $ "Expected year/month, received: " ++ show other
-      Left err ->
-        assertFailure $ "Unexpected parse failure: " ++ unpackText err
+      Err err ->
+        assertFailure $ "Unexpected parse failure: " ++ err
 
     isTimestamp t = case P.parse @Moment t of
-      Right (MomentTimestamp _) -> pure ()
-      Right other ->
+      Ok (MomentTimestamp _) -> pure ()
+      Ok other ->
         assertFailure $ "Expected year/month, received: " ++ show other
-      Left err ->
-        assertFailure $ "Unexpected parse failure: " ++ unpackText err
+      Err err ->
+        assertFailure $ "Unexpected parse failure: " ++ err
 
 testMomentEqLaws :: TestTree
 testMomentEqLaws = testPropertyNamed name desc $ property $ do
@@ -495,7 +496,4 @@ assertDiff ::
   PropertyT IO ()
 assertDiff @a i x op y = do
   annotateShow i
-  hdiff (unsafeParse @a x) op (unsafeParse y)
-
-unsafeParse :: (HasCallStack) => (P.Parser a) => Text -> a
-unsafeParse @a = errorMapLeft unpackText . P.parse @a
+  hdiff (parseOrDie @a x) op (parseOrDie y)

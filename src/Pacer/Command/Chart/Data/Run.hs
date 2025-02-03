@@ -48,6 +48,7 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
+import Pacer.Data.Result (failErr)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML
@@ -198,10 +199,10 @@ instance
             }
 
 decodeDistance :: (FromRational a, Parser a) => Decoder (SomeDistance a)
-decodeDistance = tomlDecoder >>= P.parseFail
+decodeDistance = tomlDecoder >>= (failErr . P.parse)
 
 decodeDuration :: forall a. (Parser (Seconds a)) => Decoder (Seconds a)
-decodeDuration = tomlDecoder >>= P.parseFail
+decodeDuration = tomlDecoder >>= (failErr . P.parse)
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --

@@ -25,6 +25,7 @@ import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SMeter),
   )
+import Pacer.Data.Result (Result (Ok))
 import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Prelude
 import Unit.Utils qualified as Utils
@@ -92,20 +93,20 @@ testParseDistanceCases = testCase "Parses Distance" $ do
   for_ [(v, u) | v <- vals, u <- units] $ \(val, dunit) -> do
     case toSing dunit of
       SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
-        Right (mkDistanceD @d val) @=? Parser.parse (showt val)
-        Right (mkDistancePD @d val) @=? Parser.parse (showt val)
+        Ok (mkDistanceD @d val) @=? Parser.parse (showt val)
+        Ok (mkDistancePD @d val) @=? Parser.parse (showt val)
 
   for_ hvals $ \(val, dunit, txt) -> do
     case toSing dunit of
       SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
-        Right (mkDistanceD @d val) @=? Parser.parse txt
-        Right (mkDistancePD @d val) @=? Parser.parse txt
+        Ok (mkDistanceD @d val) @=? Parser.parse txt
+        Ok (mkDistancePD @d val) @=? Parser.parse txt
 
   for_ units $ \dunit -> do
     case toSing dunit of
       SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
-        Right (mkDistanceD @d 0) @=? Parser.parse "0"
-        assertLeft "PDouble zero" $ Parser.parse @(Distance d PDouble) "0"
+        Ok (mkDistanceD @d 0) @=? Parser.parse "0"
+        assertErr "PDouble zero" $ Parser.parse @(Distance d PDouble) "0"
   where
     vals = [7, 4.83, 452.5301]
 
@@ -130,20 +131,20 @@ testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
   for_ args $ \(val, dist, unitTxt, spc) -> do
     case toSing dist of
       SomeSing sdist -> do
-        Right (mkSomeDistanceD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
-        Right (mkSomeDistancePD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
+        Ok (mkSomeDistanceD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
+        Ok (mkSomeDistancePD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
 
   for_ hvals $ \(dist, val, txt) -> do
     case toSing dist of
       SomeSing sdist -> do
-        Right (mkSomeDistanceD sdist val) @=? Parser.parse txt
-        Right (mkSomeDistancePD sdist val) @=? Parser.parse txt
+        Ok (mkSomeDistanceD sdist val) @=? Parser.parse txt
+        Ok (mkSomeDistancePD sdist val) @=? Parser.parse txt
 
   for_ units $ \(dist, unitTxt) -> do
     case toSing dist of
       SomeSing sdist -> do
-        Right (mkSomeDistanceD sdist 0) @=? Parser.parse ("0" <> unitTxt)
-        assertLeft "PDouble zero" $ Parser.parse @(SomeDistance PDouble) ("0" <> unitTxt)
+        Ok (mkSomeDistanceD sdist 0) @=? Parser.parse ("0" <> unitTxt)
+        assertErr "PDouble zero" $ Parser.parse @(SomeDistance PDouble) ("0" <> unitTxt)
   where
     vals = [7, 4.83, 452.5301]
 
@@ -165,18 +166,18 @@ testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
 testParseDistanceFailureCases :: TestTree
 testParseDistanceFailureCases = testCase "Parse failures" $ do
   for_ bothVals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Meters Double) t
-    assertLeft d $ Parser.parse @(Meters PDouble) t
-    assertLeft d $ Parser.parse @(SomeDistance Double) t
-    assertLeft d $ Parser.parse @(SomeDistance PDouble) t
+    assertErr d $ Parser.parse @(Meters Double) t
+    assertErr d $ Parser.parse @(Meters PDouble) t
+    assertErr d $ Parser.parse @(SomeDistance Double) t
+    assertErr d $ Parser.parse @(SomeDistance PDouble) t
 
   for_ vals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Meters Double) t
-    assertLeft d $ Parser.parse @(Meters PDouble) t
+    assertErr d $ Parser.parse @(Meters Double) t
+    assertErr d $ Parser.parse @(Meters PDouble) t
 
   for_ someVals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(SomeDistance Double) t
-    assertLeft d $ Parser.parse @(SomeDistance PDouble) t
+    assertErr d $ Parser.parse @(SomeDistance Double) t
+    assertErr d $ Parser.parse @(SomeDistance PDouble) t
   where
     bothVals =
       [ ("Empty", ""),

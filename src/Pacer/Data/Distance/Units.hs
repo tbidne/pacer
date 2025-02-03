@@ -24,6 +24,7 @@ where
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
 import Pacer.Class.Units (Units (baseFactor))
+import Pacer.Data.Result (failErr)
 import Pacer.Prelude
 import TOML (DecodeTOML (tomlDecoder))
 import Text.Megaparsec qualified as MP
@@ -66,7 +67,7 @@ instance Parser DistanceUnit where
       ]
 
 instance DecodeTOML DistanceUnit where
-  tomlDecoder = tomlDecoder >>= P.parseFail
+  tomlDecoder = tomlDecoder >>= (failErr . P.parse)
 
 instance Units DistanceUnit where
   baseFactor Meter = fromℤ 1

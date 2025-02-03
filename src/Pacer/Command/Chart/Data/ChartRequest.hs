@@ -25,6 +25,7 @@ import Pacer.Command.Chart.Data.Time (Moment)
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
+import Pacer.Data.Result (failErr)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML
@@ -213,7 +214,7 @@ instance (Parser a) => Parser (Expr a) where
       parseAtom = Atom <$> P.parser
 
 instance (Parser a) => DecodeTOML (Expr a) where
-  tomlDecoder = tomlDecoder >>= P.parseFail
+  tomlDecoder = tomlDecoder >>= (failErr . P.parse)
 
 -- | Chart request type.
 data ChartRequest a = MkChartRequest

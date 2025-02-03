@@ -43,6 +43,7 @@ import Pacer.Class.Parser qualified as P
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
+import Pacer.Data.Result (Result (Err, Ok))
 import Pacer.Prelude
 
 -- | Represents the pace. For some conversions, the units are optional,
@@ -85,17 +86,17 @@ paceOptUnitsParserHelp helpTxt =
     read = do
       s <- OA.str
       case P.parse s of
-        Right duration -> pure $ Right duration
-        Left err1 -> do
+        Ok duration -> pure $ Right duration
+        Err err1 -> do
           case P.parse s of
-            Right pace -> pure $ Left pace
-            Left err2 ->
+            Ok pace -> pure $ Left pace
+            Err err2 ->
               fail
                 $ mconcat
                   [ "Could not parse pace.\n* Error 1 (without unit):\n",
-                    unpackText err1,
+                    err1,
                     "\n* Error 2 (with unit):\n",
-                    unpackText err2
+                    err2
                   ]
 
 data DistancePaceArgs a = MkDistancePaceArgs
@@ -251,8 +252,8 @@ readParseable :: (P.Parser a) => ReadM a
 readParseable =
   OA.str
     >>= ( P.parse >>> \case
-            Right y -> pure y
-            Left err -> fail $ unpackText err
+            Ok y -> pure y
+            Err err -> fail err
         )
 
 mkCommand :: String -> Parser a -> InfoMod a -> Mod CommandFields a

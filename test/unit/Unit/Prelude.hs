@@ -14,7 +14,7 @@ module Unit.Prelude
 
     -- * HUnit
     (@/=?),
-    assertLeft,
+    assertErr,
 
     -- * Golden
     GoldenParams (..),
@@ -78,6 +78,7 @@ import Pacer.Data.Duration
   )
 import Pacer.Data.Duration.Units (STimeUnit)
 import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
+import Pacer.Data.Result (Result (Err, Ok), errorErr)
 import Pacer.Prelude as X hiding (IO)
 import System.IO as X (IO)
 import Test.Tasty as X (TestName, TestTree, testGroup)
@@ -126,26 +127,26 @@ x @/=? y = assertBool msg (x /= y)
 
 infix 1 @/=?
 
-assertLeft :: (Show b) => List Char -> Either a b -> Assertion
-assertLeft _ (Left _) = pure ()
-assertLeft s (Right x) = assertFailure err
+assertErr :: (Show a) => List Char -> Result a -> Assertion
+assertErr _ (Err _) = pure ()
+assertErr s (Ok x) = assertFailure err
   where
     err =
       mconcat
         [ s,
-          ": Expected Left, received Right '",
+          ": Expected Err, received Ok '",
           show x,
           "'"
         ]
 
 parseOrDie :: (HasCallStack, Parser a) => Text -> a
-parseOrDie = errorMapLeft unpackText . Parser.parse
+parseOrDie = errorErr . Parser.parse
 
 parseOrDieM :: forall a m. (MonadFail m, Parser a) => Text -> m a
 parseOrDieM t = do
   case Parser.parse t of
-    Right r -> pure r
-    Left err -> fail (unpackText err)
+    Ok r -> pure r
+    Err err -> fail err
 
 parseOrDieM_ :: forall a m. (MonadFail m, Parser a) => Text -> m ()
 parseOrDieM_ = void . parseOrDieM @a

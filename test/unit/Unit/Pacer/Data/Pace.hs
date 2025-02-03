@@ -14,6 +14,7 @@ import Pacer.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
+import Pacer.Data.Result (Result (Ok))
 import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Pacer.Data.Duration qualified as D
 import Unit.Pacer.Data.Duration qualified as Duration
@@ -61,30 +62,30 @@ testParsePaceCases = testCase "Parses text to expected SomePace" $ do
   -- Cannot (easily) loop over the units like in Duration and Distance
   -- because of the PaceDistF constraint.
   for_ vals $ \(e, t) -> do
-    Right (mkPaceD @Kilometer e) @=? Parser.parse t
-    Right (mkPacePD @Kilometer e) @=? Parser.parse t
-    Right (mkPaceD @Mile e) @=? Parser.parse t
-    Right (mkPacePD @Mile e) @=? Parser.parse t
+    Ok (mkPaceD @Kilometer e) @=? Parser.parse t
+    Ok (mkPacePD @Kilometer e) @=? Parser.parse t
+    Ok (mkPaceD @Mile e) @=? Parser.parse t
+    Ok (mkPacePD @Mile e) @=? Parser.parse t
 
-    Right (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
-    Right (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /km")
-    Right (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /kilometer")
-    Right (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /kilometer")
-    Right (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
-    Right (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mi")
-    Right (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mile")
-    Right (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mile")
+    Ok (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
+    Ok (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /km")
+    Ok (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /kilometer")
+    Ok (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /kilometer")
+    Ok (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
+    Ok (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mi")
+    Ok (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mile")
+    Ok (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mile")
 
   for_ zVals $ \(e, t) -> do
-    Right (mkPaceD @Kilometer e) @=? Parser.parse t
-    assertLeft "PDouble zero" $ Parser.parse @(Pace Kilometer PDouble) t
-    Right (mkPaceD @Mile e) @=? Parser.parse t
-    assertLeft "PDouble zero" $ Parser.parse @(Pace Mile PDouble) t
+    Ok (mkPaceD @Kilometer e) @=? Parser.parse t
+    assertErr "PDouble zero" $ Parser.parse @(Pace Kilometer PDouble) t
+    Ok (mkPaceD @Mile e) @=? Parser.parse t
+    assertErr "PDouble zero" $ Parser.parse @(Pace Mile PDouble) t
 
-    Right (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
-    assertLeft "PDouble zero" $ Parser.parse @(SomePace PDouble) (t <> " /km")
-    Right (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
-    assertLeft "PDouble zero" $ Parser.parse @(Pace Mile PDouble) (t <> " /mi")
+    Ok (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
+    assertErr "PDouble zero" $ Parser.parse @(SomePace PDouble) (t <> " /km")
+    Ok (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
+    assertErr "PDouble zero" $ Parser.parse @(Pace Mile PDouble) (t <> " /mi")
   where
     vals =
       [ (3_600, "1h"),
@@ -110,23 +111,23 @@ testParsePaceFailureCases :: TestTree
 testParsePaceFailureCases = testCase "Parse failures" $ do
   -- see NOTE: [Unit Loop]
   for_ bothVals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Pace Kilometer Double) t
-    assertLeft d $ Parser.parse @(Pace Mile Double) t
-    assertLeft d $ Parser.parse @(Pace Kilometer PDouble) t
-    assertLeft d $ Parser.parse @(Pace Mile PDouble) t
+    assertErr d $ Parser.parse @(Pace Kilometer Double) t
+    assertErr d $ Parser.parse @(Pace Mile Double) t
+    assertErr d $ Parser.parse @(Pace Kilometer PDouble) t
+    assertErr d $ Parser.parse @(Pace Mile PDouble) t
 
-    assertLeft d $ Parser.parse @(SomePace Double) t
-    assertLeft d $ Parser.parse @(SomePace PDouble) t
+    assertErr d $ Parser.parse @(SomePace Double) t
+    assertErr d $ Parser.parse @(SomePace PDouble) t
 
   for_ vals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(Pace Kilometer Double) t
-    assertLeft d $ Parser.parse @(Pace Kilometer PDouble) t
-    assertLeft d $ Parser.parse @(Pace Mile Double) t
-    assertLeft d $ Parser.parse @(Pace Mile PDouble) t
+    assertErr d $ Parser.parse @(Pace Kilometer Double) t
+    assertErr d $ Parser.parse @(Pace Kilometer PDouble) t
+    assertErr d $ Parser.parse @(Pace Mile Double) t
+    assertErr d $ Parser.parse @(Pace Mile PDouble) t
 
   for_ someVals $ \(d, t) -> do
-    assertLeft d $ Parser.parse @(SomePace Double) t
-    assertLeft d $ Parser.parse @(SomePace PDouble) t
+    assertErr d $ Parser.parse @(SomePace Double) t
+    assertErr d $ Parser.parse @(SomePace PDouble) t
   where
     bothVals =
       [ ("Empty", ""),

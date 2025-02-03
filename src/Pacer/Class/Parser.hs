@@ -1,11 +1,12 @@
 -- | Provides parsing functionality.
 module Pacer.Class.Parser
-  ( Parser (..),
+  ( -- * Class
+    Parser (..),
     MParser,
+
+    -- ** Parse functions
     parse,
-    parseFail,
     parseWith,
-    parseWithFail,
 
     -- * Digits
     parseDigits,
@@ -162,23 +163,13 @@ readDigits b =
     Nothing -> fail $ "Could not read digits: " <> T.unpack b
     Just b' -> pure b'
 
-parse :: (Parser a) => Text -> Either Text a
+parse :: (Parser a) => Text -> Result a
 parse = parseWith parser
 
-parseFail :: forall a m. (MonadFail m, Parser a) => Text -> m a
-parseFail t = case parse t of
-  Left err -> fail $ unpackText err
-  Right x -> pure x
-
-parseWith :: MParser a -> Text -> Either Text a
+parseWith :: MParser a -> Text -> Result a
 parseWith p t = case MP.runParser (p <* MP.eof) "Pacer.Class.Parser.parseWith" t of
-  Left err -> Left . T.pack . MP.errorBundlePretty $ err
-  Right v -> Right v
-
-parseWithFail :: forall a m. (MonadFail m) => MParser a -> Text -> m a
-parseWithFail p t = case parseWith p t of
-  Left err -> fail $ unpackText err
-  Right x -> pure x
+  Left err -> Err . MP.errorBundlePretty $ err
+  Right v -> Ok v
 
 failNonSpace :: MParser ()
 failNonSpace = MP.notFollowedBy nonSpace

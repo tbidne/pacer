@@ -1,5 +1,7 @@
 module Pacer.Data.Result
   ( Result (..),
+    errorErr,
+    failErr,
   )
 where
 
@@ -48,3 +50,11 @@ instance Traversable Result where
 
 instance MonadFail Result where
   fail = Err
+
+errorErr :: (HasCallStack) => Result a -> a
+errorErr (Ok x) = x
+errorErr (Err err) = error err
+
+failErr :: (MonadFail m) => Result a -> m a
+failErr (Ok x) = pure x
+failErr (Err err) = fail err

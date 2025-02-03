@@ -17,6 +17,7 @@ import Hedgehog.Gen qualified as G
 import Pacer.Class.Parser qualified as Parser
 import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Duration (TimeUnit)
+import Pacer.Data.Result (Result (Ok))
 import Unit.Prelude
 
 tests :: TestTree
@@ -106,12 +107,12 @@ testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
 
 testParseExpected :: TestTree
 testParseExpected = testCase "Parses expected text" $ do
-  Right Meter @=? Parser.parse "m"
-  Right Meter @=? Parser.parse "meters"
-  Right Kilometer @=? Parser.parse "km"
-  Right Kilometer @=? Parser.parse "kilometers"
-  Right Mile @=? Parser.parse "mi"
-  Right Mile @=? Parser.parse "miles"
+  Ok Meter @=? Parser.parse "m"
+  Ok Meter @=? Parser.parse "meters"
+  Ok Kilometer @=? Parser.parse "km"
+  Ok Kilometer @=? Parser.parse "kilometers"
+  Ok Mile @=? Parser.parse "mi"
+  Ok Mile @=? Parser.parse "miles"
 
 genDistanceUnit :: Gen DistanceUnit
 genDistanceUnit = G.enumBounded
