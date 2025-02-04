@@ -6,7 +6,9 @@ module Pacer.Class.Parser
 
     -- ** Parse functions
     parse,
+    parseAll,
     parseWith,
+    parseAllWith,
 
     -- * Digits
     parseDigits,
@@ -31,6 +33,8 @@ import Pacer.Data.Result (Result (Err, Ok))
 import Pacer.Prelude
 import Text.Megaparsec (Parsec, (<?>))
 import Text.Megaparsec qualified as MP
+import Text.Megaparsec.Char qualified as MPC
+import Text.Megaparsec.Char.Lexer qualified as MPCL
 import Text.Read qualified as TR
 
 -- | Main parsing type.
@@ -163,11 +167,22 @@ readDigits b =
     Nothing -> fail $ "Could not read digits: " <> T.unpack b
     Just b' -> pure b'
 
+-- | Combines 'parseWith' with 'Parser'.
 parse :: (Parser a) => Text -> Result a
 parse = parseWith parser
 
+-- | Combines 'parseAllWith' with 'Parser'.
+parseAll :: (Parser a) => Text -> Result a
+parseAll = parseAllWith parser
+
+-- | Runs the given parser. Allows trailing whitespace, but other unconsumed
+-- tokens are an error.
+parseAllWith :: MParser a -> Text -> Result a
+parseAllWith p = parseWith (lexeme p <* MP.eof)
+
+-- | Runs the given parser. Unconsumed tokens are not an error.
 parseWith :: MParser a -> Text -> Result a
-parseWith p t = case MP.runParser (p <* MP.eof) "Pacer.Class.Parser.parseWith" t of
+parseWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
   Left err -> Err . MP.errorBundlePretty $ err
   Right v -> Ok v
 
@@ -179,3 +194,6 @@ nonSpace = MP.satisfy (not . Ch.isSpace) <?> "non white space"
 
 optionalTry :: MParser a -> MParser (Maybe a)
 optionalTry = MP.optional . MP.try
+
+lexeme :: MParser a -> MParser a
+lexeme = MPCL.lexeme MPC.space

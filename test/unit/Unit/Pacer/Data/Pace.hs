@@ -111,23 +111,23 @@ testParsePaceFailureCases :: TestTree
 testParsePaceFailureCases = testCase "Parse failures" $ do
   -- see NOTE: [Unit Loop]
   for_ bothVals $ \(d, t) -> do
-    assertErr d $ Parser.parse @(Pace Kilometer Double) t
-    assertErr d $ Parser.parse @(Pace Mile Double) t
-    assertErr d $ Parser.parse @(Pace Kilometer PDouble) t
-    assertErr d $ Parser.parse @(Pace Mile PDouble) t
+    assertErr d $ Parser.parseAll @(Pace Kilometer Double) t
+    assertErr d $ Parser.parseAll @(Pace Mile Double) t
+    assertErr d $ Parser.parseAll @(Pace Kilometer PDouble) t
+    assertErr d $ Parser.parseAll @(Pace Mile PDouble) t
 
-    assertErr d $ Parser.parse @(SomePace Double) t
-    assertErr d $ Parser.parse @(SomePace PDouble) t
+    assertErr d $ Parser.parseAll @(SomePace Double) t
+    assertErr d $ Parser.parseAll @(SomePace PDouble) t
 
   for_ vals $ \(d, t) -> do
-    assertErr d $ Parser.parse @(Pace Kilometer Double) t
-    assertErr d $ Parser.parse @(Pace Kilometer PDouble) t
-    assertErr d $ Parser.parse @(Pace Mile Double) t
-    assertErr d $ Parser.parse @(Pace Mile PDouble) t
+    assertErr d $ Parser.parseAll @(Pace Kilometer Double) t
+    assertErr d $ Parser.parseAll @(Pace Kilometer PDouble) t
+    assertErr d $ Parser.parseAll @(Pace Mile Double) t
+    assertErr d $ Parser.parseAll @(Pace Mile PDouble) t
 
   for_ someVals $ \(d, t) -> do
-    assertErr d $ Parser.parse @(SomePace Double) t
-    assertErr d $ Parser.parse @(SomePace PDouble) t
+    assertErr d $ Parser.parseAll @(SomePace Double) t
+    assertErr d $ Parser.parseAll @(SomePace PDouble) t
   where
     bothVals =
       [ ("Empty", ""),

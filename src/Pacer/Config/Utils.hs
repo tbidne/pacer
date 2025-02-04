@@ -85,10 +85,10 @@ paceOptUnitsParserHelp helpTxt =
     read :: ReadM (PaceOptUnits a)
     read = do
       s <- OA.str
-      case P.parse s of
+      case P.parseAll s of
         Ok duration -> pure $ Right duration
         Err err1 -> do
-          case P.parse s of
+          case P.parseAll s of
             Ok pace -> pure $ Left pace
             Err err2 ->
               fail
@@ -248,10 +248,13 @@ readPath pathParser = do
           ]
     Right x -> pure x
 
+-- In general, we want parseAll when parsing CLI args since we want any extra
+-- characters to cause a parse failure.
+
 readParseable :: (P.Parser a) => ReadM a
 readParseable =
   OA.str
-    >>= ( P.parse >>> \case
+    >>= ( P.parseAll >>> \case
             Ok y -> pure y
             Err err -> fail err
         )

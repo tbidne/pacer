@@ -166,18 +166,18 @@ testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
 testParseDistanceFailureCases :: TestTree
 testParseDistanceFailureCases = testCase "Parse failures" $ do
   for_ bothVals $ \(d, t) -> do
-    assertErr d $ Parser.parse @(Meters Double) t
-    assertErr d $ Parser.parse @(Meters PDouble) t
-    assertErr d $ Parser.parse @(SomeDistance Double) t
-    assertErr d $ Parser.parse @(SomeDistance PDouble) t
+    assertErr d $ Parser.parseAll @(Meters Double) t
+    assertErr d $ Parser.parseAll @(Meters PDouble) t
+    assertErr d $ Parser.parseAll @(SomeDistance Double) t
+    assertErr d $ Parser.parseAll @(SomeDistance PDouble) t
 
   for_ vals $ \(d, t) -> do
-    assertErr d $ Parser.parse @(Meters Double) t
-    assertErr d $ Parser.parse @(Meters PDouble) t
+    assertErr d $ Parser.parseAll @(Meters Double) t
+    assertErr d $ Parser.parseAll @(Meters PDouble) t
 
   for_ someVals $ \(d, t) -> do
-    assertErr d $ Parser.parse @(SomeDistance Double) t
-    assertErr d $ Parser.parse @(SomeDistance PDouble) t
+    assertErr d $ Parser.parseAll @(SomeDistance Double) t
+    assertErr d $ Parser.parseAll @(SomeDistance PDouble) t
   where
     bothVals =
       [ ("Empty", ""),
