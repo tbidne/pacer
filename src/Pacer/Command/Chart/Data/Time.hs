@@ -128,6 +128,12 @@ instance Ord Timestamp where
 --                               Serialization                               --
 -------------------------------------------------------------------------------
 
+instance Display Timestamp where
+  displayBuilder = \case
+    TimestampDate d -> displayBuilder $ show d
+    TimestampTime d -> displayBuilder $ show d
+    TimestampZoned d -> displayBuilder $ show d
+
 instance DecodeTOML Timestamp where
   tomlDecoder =
     TimestampDate
@@ -226,6 +232,21 @@ instance Parser Month where
       other ->
         fail $ "Expected a month in 01 - 12, received: " ++ unpackText other
 
+instance Display Month where
+  displayBuilder = \case
+    Jan -> "01"
+    Feb -> "02"
+    Mar -> "03"
+    Apr -> "04"
+    May -> "05"
+    Jun -> "06"
+    Jul -> "07"
+    Aug -> "08"
+    Sep -> "09"
+    Oct -> "10"
+    Nov -> "11"
+    Dec -> "12"
+
 -------------------------------------------------------------------------------
 --                                   Year                                    --
 -------------------------------------------------------------------------------
@@ -244,6 +265,9 @@ instance Bounded Year where
 instance Enum Year where
   fromEnum = fromIntegral . (.unInterval) . (.unYear)
   toEnum = MkYear . Interval.unsafeInterval . fromIntegral
+
+instance Display Year where
+  displayBuilder = displayBuilder . Interval.unInterval . unYear
 
 instance Parser Year where
   parser = do
@@ -280,6 +304,12 @@ data Moment
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
+
+instance Display Moment where
+  displayBuilder = \case
+    MomentYear x -> displayBuilder x
+    MomentMonth x y -> displayBuilder x <> "-" <> displayBuilder y
+    MomentTimestamp x -> displayBuilder x
 
 instance Parser Moment where
   parser = do

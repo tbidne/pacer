@@ -14,6 +14,7 @@ module Pacer.Command.Chart.Data.Expr
     FilterOp (..),
 
     -- * Misc
+    lexParse,
     debugLex,
   )
 where
@@ -54,6 +55,15 @@ data FilterOp
   | FilterOpGt
   deriving stock (Eq, Show)
 
+instance Display FilterOp where
+  displayBuilder = \case
+    FilterOpEq -> "="
+    FilterOpNeq -> "/="
+    FilterOpLte -> "<="
+    FilterOpLt -> "<"
+    FilterOpGte -> ">="
+    FilterOpGt -> ">"
+
 instance Parser FilterOp where
   parser =
     asum
@@ -83,6 +93,51 @@ data FilterType a
   | FilterDate FilterOp Moment
   | FilterPace FilterOp (SomePace (Positive a))
   deriving stock (Eq, Show)
+
+instance
+  ( AMonoid a,
+    FromInteger a,
+    MSemigroup a,
+    Ord a,
+    Show a,
+    ToRational a
+  ) =>
+  Display (FilterType a)
+  where
+  displayBuilder = \case
+    FilterDistance op d ->
+      mconcat
+        [ "distance ",
+          displayBuilder op,
+          " ",
+          displayBuilder d
+        ]
+    FilterDuration op d ->
+      mconcat
+        [ "duration ",
+          displayBuilder op,
+          " ",
+          displayBuilder d
+        ]
+    FilterLabel t ->
+      mconcat
+        [ "label ",
+          displayBuilder t
+        ]
+    FilterDate op m ->
+      mconcat
+        [ "datetime ",
+          displayBuilder op,
+          " ",
+          displayBuilder m
+        ]
+    FilterPace op d ->
+      mconcat
+        [ "pace ",
+          displayBuilder op,
+          " ",
+          displayBuilder d
+        ]
 
 instance
   ( FromRational a,
@@ -142,6 +197,29 @@ data Expr a
   | -- | "and (expr) (expr)"
     And (Expr a) (Expr a)
   deriving stock (Eq, Foldable, Functor, Ord, Show, Traversable)
+
+instance (Display a) => Display (Expr a) where
+  displayBuilder = go
+    where
+      go = \case
+        Atom x -> displayBuilder x
+        Not e -> "not (" <> go e <> ")"
+        Or e1 e2 ->
+          mconcat
+            [ "(",
+              go e1,
+              ") or (",
+              go e2,
+              ")"
+            ]
+        And e1 e2 ->
+          mconcat
+            [ "(",
+              go e1,
+              ") and (",
+              go e2,
+              ")"
+            ]
 
 -- | Alias for a filter expression.
 type FilterExpr a = Expr (FilterType a)
@@ -238,13 +316,29 @@ term = parens <|> p
 
 table :: List (List (Operator (Parsec Void (List ExprToken)) (Expr Text)))
 table =
-  [ [ P.prefix [[TokenExprNot]] Not
+  [ [ P.prefix [TokenExprNot] Not
     ],
-    [ P.binary [[TokenExprAnd]] And,
-      P.binary [[TokenExprOr]] Or,
-      P.binary [[TokenExprXor]] (\x y -> Or (And x (Not y)) (And (Not x) y))
+    [ P.binary [TokenExprAnd] And
+    ],
+    [ P.binary [TokenExprOr] Or,
+      P.binary [TokenExprXor] (\x y -> Or (And x (Not y)) (And (Not x) y))
     ]
   ]
+
+lexParse ::
+  forall a.
+  ( FromRational a,
+    Parser a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  Text ->
+  Result (Expr (FilterType a))
+lexParse txt = do
+  ts <- P.parseAllWith exprLexer txt
+  exprText <- P.parseTokWith exprParser ts
+  traverse P.parseAll exprText
 
 debugLex :: Text -> IO ()
 debugLex txt =

@@ -4,7 +4,7 @@
 module Unit.Pacer.Command.Chart.Data.ChartRequest (tests) where
 
 import FileSystem.IO (readBinaryFileIO)
-import Pacer.Command.Chart.Data.ChartRequest
+import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
 import TOML (decode)
 import Unit.Prelude
 

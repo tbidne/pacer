@@ -4,6 +4,7 @@ import Test.Tasty (defaultMain, localOption)
 import Test.Tasty.Golden (DeleteOutputFile (OnPass))
 import Unit.Pacer.Command.Chart qualified
 import Unit.Pacer.Command.Chart.Data.ChartRequest qualified
+import Unit.Pacer.Command.Chart.Data.Expr qualified
 import Unit.Pacer.Command.Chart.Data.Run qualified
 import Unit.Pacer.Command.Chart.Data.Time qualified
 import Unit.Pacer.Command.Chart.Params qualified
@@ -22,6 +23,7 @@ main =
       "Unit"
       [ Unit.Pacer.Command.Chart.tests,
         Unit.Pacer.Command.Chart.Data.ChartRequest.tests,
+        Unit.Pacer.Command.Chart.Data.Expr.tests,
         Unit.Pacer.Command.Chart.Data.Run.tests,
         Unit.Pacer.Command.Chart.Data.Time.tests,
         Unit.Pacer.Command.Chart.Params.tests,

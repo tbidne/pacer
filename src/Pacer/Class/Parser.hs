@@ -232,12 +232,8 @@ symbols = asum . fmap symbol
 symbol :: Text -> MParser Text
 symbol = Lex.symbol MPC.space
 
-binary :: (MonadParsec e s m) => List (Tokens s) -> (a -> a -> a) -> Operator m a
-binary ts f = InfixL (f <$ p)
-  where
-    p = asum $ fmap MPC.string ts
+binary :: (MonadParsec e s m) => Tokens s -> (a -> a -> a) -> Operator m a
+binary t f = InfixL (f <$ MPC.string t)
 
-prefix :: (MonadParsec e s m) => List (Tokens s) -> (a -> a) -> Operator m a
-prefix ts f = Prefix (f <$ p)
-  where
-    p = asum $ fmap MPC.string ts
+prefix :: (MonadParsec e s m) => Tokens s -> (a -> a) -> Operator m a
+prefix t f = Prefix (f <$ MPC.string t)

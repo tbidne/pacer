@@ -162,6 +162,7 @@ test-suite unit
   other-modules:
     Unit.Pacer.Command.Chart
     Unit.Pacer.Command.Chart.Data.ChartRequest
+    Unit.Pacer.Command.Chart.Data.Expr
     Unit.Pacer.Command.Chart.Data.Run
     Unit.Pacer.Command.Chart.Data.Time
     Unit.Pacer.Command.Chart.Params
