@@ -27,6 +27,7 @@ import GHC.TypeError (Unsatisfiable)
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (symbolVal)
 import Pacer.Class.Parser (Parser (parser))
+import Pacer.Class.Parser qualified as P
 import Pacer.Class.Units (singFactor)
 import Pacer.Data.Distance
   ( Distance (MkDistance),
@@ -49,7 +50,6 @@ import Pacer.Data.Duration (Duration (MkDuration), Seconds)
 import Pacer.Data.Duration qualified as Duration
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
-import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
 -------------------------------------------------------------------------------
@@ -397,15 +397,15 @@ instance
     -- We do not use DistanceUnit's built-in parsing because we want the
     -- long units here (kilometer and mile) to be __singular__, not plural.
     eDUnit <-
-      MP.choice
-        [ MPC.string "meters" $> Left "meters",
-          MPC.string "km" $> Right Kilometer,
-          MPC.string "kilometers" $> Left "kilometers",
-          MPC.string "kilometer" $> Right Kilometer,
-          MPC.string "miles" $> Left "miles",
-          MPC.string "mile" $> Right Mile,
-          MPC.string "mi" $> Right Mile,
-          MPC.char 'm' $> Right Meter
+      asum
+        [ P.string "meters" $> Left "meters",
+          P.string "km" $> Right Kilometer,
+          P.string "kilometers" $> Left "kilometers",
+          P.string "kilometer" $> Right Kilometer,
+          P.string "miles" $> Left "miles",
+          P.string "mile" $> Right Mile,
+          P.string "mi" $> Right Mile,
+          P.char 'm' $> Right Meter
         ]
 
     case eDUnit of

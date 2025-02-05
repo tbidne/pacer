@@ -140,7 +140,7 @@ instance DecodeTOML Timestamp where
 instance Parser Timestamp where
   -- reuse toml instance since it is already done for us upstream.
   parser = do
-    MP.choice
+    asum
       [ TimestampZoned <$> MP.try parser,
         TimestampTime <$> MP.try parser,
         TimestampDate <$> parser
@@ -209,7 +209,7 @@ data Month
 
 instance Parser Month where
   parser = do
-    txt <- MP.takeWhile1P Nothing (\c -> Ch.isDigit c)
+    txt <- MP.takeWhile1P (Just "01-12") (\c -> Ch.isDigit c)
     case txt of
       "01" -> pure Jan
       "02" -> pure Feb
@@ -283,7 +283,7 @@ data Moment
 
 instance Parser Moment where
   parser = do
-    MP.choice
+    asum
       [ MomentTimestamp <$> MP.try parser,
         MP.try parseYearMonth,
         parseYear

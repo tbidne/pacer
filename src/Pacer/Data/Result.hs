@@ -7,6 +7,8 @@ where
 
 import Pacer.Prelude
 
+-- TODO: Probably generalize this.
+
 -- | General type for error handling, with convenient MonadFail instance.
 -- Isomorphic to Either String.
 data Result a

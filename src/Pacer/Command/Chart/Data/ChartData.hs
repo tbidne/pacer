@@ -17,7 +17,7 @@ import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (filters, title, y1Axis, yAxis),
     ChartRequests (unChartRequests),
     FilterExpr,
-    FilterOp (FilterOpEq, FilterOpGt, FilterOpGte, FilterOpLt, FilterOpLte),
+    FilterOp (FilterOpEq, FilterOpGt, FilterOpGte, FilterOpLt, FilterOpLte, FilterOpNeq),
     FilterType (FilterDate, FilterDistance, FilterDuration, FilterLabel, FilterPace),
     YAxisType
       ( YAxisDistance,
@@ -36,6 +36,7 @@ import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.Time
   ( Moment (MomentTimestamp),
     Timestamp,
+    (./=),
     (.<),
     (.<=),
     (.==),
@@ -265,6 +266,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
     opToFun FilterOpEq = (==)
+    opToFun FilterOpNeq = (/=)
     opToFun FilterOpLte = (<=)
     opToFun FilterOpLt = (<)
     opToFun FilterOpGte = (>=)
@@ -272,6 +274,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     opToMFun :: FilterOp -> (Moment -> Moment -> Bool)
     opToMFun FilterOpEq = (.==)
+    opToMFun FilterOpNeq = (./=)
     opToMFun FilterOpLte = (.<=)
     opToMFun FilterOpLt = (.<)
     opToMFun FilterOpGte = (.>=)

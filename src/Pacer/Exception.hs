@@ -187,6 +187,8 @@ instance Exception TomlE where
       [ "Error decoding toml file '",
         decodeLenient p,
         "': ",
+        -- TODO: It would be nice to use megaparsec's rendering for its
+        -- failures since otherwise the error is a mess.
         displayException err
       ]
 

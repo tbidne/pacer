@@ -1,6 +1,8 @@
 -- | Provides parsing functionality.
 module Pacer.Class.Parser
-  ( -- * Class
+  ( -- * Parsing
+
+    -- ** Class
     Parser (..),
     MParser,
 
@@ -9,32 +11,42 @@ module Pacer.Class.Parser
     parseAll,
     parseWith,
     parseAllWith,
+    parseTokWith,
 
-    -- * Digits
+    -- ** Digits
     parseDigits,
     parseDigitText,
     readDigits,
 
-    -- * TimeString
+    -- ** TimeString
     parseTimeString,
 
-    -- * Misc
-    failNonSpace,
-    nonSpace,
-    optionalTry,
+    -- * Lexing,
+    lexeme,
+    allExcept,
+    char,
+    string,
+    symbol,
+    symbols,
+
+    -- * Expressions
+    prefix,
+    binary,
   )
 where
 
+import Control.Monad.Combinators.Expr (Operator (InfixL, Prefix))
 import Data.Char qualified as Ch
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
 import Pacer.Data.Result (Result (Err, Ok))
 import Pacer.Prelude
-import Text.Megaparsec (Parsec, (<?>))
+import Text.Megaparsec (MonadParsec, Parsec, Stream (Tokens))
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
-import Text.Megaparsec.Char.Lexer qualified as MPCL
+import Text.Megaparsec.Char.Lexer qualified as Lex
 import Text.Read qualified as TR
 
 -- | Main parsing type.
@@ -60,7 +72,7 @@ instance (AMonoid a, Ord a, Parser a, Show a) => Parser (Positive a) where
 
 instance Parser LocalTime where
   parser = do
-    str <- unpackText <$> MP.takeWhile1P Nothing p
+    str <- unpackText <$> MP.takeWhile1P (Just "local-time") p
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
       Ok d -> pure d
       Err err ->
@@ -85,7 +97,7 @@ instance Parser LocalTime where
 
 instance Parser ZonedTime where
   parser = do
-    str <- unpackText <$> MP.takeWhile1P Nothing p
+    str <- unpackText <$> MP.takeWhile1P (Just "zoned-time") p
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
       Ok d -> pure d
       Err err ->
@@ -114,7 +126,7 @@ instance Parser ZonedTime where
 
 instance Parser Day where
   parser = do
-    str <- unpackText <$> MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c == '-')
+    str <- unpackText <$> MP.takeWhile1P (Just "date") (\c -> Ch.isDigit c || c == '-')
     case Format.parseTimeM False Format.defaultTimeLocale fmt str of
       Ok d -> pure d
       Err err ->
@@ -139,17 +151,21 @@ parseIntegral = parseIntegralText >>= readDigits
 -- | Parser combinator for digits.
 parseDigitText :: Parsec Void Text Text
 parseDigitText =
-  MP.takeWhile1P (Just "parseDigitText") (\c -> Ch.isDigit c || c == '.')
+  MP.takeWhile1P (Just "digits") (\c -> Ch.isDigit c || c == '.')
 
 -- | Parser combinator for digits.
 parseIntegralText :: Parsec Void Text Text
-parseIntegralText = MP.takeWhile1P (Just "parseIntegralText") Ch.isDigit
+parseIntegralText =
+  MP.takeWhile1P (Just "digits") Ch.isDigit
 
 -- | Read text like "1d2h3m4s", parse w/ relative time into Fractional
 -- seconds.
 parseTimeString :: forall a. (FromInteger a) => MParser a
 parseTimeString = do
-  t <- MP.takeWhile1P Nothing (\c -> Ch.isDigit c || c `T.elem` chars)
+  t <-
+    MP.takeWhile1P
+      (Just "time-string")
+      (\c -> Ch.isDigit c || c `T.elem` chars)
   case Rel.fromString (unpackText t) of
     Left err -> fail $ "Could not read duration: " ++ err
     Right rt -> do
@@ -186,14 +202,42 @@ parseWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
   Left err -> Err . MP.errorBundlePretty $ err
   Right v -> Ok v
 
-failNonSpace :: MParser ()
-failNonSpace = MP.notFollowedBy nonSpace
-
-nonSpace :: MParser Char
-nonSpace = MP.satisfy (not . Ch.isSpace) <?> "non white space"
-
-optionalTry :: MParser a -> MParser (Maybe a)
-optionalTry = MP.optional . MP.try
+-- | Like 'parseWith', except over an arbitrary token. It would be nice to
+-- consolidate these, though we'd have to ensure our consumers implement the
+-- correct classes to use errorBundlePretty.
+parseTokWith :: (Show e, Show s, Show (MP.Token s)) => Parsec e s a -> s -> Result a
+parseTokWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
+  Left err -> Err . show $ err
+  Right v -> Ok v
 
 lexeme :: MParser a -> MParser a
-lexeme = MPCL.lexeme MPC.space
+lexeme = Lex.lexeme MPC.space
+
+allExcept :: List Char -> MParser Text
+allExcept ts = lexeme $ MP.takeWhile1P (Just "expr") (not . badChar)
+  where
+    badChar c = Ch.isSpace c || Set.member c badChars
+    badChars = Set.fromList ts
+
+char :: Char -> MParser Char
+char = lexeme . MPC.char
+
+-- | Takes a text literal, and trailing whitespace.
+string :: Text -> MParser Text
+string = lexeme . MPC.string
+
+symbols :: List Text -> MParser Text
+symbols = asum . fmap symbol
+
+symbol :: Text -> MParser Text
+symbol = Lex.symbol MPC.space
+
+binary :: (MonadParsec e s m) => List (Tokens s) -> (a -> a -> a) -> Operator m a
+binary ts f = InfixL (f <$ p)
+  where
+    p = asum $ fmap MPC.string ts
+
+prefix :: (MonadParsec e s m) => List (Tokens s) -> (a -> a) -> Operator m a
+prefix ts f = Prefix (f <$ p)
+  where
+    p = asum $ fmap MPC.string ts

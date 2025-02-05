@@ -11,7 +11,7 @@ filters = ['label label1']
 [[charts]]
 title = 'Chart 3'
 y-axis = 'pace'
-filters = ['label label1', 'or (label label2) (label label3)']
+filters = ['label label1', 'label label2 or label label3']
 
 [[charts]]
 title = 'Chart 4'
@@ -20,5 +20,5 @@ filters = ['label label3', 'not (label label4)']
 
 [[charts]]
 title = 'Chart 5'
-filters = ['xor (label label3) (label label4)']
+filters = ['label label3 xor label label4']
 y-axis = 'pace'

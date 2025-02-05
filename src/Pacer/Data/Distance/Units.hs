@@ -27,8 +27,6 @@ import Pacer.Class.Units (Units (baseFactor))
 import Pacer.Data.Result (failErr)
 import Pacer.Prelude
 import TOML (DecodeTOML (tomlDecoder))
-import Text.Megaparsec qualified as MP
-import Text.Megaparsec.Char qualified as MPC
 
 -------------------------------------------------------------------------------
 --                                    Core                                   --
@@ -57,13 +55,13 @@ instance Parser DistanceUnit where
   -- Alternatively, we could check that the parse ends after s1
   -- (e.g. whitespace), but we leave that to "upstream" parsers, for now.
   parser =
-    MP.choice
-      [ MPC.string "meters" $> Meter,
-        MPC.string "km" $> Kilometer,
-        MPC.string "kilometers" $> Kilometer,
-        MPC.string "miles" $> Mile,
-        MPC.string "mi" $> Mile,
-        MPC.char 'm' $> Meter
+    asum
+      [ P.string "meters" $> Meter,
+        P.string "km" $> Kilometer,
+        P.string "kilometers" $> Kilometer,
+        P.string "miles" $> Mile,
+        P.string "mi" $> Mile,
+        P.char 'm' $> Meter
       ]
 
 instance DecodeTOML DistanceUnit where

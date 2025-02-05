@@ -11,6 +11,7 @@
 module Pacer.Prelude
   ( -- * Functor
     (<<$>>),
+    (<<&>>),
 
     -- * ByteString
     LazyByteString,
@@ -101,8 +102,9 @@ where
 {- ORMOLU_ENABLE -}
 
 import Control.Applicative as X
-  ( Alternative (empty, (<|>)),
+  ( Alternative (empty, many, some, (<|>)),
     Applicative (liftA2, pure, (*>), (<*), (<*>)),
+    asum,
     (<**>),
   )
 import Control.Category as X (Category ((.)), (<<<), (>>>))
@@ -409,6 +411,11 @@ import Text.Read qualified as TR
 (<<$>>) = fmap . fmap
 
 infixl 4 <<$>>
+
+(<<&>>) :: (Functor f, Functor g) => f (g a) -> (a -> b) -> f (g b)
+(<<&>>) = flip (<<$>>)
+
+infixl 1 <<&>>
 
 errorMapLeft :: (HasCallStack) => (a -> String) -> Either a b -> b
 errorMapLeft f = errorLeft . first f

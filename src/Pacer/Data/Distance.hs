@@ -34,7 +34,7 @@ import Pacer.Data.Distance.Units
     convertToMeters,
   )
 import Pacer.Prelude
-import Text.Megaparsec qualified as MP
+import Text.Megaparsec ((<?>))
 import Text.Megaparsec.Char qualified as MPC
 import Text.Printf (printf)
 
@@ -349,11 +349,11 @@ data DistParse a
 -- | Normal parsing w/ special cases
 distanceParser :: (Parser a) => MParser (DistParse a)
 distanceParser = do
-  MP.choice
-    [ MP.try $ MPC.string "marathon" $> DistParseMarathon,
-      MP.try $ MPC.string "half-marathon" $> DistParseHalfMarathon,
-      MP.try $ MPC.string "hmarathon" $> DistParseHalfMarathon,
-      DistParseNumeric <$> parser
+  asum
+    [ MPC.string "marathon" $> DistParseMarathon,
+      MPC.string "half-marathon" $> DistParseHalfMarathon,
+      MPC.string "hmarathon" $> DistParseHalfMarathon,
+      DistParseNumeric <$> parser <?> "digits_unit"
     ]
 
 -------------------------------------------------------------------------------
