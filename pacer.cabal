@@ -72,6 +72,7 @@ library
     Pacer.Command.Chart.Data.ChartExtra
     Pacer.Command.Chart.Data.ChartOptions
     Pacer.Command.Chart.Data.ChartRequest
+    Pacer.Command.Chart.Data.Expr
     Pacer.Command.Chart.Data.Run
     Pacer.Command.Chart.Data.Time
     Pacer.Command.Chart.Params

@@ -16,14 +16,16 @@ import Data.Sequence.NonEmpty qualified as NESeq
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (filters, title, y1Axis, yAxis),
     ChartRequests (unChartRequests),
-    FilterExpr,
-    FilterOp (FilterOpEq, FilterOpGt, FilterOpGte, FilterOpLt, FilterOpLte, FilterOpNeq),
-    FilterType (FilterDate, FilterDistance, FilterDuration, FilterLabel, FilterPace),
     YAxisType
       ( YAxisDistance,
         YAxisDuration,
         YAxisPace
       ),
+  )
+import Pacer.Command.Chart.Data.Expr
+  ( FilterExpr,
+    FilterOp (FilterOpEq, FilterOpGt, FilterOpGte, FilterOpLt, FilterOpLte, FilterOpNeq),
+    FilterType (FilterDate, FilterDistance, FilterDuration, FilterLabel, FilterPace),
     eval,
   )
 import Pacer.Command.Chart.Data.Run
