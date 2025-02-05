@@ -29,15 +29,16 @@ Chart requests allow us to filter runs based on some criteria. In general, `filt
 - `<=`
 - `<`
 - `=`
+- `/=`
 - `>=`
 - `>`
 
 Filters also support basic boolean logic i.e.
 
-- `not (expr)`: `expr` must be false.
-- `or (expr1) (expr2)`: `expr1` and/or `expr2` must be true.
-- `and (expr1) (expr2)`: `expr1` and `expr2` must be true.
-- `xor (expr1) (expr2)`: Exactly one of `expr1` and `expr2` must be true.
+- `not expr`: `expr` must be false.
+- `expr1 or expr2`: `expr1` and/or `expr2` must be true.
+- `expr1 and expr2`: `expr1` and `expr2` must be true.
+- `expr1 xor expr2`: Exactly one of `expr1` and `expr2` must be true.
 
 where `expr` is either an atom or another expression.
 
@@ -46,7 +47,7 @@ For example, we can have:
 ```toml
 [[charts]]
 title = 'Races and long runs'
-filters = ['or (label official_race) (label marathon)', 'distance >= 25 km', 'datetime > 2024']
+filters = ['label official_race or label marathon', 'distance >= 25 km', 'datetime > 2024']
 y-axis = 'distance'
 ```
 
@@ -58,7 +59,7 @@ In this case, we will take all runs that satisfy **all** of the following criter
 
 > [!TIP]
 >
-> Technically, there is no need to have a separate `and (expr1) (expr2)` expression, as we can encode `and` with multiple filters. Nevertheless we include the redundant functionality, as it may make some expressions simpler.
+> Technically, there is no need to have a separate `expr1 and expr2` expression, as we can encode `and` with multiple filters. Nevertheless we include the redundant functionality, as it may make some expressions simpler.
 
 ## Running
 

@@ -65,6 +65,7 @@ instance Parser FilterOp where
       [ MPC.string "<=" $> FilterOpLte,
         MPC.char '<' $> FilterOpLt,
         MPC.char '=' $> FilterOpEq,
+        MPC.string "/=" $> FilterOpNeq,
         MPC.string ">=" $> FilterOpGte,
         MPC.char '>' $> FilterOpGt
       ]
