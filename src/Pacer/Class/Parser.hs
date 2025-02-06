@@ -41,7 +41,7 @@ import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
-import Pacer.Data.Result (Result (Err, Ok))
+import Pacer.Data.Result (Result (Err, Ok), ResultDefault)
 import Pacer.Prelude
 import Text.Megaparsec (MonadParsec, Parsec, Stream (Tokens))
 import Text.Megaparsec qualified as MP
@@ -184,20 +184,20 @@ readDigits b =
     Just b' -> pure b'
 
 -- | Combines 'parseWith' with 'Parser'.
-parse :: (Parser a) => Text -> Result a
+parse :: (Parser a) => Text -> ResultDefault a
 parse = parseWith parser
 
 -- | Combines 'parseAllWith' with 'Parser'.
-parseAll :: (Parser a) => Text -> Result a
+parseAll :: (Parser a) => Text -> ResultDefault a
 parseAll = parseAllWith parser
 
 -- | Runs the given parser. Allows trailing whitespace, but other unconsumed
 -- tokens are an error.
-parseAllWith :: MParser a -> Text -> Result a
+parseAllWith :: MParser a -> Text -> ResultDefault a
 parseAllWith p = parseWith (lexeme p <* MP.eof)
 
 -- | Runs the given parser. Unconsumed tokens are not an error.
-parseWith :: MParser a -> Text -> Result a
+parseWith :: MParser a -> Text -> ResultDefault a
 parseWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
   Left err -> Err . MP.errorBundlePretty $ err
   Right v -> Ok v
@@ -205,7 +205,7 @@ parseWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
 -- | Like 'parseWith', except over an arbitrary token. It would be nice to
 -- consolidate these, though we'd have to ensure our consumers implement the
 -- correct classes to use errorBundlePretty.
-parseTokWith :: (Show e, Show s, Show (MP.Token s)) => Parsec e s a -> s -> Result a
+parseTokWith :: (Show e, Show s, Show (MP.Token s)) => Parsec e s a -> s -> ResultDefault a
 parseTokWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
   Left err -> Err . show $ err
   Right v -> Ok v

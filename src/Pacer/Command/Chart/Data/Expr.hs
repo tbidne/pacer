@@ -29,7 +29,7 @@ import Pacer.Command.Chart.Data.Time (Moment)
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
-import Pacer.Data.Result (Result (Err, Ok))
+import Pacer.Data.Result (Result (Err, Ok), ResultDefault)
 import Pacer.Prelude
 import System.IO qualified as IO
 import TOML
@@ -334,7 +334,7 @@ lexParse ::
     Show a
   ) =>
   Text ->
-  Result (Expr (FilterType a))
+  ResultDefault (Expr (FilterType a))
 lexParse txt = do
   ts <- P.parseAllWith exprLexer txt
   exprText <- P.parseTokWith exprParser ts

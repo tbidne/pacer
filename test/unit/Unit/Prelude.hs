@@ -127,7 +127,7 @@ x @/=? y = assertBool msg (x /= y)
 
 infix 1 @/=?
 
-assertErr :: (Show a) => List Char -> Result a -> Assertion
+assertErr :: (Show a) => List Char -> Result e a -> Assertion
 assertErr _ (Err _) = pure ()
 assertErr s (Ok x) = assertFailure err
   where
