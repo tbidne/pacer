@@ -339,12 +339,32 @@ exprParser :: Parsec Void (List ExprToken) (Expr Text)
 exprParser = Combs.makeExprParser term table <?> "expression"
 
 term :: Parsec Void (List ExprToken) (Expr Text)
-term = parens <|> p
+term = parens <|> parseAtom
   where
     parens = MP.single TokenParenL *> exprParser <* MP.single TokenParenR
 
-    p :: Parsec Void (List ExprToken) (Expr Text)
-    p = do
+    parseAtom :: Parsec Void (List ExprToken) (Expr Text)
+    parseAtom = do
+      -- Because our lexer breaks up whitespace, we may end up with
+      -- several TokenString tokens between keywords e.g.
+      --
+      --     "label foo and distance >= 5 km"
+      --
+      -- will be lexed as
+      --
+      --     [ TokenString "label",
+      --       TokenString "foo",
+      --       TokenExprAnd,
+      --       TokenString "distance",
+      --       TokenString ">=",
+      --       TokenString "5",
+      --       TokenString "km"
+      --     ]
+      --
+      -- Our second stage of parsing requires these "broken" strings to be
+      -- intact, i.e. we want "label foo" and "distance >= 5 km".
+      -- Hence when parsing an atom we take all consecutive TokenStrings and
+      -- concat them back together, separating by a single whitespace.
       ts <-
         MP.takeWhile1P
           (Just "atom")
