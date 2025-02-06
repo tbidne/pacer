@@ -1,0 +1,13 @@
+Text: 'duration % 4m24s'
+
+Tokens: [duration,%,4m24s]
+
+Expr Text: duration % 4m24s
+
+Error: Pacer.Class.Parser.parseWith:1:10:
+  |
+1 | duration % 4m24s
+  |          ^^
+unexpected "% "
+expecting "/=", "<=", ">=", '<', '=', '>', or white space
+

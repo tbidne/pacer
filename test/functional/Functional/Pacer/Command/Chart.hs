@@ -23,6 +23,7 @@ basicTests getTestDir =
       testFilterPreds getTestDir,
       testFilterDates getTestDir,
       testFilterEmptyError getTestDir,
+      testFilterParseExprError getTestDir,
       testDuplicateDateError getTestDir
     ]
 
@@ -54,6 +55,11 @@ testFilterEmptyError :: IO OsPath -> TestTree
 testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]
   where
     desc = "Filter empty error"
+
+testFilterParseExprError :: IO OsPath -> TestTree
+testFilterParseExprError = testChartPosix True desc [osp|testFilterParseExprError|]
+  where
+    desc = "Filter parse expr error"
 
 testDuplicateDateError :: IO OsPath -> TestTree
 testDuplicateDateError = testChartPosix True desc [osp|testDuplicateDateError|]

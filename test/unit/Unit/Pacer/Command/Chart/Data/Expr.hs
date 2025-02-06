@@ -2,6 +2,7 @@
 
 module Unit.Pacer.Command.Chart.Data.Expr (tests) where
 
+import Pacer.Command.Chart.Data.Expr (FilterType)
 import Pacer.Command.Chart.Data.Expr qualified as Expr
 import Pacer.Data.Result (Result (Err, Ok))
 import Unit.Prelude
@@ -50,6 +51,21 @@ atomTests =
             { testDesc = "Pace",
               testName = [osp|testParseExprAtomPace|],
               runner = pure $ parseExpr "pace <= 4m24s /km"
+            },
+          MkGoldenParams
+            { testDesc = "Atom failure",
+              testName = [osp|testParseExprAtomUnknown|],
+              runner = pure $ parseExpr "unknown <= 4m24s"
+            },
+          MkGoldenParams
+            { testDesc = "Op failure",
+              testName = [osp|testParseExprAtomUnknownOp|],
+              runner = pure $ parseExpr "duration % 4m24s"
+            },
+          MkGoldenParams
+            { testDesc = "Value failure",
+              testName = [osp|testParseExprAtomUnknownValue|],
+              runner = pure $ parseExpr "duration = blah"
             }
         ]
 
@@ -72,10 +88,15 @@ exprTests =
             { testDesc = "Expr3",
               testName = [osp|testParseExpr3|],
               runner = pure $ parseExpr "(distance = 20 km or label foo bar) and pace <= 4m24s /km)"
+            },
+          MkGoldenParams
+            { testDesc = "Expr Failure 1",
+              testName = [osp|testParseExprFailure1|],
+              runner = pure $ parseExpr "distance = 20 km or or foo"
             }
         ]
 
 parseExpr :: Text -> ByteString
-parseExpr txt = case Expr.lexParse @Double txt of
+parseExpr txt = case Expr.lexParse @(FilterType Double) txt of
   Err err -> encodeUtf8 $ packText err
   Ok x -> encodeUtf8 $ display x

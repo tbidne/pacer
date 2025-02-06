@@ -1,0 +1,13 @@
+Text: 'unknown <= 4m24s'
+
+Tokens: [unknown,<=,4m24s]
+
+Expr Text: unknown <= 4m24s
+
+Error: Pacer.Class.Parser.parseWith:1:1:
+  |
+1 | unknown <= 4m24s
+  | ^^^^^^^^
+unexpected "unknown "
+expecting datetime, distance, duration, label, or pace
+

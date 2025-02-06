@@ -1,0 +1,13 @@
+Text: 'duration = blah'
+
+Tokens: [duration,=,blah]
+
+Expr Text: duration = blah
+
+Error: Pacer.Class.Parser.parseWith:1:12:
+  |
+1 | duration = blah
+  |            ^
+unexpected 'b'
+expecting time-string or white space
+

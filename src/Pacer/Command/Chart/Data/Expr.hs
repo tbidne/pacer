@@ -15,13 +15,13 @@ module Pacer.Command.Chart.Data.Expr
 
     -- * Misc
     lexParse,
-    debugLex,
   )
 where
 
 import Control.Monad.Combinators.Expr (Operator)
 import Control.Monad.Combinators.Expr qualified as Combs
 import Data.Functor.Identity (Identity (Identity, runIdentity))
+import Data.List qualified as L
 import Data.Text qualified as T
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Parser qualified as P
@@ -29,15 +29,21 @@ import Pacer.Command.Chart.Data.Time (Moment)
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Seconds)
 import Pacer.Data.Pace (SomePace)
-import Pacer.Data.Result (Result (Err, Ok), ResultDefault)
+import Pacer.Data.Result (Result (Err, Ok), ResultDefault, failErr)
 import Pacer.Prelude
-import System.IO qualified as IO
 import TOML
   ( DecodeTOML (tomlDecoder),
   )
-import Text.Megaparsec (Parsec, (<?>))
+import Text.Megaparsec
+  ( Parsec,
+    PosState (PosState),
+    TraversableStream (reachOffset),
+    VisualStream,
+    (<?>),
+  )
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
+import Prelude (Ord (max))
 
 -------------------------------------------------------------------------------
 --                                  FilterOp                                 --
@@ -225,30 +231,7 @@ instance (Display a) => Display (Expr a) where
 type FilterExpr a = Expr (FilterType a)
 
 instance (Parser a) => DecodeTOML (Expr a) where
-  tomlDecoder = do
-    txt <- tomlDecoder @Text
-
-    case P.parseAllWith exprLexer txt of
-      Err err -> fail $ "Token failure: " ++ err
-      Ok ts -> case P.parseTokWith exprParser ts of
-        Err err2 ->
-          fail
-            $ mconcat
-              [ "Tokens: ",
-                show ts,
-                "\n\nExpr Text err: " ++ err2
-              ]
-        Ok expr -> case traverse P.parseAll expr of
-          Err err3 ->
-            fail
-              $ mconcat
-                [ "Tokens: ",
-                  show ts,
-                  "\n\nExpr Text: ",
-                  show expr,
-                  "\n\nExpr a err: " ++ err3
-                ]
-          Ok x -> pure x
+  tomlDecoder = tomlDecoder >>= failErr . lexParse
 
 eval :: (a -> Bool) -> Expr a -> Bool
 eval p = runIdentity . evalA (\x -> Identity (p x))
@@ -277,6 +260,56 @@ data ExprToken
     TokenParenL
   | TokenParenR
   deriving stock (Eq, Ord, Show)
+
+instance Display ExprToken where
+  displayBuilder = \case
+    TokenString s -> displayBuilder s
+    TokenExprAnd -> "and"
+    TokenExprNot -> "not"
+    TokenExprOr -> "or"
+    TokenExprXor -> "xor"
+    TokenParenL -> "("
+    TokenParenR -> ")"
+
+-- NOTE: In order to use megaparsec's great errorBundlePretty, we need our
+-- token to implement the following two classes. Our implementation is quite
+-- basic, essentially copying the upstream strategy from the source, making
+-- changes where needed to satisfy the types.
+--
+-- It is thus quite possible that the current implementation could look
+-- weird in some scenarios, and would benefit from a more sophisticated
+-- approach. If so, consider implementing the example from the tutorial:
+--
+-- https://markkarpov.com/tutorial/megaparsec.html#parse-errors
+
+instance TraversableStream (List ExprToken) where
+  reachOffset o pst = (Just str, pst')
+    where
+      pst' :: PosState (List ExprToken)
+      pst' =
+        PosState
+          { pstateInput = post,
+            pstateOffset = max o pst.pstateOffset,
+            pstateSourcePos = pst.pstateSourcePos,
+            pstateTabWidth = pst.pstateTabWidth,
+            pstateLinePrefix = pst.pstateLinePrefix
+          }
+
+      str =
+        unpackText
+          . T.intercalate " "
+          $ display
+          <$> post
+
+      (_, post) = L.splitAt (o - pst.pstateOffset) pst.pstateInput
+
+instance VisualStream (List ExprToken) where
+  showTokens _ = L.intercalate " " . toList . fmap showTok
+    where
+      showTok =
+        unpackText
+          . (\t -> "'" <> t <> "'")
+          . display
 
 exprLexer :: MParser (List ExprToken)
 exprLexer =
@@ -327,29 +360,30 @@ table =
 
 lexParse ::
   forall a.
-  ( FromRational a,
-    Parser a,
-    Ord a,
-    Semifield a,
-    Show a
-  ) =>
+  (Parser a) =>
   Text ->
-  ResultDefault (Expr (FilterType a))
-lexParse txt = do
-  ts <- P.parseAllWith exprLexer txt
-  exprText <- P.parseTokWith exprParser ts
-  traverse P.parseAll exprText
-
-debugLex :: Text -> IO ()
-debugLex txt =
+  ResultDefault (Expr a)
+lexParse txt =
   case P.parseAllWith exprLexer txt of
-    Err err -> IO.putStrLn err
-    Ok ts -> do
-      IO.putStrLn $ "Tokens: " ++ show ts
-      case P.parseTokWith exprParser ts of
-        Err err2 -> IO.putStrLn err2
-        Ok exprTxt -> do
-          IO.putStrLn $ "Expr Text: " ++ show exprTxt
-          case traverse (P.parseAll @(FilterType Double)) exprTxt of
-            Err err3 -> IO.putStrLn err3
-            Ok result -> IO.putStrLn $ "Expr F: " ++ show result
+    Err err -> fail $ fmtErr Nothing Nothing err
+    Ok ts -> case P.parseWith exprParser ts of
+      Err err2 -> fail $ fmtErr (Just ts) Nothing err2
+      Ok expr -> case traverse P.parseAll expr of
+        Err err3 -> fail $ fmtErr (Just ts) (Just expr) err3
+        Ok x -> pure x
+  where
+    fmtErr :: Maybe (List ExprToken) -> Maybe (Expr Text) -> String -> String
+    fmtErr mTokens mExprText err =
+      unpackText
+        $ mconcat
+          [ "Text: '",
+            txt,
+            "'",
+            mFmt "Tokens" mTokens,
+            mFmt "Expr Text" mExprText,
+            "\n\nError: ",
+            packText err
+          ]
+
+    mFmt _ Nothing = ""
+    mFmt hdr (Just x) = "\n\n" <> hdr <> ": " <> display x

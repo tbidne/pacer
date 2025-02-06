@@ -124,7 +124,7 @@ library
     , ioref-effectful                  ^>=0.1
     , logger-effectful                 ^>=0.1
     , logger-ns-effectful              ^>=0.1
-    , megaparsec                       >=7.0.5    && <9.8
+    , megaparsec                       ^>=9.7.0
     , nonempty-containers              >=0.3.4.2  && <0.4
     , optparse-applicative             >=0.15     && <0.19
     , optparse-effectful               ^>=0.1

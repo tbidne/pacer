@@ -1,0 +1,11 @@
+Text: 'distance = 20 km or or foo'
+
+Tokens: [distance,=,20,km,or,or,foo]
+
+Error: Pacer.Class.Parser.parseWith:1:1:
+  |
+1 | or foo
+  | ^
+unexpected 'or'
+expecting '(', 'not', or atom
+

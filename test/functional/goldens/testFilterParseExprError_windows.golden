@@ -1,0 +1,11 @@
+Error decoding toml file 'test\functional\data\testFilterParseExprError\chart-requests.toml': Decode error at '.charts[0].filters[0]': Text: 'label foo and or distance > 4 or date < 2024'
+
+Tokens: [label,foo,and,or,distance,>,4,or,date,<,2024]
+
+Error: Pacer.Class.Parser.parseWith:1:1:
+  |
+1 | or distance > 4 or date < 2024
+  | ^
+unexpected 'or'
+expecting '(', 'not', or atom
+

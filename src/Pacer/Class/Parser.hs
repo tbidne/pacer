@@ -11,7 +11,6 @@ module Pacer.Class.Parser
     parseAll,
     parseWith,
     parseAllWith,
-    parseTokWith,
 
     -- ** Digits
     parseDigits,
@@ -43,7 +42,14 @@ import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
 import Pacer.Data.Result (Result (Err, Ok), ResultDefault)
 import Pacer.Prelude
-import Text.Megaparsec (MonadParsec, Parsec, Stream (Tokens))
+import Text.Megaparsec
+  ( MonadParsec,
+    Parsec,
+    ShowErrorComponent,
+    Stream (Tokens),
+    TraversableStream,
+    VisualStream,
+  )
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 import Text.Megaparsec.Char.Lexer qualified as Lex
@@ -51,6 +57,9 @@ import Text.Read qualified as TR
 
 -- | Main parsing type.
 type MParser a = Parsec Void Text a
+
+-- REVIEW: It might be nice to generalize this class to accept input types
+-- other than Text i.e. consider that Expr parses List ExprToken.
 
 -- | Class for parsing.
 class Parser a where
@@ -197,17 +206,16 @@ parseAllWith :: MParser a -> Text -> ResultDefault a
 parseAllWith p = parseWith (lexeme p <* MP.eof)
 
 -- | Runs the given parser. Unconsumed tokens are not an error.
-parseWith :: MParser a -> Text -> ResultDefault a
+parseWith ::
+  ( ShowErrorComponent e,
+    TraversableStream s,
+    VisualStream s
+  ) =>
+  Parsec e s a ->
+  s ->
+  ResultDefault a
 parseWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
   Left err -> Err . MP.errorBundlePretty $ err
-  Right v -> Ok v
-
--- | Like 'parseWith', except over an arbitrary token. It would be nice to
--- consolidate these, though we'd have to ensure our consumers implement the
--- correct classes to use errorBundlePretty.
-parseTokWith :: (Show e, Show s, Show (MP.Token s)) => Parsec e s a -> s -> ResultDefault a
-parseTokWith p t = case MP.runParser p "Pacer.Class.Parser.parseWith" t of
-  Left err -> Err . show $ err
   Right v -> Ok v
 
 lexeme :: MParser a -> MParser a
