@@ -311,6 +311,21 @@ instance VisualStream (List ExprToken) where
           . (\t -> "'" <> t <> "'")
           . display
 
+  -- Controls the number of carrots e.g.
+  --
+  --     1 | or distance > 4 or date < 2024
+  --       | ^^
+  --
+  -- Need to account for the fact that our lengths are custom i.e. based on
+  -- the string (display) encoding. We cannot reuse the showTokens function
+  -- above since it adds single quotes, which are not part of the rendering
+  -- here.
+  tokensLength _ =
+    length
+      . L.intercalate " "
+      . toList
+      . fmap (unpackText . display)
+
 exprLexer :: MParser (List ExprToken)
 exprLexer =
   some
