@@ -316,9 +316,16 @@ exprLexer =
   some
     $ asum
       [ TokenExprAnd <$ P.string "and",
+        TokenExprAnd <$ P.string "&&",
+        TokenExprAnd <$ P.char '∧',
         TokenExprNot <$ P.string "not",
+        TokenExprNot <$ P.char '!',
+        TokenExprNot <$ P.char '¬',
         TokenExprOr <$ P.string "or",
+        TokenExprOr <$ P.string "||",
+        TokenExprOr <$ P.char '∨',
         TokenExprXor <$ P.string "xor",
+        TokenExprXor <$ P.char '⊕',
         TokenParenL <$ P.symbol "(",
         TokenParenR <$ P.symbol ")",
         TokenString <$> P.allExcept "()"
