@@ -6,6 +6,10 @@
 [![ci](http://img.shields.io/github/actions/workflow/status/tbidne/pacer/ci.yaml?branch=main)](https://github.com/tbidne/pacer/actions/workflows/ci.yaml)
 [![MIT](https://img.shields.io/github/license/tbidne/pacer?color=blue)](https://opensource.org/licenses/MIT)
 
+![linux](https://img.shields.io/static/v1?label=&message=linux&logo=linux&logoColor=white&labelColor=2f353e&color=blue)
+![osx](https://img.shields.io/static/v1?label=&message=osx&logo=apple&labelColor=2f353e&color=blue)
+![windows](https://img.shields.io/static/v1?label=&message=windows&logo=windows&labelColor=2f353e&color=blue)
+
 </div>
 
 ---
