@@ -87,6 +87,7 @@
               {
                 effectful-core = prev.effectful-core_2_5_0_0;
                 effectful = prev.effectful_2_5_0_0;
+                megaparsec = prev.megaparsec_9_7_0;
                 path = hlib.dontCheck prev.path_0_9_6;
               }
               // nix-hs-utils.mkLibs inputs final [
