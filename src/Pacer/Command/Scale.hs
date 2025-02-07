@@ -17,13 +17,13 @@ import Pacer.Prelude
 -- | Handles scale command.
 handle ::
   forall es a.
-  ( FromInteger a,
+  ( Fromℤ a,
     HasCallStack,
     Ord a,
     Semifield a,
     Show a,
     Terminal :> es,
-    ToRational a
+    Toℚ a
   ) =>
   ScaleParamsFinal a ->
   Eff es ()

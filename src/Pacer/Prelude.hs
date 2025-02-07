@@ -371,21 +371,30 @@ import Numeric.Algebra as X
 import Numeric.Class.Division as X (Division)
 import Numeric.Convert.Integer as X
   ( FromInteger (fromZ),
+    Fromℤ,
     ToInteger (toZ),
+    Toℤ,
     fromℤ,
     toℤ,
+    ℤ,
   )
 import Numeric.Convert.Rational as X
   ( FromRational (fromQ),
+    Fromℚ,
     ToRational (toQ),
+    Toℚ,
     fromℚ,
     toℚ,
+    ℚ,
   )
 import Numeric.Convert.Real as X
   ( FromReal (fromR),
+    Fromℝ,
     ToReal (toR),
+    Toℝ,
     fromℝ,
     toℝ,
+    ℝ,
   )
 import Numeric.Data.Fraction.Algebra as X (Fraction)
 import Numeric.Data.Positive.Algebra as X (mkPositive, unsafePositive, (+!))

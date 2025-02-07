@@ -72,7 +72,7 @@ instance (Show a, SingI d) => Show (Distance d a) where
     where
       d = fromSingI @_ @d
 
-instance (Display a, SingI d, ToRational a) => Display (Distance d a) where
+instance (Display a, SingI d, Toℚ a) => Display (Distance d a) where
   displayBuilder (MkDistance x) =
     mconcat
       [ x',
@@ -119,29 +119,29 @@ instance (Field a) => VectorSpace (Distance d a) a
 --                             Numeric Conversions                           --
 -------------------------------------------------------------------------------
 
-instance (FromRational a) => FromRational (Distance d a) where
+instance (Fromℚ a) => FromRational (Distance d a) where
   fromQ = MkDistance . fromQ
 
-instance (ToRational a) => ToRational (Distance d a) where
+instance (Toℚ a) => ToRational (Distance d a) where
   toQ (MkDistance x) = toQ x
 
-instance (FromInteger a) => FromInteger (Distance d a) where
+instance (Fromℤ a) => FromInteger (Distance d a) where
   fromZ = MkDistance . fromZ
 
-instance (ToInteger a) => ToInteger (Distance d a) where
+instance (Toℤ a) => ToInteger (Distance d a) where
   toZ (MkDistance x) = toZ x
 
-instance (FromReal a) => FromReal (Distance d a) where
+instance (Fromℝ a) => FromReal (Distance d a) where
   fromR = MkDistance . fromR
 
-instance (ToReal a) => ToReal (Distance d a) where
+instance (Toℝ a) => ToReal (Distance d a) where
   toR (MkDistance x) = toR x
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
 -------------------------------------------------------------------------------
 
-instance (FromInteger a, MGroup a, SingI d) => ConvertDistance (Distance d a) where
+instance (Fromℤ a, MGroup a, SingI d) => ConvertDistance (Distance d a) where
   type ConvertedDistance (Distance d a) e = Distance e a
   type ToConstraints (Distance d a) _ = ()
 
@@ -176,7 +176,7 @@ instance (SingI d) => HasDistance (Distance d a) where
 -- See NOTE: [SomeDistance Parsing]
 
 instance
-  ( FromRational a,
+  ( Fromℚ a,
     SingI d,
     Parser a
   ) =>
@@ -214,11 +214,11 @@ data SomeDistance a where
 
 deriving stock instance Functor SomeDistance
 
-instance (FromInteger a, MetricSpace a, MGroup a) => Eq (SomeDistance a) where
+instance (Fromℤ a, MetricSpace a, MGroup a) => Eq (SomeDistance a) where
   t1 == t2 = convertToMeters t1 == convertToMeters t2
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     MGroup a,
     Ord a
@@ -240,7 +240,7 @@ instance (Show a) => Show (SomeDistance a) where
           . withSingI u showsPrec 11 x
       )
 
-instance (Display a, ToRational a) => Display (SomeDistance a) where
+instance (Display a, Toℚ a) => Display (SomeDistance a) where
   displayBuilder (MkSomeDistance u x) = withSingI u displayBuilder x
 
 -------------------------------------------------------------------------------
@@ -249,17 +249,17 @@ instance (Display a, ToRational a) => Display (SomeDistance a) where
 
 instance
   ( ASemigroup a,
-    FromInteger a,
+    Fromℤ a,
     MGroup a
   ) =>
   ASemigroup (SomeDistance a)
   where
   (.+.) = liftSomeDist2 (.+.)
 
-instance (FromInteger a, Semifield a) => AMonoid (SomeDistance a) where
+instance (Fromℤ a, Semifield a) => AMonoid (SomeDistance a) where
   zero = MkSomeDistance SMeter zero
 
-instance (Field a, FromInteger a) => AGroup (SomeDistance a) where
+instance (Field a, Fromℤ a) => AGroup (SomeDistance a) where
   (.-.) = liftSomeDist2 (.-.)
 
 instance (MSemigroup a) => MSemiSpace (SomeDistance a) a where
@@ -268,41 +268,41 @@ instance (MSemigroup a) => MSemiSpace (SomeDistance a) a where
 instance (MGroup a) => MSpace (SomeDistance a) a where
   MkSomeDistance u x .% k = MkSomeDistance u (x .% k)
 
-instance (FromInteger a, Semifield a) => Semimodule (SomeDistance a) a
+instance (Fromℤ a, Semifield a) => Semimodule (SomeDistance a) a
 
-instance (FromInteger a, Semifield a) => SemivectorSpace (SomeDistance a) a
+instance (Fromℤ a, Semifield a) => SemivectorSpace (SomeDistance a) a
 
-instance (Field a, FromInteger a) => Module (SomeDistance a) a
+instance (Field a, Fromℤ a) => Module (SomeDistance a) a
 
-instance (Field a, FromInteger a) => VectorSpace (SomeDistance a) a
+instance (Field a, Fromℤ a) => VectorSpace (SomeDistance a) a
 
 -------------------------------------------------------------------------------
 --                             Numeric Conversions                           --
 -------------------------------------------------------------------------------
 
-instance (FromRational a) => FromRational (SomeDistance a) where
+instance (Fromℚ a) => FromRational (SomeDistance a) where
   fromQ = MkSomeDistance SMeter . fromQ
 
-instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomeDistance a) where
+instance (Fromℤ a, MGroup a, Toℚ a) => ToRational (SomeDistance a) where
   toQ = toQ . convertToMeters
 
-instance (FromReal a) => FromReal (SomeDistance a) where
+instance (Fromℝ a) => FromReal (SomeDistance a) where
   fromR = MkSomeDistance SMeter . fromR
 
-instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomeDistance a) where
+instance (Fromℤ a, MGroup a, Toℝ a) => ToReal (SomeDistance a) where
   toR = toR . convertToMeters
 
-instance (FromInteger a) => FromInteger (SomeDistance a) where
+instance (Fromℤ a) => FromInteger (SomeDistance a) where
   fromZ = MkSomeDistance SMeter . fromZ
 
-instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomeDistance a) where
+instance (Fromℤ a, MGroup a, Toℤ a) => ToInteger (SomeDistance a) where
   toZ = toZ . convertToMeters
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
 -------------------------------------------------------------------------------
 
-instance (FromInteger a, MGroup a) => ConvertDistance (SomeDistance a) where
+instance (Fromℤ a, MGroup a) => ConvertDistance (SomeDistance a) where
   type ConvertedDistance (SomeDistance a) e = Distance e a
   type ToConstraints (SomeDistance a) _ = ()
 
@@ -327,7 +327,7 @@ instance HasDistance (SomeDistance a) where
 --
 -- Uses Distance's instance and adds units e.g. '4 km'.
 -- See NOTE: [Distance Parsing]
-instance (FromRational a, Parser a) => Parser (SomeDistance a) where
+instance (Fromℚ a, Parser a) => Parser (SomeDistance a) where
   parser =
     distanceParser >>= \case
       DistParseMarathon -> pure $ MkSomeDistance SKilometer marathon
@@ -361,7 +361,7 @@ distanceParser = do
 -------------------------------------------------------------------------------
 
 liftSomeDist2 ::
-  (FromInteger a, MGroup a) =>
+  (Fromℤ a, MGroup a) =>
   (forall d. Distance d a -> Distance d a -> Distance d a) ->
   SomeDistance a ->
   SomeDistance a ->
@@ -373,28 +373,28 @@ liftSomeDist2 f x y =
 -- (minor) float rounding.
 
 -- | Marathon.
-marathon :: forall d a. (FromRational a, SingI d) => Distance d a
+marathon :: forall d a. (Fromℚ a, SingI d) => Distance d a
 marathon = case sing @d of
   SMeter -> MkDistance $ fromℚ 42_195
   SKilometer -> MkDistance $ fromℚ 42.195
   SMile -> MkDistance $ fromℚ 26.2188
 
 -- | Half marathon.
-halfMarathon :: forall d a. (FromRational a, SingI d) => Distance d a
+halfMarathon :: forall d a. (Fromℚ a, SingI d) => Distance d a
 halfMarathon = case sing @d of
   SMeter -> MkDistance $ fromℚ 21_097.5
   SKilometer -> MkDistance $ fromℚ 21.0975
   SMile -> MkDistance $ fromℚ 13.1094
 
 -- | 10 km.
-k_10 :: forall d a. (FromRational a, SingI d) => Distance d a
+k_10 :: forall d a. (Fromℚ a, SingI d) => Distance d a
 k_10 = case sing @d of
   SMeter -> MkDistance $ fromℚ 10_000
   SKilometer -> MkDistance $ fromℚ 10
   SMile -> MkDistance $ fromℚ 6.21371
 
 -- | 5 km.
-k_5 :: forall d a. (FromRational a, SingI d) => Distance d a
+k_5 :: forall d a. (Fromℚ a, SingI d) => Distance d a
 k_5 = case sing @d of
   SMeter -> MkDistance $ fromℚ 5_000
   SKilometer -> MkDistance $ fromℚ 5

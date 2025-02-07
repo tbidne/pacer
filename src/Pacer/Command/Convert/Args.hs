@@ -16,7 +16,7 @@ import Pacer.Prelude
 -- | Parse convert args.
 parser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
     Semifield a,

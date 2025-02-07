@@ -169,7 +169,7 @@ parseIntegralText =
 
 -- | Read text like "1d2h3m4s", parse w/ relative time into Fractional
 -- seconds.
-parseTimeString :: forall a. (FromInteger a) => MParser a
+parseTimeString :: forall a. (Fromℤ a) => MParser a
 parseTimeString = do
   t <-
     MP.takeWhile1P

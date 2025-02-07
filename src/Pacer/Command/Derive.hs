@@ -49,13 +49,13 @@ import Pacer.Prelude
 handle ::
   forall es a.
   ( Display a,
-    FromInteger a,
+    Fromℤ a,
     HasCallStack,
     Ord a,
     Semifield a,
     Show a,
     Terminal :> es,
-    ToRational a
+    Toℚ a
   ) =>
   DeriveParamsFinal a ->
   Eff es ()
@@ -95,7 +95,7 @@ handle params = case params.quantity of
 -- | Given a distance and a duration, derives the pace.
 derivePace ::
   forall t d a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a,
     PaceDistF d,
     SingI t
@@ -113,7 +113,7 @@ derivePace distance duration =
 -- the pace.
 deriveSomePace ::
   forall t a.
-  (FromInteger a, Ord a, Semifield a, Show a, SingI t) =>
+  (Fromℤ a, Ord a, Semifield a, Show a, SingI t) =>
   -- | Existentially-quantified distance.
   SomeDistance (Positive a) ->
   -- | Duration.
@@ -144,7 +144,7 @@ deriveDuration distance pace = pace.unPace .* distance.unDistance
 -- | Given existentially-quantified distance and pace, derives the duration.
 -- Different distance units are converted.
 deriveSomeDuration ::
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a
   ) =>
   -- | Existentially-quantified distance.
@@ -166,7 +166,7 @@ deriveSomeDuration
 -- | Given a duration and pace, derives the distance.
 deriveDistance ::
   forall t d a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a,
     SingI t
   ) =>
@@ -187,7 +187,7 @@ deriveDistance duration (MkPace (MkDuration paceDuration)) =
 -- distance.
 deriveSomeDistance ::
   forall t a.
-  (FromInteger a, MGroup a, SingI t) =>
+  (Fromℤ a, MGroup a, SingI t) =>
   -- | Duration.
   Duration t a ->
   -- | Existentially-quantified Pace.

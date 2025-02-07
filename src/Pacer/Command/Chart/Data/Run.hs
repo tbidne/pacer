@@ -85,7 +85,7 @@ data Run dist a = MkRun
 -- Run contains Positive, which needs it for construction.
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     Ord a,
     Semifield a,
     Show a,
@@ -121,7 +121,7 @@ instance (SingI dist) => HasDistance (Run dist a) where
 
 -- | Derives the pace from a run.
 derivePace ::
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a,
     PaceDistF d
   ) =>
@@ -146,7 +146,7 @@ data SomeRun a where
 -------------------------------------------------------------------------------
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     Semifield a,
     Ord a,
@@ -171,7 +171,7 @@ instance (Show a) => Show (SomeRun a) where
 -------------------------------------------------------------------------------
 
 instance
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Parser (Positive a),
     Semifield a,
@@ -198,7 +198,7 @@ instance
               title
             }
 
-decodeDistance :: (FromRational a, Parser a) => Decoder (SomeDistance a)
+decodeDistance :: (Fromℚ a, Parser a) => Decoder (SomeDistance a)
 decodeDistance = tomlDecoder >>= (failErr . P.parse)
 
 decodeDuration :: forall a. (Parser (Seconds a)) => Decoder (Seconds a)
@@ -209,7 +209,7 @@ decodeDuration = tomlDecoder >>= (failErr . P.parse)
 -------------------------------------------------------------------------------
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     Ord a,
     Semifield a,
     Show a
@@ -298,7 +298,7 @@ instance HasDistance (SomeRuns a) where
 -------------------------------------------------------------------------------
 
 instance
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Semifield a,
     Show a,
@@ -387,7 +387,7 @@ findOverlap (MkSomeRun _ r1) = F.find p
 
 -- | Derives a pace from some run.
 deriveSomePace ::
-  ( FromInteger a,
+  ( Fromℤ a,
     Ord a,
     Semifield a,
     Show a
@@ -400,7 +400,7 @@ deriveSomePace (MkSomeRun sr r) = case sr of
   SMile -> hideDistance $ derivePace r
 
 applySomeRun2 ::
-  (FromInteger a, Ord a, Semifield a, Show a) =>
+  (Fromℤ a, Ord a, Semifield a, Show a) =>
   (forall d. (SingI d) => Run d a -> Run d a -> r) ->
   SomeRun a ->
   SomeRun a ->

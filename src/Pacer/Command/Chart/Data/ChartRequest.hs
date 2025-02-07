@@ -65,7 +65,7 @@ data ChartRequest a = MkChartRequest
   deriving stock (Eq, Show)
 
 instance
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Parser a,
     Semifield a,
@@ -95,7 +95,7 @@ newtype ChartRequests a = MkChartRequests {unChartRequests :: Seq (ChartRequest 
   deriving stock (Eq, Show)
 
 instance
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Parser a,
     Semifield a,

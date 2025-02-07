@@ -86,7 +86,7 @@ evolvePhase cmd mToml = case cmd of
 -- | Parse command.
 parser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
     Semifield a,

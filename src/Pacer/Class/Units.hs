@@ -23,11 +23,11 @@ class Units a where
   -- @
   --   x kilometers === x * 1_000 meters
   -- @
-  baseFactor :: (FromInteger b) => a -> b
+  baseFactor :: (Fromℤ b) => a -> b
 
 -- | Retrieves the 'baseFactor' from the singleton witness.
 singFactor ::
   forall k (a :: k) b.
-  (FromInteger b, Units (Demote k), SingI a, SingKind k) =>
+  (Fromℤ b, Units (Demote k), SingI a, SingKind k) =>
   b
 singFactor = baseFactor $ fromSing (sing @a)

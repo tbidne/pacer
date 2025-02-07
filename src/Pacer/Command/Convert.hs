@@ -16,13 +16,13 @@ import Pacer.Prelude
 -- | Handles convert command.
 handle ::
   forall es a.
-  ( FromInteger a,
+  ( Fromℤ a,
     HasCallStack,
     Ord a,
     Semifield a,
     Show a,
     Terminal :> es,
-    ToRational a
+    Toℚ a
   ) =>
   ConvertParamsFinal a ->
   Eff es ()

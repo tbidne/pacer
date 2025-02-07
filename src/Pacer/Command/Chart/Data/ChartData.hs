@@ -127,12 +127,12 @@ type AccY1 = NESeq (Tuple3 Timestamp Double Double)
 
 -- | Turns a sequence of runs and chart requests into charts.
 mkChartDatas ::
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     Ord a,
     Semifield a,
     Show a,
-    ToReal a
+    Toℝ a
   ) =>
   -- | Final distance unit to use.
   DistanceUnit ->
@@ -150,12 +150,12 @@ mkChartDatas finalDistUnit runs =
 -- | Turns a sequence of runs and a chart request into a chart.
 mkChartData ::
   forall a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     Ord a,
     Semifield a,
     Show a,
-    ToReal a
+    Toℝ a
   ) =>
   -- | Final distance unit to use.
   DistanceUnit ->
@@ -216,7 +216,7 @@ mkChartData
 
 filterRuns ::
   forall a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     Ord a,
     Semifield a,

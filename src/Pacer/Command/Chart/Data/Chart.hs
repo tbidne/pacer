@@ -44,12 +44,12 @@ instance ToJSON Chart where
 -- | Given runs and chart requests, generates a series of charts, or the
 mkCharts ::
   forall a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     Ord a,
     Semifield a,
     Show a,
-    ToReal a
+    Toℝ a
   ) =>
   SomeRuns a ->
   ChartRequests a ->
@@ -58,12 +58,12 @@ mkCharts runs = traverse (mkChart runs) . (.unChartRequests)
 
 mkChart ::
   forall a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     Ord a,
     Semifield a,
     Show a,
-    ToReal a
+    Toℝ a
   ) =>
   SomeRuns a ->
   ChartRequest a ->

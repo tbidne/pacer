@@ -69,10 +69,10 @@ instance (Show a, SingI t) => Show (Duration t a) where
       t = fromSingI @_ @t
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MSemigroup a,
     SingI t,
-    ToRational a
+    Toℚ a
   ) =>
   Display (Duration t a)
   where
@@ -127,22 +127,22 @@ instance (Field a) => VectorSpace (Duration t a) a
 --                             Numeric Conversions                           --
 -------------------------------------------------------------------------------
 
-instance (FromRational a) => FromRational (Duration t a) where
+instance (Fromℚ a) => FromRational (Duration t a) where
   fromQ = MkDuration . fromQ
 
-instance (ToRational a) => ToRational (Duration t a) where
+instance (Toℚ a) => ToRational (Duration t a) where
   toQ (MkDuration x) = toQ x
 
-instance (FromInteger a) => FromInteger (Duration t a) where
+instance (Fromℤ a) => FromInteger (Duration t a) where
   fromZ = MkDuration . fromℤ
 
-instance (ToInteger a) => ToInteger (Duration t a) where
+instance (Toℤ a) => ToInteger (Duration t a) where
   toZ (MkDuration x) = toZ x
 
-instance (FromReal a) => FromReal (Duration t a) where
+instance (Fromℝ a) => FromReal (Duration t a) where
   fromR = MkDuration . fromR
 
-instance (ToReal a) => ToReal (Duration t a) where
+instance (Toℝ a) => ToReal (Duration t a) where
   toR (MkDuration x) = toR x
 
 -------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ instance (ToReal a) => ToReal (Duration t a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a,
     SingI t
   ) =>
@@ -173,7 +173,7 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     Ord a,
     Semifield a,
     Show a,
@@ -201,7 +201,7 @@ liftDuration2 f (MkDuration x) (MkDuration y) = MkDuration (f x y)
 -- | Convert to seconds.
 toSeconds ::
   forall t a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MSemigroup a,
     SingI t
   ) =>
@@ -214,7 +214,7 @@ toSeconds = MkDuration . (.*. toBase) . (.unDuration)
 -- | Convert from on duration to another.
 convertDuration ::
   forall t2 t1 a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a,
     SingI t1,
     SingI t2
@@ -228,10 +228,10 @@ convertDuration = MkDuration . (.%. fromBase) . (.*. toBase) . (.unDuration)
 
 toHrMinSec ::
   forall t a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MSemigroup a,
     SingI t,
-    ToRational a
+    Toℚ a
   ) =>
   Duration t a ->
   (Word32, Word32, Word32)
@@ -273,10 +273,10 @@ toHrMinSec d = normalizeTime (h_init, m_init, s_init)
 
 toTimeString ::
   forall t a.
-  ( FromInteger a,
+  ( Fromℤ a,
     MSemigroup a,
     SingI t,
-    ToRational a
+    Toℚ a
   ) =>
   Duration t a ->
   Text
@@ -324,7 +324,7 @@ data SomeDuration a where
 deriving stock instance Functor SomeDuration
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     MSemigroup a
   ) =>
@@ -333,7 +333,7 @@ instance
   t1 == t2 = someToSeconds t1 == someToSeconds t2
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     MSemigroup a,
     Ord a
@@ -357,10 +357,10 @@ instance (Show a) => Show (SomeDuration a) where
 
 instance
   ( Display a,
-    FromInteger a,
+    Fromℤ a,
     MetricSpace a,
     MSemigroup a,
-    ToRational a
+    Toℚ a
   ) =>
   Display (SomeDuration a)
   where
@@ -370,13 +370,13 @@ instance
 --                                   Algebra                                 --
 -------------------------------------------------------------------------------
 
-instance (ASemigroup a, FromInteger a, MSemigroup a) => ASemigroup (SomeDuration a) where
+instance (ASemigroup a, Fromℤ a, MSemigroup a) => ASemigroup (SomeDuration a) where
   (.+.) = liftSomeDuration2 (.+.)
 
-instance (AMonoid a, FromInteger a, MSemigroup a) => AMonoid (SomeDuration a) where
+instance (AMonoid a, Fromℤ a, MSemigroup a) => AMonoid (SomeDuration a) where
   zero = MkSomeDuration SSecond zero
 
-instance (FromInteger a, Ring a) => AGroup (SomeDuration a) where
+instance (Fromℤ a, Ring a) => AGroup (SomeDuration a) where
   (.-.) = liftSomeDuration2 (.-.)
 
 instance (MSemigroup a) => MSemiSpace (SomeDuration a) a where
@@ -385,34 +385,34 @@ instance (MSemigroup a) => MSemiSpace (SomeDuration a) a where
 instance (MGroup a) => MSpace (SomeDuration a) a where
   MkSomeDuration u x .% k = MkSomeDuration u (x .% k)
 
-instance (FromInteger a, Semiring a) => Semimodule (SomeDuration a) a
+instance (Fromℤ a, Semiring a) => Semimodule (SomeDuration a) a
 
-instance (FromInteger a, Semifield a) => SemivectorSpace (SomeDuration a) a
+instance (Fromℤ a, Semifield a) => SemivectorSpace (SomeDuration a) a
 
-instance (FromInteger a, Ring a) => Module (SomeDuration a) a
+instance (Fromℤ a, Ring a) => Module (SomeDuration a) a
 
-instance (FromInteger a, Field a) => VectorSpace (SomeDuration a) a
+instance (Fromℤ a, Field a) => VectorSpace (SomeDuration a) a
 
 -------------------------------------------------------------------------------
 --                             Numeric Conversions                           --
 -------------------------------------------------------------------------------
 
-instance (FromRational a) => FromRational (SomeDuration a) where
+instance (Fromℚ a) => FromRational (SomeDuration a) where
   fromQ = MkSomeDuration SSecond . fromQ
 
-instance (FromInteger a, MSemigroup a, ToRational a) => ToRational (SomeDuration a) where
+instance (Fromℤ a, MSemigroup a, Toℚ a) => ToRational (SomeDuration a) where
   toQ = toQ . someToSeconds
 
-instance (FromReal a) => FromReal (SomeDuration a) where
+instance (Fromℝ a) => FromReal (SomeDuration a) where
   fromR = MkSomeDuration SSecond . fromR
 
-instance (FromInteger a, MSemigroup a, ToReal a) => ToReal (SomeDuration a) where
+instance (Fromℤ a, MSemigroup a, Toℝ a) => ToReal (SomeDuration a) where
   toR = toℝ . someToSeconds
 
-instance (FromInteger a) => FromInteger (SomeDuration a) where
+instance (Fromℤ a) => FromInteger (SomeDuration a) where
   fromZ = MkSomeDuration SSecond . fromZ
 
-instance (FromInteger a, MSemigroup a, ToInteger a) => ToInteger (SomeDuration a) where
+instance (Fromℤ a, MSemigroup a, Toℤ a) => ToInteger (SomeDuration a) where
   toZ = toZ . someToSeconds
 
 -------------------------------------------------------------------------------
@@ -444,7 +444,7 @@ instance (FromInteger a, MSemigroup a, ToInteger a) => ToInteger (SomeDuration a
 
 instance
   {-# OVERLAPPABLE #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a
   ) =>
   Parser (SomeDuration a)
@@ -453,7 +453,7 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     Semifield a,
     Ord a,
     Show a
@@ -471,7 +471,7 @@ instance
 -------------------------------------------------------------------------------
 
 liftSomeDuration2 ::
-  (FromInteger a, MSemigroup a) =>
+  (Fromℤ a, MSemigroup a) =>
   (forall t. Duration t a -> Duration t a -> Duration t a) ->
   SomeDuration a ->
   SomeDuration a ->
@@ -481,7 +481,7 @@ liftSomeDuration2 f x y =
 
 -- | Converts some distance to meters.
 someToSeconds ::
-  (FromInteger a, MSemigroup a) =>
+  (Fromℤ a, MSemigroup a) =>
   SomeDuration a ->
   Seconds a
 someToSeconds (MkSomeDuration u t) = withSingI u toSeconds t

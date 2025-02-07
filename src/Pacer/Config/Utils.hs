@@ -65,7 +65,7 @@ type PaceOptUnits a = Either (SomePace (Positive a)) (Seconds (Positive a))
 
 paceOptUnitsParserHelp ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Semifield a,
     Show a
@@ -109,7 +109,7 @@ data DistancePaceArgs a = MkDistancePaceArgs
 
 dpArgsParser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
     Semifield a,
@@ -140,7 +140,7 @@ data DistanceDurationPaceArgs a = MkDistanceDurationPaceArgs
 
 ddpArgsParser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
     Semifield a,
@@ -176,7 +176,7 @@ distanceUnitParser =
 
 durationParser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Semifield a,
     Show a
@@ -195,7 +195,7 @@ durationParser =
 someDistanceParser ::
   forall a.
   ( AMonoid a,
-    FromRational a,
+    Fromℚ a,
     Ord a,
     P.Parser a,
     Show a
@@ -213,7 +213,7 @@ someDistanceParser =
 
 somePaceParser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Semifield a,
     Show a

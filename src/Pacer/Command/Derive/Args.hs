@@ -17,7 +17,7 @@ import Pacer.Prelude
 -- | Parses derive params.
 parser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
     Semifield a,

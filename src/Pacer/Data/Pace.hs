@@ -88,7 +88,7 @@ type family PaceDistF d where
 
 instance
   ( Eq a,
-    FromInteger a,
+    Fromℤ a,
     MetricSpace a,
     MGroup a,
     SingI d
@@ -98,7 +98,7 @@ instance
   x == y = x.unPace == y.unPace
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     MGroup a,
     Ord a,
@@ -122,10 +122,10 @@ instance (Show a, SingI d) => Show (Pace d a) where
 
 instance
   ( Display a,
-    FromInteger a,
+    Fromℤ a,
     MSemigroup a,
     SingI d,
-    ToRational a
+    Toℚ a
   ) =>
   Display (Pace d a)
   where
@@ -152,22 +152,22 @@ instance (MGroup a) => MSpace (Pace d a) a where
 --                             Numeric Conversions                           --
 -------------------------------------------------------------------------------
 
-instance (FromRational a, PaceDistF d) => FromRational (Pace d a) where
+instance (Fromℚ a, PaceDistF d) => FromRational (Pace d a) where
   fromQ = MkPace . fromQ
 
-instance (ToRational a) => ToRational (Pace d a) where
+instance (Toℚ a) => ToRational (Pace d a) where
   toQ = toQ . (.unPace)
 
-instance (FromInteger a, PaceDistF d) => FromInteger (Pace d a) where
+instance (Fromℤ a, PaceDistF d) => FromInteger (Pace d a) where
   fromZ = MkPace . fromℤ
 
-instance (ToInteger a) => ToInteger (Pace d a) where
+instance (Toℤ a) => ToInteger (Pace d a) where
   toZ = toZ . (.unPace)
 
-instance (FromReal a, PaceDistF d) => FromReal (Pace d a) where
+instance (Fromℝ a, PaceDistF d) => FromReal (Pace d a) where
   fromR = MkPace . fromR
 
-instance (ToReal a) => ToReal (Pace d a) where
+instance (Toℝ a) => ToReal (Pace d a) where
   toR = toR . (.unPace)
 
 -------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ instance (ToReal a) => ToReal (Pace d a) where
 -------------------------------------------------------------------------------
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a,
     SingI d
   ) =>
@@ -217,7 +217,7 @@ instance (MMonoid a, PaceDistF d, SingI d) => HasDistance (Pace d a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a,
     PaceDistF d
   ) =>
@@ -227,7 +227,7 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     Ord a,
     PaceDistF d,
     Semifield a,
@@ -244,7 +244,7 @@ instance
 -- | Creates a pace from a duration.
 mkPace ::
   ( PaceDistF d,
-    FromInteger a,
+    Fromℤ a,
     MSemigroup a,
     SingI t
   ) =>
@@ -273,7 +273,7 @@ deriving stock instance Functor SomePace
 
 instance
   ( Eq a,
-    FromInteger a,
+    Fromℤ a,
     MetricSpace a,
     MGroup a
   ) =>
@@ -282,7 +282,7 @@ instance
   (==) = applySomePace2 (==)
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MetricSpace a,
     MGroup a,
     Ord a
@@ -306,9 +306,9 @@ instance (Show a) => Show (SomePace a) where
 
 instance
   ( Display a,
-    FromInteger a,
+    Fromℤ a,
     MSemigroup a,
-    ToRational a
+    Toℚ a
   ) =>
   Display (SomePace a)
   where
@@ -328,22 +328,22 @@ instance (MGroup a) => MSpace (SomePace a) a where
 --                             Numeric Conversions                           --
 -------------------------------------------------------------------------------
 
-instance (FromRational a) => FromRational (SomePace a) where
+instance (Fromℚ a) => FromRational (SomePace a) where
   fromQ = MkSomePace SKilometer . fromQ
 
-instance (FromInteger a, MGroup a, ToRational a) => ToRational (SomePace a) where
+instance (Fromℤ a, MGroup a, Toℚ a) => ToRational (SomePace a) where
   toQ = toQ . DistU.convertToKilometers
 
-instance (FromInteger a) => FromInteger (SomePace a) where
+instance (Fromℤ a) => FromInteger (SomePace a) where
   fromZ = MkSomePace SKilometer . fromℤ
 
-instance (FromInteger a, MGroup a, ToInteger a) => ToInteger (SomePace a) where
+instance (Fromℤ a, MGroup a, Toℤ a) => ToInteger (SomePace a) where
   toZ = toZ . DistU.convertToKilometers
 
-instance (FromReal a) => FromReal (SomePace a) where
+instance (Fromℝ a) => FromReal (SomePace a) where
   fromR = MkSomePace SKilometer . fromR
 
-instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
+instance (Fromℤ a, MGroup a, Toℝ a) => ToReal (SomePace a) where
   toR = toR . DistU.convertToKilometers
 
 -------------------------------------------------------------------------------
@@ -351,7 +351,7 @@ instance (FromInteger a, MGroup a, ToReal a) => ToReal (SomePace a) where
 -------------------------------------------------------------------------------
 
 instance
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a
   ) =>
   ConvertDistance (SomePace a)
@@ -384,7 +384,7 @@ instance (MMonoid a) => HasDistance (SomePace a) where
 
 instance
   {-# OVERLAPPABLE #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     MGroup a
   ) =>
   Parser (SomePace a)
@@ -417,7 +417,7 @@ instance
 
 instance
   {-# OVERLAPPING #-}
-  ( FromInteger a,
+  ( Fromℤ a,
     Ord a,
     Semifield a,
     Show a
@@ -443,7 +443,7 @@ mkSomePace :: forall d a. (PaceDistF d, SingI d) => Pace d a -> SomePace a
 mkSomePace = MkSomePace (sing @d)
 
 applySomePace2 ::
-  (FromInteger a, MGroup a) =>
+  (Fromℤ a, MGroup a) =>
   (forall d. (SingI d) => Pace d a -> Pace d a -> r) ->
   SomePace a ->
   SomePace a ->

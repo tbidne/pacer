@@ -102,11 +102,11 @@ data FilterType a
 
 instance
   ( AMonoid a,
-    FromInteger a,
+    Fromℤ a,
     MSemigroup a,
     Ord a,
     Show a,
-    ToRational a
+    Toℚ a
   ) =>
   Display (FilterType a)
   where
@@ -146,7 +146,7 @@ instance
         ]
 
 instance
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     Parser a,
     Semifield a,

@@ -47,7 +47,7 @@ data Args a = MkArgs
 -- | Optparse-Applicative info.
 parserInfo ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
     Semifield a,
@@ -76,7 +76,7 @@ parserInfo =
 
 argsParser ::
   forall a.
-  ( FromRational a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
     Semifield a,
