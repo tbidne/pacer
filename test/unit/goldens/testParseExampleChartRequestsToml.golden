@@ -1,5 +1,5 @@
 MkChartRequests
-  { unChartRequests = fromList
+  { chartRequests = fromList
     [ MkChartRequest
       { description = Just "This is some runs plotted by distance."
       , filters = []
@@ -87,4 +87,5 @@ MkChartRequests
       , y1Axis = Just YAxisPace
       }
     ]
+  , garminSettings = Nothing
   }

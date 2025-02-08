@@ -15,7 +15,7 @@ import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (filters, title, y1Axis, yAxis),
-    ChartRequests (unChartRequests),
+    ChartRequests (chartRequests),
     YAxisType
       ( YAxisDistance,
         YAxisDuration,
@@ -140,7 +140,7 @@ mkChartDatas ::
   ChartRequests a ->
   Either CreateChartE (Seq ChartData)
 mkChartDatas finalDistUnit runs =
-  traverse (mkChartData finalDistUnit runs) . (.unChartRequests)
+  traverse (mkChartData finalDistUnit runs) . (.chartRequests)
 
 -- NOTE: HLint incorrectly thinks some brackets are unnecessary.
 -- See NOTE: [Brackets with OverloadedRecordDot].

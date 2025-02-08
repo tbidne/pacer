@@ -74,6 +74,7 @@ library
     Pacer.Command.Chart.Data.ChartRequest
     Pacer.Command.Chart.Data.Expr
     Pacer.Command.Chart.Data.Run
+    Pacer.Command.Chart.Data.Run.Garmin
     Pacer.Command.Chart.Data.Time
     Pacer.Command.Chart.Params
     Pacer.Command.Convert
@@ -112,6 +113,7 @@ library
     , algebra-simple                   ^>=0.1
     , base                             >=4.20.0.0 && <4.22
     , bytestring                       >=0.10.12  && <0.13
+    , cassava                          ^>=0.5.3.2
     , containers                       >=0.6.3.1  && <0.8
     , deepseq                          >=1.4.6.0  && <1.6
     , effectful                        ^>=2.5.0.0

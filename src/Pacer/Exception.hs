@@ -3,6 +3,7 @@ module Pacer.Exception
     ChartFileMissingE (..),
     CreateChartE (..),
     FileNotFoundE (..),
+    GarminE (..),
     NpmE (..),
     TomlE (..),
 
@@ -201,8 +202,31 @@ instance Exception NpmE where
         "' exited with error code ",
         show i,
         ": ",
-        unpackText $ decodeUtf8Lenient $ toStrictByteString t
+        unpackText $ decodeUtf8Lenient $ toStrictBS t
       ]
+
+-- | Garmin exceptions.
+data GarminE
+  = -- | Error decoding a garmin file.
+    GarminDecode String
+  | -- | Error for specifing garmin unit as meters.
+    GarminMeters
+  | -- | Generic garmin error.
+    GarminOther String
+  | -- | Error for unspecified garmin distance unit.
+    GarminUnitRequired
+  deriving stock (Eq, Show)
+
+instance Exception GarminE where
+  displayException = \case
+    GarminDecode s -> "Error decoding garmin file: " ++ s
+    GarminMeters -> "Meters are invalid for Garmin; use km or mi."
+    GarminOther s -> "Garmin error: " ++ s
+    GarminUnitRequired ->
+      mconcat
+        [ "The 'garmin.unit' settings is required in chart-requests.toml ",
+          "when used with a garmin runs file."
+        ]
 
 displayInnerMatchKnown :: (Exception e) => e -> String
 displayInnerMatchKnown e =

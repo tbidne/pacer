@@ -16,7 +16,8 @@ import Pacer.Command.Chart.Params
         cleanInstall,
         dataDir,
         json,
-        runsPath
+        runsPath,
+        runsType
       ),
     ChartParamsArgs,
     ChartParamsFinal,
@@ -72,7 +73,8 @@ testEvolvePhaseCliPaths =
           chartRequestsPath = Just [osp|cli-cr.toml|],
           dataDir = Just [osp|cli-data|],
           json = False,
-          runsPath = Just [osp|cli-runs.toml|]
+          runsPath = Just [osp|cli-runs.toml|],
+          runsType = Nothing
         }
     toml =
       MkToml
@@ -97,7 +99,8 @@ testEvolvePhaseCliData =
           chartRequestsPath = Nothing,
           dataDir = Just [osp|cli-data|],
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
 
     toml =
@@ -125,7 +128,8 @@ testEvolvePhaseConfigAbsPaths =
           -- former contains no paths.
           dataDir = Just [osp|no-data|],
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
 
     toml =
@@ -153,7 +157,8 @@ testEvolvePhaseConfigRelPaths =
           -- former contains no paths.
           dataDir = Just [osp|no-data|],
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
 
     toml =
@@ -181,7 +186,8 @@ testEvolvePhaseConfigAbsData =
           -- former contains no paths.
           dataDir = Just [osp|no-data|],
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
 
     toml =
@@ -209,7 +215,8 @@ testEvolvePhaseConfigRelData =
           -- former contains no paths.
           dataDir = Just [osp|no-data|],
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
 
     toml =
@@ -237,7 +244,8 @@ testEvolvePhaseXdgPaths =
           -- former contains no paths.
           dataDir = Just [osp|no-data|],
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
 
     toml =
@@ -274,7 +282,8 @@ testEvolvePhaseCliPathsEx =
           chartRequestsPath = Just [osp|bad_cr.toml|],
           dataDir = Just [osp|cli-data|],
           json = False,
-          runsPath = Just [osp|bad_runs.toml|]
+          runsPath = Just [osp|bad_runs.toml|],
+          runsType = Nothing
         }
     toml =
       MkToml
@@ -299,7 +308,8 @@ testEvolvePhaseConfigPathsEx =
           chartRequestsPath = Nothing,
           dataDir = Nothing,
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
     toml =
       MkToml
@@ -324,7 +334,8 @@ testEvolvePhaseMissingEx =
           chartRequestsPath = Nothing,
           dataDir = Just [osp|some-dir|],
           json = False,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
     toml =
       MkToml

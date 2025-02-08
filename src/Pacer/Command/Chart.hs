@@ -11,6 +11,9 @@ module Pacer.Command.Chart
     createCharts,
     createChartsJsonFile,
     createChartsJsonBS,
+
+    -- ** Misc
+    getRunsType,
   )
 where
 
@@ -19,6 +22,10 @@ import Data.Aeson.Encode.Pretty
     Indent (Spaces),
   )
 import Data.Aeson.Encode.Pretty qualified as AsnPretty
+import Data.ByteString.Lazy qualified as BSL
+import Data.Csv.Streaming (Records (Cons, Nil))
+import Data.Csv.Streaming qualified as Csv
+import Data.Text qualified as T
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.FileSystem.PathWriter.Dynamic
   ( CopyDirConfig (MkCopyDirConfig),
@@ -30,16 +37,40 @@ import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.Process.Typed.Dynamic qualified as TP
 import FileSystem.OsPath (decodeLenient, decodeThrowM)
 import FileSystem.Path qualified as Path
+import FileSystem.UTF8 (decodeUtf8Lenient)
 import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
 import Pacer.Command.Chart.Data.Chart (Chart)
 import Pacer.Command.Chart.Data.Chart qualified as Chart
-import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
-import Pacer.Command.Chart.Data.Run (SomeRuns)
-import Pacer.Command.Chart.Params
-  ( ChartParams (chartRequestsPath, cleanInstall, json, runsPath),
-    ChartParamsFinal,
+import Pacer.Command.Chart.Data.ChartRequest
+  ( ChartRequests (garminSettings),
+    GarminSettings (distanceUnit),
   )
-import Pacer.Exception (NpmE (MkNpmE), TomlE (MkTomlE))
+import Pacer.Command.Chart.Data.Run
+  ( Run (MkRun),
+    SomeRun (MkSomeRun),
+    SomeRuns,
+  )
+import Pacer.Command.Chart.Data.Run qualified as Run
+import Pacer.Command.Chart.Data.Run.Garmin
+  ( GarminAct (GarminActOther, GarminActRun),
+    GarminRun (datetime, distance, duration, title),
+  )
+import Pacer.Command.Chart.Data.Time (Timestamp (TimestampTime))
+import Pacer.Command.Chart.Params
+  ( ChartParams (chartRequestsPath, cleanInstall, json, runsPath, runsType),
+    ChartParamsFinal,
+    RunsType (RunsDefault, RunsGarmin),
+  )
+import Pacer.Data.Distance qualified as Distance
+import Pacer.Data.Distance.Units
+  ( DistanceUnit (Kilometer, Meter, Mile),
+  )
+import Pacer.Data.Result (Result (Err, Ok))
+import Pacer.Exception
+  ( GarminE (GarminDecode, GarminMeters, GarminOther, GarminUnitRequired),
+    NpmE (MkNpmE),
+    TomlE (MkTomlE),
+  )
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import Pacer.Web qualified as Web
@@ -87,7 +118,12 @@ createCharts params = addNamespace "createCharts" $ do
     then do
       -- params.json is active, so stop after json generation
       let jsonPath = cwdPath <</>> jsonName
-      createChartsJsonFile True params.runsPath params.chartRequestsPath jsonPath
+      createChartsJsonFile
+        True
+        params.runsType
+        params.runsPath
+        params.chartRequestsPath
+        jsonPath
     else do
       -- 1. Check that node exists
       --
@@ -115,7 +151,12 @@ createCharts params = addNamespace "createCharts" $ do
       PW.createDirectoryIfMissing True (pathToOsPath webDataDir)
       let jsonPath = webDataDir <</>> jsonName
 
-      createChartsJsonFile False params.runsPath params.chartRequestsPath jsonPath
+      createChartsJsonFile
+        False
+        params.runsType
+        params.runsPath
+        params.chartRequestsPath
+        jsonPath
 
       let setCurrDir = PW.setCurrentDirectory . pathToOsPath
           restorePrevDir = const (PW.setCurrentDirectory cwdOsPath)
@@ -213,19 +254,20 @@ createChartsJsonFile ::
   ) =>
   -- | Level to log the success message at.
   Bool ->
+  Maybe RunsType ->
   Path Abs File ->
   Path Abs File ->
   Path Abs File ->
   Eff es ()
-createChartsJsonFile logInfoLvl runsPath requestsPath outJson =
+createChartsJsonFile logInfoLvl mRunsType runsPath requestsPath outJson =
   addNamespace "createChartsJsonFile" $ do
-    bs <- createChartsJsonBS runsPath requestsPath
+    bs <- createChartsJsonBS mRunsType runsPath requestsPath
 
     let (dir, _) = OsPath.splitFileName outJsonOsPath
 
     createDirectoryIfMissing True dir
 
-    writeBinaryFile outJsonOsPath (toStrictByteString bs)
+    writeBinaryFile outJsonOsPath (toStrictBS bs)
 
     let msg = "Wrote json file: " <> Utils.showtOsPath outJsonOsPath
     if logInfoLvl
@@ -239,15 +281,19 @@ createChartsJsonFile logInfoLvl runsPath requestsPath outJson =
 createChartsJsonBS ::
   forall es.
   ( HasCallStack,
-    FileReader :> es
+    FileReader :> es,
+    Logger :> es,
+    LoggerNS :> es
   ) =>
-  -- | Path to runs.toml. Defaults to 'defRunsPath'.
+  Maybe RunsType ->
+  -- | Path to runs file. Defaults to 'defRunsPath'.
   Path Abs File ->
   -- | Path to chart-requests.toml. Defaults to 'defChartRequestsPath'.
   Path Abs File ->
   Eff es LazyByteString
-createChartsJsonBS runsPath chartRequestsPath =
-  AsnPretty.encodePretty' cfg <$> createChartSeq runsPath chartRequestsPath
+createChartsJsonBS mRunsType runsPath chartRequestsPath =
+  AsnPretty.encodePretty' cfg
+    <$> createChartSeq mRunsType runsPath chartRequestsPath
   where
     cfg =
       AsnPretty.defConfig
@@ -260,26 +306,155 @@ createChartsJsonBS runsPath chartRequestsPath =
 createChartSeq ::
   forall es.
   ( HasCallStack,
-    FileReader :> es
+    FileReader :> es,
+    Logger :> es,
+    LoggerNS :> es
   ) =>
-  -- | Path to runs.toml
+  Maybe RunsType ->
+  -- | Path to runs file
   Path Abs File ->
   -- | Path to chart-requests.toml
   Path Abs File ->
   Eff es (Seq Chart)
-createChartSeq runsPath chartRequestsPath = do
-  runs <- readDecodeToml @(SomeRuns Double) (pathToOsPath runsPath)
+createChartSeq mRunsType runsPath chartRequestsPath = addNamespace "createChartSeq" $ do
   chartRequests <-
     readDecodeToml @(ChartRequests Double) (pathToOsPath chartRequestsPath)
 
+  runs <- readRuns (chartRequests.garminSettings >>= (.distanceUnit))
+
   throwLeft (Chart.mkCharts runs chartRequests)
   where
-    readDecodeToml :: forall a. (DecodeTOML a, HasCallStack) => OsPath -> Eff es a
+    runsOsPath = pathToOsPath runsPath
+
+    -- DistanceUnit should be set if this is a garmin (csv) file.
+    -- If it is a toml file, it is ignored.
+    readRuns :: Maybe DistanceUnit -> Eff es (SomeRuns Double)
+    readRuns mInputDistUnit =
+      getRunsType mRunsType runsOsPath >>= \case
+        RunsDefault -> readDecodeToml runsOsPath
+        RunsGarmin -> do
+          inputDistUnit <- case mInputDistUnit of
+            Nothing -> throwM GarminUnitRequired
+            Just du -> pure du
+          readRunsCsv inputDistUnit runsOsPath
+
+    readRunsCsv :: DistanceUnit -> OsPath -> Eff es (SomeRuns Double)
+    readRunsCsv inputDistUnit csvPath = do
+      -- 1. Read csv into bytestring.
+      bs <- readBinaryFile csvPath
+
+      someRunsList <- case inputDistUnit of
+        Meter -> throwM GarminMeters
+        Kilometer -> bsToRuns Kilometer bs
+        Mile -> bsToRuns Mile bs
+
+      case Run.mkSomeRuns someRunsList of
+        Err err -> throwM $ GarminOther err
+        Ok someRuns -> pure someRuns
+      where
+        bsToTxt = decodeUtf8Lenient . toStrictBS
+
+        bsToRuns ::
+          forall (d :: DistanceUnit) ->
+          (SingI d) =>
+          ByteString ->
+          Eff es (List (SomeRun Double))
+        bsToRuns d bs =
+          case Csv.decodeByName @(GarminAct d PDouble) (fromStrictBS bs) of
+            Left err -> throwM $ GarminDecode err
+            Right (_, rs) -> foldGarmin [] rs
+
+        toSomeRun :: (SingI d) => GarminRun d PDouble -> SomeRun Double
+        toSomeRun @d gr =
+          MkSomeRun (sing @d)
+            $ MkRun
+              { datetime = TimestampTime gr.datetime,
+                distance = Distance.forceUnit gr.distance,
+                duration = gr.duration,
+                labels = [],
+                title = Just gr.title
+              }
+
+        foldGarmin ::
+          forall d.
+          (SingI d) =>
+          List (SomeRun Double) ->
+          Records (GarminAct d PDouble) ->
+          Eff es (List (SomeRun Double))
+        foldGarmin acc = \case
+          (Nil Nothing leftover) -> do
+            unless (BSL.null leftover)
+              $ $(Logger.logWarn)
+              $ "Csv bytes leftover: "
+              <> (bsToTxt $ leftover)
+
+            pure acc
+          (Nil (Just err) leftover) -> do
+            $(Logger.logWarn) $ "Csv parse error: " <> packText err
+
+            unless (BSL.null leftover)
+              $ $(Logger.logWarn)
+              $ "Csv bytes leftover: "
+              <> (bsToTxt $ leftover)
+
+            pure acc
+          Cons (Left err) rs -> do
+            $(Logger.logWarn) $ "Csv parse error: " <> packText err
+
+            foldGarmin acc rs
+          Cons (Right r) rs -> case r of
+            GarminActOther -> foldGarmin acc rs
+            GarminActRun gr -> foldGarmin (toSomeRun @d gr : acc) rs
+
+    readDecodeToml ::
+      forall a. (DecodeTOML a, HasCallStack) => OsPath -> Eff es a
     readDecodeToml path = do
       contents <- readFileUtf8ThrowM path
       case decode contents of
         Right t -> pure t
         Left err -> throwM $ MkTomlE path err
+
+-- heuristics to decide if we should decode csv or toml.
+getRunsType ::
+  (Logger :> es) =>
+  -- | Specified runs type.
+  Maybe RunsType ->
+  -- | Runs path.
+  OsPath ->
+  Eff es RunsType
+getRunsType mRunsType runsOsPath = do
+  let guess =
+        if
+          -- 1. Ends w/ .csv -> read garmin csv
+          | runsExt == [osp|.csv|] -> RunsGarmin
+          -- 2. Ends w/ .toml -> read custom toml
+          | runsExt == [osp|.toml|] -> RunsDefault
+          -- 3. Name contains the strings 'garmin' or 'activities', assume csv
+          | "garmin" `T.isInfixOf` runsBaseNameTxt -> RunsGarmin
+          | "activities" `T.isInfixOf` runsBaseNameTxt -> RunsGarmin
+          -- 4. Otherwise default to toml
+          | otherwise -> RunsDefault
+
+  case mRunsType of
+    Nothing -> pure guess
+    Just runsType ->
+      if runsType == guess
+        then pure runsType
+        else do
+          let msg =
+                mconcat
+                  [ "Specified runs type '",
+                    display runsType,
+                    "', but guessed '",
+                    display guess,
+                    "'; assuming the former."
+                  ]
+          $(Logger.logWarn) msg
+          pure runsType
+  where
+    runsBaseName = OsPath.takeBaseName runsOsPath
+    runsBaseNameTxt = T.toCaseFold $ packText $ decodeLenient runsBaseName
+    runsExt = OsPath.takeExtension runsOsPath
 
 jsonName :: Path Rel File
 jsonName = [relfile|charts.json|]

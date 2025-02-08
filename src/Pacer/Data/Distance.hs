@@ -18,6 +18,9 @@ module Pacer.Data.Distance
     HasDistance (..),
 
     -- * Misc
+    forceUnit,
+
+    -- ** Distances
     marathon,
     halfMarathon,
     k_10,
@@ -408,6 +411,12 @@ type Kilometers a = Distance Kilometer a
 
 -- | Alias for 'Distance Miles'.
 type Miles a = Distance Mile a
+
+-- | Changes the distance __without__ doing any conversions. Internal tool
+-- intended for forcing a universally quantified value to be a specific
+-- distance.
+forceUnit :: Distance d a -> Distance e a
+forceUnit (MkDistance x) = MkDistance x
 
 -------------------------------------------------------------------------------
 --                                Units classes                              --

@@ -3,6 +3,9 @@ module Pacer.Command.Chart.Data.ChartRequest
     ChartRequest (..),
     YAxisType (..),
 
+    -- * Garmin
+    GarminSettings (..),
+
     -- * ChartRequests
     ChartRequests (..),
   )
@@ -11,8 +14,10 @@ where
 import Data.Aeson (ToJSON)
 import Data.Aeson.Types (ToJSON (toJSON))
 import Pacer.Class.Parser (Parser)
+import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Expr
 import Pacer.Data.Distance (DistanceUnit)
+import Pacer.Data.Result (failErr)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML
@@ -90,8 +95,27 @@ instance
           y1Axis
         }
 
+-- | Garmin settings for chart requests.
+newtype GarminSettings = MkGarminSettings
+  { distanceUnit :: Maybe DistanceUnit
+  }
+  deriving stock (Eq, Show)
+
+instance DecodeTOML GarminSettings where
+  tomlDecoder = do
+    distanceUnit <-
+      traverse (failErr . P.parseAll)
+        =<< TOML.getFieldOptWith @Text tomlDecoder "unit"
+    pure
+      $ MkGarminSettings
+        { distanceUnit
+        }
+
 -- | List of chart requests.
-newtype ChartRequests a = MkChartRequests {unChartRequests :: Seq (ChartRequest a)}
+data ChartRequests a = MkChartRequests
+  { chartRequests :: Seq (ChartRequest a),
+    garminSettings :: Maybe GarminSettings
+  }
   deriving stock (Eq, Show)
 
 instance
@@ -103,4 +127,11 @@ instance
   ) =>
   DecodeTOML (ChartRequests a)
   where
-  tomlDecoder = MkChartRequests <$> TOML.getFieldWith tomlDecoder "charts"
+  tomlDecoder = do
+    garminSettings <- TOML.getFieldOptWith tomlDecoder "garmin"
+    chartRequests <- TOML.getFieldWith tomlDecoder "charts"
+    pure
+      $ MkChartRequests
+        { chartRequests,
+          garminSettings
+        }

@@ -15,8 +15,8 @@ module Pacer.Prelude
 
     -- * ByteString
     LazyByteString,
-    toStrictByteString,
-    fromStrictByteString,
+    toStrictBS,
+    fromStrictBS,
 
     -- * Text
     showt,
@@ -479,11 +479,11 @@ fromStrictText = TL.fromStrict
 
 type LazyByteString = BSL.ByteString
 
-toStrictByteString :: LazyByteString -> ByteString
-toStrictByteString = BSL.toStrict
+toStrictBS :: LazyByteString -> ByteString
+toStrictBS = BSL.toStrict
 
-fromStrictByteString :: ByteString -> LazyByteString
-fromStrictByteString = BSL.fromStrict
+fromStrictBS :: ByteString -> LazyByteString
+fromStrictBS = BSL.fromStrict
 
 type TextBuilder = TLB.Builder
 

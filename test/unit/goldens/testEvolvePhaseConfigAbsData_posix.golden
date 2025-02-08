@@ -4,4 +4,5 @@ MkChartParams
   , dataDir = ()
   , json = False
   , runsPath = "/root/config-data/runs.toml"
+  , runsType = Nothing
   }

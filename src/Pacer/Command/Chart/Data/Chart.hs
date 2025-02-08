@@ -15,7 +15,7 @@ import Pacer.Command.Chart.Data.ChartOptions (ChartOptions)
 import Pacer.Command.Chart.Data.ChartOptions qualified as ChartOptions
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (unit),
-    ChartRequests (unChartRequests),
+    ChartRequests (chartRequests),
   )
 import Pacer.Command.Chart.Data.Run (SomeRuns)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
@@ -54,7 +54,7 @@ mkCharts ::
   SomeRuns a ->
   ChartRequests a ->
   Either CreateChartE (Seq Chart)
-mkCharts runs = traverse (mkChart runs) . (.unChartRequests)
+mkCharts runs = traverse (mkChart runs) . (.chartRequests)
 
 mkChart ::
   forall a.

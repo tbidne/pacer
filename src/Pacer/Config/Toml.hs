@@ -26,13 +26,13 @@ data TomlWithPath = MkTomlWithPath
 
 -- | Toml configuration.
 data Toml = MkToml
-  { -- | Optional path to directory with runs.toml and chart-requests.toml.
+  { -- | Optional path to directory with runs file and chart-requests.toml.
     dataDir :: Maybe OsPath,
     -- | Optional path to chart-requests.toml.
     chartRequestsPath :: Maybe OsPath,
     -- | Optional logging.
     logLevel :: Maybe LogLevelParam,
-    -- | Optional path to runs.toml.
+    -- | Optional path to runs file.
     runsPath :: Maybe OsPath
   }
   deriving stock (Eq, Show)

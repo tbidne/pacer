@@ -16,6 +16,7 @@ module Pacer.Command.Chart.Data.Run
     -- * SomeRuns
     SomeRunsKey (..),
     SomeRuns (..),
+    mkSomeRuns,
   )
 where
 
@@ -306,67 +307,68 @@ instance
   ) =>
   DecodeTOML (SomeRuns a)
   where
-  tomlDecoder = do
-    xs <- TOML.getFieldWith (TOML.getArrayOf tomlDecoder) "runs"
-    case xs of
-      [] -> fail "Received empty list"
-      (y@(MkSomeRun _ _) : ys) -> case eDuplicate of
-        Left ((ts1, mTitle1), (ts2, mTitle2)) ->
-          fail
-            $ unpackText
-            $ mconcat
-              [ "Found overlapping timestamps\n - ",
-                fmtTitle mTitle1,
-                ": ",
-                Time.fmtTimestamp ts1,
-                "\n - ",
-                fmtTitle mTitle2,
-                ": ",
-                Time.fmtTimestamp ts2
-              ]
-        Right mp -> pure $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
-        where
-          -- The logic here is:
-          --
-          -- 1. Transform parsed List -> NonEmpty (SomeRunsKey a)
-          -- 2. If we don't receive any duplicates, transform
-          --      NonEmpty (SomeRunsKey a) -> Set (SomeRunsKey a)
-          --
-          -- Why don't we just immediately used a set, rather than the
-          -- intermediate NonEmpty?
-          --
-          -- Because Timestamp's Ord will not detect the duplicates we want.
-          -- For instance, the timestamps 2013-10-08 and 2013-10-08T12:14:30
-          -- will compare non-equal (which we need for Eq/Ord to be lawful),
-          -- but we want these to compare Eq for purposes of detecting
-          -- overlaps. Thus we cannot use Timestamp's Ord for this, hence
-          -- Set/Map etc. are out.
-          --
-          -- Instead, we iterate manually, looking for overlaps using the
-          -- bespoke 'T.overlaps' function. Unfortuanately this is O(n^2),
-          -- and it is difficult to see a way around this, as the overlap
-          -- function is inherently intransitive e.g. consider
-          --
-          --   x = 2013-10-08T12:14:30
-          --   y = 2013-10-08
-          --   z = 2013-10-08T12:14:40
-          --
-          -- For overlaps, we want x == y == z and x /= z. It is unclear how
-          -- to preserve this and achieve O(1) (or O(lg n)) lookup. Hopefully
-          -- this does not impact performance too much.
-          eDuplicate =
-            foldr go (Right $ NonEmpty.singleton (MkSomeRunsKey y)) ys
+  tomlDecoder =
+    mkSomeRuns =<< TOML.getFieldWith (TOML.getArrayOf tomlDecoder) "runs"
 
-          go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
-          go _ (Left collision) = Left collision
-          go someRun@(MkSomeRun _ q) (Right someRuns) =
-            case findOverlap someRun someRuns of
-              Nothing -> Right $ (MkSomeRunsKey someRun) <| someRuns
-              Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
-                Left ((q.datetime, q.title), (collision.datetime, collision.title))
+mkSomeRuns :: (MonadFail m) => List (SomeRun a) -> m (SomeRuns a)
+mkSomeRuns xs = case xs of
+  [] -> fail "Received empty list"
+  (y@(MkSomeRun _ _) : ys) -> case eDuplicate of
+    Left ((ts1, mTitle1), (ts2, mTitle2)) ->
+      fail
+        $ unpackText
+        $ mconcat
+          [ "Found overlapping timestamps\n - ",
+            fmtTitle mTitle1,
+            ": ",
+            Time.fmtTimestamp ts1,
+            "\n - ",
+            fmtTitle mTitle2,
+            ": ",
+            Time.fmtTimestamp ts2
+          ]
+    Right mp -> pure $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
+    where
+      -- The logic here is:
+      --
+      -- 1. Transform parsed List -> NonEmpty (SomeRunsKey a)
+      -- 2. If we don't receive any duplicates, transform
+      --      NonEmpty (SomeRunsKey a) -> Set (SomeRunsKey a)
+      --
+      -- Why don't we just immediately used a set, rather than the
+      -- intermediate NonEmpty?
+      --
+      -- Because Timestamp's Ord will not detect the duplicates we want.
+      -- For instance, the timestamps 2013-10-08 and 2013-10-08T12:14:30
+      -- will compare non-equal (which we need for Eq/Ord to be lawful),
+      -- but we want these to compare Eq for purposes of detecting
+      -- overlaps. Thus we cannot use Timestamp's Ord for this, hence
+      -- Set/Map etc. are out.
+      --
+      -- Instead, we iterate manually, looking for overlaps using the
+      -- bespoke 'T.overlaps' function. Unfortuanately this is O(n^2),
+      -- and it is difficult to see a way around this, as the overlap
+      -- function is inherently intransitive e.g. consider
+      --
+      --   x = 2013-10-08T12:14:30
+      --   y = 2013-10-08
+      --   z = 2013-10-08T12:14:40
+      --
+      -- For overlaps, we want x == y == z and x /= z. It is unclear how
+      -- to preserve this and achieve O(1) (or O(lg n)) lookup. Hopefully
+      -- this does not impact performance too much.
+      eDuplicate = foldr go (Right $ NonEmpty.singleton (MkSomeRunsKey y)) ys
 
-          fmtTitle Nothing = "<no title>"
-          fmtTitle (Just t) = t
+      go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
+      go _ (Left collision) = Left collision
+      go someRun@(MkSomeRun _ q) (Right someRuns) =
+        case findOverlap someRun someRuns of
+          Nothing -> Right $ (MkSomeRunsKey someRun) <| someRuns
+          Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
+            Left ((q.datetime, q.title), (collision.datetime, collision.title))
+
+      fmtTitle Nothing = "<no title>"
+      fmtTitle (Just t) = t
 
 type TitleAndTime = Tuple2 Timestamp (Maybe Text)
 

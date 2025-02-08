@@ -24,6 +24,7 @@ module Pacer.Config.Utils
 
     -- * Misc
     mkHelp,
+    mkMultiHelp,
   )
 where
 
@@ -263,11 +264,15 @@ mkCommand :: String -> Parser a -> InfoMod a -> Mod CommandFields a
 mkCommand cmdTxt parser helpTxt = OA.command cmdTxt (OA.info parser helpTxt)
 
 mkHelp :: String -> Mod f a
-mkHelp =
+mkHelp s = mkMultiHelp [s]
+
+mkMultiHelp :: List String -> Mod f a
+mkMultiHelp =
   OA.helpDoc
     . fmap (<> Pretty.hardline)
     . Chunk.unChunk
-    . Chunk.paragraph
+    . Chunk.vsepChunks
+    . fmap Chunk.paragraph
 
 mkCommandDesc :: String -> InfoMod a
 mkCommandDesc = mkCommandDescChunk . Chunk.paragraph

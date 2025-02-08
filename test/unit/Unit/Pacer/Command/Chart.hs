@@ -46,7 +46,8 @@ import Pacer.Command.Chart.Params
         cleanInstall,
         dataDir,
         json,
-        runsPath
+        runsPath,
+        runsType
       ),
     ChartParamsArgs,
   )
@@ -86,7 +87,8 @@ testDefault = testCase "Default" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -106,7 +108,8 @@ testJson = testCase "With --json" $ do
           dataDir = Nothing,
           json = True,
           chartRequestsPath = Nothing,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -127,7 +130,8 @@ testPathNodeModExists = testCase "node_modules exists" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -147,7 +151,8 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
     coreEnv =
       MkCoreEnv
@@ -182,7 +187,8 @@ testNoNpmFailure = testCase "No npm failure" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runsPath = Nothing
+          runsPath = Nothing,
+          runsType = Nothing
         }
     coreEnv =
       MkCoreEnv

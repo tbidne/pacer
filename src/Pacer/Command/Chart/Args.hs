@@ -13,9 +13,11 @@ import Pacer.Command.Chart.Params
         cleanInstall,
         dataDir,
         json,
-        runsPath
+        runsPath,
+        runsType
       ),
     ChartParamsArgs,
+    RunsType (RunsDefault, RunsGarmin),
   )
 import Pacer.Config.Utils qualified as Utils
 import Pacer.Prelude
@@ -28,6 +30,7 @@ parser = do
   dataDir <- dataDirParser
   json <- jsonParser
   runsPath <- mRunsParser
+  runsType <- runsTypeParser
 
   pure
     $ MkChartParams
@@ -35,7 +38,8 @@ parser = do
         cleanInstall,
         dataDir,
         json,
-        runsPath
+        runsPath,
+        runsType
       }
 
 mChartRequestsParser :: Parser (Maybe OsPath)
@@ -92,6 +96,48 @@ jsonParser =
               ]
         ]
     )
+
+runsTypeParser :: Parser (Maybe RunsType)
+runsTypeParser =
+  OA.optional
+    $ OA.option
+      readRunsType
+      ( mconcat
+          [ OA.long "runs-type",
+            OA.metavar "(default | garmin)",
+            Utils.mkMultiHelp helpTxt
+          ]
+      )
+  where
+    helpTxt =
+      [ mconcat
+          [ "Runs-type has two effects:"
+          ],
+        mconcat
+          [ "1. If -- in the course of searching for a runs file (i.e. ",
+            "no explicit path) -- we encounter both a runs.toml and an ",
+            "activities.csv, we will use the one specified by runs-type."
+          ],
+        mconcat
+          [ "2. We use it to determine how to parse the runs file i.e. ",
+            "toml (default) or csv (garmin)."
+          ],
+        mconcat
+          [ "If runs-type is not specified, we use heuristics to guess ",
+            "how to parse the file i.e. name / file-extension."
+          ]
+      ]
+    readRunsType =
+      OA.str @Text >>= \case
+        "default" -> pure RunsDefault
+        "garmin" -> pure RunsGarmin
+        other ->
+          fail
+            $ mconcat
+              [ "Expected one of (default | garmin), received: '",
+                unpackText other,
+                "'"
+              ]
 
 cleanInstallParser :: Parser Bool
 cleanInstallParser =

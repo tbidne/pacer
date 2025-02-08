@@ -8,6 +8,7 @@ module Pacer.Command.Chart.Params
     ChartParams (..),
     ChartParamsArgs,
     ChartParamsFinal,
+    RunsType (..),
 
     -- * Functions
     evolvePhase,
@@ -44,6 +45,19 @@ import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import System.OsPath qualified as OsPath
 
+-- | The type of runs file.
+data RunsType
+  = -- | Default runs type, runs.toml.
+    RunsDefault
+  | -- | Garmin runs type, activities.csv.
+    RunsGarmin
+  deriving stock (Eq, Show)
+
+instance Display RunsType where
+  displayBuilder = \case
+    RunsDefault -> "default (toml)"
+    RunsGarmin -> "garming (csv)"
+
 -- See NOTE: [User Path]
 
 type PathF :: ConfigPhase -> Type -> Type
@@ -65,13 +79,15 @@ data ChartParams p = MkChartParams
     cleanInstall :: Bool,
     -- | Optional path to chart-requests.toml.
     chartRequestsPath :: PathF p File,
-    -- | Optional path to directory with runs.toml and chart-requests.toml.
+    -- | Optional path to directory with runs file and chart-requests.toml.
     dataDir :: PathF p Dir,
     -- | If true, stops the build after generating the intermediate json
     -- file.
     json :: Bool,
-    -- | Optional path to runs.toml.
-    runsPath :: PathF p File
+    -- | Optional path to runs file.
+    runsPath :: PathF p File,
+    -- | Optional specification for which runs type file we are using.
+    runsType :: Maybe RunsType
   }
 
 type ChartParamsArgs = ChartParams ConfigPhaseArgs
@@ -113,7 +129,8 @@ evolvePhase @es params mTomlWithPath = do
         chartRequestsPath,
         dataDir = (),
         json = params.json,
-        runsPath
+        runsPath,
+        runsType = params.runsType
       }
   where
     -- Retrieves (Tuple2 chart-requests-path runs-path)
@@ -126,10 +143,29 @@ evolvePhase @es params mTomlWithPath = do
           params.chartRequestsPath
           (.chartRequestsPath)
 
+      -- If --runs-type is given, use it to influence the order of files
+      -- we try to find. Note that our current implementation does NOT mean
+      -- that the specified type will always override the other. It just
+      -- determines which one we use when we find both __in the same
+      -- location__. In particular, suppose we have the following conditions:
+      --
+      --   1. --runs-type garmin
+      --   2. -d some-dir
+      --   3. some-dir/ has runs.toml __only__
+      --   4. xdg/ has runs.toml and Activities.garmin
+      --
+      -- Then we will still use runs.toml because it is in the higher priority
+      -- location (-d over xdg). OTOH, if we left out -d, we'd use,
+      -- Activities.garmin.
+      let runsFileNames = case params.runsType of
+            Nothing -> runsTomlName : runsGarmins
+            Just RunsDefault -> runsTomlName : runsGarmins
+            Just RunsGarmin -> runsGarmins ++ [runsTomlName]
+
       runsPath <-
         getChartInput
           "runs"
-          [runsName]
+          runsFileNames
           params.runsPath
           (.runsPath)
 
@@ -138,7 +174,7 @@ evolvePhase @es params mTomlWithPath = do
     getChartInput ::
       -- Text description
       Text ->
-      -- Expected file_name(s) e.g. runs.toml
+      -- Expected file_name(s) e.g. runs file
       List (Path Rel File) ->
       -- Maybe file.
       Maybe OsPath ->
@@ -261,8 +297,17 @@ evolvePhase @es params mTomlWithPath = do
       exists <- PR.doesFileExist p'
       unless exists $ throwM (MkFileNotFoundE p')
 
-    runsName :: Path Rel File
-    runsName = [relfile|runs.toml|]
+    runsTomlName :: Path Rel File
+    runsTomlName = [relfile|runs.toml|]
+
+    runsGarmins :: List (Path Rel File)
+    runsGarmins = [runsGarminName, runsGarminNameLower]
+
+    runsGarminName :: Path Rel File
+    runsGarminName = [relfile|Activities.csv|]
+
+    runsGarminNameLower :: Path Rel File
+    runsGarminNameLower = [relfile|activities.csv|]
 
     chartRequestsName :: Path Rel File
     chartRequestsName = [relfile|chart-requests.toml|]
