@@ -24,7 +24,8 @@ basicTests getTestDir =
       testFilterDates getTestDir,
       testFilterEmptyError getTestDir,
       testFilterParseExprError getTestDir,
-      testDuplicateDateError getTestDir
+      testDuplicateDateError getTestDir,
+      testGarminChart getTestDir
     ]
 
 testExampleChart :: IO OsPath -> TestTree
@@ -169,6 +170,27 @@ testPathConfig getTestDir = testGoldenParams getTestDir params
         }
 
     configPath = unsafeDecode [ospPathSep|examples/config.toml|]
+
+testGarminChart :: IO OsPath -> TestTree
+testGarminChart getTestDir = testGoldenParams getTestDir params
+  where
+    params =
+      MkGoldenParams
+        { mkArgs =
+            const
+              [ "chart",
+                "--chart-requests",
+                chartRequestsPath,
+                "--runs",
+                runsPath,
+                "--json"
+              ],
+          outFileName = Just [osp|charts.json|],
+          testDesc = "Generates garmin example",
+          testName = [osp|testGarminChart|]
+        }
+    chartRequestsPath = unsafeDecode [osp|examples/chart-requests-garmin.toml|]
+    runsPath = unsafeDecode [osp|examples/Activities.csv|]
 
 -- TODO: Would be nice to have an e2e test for chart generation i.e. actually
 -- invoke node and generate a real html page.
