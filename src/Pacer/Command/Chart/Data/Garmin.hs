@@ -189,7 +189,7 @@ readRunsCsv @es inputDistUnit csvPath = do
 
         pure acc
       (Nil (Just err) leftover) -> do
-        $(Logger.logWarn) $ "Csv parse error: " <> packText err
+        $(Logger.logError) $ "Csv parse error: " <> packText err
 
         unless (BSL.null leftover)
           $ $(Logger.logWarn)
@@ -198,7 +198,7 @@ readRunsCsv @es inputDistUnit csvPath = do
 
         pure acc
       Cons (Left err) rs -> do
-        $(Logger.logWarn) $ "Csv parse error: " <> packText err
+        $(Logger.logError) $ "Csv parse error: " <> packText err
 
         foldGarmin acc rs
       Cons (Right r) rs -> case r of

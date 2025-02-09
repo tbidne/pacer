@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Pacer.Driver
   ( -- * Main
@@ -63,7 +64,7 @@ runCommand ::
   ) =>
   Config ->
   Eff es ()
-runCommand (cmd, mToml, cachedPaths, logEnv) = runner $ do
+runCommand (cmd, mToml, cachedPaths, logEnv) = runner $ logAndRethrow $ do
   command <- Command.evolvePhase cmd mToml
   case command of
     Chart params -> Chart.handle params
@@ -74,8 +75,15 @@ runCommand (cmd, mToml, cachedPaths, logEnv) = runner $ do
     runner =
       evalState cachedPaths
         . runReader logEnv
-        . runLoggerNS mempty
+        . runLoggerNS "main"
         . runLogger
+
+    logAndRethrow m =
+      trySync m >>= \case
+        Right x -> pure x
+        Left err -> do
+          $(Logger.logFatal) $ displayExceptiont err
+          throwM err
 
 withEnv ::
   ( HasCallStack,
