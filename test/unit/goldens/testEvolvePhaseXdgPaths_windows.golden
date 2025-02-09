@@ -4,4 +4,5 @@ MkChartParams
   , dataDir = ()
   , json = False
   , runsPath = "C:\root\xdg\config\pacer\runs.toml"
+  , runsType = Nothing
   }

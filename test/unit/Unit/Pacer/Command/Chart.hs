@@ -62,12 +62,19 @@ tests :: TestTree
 tests =
   testGroup
     "Pacer.Command.Chart"
-    [ successTests,
-      failureTests
+    [ createChartTests
     ]
 
-successTests :: TestTree
-successTests =
+createChartTests :: TestTree
+createChartTests =
+  testGroup
+    "createCharts"
+    [ createChartSuccessTests,
+      createChartFailureTests
+    ]
+
+createChartSuccessTests :: TestTree
+createChartSuccessTests =
   testGroup
     "Happy paths"
     [ testDefault,
@@ -161,8 +168,8 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
           npmExists = True
         }
 
-failureTests :: TestTree
-failureTests =
+createChartFailureTests :: TestTree
+createChartFailureTests =
   testGroup
     "Failures"
     [ testNoNpmFailure

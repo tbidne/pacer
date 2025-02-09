@@ -56,7 +56,7 @@ data RunsType
 instance Display RunsType where
   displayBuilder = \case
     RunsDefault -> "default (toml)"
-    RunsGarmin -> "garming (csv)"
+    RunsGarmin -> "garmin (csv)"
 
 -- See NOTE: [User Path]
 

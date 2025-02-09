@@ -243,6 +243,7 @@ knownExceptions =
     MkExceptionProxy @CommandScaleE,
     MkExceptionProxy @CreateChartE,
     MkExceptionProxy @FileNotFoundE,
+    MkExceptionProxy @GarminE,
     MkExceptionProxy @NpmE,
     MkExceptionProxy @TomlE
   ]

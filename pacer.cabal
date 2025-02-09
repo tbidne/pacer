@@ -73,8 +73,8 @@ library
     Pacer.Command.Chart.Data.ChartOptions
     Pacer.Command.Chart.Data.ChartRequest
     Pacer.Command.Chart.Data.Expr
+    Pacer.Command.Chart.Data.Garmin
     Pacer.Command.Chart.Data.Run
-    Pacer.Command.Chart.Data.Run.Garmin
     Pacer.Command.Chart.Data.Time
     Pacer.Command.Chart.Params
     Pacer.Command.Convert
@@ -165,6 +165,7 @@ test-suite unit
     Unit.Pacer.Command.Chart
     Unit.Pacer.Command.Chart.Data.ChartRequest
     Unit.Pacer.Command.Chart.Data.Expr
+    Unit.Pacer.Command.Chart.Data.Garmin
     Unit.Pacer.Command.Chart.Data.Run
     Unit.Pacer.Command.Chart.Data.Time
     Unit.Pacer.Command.Chart.Params

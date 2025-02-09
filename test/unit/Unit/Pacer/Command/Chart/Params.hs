@@ -21,6 +21,7 @@ import Pacer.Command.Chart.Params
       ),
     ChartParamsArgs,
     ChartParamsFinal,
+    RunsType (RunsDefault, RunsGarmin),
   )
 import Pacer.Command.Chart.Params qualified as Params
 import Pacer.Config.Env.Types (CachedPaths)
@@ -55,7 +56,11 @@ successTests =
       testEvolvePhaseConfigRelPaths,
       testEvolvePhaseConfigAbsData,
       testEvolvePhaseConfigRelData,
-      testEvolvePhaseXdgPaths
+      testEvolvePhaseXdgPaths,
+      testEvolvePhaseGarmin,
+      testEvolvePhaseBothToml,
+      testEvolvePhaseBothTomlRunsType,
+      testEvolvePhaseBothGarmin
     ]
 
 testEvolvePhaseCliPaths :: TestTree
@@ -258,6 +263,110 @@ testEvolvePhaseXdgPaths =
           runsPath = Nothing
         }
 
+testEvolvePhaseGarmin :: TestTree
+testEvolvePhaseGarmin =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Uses garmin path",
+        testName = [osp|testEvolvePhaseCliGarmin|],
+        runner = goldenRunner params toml
+      }
+  where
+    params =
+      MkChartParams
+        { cleanInstall = False,
+          chartRequestsPath = Nothing,
+          dataDir = Just [osp|cli-garmin|],
+          json = False,
+          runsPath = Nothing,
+          runsType = Nothing
+        }
+    toml =
+      MkToml
+        { chartRequestsPath = Nothing,
+          dataDir = Nothing,
+          logLevel = Nothing,
+          runsPath = Nothing
+        }
+
+testEvolvePhaseBothToml :: TestTree
+testEvolvePhaseBothToml =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Uses TOML when both runs types exist",
+        testName = [osp|testEvolvePhaseBothToml|],
+        runner = goldenRunner params toml
+      }
+  where
+    params =
+      MkChartParams
+        { cleanInstall = False,
+          chartRequestsPath = Nothing,
+          dataDir = Just [osp|cli-both|],
+          json = False,
+          runsPath = Nothing,
+          runsType = Nothing
+        }
+    toml =
+      MkToml
+        { chartRequestsPath = Nothing,
+          dataDir = Nothing,
+          logLevel = Nothing,
+          runsPath = Nothing
+        }
+
+testEvolvePhaseBothTomlRunsType :: TestTree
+testEvolvePhaseBothTomlRunsType =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Uses TOML when both runs types exist and runs-type default",
+        testName = [osp|testEvolvePhaseBothTomlRunsType|],
+        runner = goldenRunner params toml
+      }
+  where
+    params =
+      MkChartParams
+        { cleanInstall = False,
+          chartRequestsPath = Nothing,
+          dataDir = Just [osp|cli-both|],
+          json = False,
+          runsPath = Nothing,
+          runsType = Just RunsDefault
+        }
+    toml =
+      MkToml
+        { chartRequestsPath = Nothing,
+          dataDir = Nothing,
+          logLevel = Nothing,
+          runsPath = Nothing
+        }
+
+testEvolvePhaseBothGarmin :: TestTree
+testEvolvePhaseBothGarmin =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Uses garmin when both runs types exist and runs-type garmin",
+        testName = [osp|testEvolvePhaseBothGarmin|],
+        runner = goldenRunner params toml
+      }
+  where
+    params =
+      MkChartParams
+        { cleanInstall = False,
+          chartRequestsPath = Nothing,
+          dataDir = Just [osp|cli-both|],
+          json = False,
+          runsPath = Nothing,
+          runsType = Just RunsGarmin
+        }
+    toml =
+      MkToml
+        { chartRequestsPath = Nothing,
+          dataDir = Nothing,
+          logLevel = Nothing,
+          runsPath = Nothing
+        }
+
 failureTests :: TestTree
 failureTests =
   testGroup
@@ -371,6 +480,11 @@ runEvolvePhase xdg params mToml = do
                     [ospPathSep|cli-runs.toml|],
                     [ospPathSep|cli-data/chart-requests.toml|],
                     [ospPathSep|cli-data/runs.toml|],
+                    [ospPathSep|cli-garmin/activities.csv|],
+                    [ospPathSep|cli-garmin/chart-requests.toml|],
+                    [ospPathSep|cli-both/runs.toml|],
+                    [ospPathSep|cli-both/activities.csv|],
+                    [ospPathSep|cli-both/chart-requests.toml|],
                     [ospPathSep|config-cr.toml|],
                     [ospPathSep|config-runs.toml|],
                     [ospPathSep|config-data/chart-requests.toml|],
