@@ -9,13 +9,16 @@ where
 
 import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON), Value)
 import Data.Aeson qualified as Asn
+import Data.Foldable1 (foldl1')
 import Data.List (all)
 import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Pacer.Command.Chart.Data.ChartRequest
-  ( ChartRequest (filters, title, y1Axis, yAxis),
+  ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
     ChartRequests (chartRequests),
+    ChartSumPeriod (ChartSumMonth, ChartSumWeek, ChartSumYear),
+    ChartType (ChartTypeDefault, ChartTypeSum),
     YAxisType
       ( YAxisDistance,
         YAxisDuration,
@@ -24,15 +27,28 @@ import Pacer.Command.Chart.Data.ChartRequest
   )
 import Pacer.Command.Chart.Data.Expr
   ( FilterExpr,
-    FilterOp (FilterOpEq, FilterOpGt, FilterOpGte, FilterOpLt, FilterOpLte, FilterOpNeq),
-    FilterType (FilterDate, FilterDistance, FilterDuration, FilterLabel, FilterPace),
+    FilterOp
+      ( FilterOpEq,
+        FilterOpGt,
+        FilterOpGte,
+        FilterOpLt,
+        FilterOpLte,
+        FilterOpNeq
+      ),
+    FilterType
+      ( FilterDate,
+        FilterDistance,
+        FilterDuration,
+        FilterLabel,
+        FilterPace
+      ),
     eval,
   )
 import Pacer.Command.Chart.Data.Run
-  ( Run (datetime, distance, duration),
+  ( Run (MkRun, datetime, distance, duration),
     SomeRun (MkSomeRun),
     SomeRuns (MkSomeRuns),
-    SomeRunsKey (MkSomeRunsKey),
+    SomeRunsKey,
   )
 import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.Time
@@ -45,7 +61,9 @@ import Pacer.Command.Chart.Data.Time
     (.>),
     (.>=),
   )
+import Pacer.Command.Chart.Data.Time qualified as Time
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
+import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
   )
@@ -54,6 +72,7 @@ import Pacer.Data.Duration (Duration (unDuration))
 import Pacer.Data.Pace (SomePace (MkSomePace))
 import Pacer.Exception (CreateChartE (CreateChartFilterEmpty))
 import Pacer.Prelude
+import Pacer.Utils qualified as U
 
 -- | Holds chart data.
 data ChartData
@@ -165,54 +184,135 @@ mkChartData ::
   ChartRequest a ->
   -- | ChartData result. Nothing if no runs passed the request's filter.
   Either CreateChartE ChartData
-mkChartData
-  finalDistUnit
-  (MkSomeRuns (SetToSeqNE someRuns@(MkSomeRunsKey (MkSomeRun sd _) :<|| _)))
-  request =
-    case filteredRuns of
-      Empty -> Left $ CreateChartFilterEmpty request.title
-      r :<| rs -> Right (mkChartDataSets (r :<|| rs))
-    where
-      filteredRuns = filterRuns someRuns request.filters
+mkChartData finalDistUnit (MkSomeRuns (SetToSeqNE someRuns)) request =
+  case finalRuns of
+    Empty -> Left $ CreateChartFilterEmpty request.title
+    r :<| rs -> Right (mkChartDataSets finalDistUnit request (r :<|| rs))
+  where
+    filteredRuns = filterRuns someRuns request.filters
 
-      mkChartDataSets :: NESeq (SomeRun a) -> ChartData
-      mkChartDataSets runs = case request.y1Axis of
-        Nothing ->
-          let vals = withSingI sd $ foldMap1 toAccY runs
-              yType = request.yAxis
-           in ChartDataY (MkChartY vals yType)
-        Just y1Type ->
-          let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) runs
-              yType = request.yAxis
-           in ChartDataY1 (MkChartY1 vals yType y1Type)
+    finalRuns = handleChartType request.chartType filteredRuns
 
-      toAccY :: SomeRun a -> AccY
-      toAccY sr@(MkSomeRun _ r) = NESeq.singleton (r.datetime, toY sr)
+handleChartType ::
+  (Fromℤ a, Ord a, Semifield a, Show a) =>
+  Maybe ChartType -> Seq (SomeRun a) -> Seq (SomeRun a)
+handleChartType @a mChartType someRuns = case mChartType of
+  Nothing -> someRuns
+  Just ChartTypeDefault -> someRuns
+  Just (ChartTypeSum period) -> sumPeriod period
+  where
+    -- groupBy on Mapping to period
+    sumPeriod :: ChartSumPeriod -> Seq (SomeRun a)
+    sumPeriod period = periodSum
+      where
+        compPeriod :: Timestamp -> Timestamp -> Bool
+        roundFn :: Timestamp -> Timestamp
 
-      toAccY1 :: YAxisType -> SomeRun a -> AccY1
-      toAccY1 yAxisType sr@(MkSomeRun _ r) =
-        NESeq.singleton (r.datetime, toY sr, toYHelper yAxisType sr)
+        (compPeriod, roundFn) = case period of
+          ChartSumWeek -> (Time.sameWeek, Time.roundTimestampWeek)
+          ChartSumMonth -> (Time.sameMonth, Time.roundTimestampMonth)
+          ChartSumYear -> (Time.sameYear, Time.roundTimestampYear)
 
-      toY :: SomeRun a -> Double
-      toY = toYHelper request.yAxis
+        periodSum :: Seq (SomeRun a)
+        periodSum = fmap sumRuns . groupByPeriod $ someRuns
 
-      toYHelper :: YAxisType -> SomeRun a -> Double
-      toYHelper axisType (MkSomeRun s r) = case axisType of
-        YAxisDistance ->
-          withSingI s $ toℝ $ case finalDistUnit of
-            -- NOTE: [Brackets with OverloadedRecordDot]
-            Meter -> (DistU.convertToKilometers r).distance.unDistance
-            Kilometer -> (DistU.convertToKilometers r).distance.unDistance
-            Mile -> (DistU.convertDistance Mile r).distance.unDistance
-        YAxisDuration -> toℝ r.duration.unDuration
-        YAxisPace ->
-          withSingI s $ toℝ $ case finalDistUnit of
-            Meter -> runToPace (DistU.convertToKilometers r)
-            Kilometer -> runToPace (DistU.convertToKilometers r)
-            Mile -> runToPace (DistU.convertDistance Mile r)
+        sumRuns :: NESeq (SomeRun a) -> SomeRun a
+        sumRuns (MkSomeRun sy y :<|| ys) = foldl1' go (init :<|| ys)
           where
-            runToPace runUnits =
-              (Run.derivePace runUnits).unPace.unDuration
+            go :: SomeRun a -> SomeRun a -> SomeRun a
+            go (MkSomeRun sacc acc) (MkSomeRun sr r) =
+              MkSomeRun sacc
+                $ MkRun
+                  { datetime = acc.datetime,
+                    distance = newDist,
+                    duration = acc.duration .+. r.duration,
+                    labels = acc.labels,
+                    title = acc.title
+                  }
+              where
+                newDist =
+                  withSingI sacc
+                    $ withSingI sr
+                    $ Dist.liftDistLeft2
+                      (.+.)
+                      acc.distance
+                      r.distance
+
+            init =
+              MkSomeRun sy
+                $ MkRun
+                  { datetime = roundFn y.datetime,
+                    distance = y.distance,
+                    duration = y.duration,
+                    labels = mempty,
+                    title = Nothing
+                  }
+
+        groupByPeriod ::
+          Seq (SomeRun a) ->
+          Seq (NESeq (SomeRun a))
+        groupByPeriod =
+          U.seqGroupBy (\r1 r2 -> compPeriod (toDatetime r1) (toDatetime r2))
+
+    toDatetime :: SomeRun a -> Timestamp
+    toDatetime (MkSomeRun _ rs) = rs.datetime
+
+mkChartDataSets ::
+  forall a.
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a,
+    Toℝ a
+  ) =>
+  DistanceUnit ->
+  ChartRequest a ->
+  NESeq (SomeRun a) ->
+  ChartData
+mkChartDataSets finalDistUnit request runs@(MkSomeRun sd _ :<|| _) =
+  case request.y1Axis of
+    Nothing ->
+      let vals = withSingI sd $ foldMap1 toAccY runs
+          yType = request.yAxis
+       in ChartDataY (MkChartY vals yType)
+    Just y1Type ->
+      let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) runs
+          yType = request.yAxis
+       in ChartDataY1 (MkChartY1 vals yType y1Type)
+  where
+    toAccY :: SomeRun a -> AccY
+    toAccY sr@(MkSomeRun _ r) = NESeq.singleton (r.datetime, toY sr)
+
+    toAccY1 :: YAxisType -> SomeRun a -> AccY1
+    toAccY1 yAxisType sr@(MkSomeRun _ r) =
+      NESeq.singleton (r.datetime, toY sr, toYHelper yAxisType sr)
+
+    toY :: SomeRun a -> Double
+    toY = toYHelper request.yAxis
+
+    toYHelper :: YAxisType -> SomeRun a -> Double
+    toYHelper axisType (MkSomeRun s r) = case axisType of
+      YAxisDistance ->
+        withSingI s $ toℝ $ case finalDistUnit of
+          -- NOTE: [Brackets with OverloadedRecordDot]
+          -- REVIEW: Should this be (DistU.convertDistance Meter)? Or do we
+          -- only allow km/mi in charts?
+          Meter -> (DistU.convertToKilometers r).distance.unDistance
+          Kilometer -> (DistU.convertToKilometers r).distance.unDistance
+          Mile -> (DistU.convertDistance Mile r).distance.unDistance
+      YAxisDuration -> toℝ r.duration.unDuration
+      YAxisPace ->
+        withSingI s $ toℝ $ case finalDistUnit of
+          -- REVIEW: Ideally this would error, not convert. But probably we
+          -- already throw errors somewhere, and the Meters are only here
+          -- because we haven't proven to GHC that it is impossible. It would
+          -- be nice to come up with something more robust.
+          Meter -> runToPace (DistU.convertToKilometers r)
+          Kilometer -> runToPace (DistU.convertToKilometers r)
+          Mile -> runToPace (DistU.convertDistance Mile r)
+        where
+          runToPace runUnits =
+            (Run.derivePace runUnits).unPace.unDuration
 
 filterRuns ::
   forall a.

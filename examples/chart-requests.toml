@@ -39,3 +39,19 @@ title = 'Long runs'
 filters = ['distance >= 25 km']
 y-axis = 'distance'
 y1-axis = 'pace'
+
+# We can optionally specify the chart type. 'default' is the same as leaving
+# it off.
+[charts.type]
+name = 'default'
+
+# Runs aggregated by week
+[[charts]]
+title = 'Runs by week'
+y-axis = 'distance'
+
+# The 'sum' type sums all runs for a certain time period. Valid periods are
+# 'year', 'month', and 'week'.
+[charts.type]
+name = 'sum'
+period = 'week'

@@ -111,6 +111,9 @@ instance Exception CommandScaleE where
           ++ i
           ++ "."
 
+-- TODO: CreateChartE should probably include the date since titles are not
+-- required to be unique.
+
 -- | Exception during chart creation.
 newtype CreateChartE = CreateChartFilterEmpty Text
   deriving stock (Show)

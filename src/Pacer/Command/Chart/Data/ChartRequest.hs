@@ -6,6 +6,10 @@ module Pacer.Command.Chart.Data.ChartRequest
     ChartRequest (..),
     YAxisType (..),
 
+    -- ** Type
+    ChartType (..),
+    ChartSumPeriod (..),
+
     -- * Garmin
     GarminSettings (..),
 
@@ -55,9 +59,52 @@ instance ToJSON YAxisType where
   toJSON YAxisDuration = "duration"
   toJSON YAxisPace = "pace"
 
+data ChartSumPeriod
+  = ChartSumWeek
+  | ChartSumMonth
+  | ChartSumYear
+  deriving stock (Eq, Show)
+
+instance DecodeTOML ChartSumPeriod where
+  tomlDecoder =
+    tomlDecoder @Text >>= \case
+      "week" -> pure ChartSumWeek
+      "month" -> pure ChartSumMonth
+      "year" -> pure ChartSumYear
+      other -> fail $ unpackText $ "Unrecognized sum period: " <> other
+
+data ChartType
+  = ChartTypeDefault
+  | ChartTypeSum ChartSumPeriod
+  deriving stock (Eq, Show)
+
+instance DecodeTOML ChartType where
+  tomlDecoder = do
+    TOML.getFieldWith @Text tomlDecoder "name" >>= \case
+      "default" -> pure ChartTypeDefault
+      "sum" -> do
+        -- FIXME: Apparently, the following:
+        --
+        --     [charts.type]
+        --     name = 'sum'
+        --
+        -- does NOT fail, even though we'd like it to, because once we have
+        -- a sum chart, we require the period. Instead it ends up as
+        -- chartType = Nothing on ChartRequest. Why does this not fail? My
+        -- guess is that it causes this entire parse to fail, so it is
+        -- considered an "unknown key", and unknown keys do not cause parse
+        -- failures. Ugh.
+        --
+        -- Maybe we should just switch to json?
+        p <- TOML.getFieldWith tomlDecoder "period"
+        pure $ ChartTypeSum p
+      other -> fail $ unpackText $ "Unrecognized chart type: " <> other
+
 -- | Chart request type.
 data ChartRequest a = MkChartRequest
-  { -- | Optional text description.
+  { -- | Optional chart type.
+    chartType :: Maybe ChartType,
+    -- | Optional text description.
     description :: Maybe Text,
     -- | Optional list of filters to apply. The filters are "AND'd" together.
     filters :: List (FilterExpr a),
@@ -82,6 +129,7 @@ instance
   DecodeTOML (ChartRequest a)
   where
   tomlDecoder = do
+    chartType <- TOML.getFieldOptWith tomlDecoder "type"
     description <- TOML.getFieldOptWith tomlDecoder "description"
     filters <- Utils.getFieldOptArrayOf "filters"
     title <- TOML.getFieldWith tomlDecoder "title"
@@ -90,7 +138,8 @@ instance
     y1Axis <- TOML.getFieldOptWith tomlDecoder "y1-axis"
     pure
       $ MkChartRequest
-        { description,
+        { chartType,
+          description,
           filters,
           title,
           unit,
