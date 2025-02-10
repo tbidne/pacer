@@ -42,7 +42,7 @@ import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Help.Pretty qualified as Pretty
 import Pacer.Class.Parser qualified as P
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
-import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Data.Result (Result (Err, Ok))
 import Pacer.Prelude
@@ -62,7 +62,7 @@ import Pacer.Prelude
 -- an entirely different meaning. Therefore it makes sense to have the units
 -- optional here, so we might as well make the units optional wherever
 -- sensible.
-type PaceOptUnits a = Either (SomePace (Positive a)) (Seconds (Positive a))
+type PaceOptUnits a = Either (SomePace (Positive a)) (Duration (Positive a))
 
 paceOptUnitsParserHelp ::
   forall a.
@@ -131,7 +131,7 @@ dpArgsParser = do
 -- exactly 2 and 1, respectively.
 data DistanceDurationPaceArgs a = MkDistanceDurationPaceArgs
   { -- | Possible duration.
-    mDuration :: Maybe (Seconds (Positive a)),
+    mDuration :: Maybe (Duration (Positive a)),
     -- | Possible pace.
     mPaceOptUnits :: Maybe (PaceOptUnits a),
     -- | Possible distance.
@@ -182,7 +182,7 @@ durationParser ::
     Semifield a,
     Show a
   ) =>
-  Parser (Seconds (Positive a))
+  Parser (Duration (Positive a))
 durationParser =
   OA.option
     readParseable

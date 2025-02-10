@@ -44,7 +44,7 @@ import Pacer.Data.Distance qualified as Distance
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
   )
-import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Duration (Duration)
 import Pacer.Data.Result (Result (Err, Ok), failErr)
 import Pacer.Exception
   ( GarminE (GarminDecode, GarminMeters, GarminOther),
@@ -62,14 +62,13 @@ data GarminAct d a
 data GarminRun d a = MkGarminRun
   { datetime :: LocalTime,
     distance :: Distance d a,
-    duration :: Seconds a,
+    duration :: Duration a,
     title :: Text
   }
   deriving stock (Eq, Show)
 
 instance
   ( Fromℚ a,
-    MGroup a,
     P.Parser a,
     SingI d
   ) =>
@@ -86,7 +85,7 @@ parseGarminRow ::
   forall a d.
   ( Fromℚ a,
     P.Parser a,
-    P.Parser (Seconds a),
+    P.Parser (Duration a),
     SingI d
   ) =>
   NamedRecord ->
@@ -113,10 +112,10 @@ parseGarminRow r = do
     parseDatetime :: String -> Parser LocalTime
     parseDatetime = Format.parseTimeM False Format.defaultTimeLocale timeFmt
 
-    parseDuration :: Text -> Parser (Seconds a)
+    parseDuration :: Text -> Parser (Duration a)
     parseDuration = failErr . P.parseAllWith movingTimeParser
 
-    movingTimeParser :: P.MParser (Seconds a)
+    movingTimeParser :: P.MParser (Duration a)
     movingTimeParser = do
       h <- MP.takeP (Just "digits") 2
       MPC.char ':'

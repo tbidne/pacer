@@ -26,7 +26,7 @@ import Pacer.Config.Utils
     PaceOptUnits,
   )
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
-import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Duration (Duration)
 import Pacer.Exception
   ( CommandScaleE
       ( CommandScaleArgs0,
@@ -39,7 +39,7 @@ import Pacer.Prelude
 -- | Quantity to scale.
 data ScaleQuantity a
   = ScaleDistance (SomeDistance (Positive a))
-  | ScaleDuration (Seconds (Positive a))
+  | ScaleDuration (Duration (Positive a))
   | ScalePace (PaceOptUnits a)
 
 type family ScaleQuantityF p a where

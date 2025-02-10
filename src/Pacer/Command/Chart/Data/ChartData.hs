@@ -50,7 +50,7 @@ import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Duration (unDuration), Seconds)
+import Pacer.Data.Duration (Duration (unDuration))
 import Pacer.Data.Pace (SomePace (MkSomePace))
 import Pacer.Exception (CreateChartE (CreateChartFilterEmpty))
 import Pacer.Prelude
@@ -252,7 +252,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
         fDist' :: Distance runDist (Positive a)
         fDist' = withSingI sr $ DistU.convertDistance runDist fDist
 
-    applyDur :: SomeRun a -> FilterOp -> Seconds (Positive a) -> Bool
+    applyDur :: SomeRun a -> FilterOp -> Duration (Positive a) -> Bool
     applyDur (MkSomeRun _ r) op = (opToFun op) r.duration
 
     applyPace :: SomeRun a -> FilterOp -> SomePace (Positive a) -> Bool

@@ -5,7 +5,6 @@ module Unit.Pacer.Data.Distance.Units
     -- * Generators
     genDistanceUnit,
     genDistanceUnitText,
-    genTimeUnit,
 
     -- * Misc
     shortDistanceUnitText,
@@ -16,7 +15,6 @@ where
 import Hedgehog.Gen qualified as G
 import Pacer.Class.Parser qualified as Parser
 import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
-import Pacer.Data.Duration (TimeUnit)
 import Pacer.Data.Result (Result (Ok))
 import Unit.Prelude
 
@@ -116,9 +114,6 @@ testParseExpected = testCase "Parses expected text" $ do
 
 genDistanceUnit :: Gen DistanceUnit
 genDistanceUnit = G.enumBounded
-
-genTimeUnit :: Gen TimeUnit
-genTimeUnit = G.enumBounded
 
 genDistanceUnitText :: Gen Text
 genDistanceUnitText =

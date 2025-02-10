@@ -27,7 +27,7 @@ import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Time (Moment)
 import Pacer.Data.Distance (SomeDistance)
-import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Data.Result (Result (Err, Ok), ResultDefault, failErr)
 import Pacer.Prelude
@@ -93,7 +93,7 @@ instance Parser FilterOp where
 -- | Ways in which we can filter runs.
 data FilterType a
   = FilterDistance FilterOp (SomeDistance (Positive a))
-  | FilterDuration FilterOp (Seconds (Positive a))
+  | FilterDuration FilterOp (Duration (Positive a))
   | -- | Filters by label equality.
     FilterLabel Text
   | FilterDate FilterOp Moment

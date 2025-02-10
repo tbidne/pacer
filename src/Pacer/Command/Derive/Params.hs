@@ -26,7 +26,7 @@ import Pacer.Config.Utils
     PaceOptUnits,
   )
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
-import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Exception
   ( CommandDeriveE
@@ -41,11 +41,11 @@ import Pacer.Prelude
 -- | Quantity to derive.
 data DeriveQuantity a
   = -- | Derives distance from duration and pace.
-    DeriveDistance (Seconds (Positive a)) (SomePace (Positive a))
+    DeriveDistance (Duration (Positive a)) (SomePace (Positive a))
   | -- | Derives duration from pace and distance.
     DeriveDuration (PaceOptUnits a) (SomeDistance (Positive a))
   | -- | Derives pace from duration and distance.
-    DerivePace (Seconds (Positive a)) (SomeDistance (Positive a))
+    DerivePace (Duration (Positive a)) (SomeDistance (Positive a))
 
 type family DeriveQuantityF p a where
   DeriveQuantityF ConfigPhaseArgs a = DistanceDurationPaceArgs a

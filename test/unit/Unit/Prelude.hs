@@ -33,8 +33,6 @@ module Unit.Prelude
     mkSomeDistancePD,
     mkDurationD,
     mkDurationPD,
-    mkSomeDurationD,
-    mkSomeDurationPD,
     mkPaceD,
     mkPacePD,
     mkSomePaceD,
@@ -72,11 +70,7 @@ import Pacer.Data.Distance
     SomeDistance (MkSomeDistance),
   )
 import Pacer.Data.Distance.Units (SDistanceUnit)
-import Pacer.Data.Duration
-  ( Duration (MkDuration),
-    SomeDuration (MkSomeDuration),
-  )
-import Pacer.Data.Duration.Units (STimeUnit)
+import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
 import Pacer.Data.Result (Result (Err, Ok), errorErr)
 import Pacer.Prelude as X hiding (IO)
@@ -166,17 +160,11 @@ mkSomeDistanceD s = MkSomeDistance s . mkDistanceD
 mkSomeDistancePD :: SDistanceUnit d -> Double -> SomeDistance PDouble
 mkSomeDistancePD s = MkSomeDistance s . mkDistancePD
 
-mkDurationD :: forall t. Double -> Duration t Double
+mkDurationD :: Double -> Duration Double
 mkDurationD = MkDuration
 
-mkDurationPD :: forall t. Double -> Duration t PDouble
+mkDurationPD :: Double -> Duration PDouble
 mkDurationPD = MkDuration . unsafePositive
-
-mkSomeDurationD :: STimeUnit s -> Double -> SomeDuration Double
-mkSomeDurationD s = MkSomeDuration s . mkDurationD
-
-mkSomeDurationPD :: STimeUnit s -> Double -> SomeDuration PDouble
-mkSomeDurationPD s = MkSomeDuration s . mkDurationPD
 
 mkPaceD :: forall d. (PaceDistF d) => Double -> Pace d Double
 mkPaceD = MkPace . MkDuration

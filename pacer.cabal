@@ -96,7 +96,6 @@ library
     Pacer.Data.Distance
     Pacer.Data.Distance.Units
     Pacer.Data.Duration
-    Pacer.Data.Duration.Units
     Pacer.Data.Pace
     Pacer.Data.Result
     Pacer.Driver

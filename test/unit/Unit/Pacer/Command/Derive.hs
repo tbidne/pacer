@@ -13,12 +13,11 @@ import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer),
     SDistanceUnit
       ( SKilometer,
-        SMeter,
-        SMile
+        SMeter
       ),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Duration (MkDuration), Hours, Minutes, Seconds)
+import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
 import Unit.Pacer.Data.Distance qualified as Unit.Distance
 import Unit.Pacer.Data.Duration qualified as Unit.Duration
@@ -32,7 +31,6 @@ tests =
     [ testDeriveDistance,
       testDeriveDuration,
       testDerivePace,
-      testPaceTimeInvariance,
       testDeriveDistanceInvariance,
       testDeriveDurationInvariance,
       testDerivePaceInvariance
@@ -63,17 +61,11 @@ testDeriveDistance =
 
           distDispTxt = display distOut'
 
-          tSec = parseOrDie @(Seconds Double) durationTxt
-          tMin = parseOrDie @(Minutes Double) durationTxt
-          tHr = parseOrDie @(Hours Double) durationTxt
+          tSec = parseOrDie @(Duration Double) durationTxt
 
       let rSec = displaySomeDistance tSec pace
-          rMin = displaySomeDistance tMin pace
-          rHr = displaySomeDistance tHr pace
 
       distDispTxt @=? rSec
-      distDispTxt @=? rMin
-      distDispTxt @=? rHr
       where
         desc =
           unpackText
@@ -96,7 +88,7 @@ testDeriveDuration =
       let pace = parseOrDie @(SomePace Double) paceTxt
           dist = parseOrDie @(SomeDistance Double) distTxt
 
-          durationDispTxt = display $ parseOrDie @(Seconds Double) durationTxt
+          durationDispTxt = display $ parseOrDie @(Duration Double) durationTxt
 
       let r = displaySomeDuration dist pace
 
@@ -125,17 +117,11 @@ testDerivePace =
 
           paceDispTxt = display $ parseOrDie @(SomePace Double) paceTxt
 
-          tSec = parseOrDie @(Seconds Double) durationTxt
-          tMin = parseOrDie @(Minutes Double) durationTxt
-          tHr = parseOrDie @(Hours Double) durationTxt
+          tSec = parseOrDie @(Duration Double) durationTxt
 
       let rSec = displaySomePace dist tSec
-          rMin = displaySomePace dist tMin
-          rHr = displaySomePace dist tHr
 
       paceDispTxt @=? rSec
-      paceDispTxt @=? rMin
-      paceDispTxt @=? rHr
       where
         desc =
           unpackText
@@ -148,58 +134,14 @@ testDerivePace =
                 paceTxt
               ]
 
-displaySomeDistance :: (SingI t) => Duration t Double -> SomePace PDouble -> Text
+displaySomeDistance :: Duration Double -> SomePace PDouble -> Text
 displaySomeDistance duration = display . Derive.deriveSomeDistance duration
 
 displaySomeDuration :: SomeDistance Double -> SomePace Double -> Text
 displaySomeDuration dist = display . Derive.deriveSomeDuration dist
 
-displaySomePace :: (SingI t) => SomeDistance PDouble -> Duration t Double -> Text
+displaySomePace :: SomeDistance PDouble -> Duration Double -> Text
 displaySomePace dist = display . Derive.deriveSomePace dist
-
-testPaceTimeInvariance :: TestTree
-testPaceTimeInvariance = testPropertyNamed name desc $ property $ do
-  distTxt <- forAll Unit.Distance.genSomeDistancePosText
-  durationTxt <- forAll Unit.Duration.genDurationPosText
-
-  let dist = parseOrDie @(SomeDistance PDouble) distTxt
-
-  let tSec = parseOrDie @(Seconds Double) durationTxt
-      tMin = parseOrDie @(Minutes Double) durationTxt
-      tHr = parseOrDie @(Hours Double) durationTxt
-
-  annotateShow tSec
-  annotateShow tMin
-  annotateShow tHr
-
-  let rSec = calcPace tSec dist
-      rMin = calcPace tMin dist
-      rHr = calcPace tHr dist
-
-  rSec === rMin
-  rMin === rHr
-  rSec === rHr
-  where
-    name = "testPaceTimeInvariance"
-    desc = "derivePace is time-invariant"
-
-    calcPace ::
-      (SingI t) =>
-      Duration t Double ->
-      SomeDistance PDouble ->
-      Seconds Double
-    calcPace duration (MkSomeDistance s d) = case s of
-      SMeter ->
-        withSingI
-          s
-          ( Derive.derivePace
-              (DistU.convertDistance Kilometer d)
-              duration
-          ).unPace
-      SKilometer ->
-        withSingI s (Derive.derivePace d duration).unPace
-      SMile ->
-        withSingI s (Derive.derivePace d duration).unPace
 
 -- Pace, Distance, Time for testing calculations. In general, these values
 -- are __very__ fragile, in the sense that it is easy for rounding differences

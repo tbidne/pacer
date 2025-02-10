@@ -34,7 +34,7 @@ import Pacer.Data.Distance.Units
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Duration (MkDuration), Seconds)
+import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Duration qualified as Duration
 import Pacer.Data.Pace
   ( Pace (MkPace),
@@ -94,16 +94,14 @@ handle params = case params.quantity of
 
 -- | Given a distance and a duration, derives the pace.
 derivePace ::
-  forall t d a.
-  ( Fromℤ a,
-    MGroup a,
-    PaceDistF d,
-    SingI t
+  forall d a.
+  ( MGroup a,
+    PaceDistF d
   ) =>
   -- | Distance.
   Distance d (Positive a) ->
   -- | Duration.
-  Duration t a ->
+  Duration a ->
   -- | Pace.
   Pace d a
 derivePace distance duration =
@@ -112,12 +110,12 @@ derivePace distance duration =
 -- | Given an existentially-quantified distance and a duration, derives
 -- the pace.
 deriveSomePace ::
-  forall t a.
-  (Fromℤ a, Ord a, Semifield a, Show a, SingI t) =>
+  forall a.
+  (Fromℤ a, Ord a, Semifield a, Show a) =>
   -- | Existentially-quantified distance.
   SomeDistance (Positive a) ->
   -- | Duration.
-  Duration t a ->
+  Duration a ->
   -- | Pace.
   SomePace a
 deriveSomePace (MkSomeDistance sdist distance) duration =
@@ -138,7 +136,7 @@ deriveDuration ::
   -- | Pace.
   Pace d a ->
   -- | Duration.
-  Seconds a
+  Duration a
 deriveDuration distance pace = pace.unPace .* distance.unDistance
 
 -- | Given existentially-quantified distance and pace, derives the duration.
@@ -152,7 +150,7 @@ deriveSomeDuration ::
   -- | Existentially-quantified pace.
   SomePace a ->
   -- | Duration.
-  Seconds a
+  Duration a
 deriveSomeDuration
   (MkSomeDistance sdistance distance)
   (MkSomePace @distUnit space pace) =
@@ -165,31 +163,28 @@ deriveSomeDuration
 
 -- | Given a duration and pace, derives the distance.
 deriveDistance ::
-  forall t d a.
-  ( Fromℤ a,
-    MGroup a,
-    SingI t
-  ) =>
+  forall d a.
+  (MGroup a) =>
   -- | Distance.
-  Duration t a ->
+  Duration a ->
   -- | Pace.
   Pace d (Positive a) ->
   -- | Distance.
   Distance d a
 deriveDistance duration (MkPace (MkDuration paceDuration)) =
-  MkDistance $ scaleDuration (Duration.toSeconds duration)
+  MkDistance $ scaleDuration duration
   where
     -- monomorphic on Second so that we have to use toSeconds
-    scaleDuration :: Seconds a -> a
+    scaleDuration :: Duration a -> a
     scaleDuration = (.unDuration) . (.% paceDuration.unPositive)
 
 -- | Given a duration and existentially-quantified pace, derives the
 -- distance.
 deriveSomeDistance ::
-  forall t a.
-  (Fromℤ a, MGroup a, SingI t) =>
+  forall a.
+  (MGroup a) =>
   -- | Duration.
-  Duration t a ->
+  Duration a ->
   -- | Existentially-quantified Pace.
   SomePace (Positive a) ->
   -- | Existentially-quantified Distance.

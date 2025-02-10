@@ -47,7 +47,7 @@ import Pacer.Data.Distance.Units
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Seconds)
+import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
 import Pacer.Data.Result (failErr)
 import Pacer.Prelude
@@ -70,7 +70,7 @@ data Run dist a = MkRun
     -- | The run's total distance.
     distance :: Distance dist (Positive a),
     -- | The run's total duration.
-    duration :: Seconds (Positive a),
+    duration :: Duration (Positive a),
     -- | Optional labels.
     labels :: List Text,
     -- | Optional title.
@@ -122,8 +122,7 @@ instance (SingI dist) => HasDistance (Run dist a) where
 
 -- | Derives the pace from a run.
 derivePace ::
-  ( Fromℤ a,
-    MGroup a,
+  ( MGroup a,
     PaceDistF d
   ) =>
   Run d a ->
@@ -202,7 +201,7 @@ instance
 decodeDistance :: (Fromℚ a, Parser a) => Decoder (SomeDistance a)
 decodeDistance = tomlDecoder >>= (failErr . P.parse)
 
-decodeDuration :: forall a. (Parser (Seconds a)) => Decoder (Seconds a)
+decodeDuration :: forall a. (Parser (Duration a)) => Decoder (Duration a)
 decodeDuration = tomlDecoder >>= (failErr . P.parse)
 
 -------------------------------------------------------------------------------
