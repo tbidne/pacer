@@ -68,9 +68,9 @@ data Run dist a = MkRun
   { -- | The start time of the run.
     datetime :: Timestamp,
     -- | The run's total distance.
-    distance :: Distance dist (Positive a),
+    distance :: Distance dist a,
     -- | The run's total duration.
-    duration :: Duration (Positive a),
+    duration :: Duration a,
     -- | Optional labels.
     labels :: List Text,
     -- | Optional title.
@@ -107,7 +107,7 @@ instance
       }
 
 instance (SingI dist) => HasDistance (Run dist a) where
-  type DistanceVal (Run dist a) = Distance dist (Positive a)
+  type DistanceVal (Run dist a) = Distance dist a
   type HideDistance (Run dist a) = SomeRun a
 
   distanceUnitOf _ = fromSingI @_ @dist
@@ -130,7 +130,7 @@ derivePace ::
 derivePace r =
   Derive.derivePace
     r.distance
-    ((.unPositive) <$> r.duration)
+    r.duration
 
 -------------------------------------------------------------------------------
 --                                  SomeRun                                  --
@@ -173,7 +173,7 @@ instance (Show a) => Show (SomeRun a) where
 instance
   ( Fromℚ a,
     Ord a,
-    Parser (Positive a),
+    Parser a,
     Semifield a,
     Show a
   ) =>
@@ -198,10 +198,24 @@ instance
               title
             }
 
-decodeDistance :: (Fromℚ a, Parser a) => Decoder (SomeDistance a)
+decodeDistance ::
+  ( AMonoid a,
+    Fromℚ a,
+    Ord a,
+    Parser a,
+    Show a
+  ) =>
+  Decoder (SomeDistance a)
 decodeDistance = tomlDecoder >>= (failErr . P.parse)
 
-decodeDuration :: forall a. (Parser (Duration a)) => Decoder (Duration a)
+decodeDuration ::
+  forall a.
+  ( AMonoid a,
+    Fromℤ a,
+    Ord a,
+    Show a
+  ) =>
+  Decoder (Duration a)
 decodeDuration = tomlDecoder >>= (failErr . P.parse)
 
 -------------------------------------------------------------------------------
@@ -222,7 +236,7 @@ instance
   convertDistance_ (MkSomeRun s x) = withSingI s convertDistance_ x
 
 instance HasDistance (SomeRun a) where
-  type DistanceVal (SomeRun a) = SomeDistance (Positive a)
+  type DistanceVal (SomeRun a) = SomeDistance a
   type HideDistance (SomeRun a) = SomeRun a
 
   distanceUnitOf (MkSomeRun s _) = fromSing s
@@ -258,13 +272,13 @@ instance Ord (SomeRunsKey a) where
 -------------------------------------------------------------------------------
 
 instance HasDistance (SomeRunsKey a) where
-  type DistanceVal (SomeRunsKey a) = SomeDistance (Positive a)
+  type DistanceVal (SomeRunsKey a) = SomeDistance a
   type HideDistance (SomeRunsKey a) = SomeRunsKey a
 
   distanceUnitOf :: SomeRunsKey a -> DistanceUnit
   distanceUnitOf (MkSomeRunsKey sr) = distanceUnitOf sr
 
-  distanceOf :: SomeRunsKey a -> SomeDistance (Positive a)
+  distanceOf :: SomeRunsKey a -> SomeDistance a
   distanceOf (MkSomeRunsKey sr) = distanceOf sr
 
   hideDistance = id
@@ -282,13 +296,13 @@ newtype SomeRuns a = MkSomeRuns {unSomeRuns :: (NESet (SomeRunsKey a))}
 -------------------------------------------------------------------------------
 
 instance HasDistance (SomeRuns a) where
-  type DistanceVal (SomeRuns a) = SomeDistance (Positive a)
+  type DistanceVal (SomeRuns a) = SomeDistance a
   type HideDistance (SomeRuns a) = SomeRuns a
 
   distanceUnitOf :: SomeRuns a -> DistanceUnit
   distanceUnitOf (MkSomeRuns (SetToSeqNE (srk :<|| _))) = distanceUnitOf srk
 
-  distanceOf :: SomeRuns a -> SomeDistance (Positive a)
+  distanceOf :: SomeRuns a -> SomeDistance a
   distanceOf (MkSomeRuns (SetToSeqNE (srk :<|| _))) = distanceOf srk
 
   hideDistance = id
@@ -302,7 +316,7 @@ instance
     Ord a,
     Semifield a,
     Show a,
-    Parser (Positive a)
+    Parser a
   ) =>
   DecodeTOML (SomeRuns a)
   where

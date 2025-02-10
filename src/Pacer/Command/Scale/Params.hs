@@ -38,8 +38,8 @@ import Pacer.Prelude
 
 -- | Quantity to scale.
 data ScaleQuantity a
-  = ScaleDistance (SomeDistance (Positive a))
-  | ScaleDuration (Duration (Positive a))
+  = ScaleDistance (SomeDistance a)
+  | ScaleDuration (Duration a)
   | ScalePace (PaceOptUnits a)
 
 type family ScaleQuantityF p a where

@@ -33,8 +33,7 @@ import Pacer.Prelude
 
 type family ConvertParamsF p a where
   ConvertParamsF ConfigPhaseArgs a = DistancePaceArgs a
-  ConvertParamsF ConfigPhaseFinal a =
-    Either (SomeDistance (Positive a)) (SomePace (Positive a))
+  ConvertParamsF ConfigPhaseFinal a = Either (SomeDistance a) (SomePace a)
 
 -- | Convert params.
 type ConvertParams :: ConfigPhase -> Type -> Type

@@ -18,7 +18,7 @@ module Pacer.Class.Parser
     readDigits,
 
     -- ** TimeString
-    parseTimeString,
+    parsePosTimeString,
 
     -- * Lexing,
     lexeme,
@@ -167,10 +167,12 @@ parseIntegralText :: Parsec Void Text Text
 parseIntegralText =
   MP.takeWhile1P (Just "digits") Ch.isDigit
 
--- | Read text like "1d2h3m4s", parse w/ relative time into Fractional
--- seconds.
-parseTimeString :: forall a. (Fromℤ a) => MParser a
-parseTimeString = do
+-- | Read text like "1d2h3m4s", parse w/ relative time into positive seconds.
+parsePosTimeString ::
+  forall a.
+  (AMonoid a, Fromℤ a, Ord a, Show a) =>
+  MParser (Positive a)
+parsePosTimeString = do
   t <-
     MP.takeWhile1P
       (Just "time-string")
@@ -180,9 +182,12 @@ parseTimeString = do
     Right rt -> do
       let secondsℕ = Rel.toSeconds rt
           secondsℤ = toℤ secondsℕ
+          -- NOTE: This is potentially unsafe e.g. if @a@ happens to be
+          -- @Positive b@. For this reason, we include the positive check here
+          -- as it is clearer that a should be a primitive, not Positive.
           secondsA = fromℤ secondsℤ
 
-      pure secondsA
+      mkPositiveFail secondsA
   where
     chars = "hmds"
 

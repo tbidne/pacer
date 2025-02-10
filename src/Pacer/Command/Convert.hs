@@ -16,7 +16,8 @@ import Pacer.Prelude
 -- | Handles convert command.
 handle ::
   forall es a.
-  ( Fromℤ a,
+  ( Display a,
+    Fromℤ a,
     HasCallStack,
     Ord a,
     Semifield a,

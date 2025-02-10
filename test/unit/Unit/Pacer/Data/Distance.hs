@@ -6,9 +6,7 @@ module Unit.Pacer.Data.Distance
 
     -- * Generators
     genSomeDistance,
-    genSomeDistancePos,
     genSomeDistanceText,
-    genSomeDistancePosText,
   )
 where
 
@@ -21,6 +19,7 @@ import Pacer.Data.Distance
     Miles,
     SomeDistance (MkSomeDistance),
   )
+import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SMeter),
@@ -51,14 +50,19 @@ parseTests =
     ]
 
 testParseDistanceGenText :: TestTree
-testParseDistanceGenText = testPropertyNamed "testParseDistanceGenText" desc $ property $ do
-  d <- forAll genDistanceText
-  parseOrDieM_ @(Meters Double) d
-  parseOrDieM_ @(Kilometers Double) d
-  parseOrDieM_ @(Miles Double) d
+testParseDistanceGenText =
+  testPropertyNamed
+    "testParseDistanceGenText"
+    desc
+    $ property
+    $ do
+      d <- forAll genDistanceText
+      parseOrDieM_ @(Meters Double) d
+      parseOrDieM_ @(Kilometers Double) d
+      parseOrDieM_ @(Miles Double) d
 
-  sd <- forAll genSomeDistanceText
-  parseOrDieM_ @(SomeDistance Double) sd
+      sd <- forAll genSomeDistanceText
+      parseOrDieM_ @(SomeDistance Double) sd
   where
     desc = "Parses text to (Some)Distance"
 
@@ -81,7 +85,6 @@ testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
   annotateUnpack t
 
   r2 <- parseOrDieM @(SomeDistance Double) t
-  annotateShow r
 
   r === r2
   where
@@ -94,19 +97,18 @@ testParseDistanceCases = testCase "Parses Distance" $ do
     case toSing dunit of
       SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
         Ok (mkDistanceD @d val) @=? Parser.parse (showt val)
-        Ok (mkDistancePD @d val) @=? Parser.parse (showt val)
 
   for_ hvals $ \(val, dunit, txt) -> do
     case toSing dunit of
       SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
         Ok (mkDistanceD @d val) @=? Parser.parse txt
-        Ok (mkDistancePD @d val) @=? Parser.parse txt
 
   for_ units $ \dunit -> do
     case toSing dunit of
-      SomeSing @DistanceUnit @d sdist -> withSingI sdist $ do
-        Ok (mkDistanceD @d 0) @=? Parser.parse "0"
-        assertErr "PDouble zero" $ Parser.parse @(Distance d PDouble) "0"
+      SomeSing @DistanceUnit @d sdist ->
+        withSingI sdist
+          $ assertErr "PDouble zero"
+          $ Parser.parse @(Distance d Double) "0"
   where
     vals = [7, 4.83, 452.5301]
 
@@ -132,19 +134,14 @@ testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
     case toSing dist of
       SomeSing sdist -> do
         Ok (mkSomeDistanceD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
-        Ok (mkSomeDistancePD sdist val) @=? Parser.parse (showt val <> spc <> unitTxt)
 
   for_ hvals $ \(dist, val, txt) -> do
     case toSing dist of
       SomeSing sdist -> do
         Ok (mkSomeDistanceD sdist val) @=? Parser.parse txt
-        Ok (mkSomeDistancePD sdist val) @=? Parser.parse txt
 
-  for_ units $ \(dist, unitTxt) -> do
-    case toSing dist of
-      SomeSing sdist -> do
-        Ok (mkSomeDistanceD sdist 0) @=? Parser.parse ("0" <> unitTxt)
-        assertErr "PDouble zero" $ Parser.parse @(SomeDistance PDouble) ("0" <> unitTxt)
+  for_ units $ \(_, unitTxt) -> do
+    assertErr "PDouble zero" $ Parser.parse @(SomeDistance Double) ("0" <> unitTxt)
   where
     vals = [7, 4.83, 452.5301]
 
@@ -167,17 +164,13 @@ testParseDistanceFailureCases :: TestTree
 testParseDistanceFailureCases = testCase "Parse failures" $ do
   for_ bothVals $ \(d, t) -> do
     assertErr d $ Parser.parseAll @(Meters Double) t
-    assertErr d $ Parser.parseAll @(Meters PDouble) t
     assertErr d $ Parser.parseAll @(SomeDistance Double) t
-    assertErr d $ Parser.parseAll @(SomeDistance PDouble) t
 
   for_ vals $ \(d, t) -> do
     assertErr d $ Parser.parseAll @(Meters Double) t
-    assertErr d $ Parser.parseAll @(Meters PDouble) t
 
   for_ someVals $ \(d, t) -> do
     assertErr d $ Parser.parseAll @(SomeDistance Double) t
-    assertErr d $ Parser.parseAll @(SomeDistance PDouble) t
   where
     bothVals =
       [ ("Empty", ""),
@@ -199,12 +192,12 @@ equalityTests =
 
 testEquivClass :: TestTree
 testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
-  t <- forAll genSomeDistance
+  t <- forAll (genSomeDistanceGtN 1.1)
 
   let tgt = t .+. mkSomeDistanceD SMeter 1.1
       tgte = t .+. mkSomeDistanceD SMeter 0.9
-      tlt = t .-. mkSomeDistanceD SMeter 1.1
-      tlte = t .-. mkSomeDistanceD SMeter 0.9
+      tlt = unsafeSub 1.1 t
+      tlte = unsafeSub 0.9 t
 
   t === tlte
   t === tgte
@@ -212,6 +205,10 @@ testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
   t /== tlt
   where
     desc = "Tests equality equivalence class"
+
+    unsafeSub n =
+      Dist.liftSomeDist
+        (Dist.liftDist (\x -> unsafePositive $ x.unPositive - n))
 
 testEqualityCases :: TestTree
 testEqualityCases = testCase "Tests expected equality cases" $ do
@@ -247,24 +244,24 @@ testDisplayCases = testCase "Displays expected" $ do
 
 genSomeDistance :: Gen (SomeDistance Double)
 genSomeDistance = do
-  d <- Utils.genDoubleNN
-  u <- Units.genDistanceUnit
-
-  pure $ case toSing u of
-    SomeSing su -> MkSomeDistance su (MkDistance d)
-
-genSomeDistancePos :: Gen (SomeDistance PDouble)
-genSomeDistancePos = do
   d <- Utils.genDoublePos
   u <- Units.genDistanceUnit
 
   pure $ case toSing u of
     SomeSing su -> MkSomeDistance su (MkDistance d)
 
+genSomeDistanceGtN :: Double -> Gen (SomeDistance Double)
+genSomeDistanceGtN x = do
+  d <- Utils.genDoublePos
+  u <- Units.genDistanceUnit
+
+  pure $ case toSing u of
+    SomeSing su -> MkSomeDistance su (MkDistance (unsafePositive x .+. d))
+
 genDistanceText :: Gen Text
 genDistanceText =
   G.choice
-    [ Utils.genTextDoublePrecision False,
+    [ Utils.genTextDoublePos,
       pure "marathon",
       pure "half-marathon",
       pure "hmarathon"
@@ -274,7 +271,7 @@ genSomeDistanceText :: Gen Text
 genSomeDistanceText = do
   G.choice
     [ do
-        d <- Utils.genTextDouble
+        d <- Utils.genTextDoublePos
         t <- Units.genDistanceUnitText
         s <- Utils.genAffineSpace
 
@@ -288,16 +285,3 @@ genSomeDistanceText = do
       pure "half-marathon",
       pure "hmarathon"
     ]
-
-genSomeDistancePosText :: Gen Text
-genSomeDistancePosText = do
-  d <- Utils.genTextDoublePos
-  t <- Units.genDistanceUnitText
-  s <- Utils.genAffineSpace
-
-  pure
-    $ mconcat
-      [ d,
-        s,
-        t
-      ]

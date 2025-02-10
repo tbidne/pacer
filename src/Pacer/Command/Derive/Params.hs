@@ -41,11 +41,11 @@ import Pacer.Prelude
 -- | Quantity to derive.
 data DeriveQuantity a
   = -- | Derives distance from duration and pace.
-    DeriveDistance (Duration (Positive a)) (SomePace (Positive a))
+    DeriveDistance (Duration a) (SomePace a)
   | -- | Derives duration from pace and distance.
-    DeriveDuration (PaceOptUnits a) (SomeDistance (Positive a))
+    DeriveDuration (PaceOptUnits a) (SomeDistance a)
   | -- | Derives pace from duration and distance.
-    DerivePace (Duration (Positive a)) (SomeDistance (Positive a))
+    DerivePace (Duration a) (SomeDistance a)
 
 type family DeriveQuantityF p a where
   DeriveQuantityF ConfigPhaseArgs a = DistanceDurationPaceArgs a

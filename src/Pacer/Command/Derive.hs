@@ -61,7 +61,7 @@ handle ::
   Eff es ()
 handle params = case params.quantity of
   DeriveDistance duration pace -> do
-    let dist = deriveSomeDistance ((.unPositive) <$> duration) pace
+    let dist = deriveSomeDistance duration pace
     case params.unit of
       Nothing -> putTextLn $ display dist
       Just unit -> case toSing unit of
@@ -84,7 +84,7 @@ handle params = case params.quantity of
                 SMile -> deriveDuration distx (MkPace paceDuration)
     putTextLn $ display duration
   DerivePace duration dist -> do
-    let pace = deriveSomePace dist ((.unPositive) <$> duration)
+    let pace = deriveSomePace dist duration
     case params.unit of
       Nothing -> putTextLn $ display pace
       Just unit -> case unit of
@@ -99,13 +99,13 @@ derivePace ::
     PaceDistF d
   ) =>
   -- | Distance.
-  Distance d (Positive a) ->
+  Distance d a ->
   -- | Duration.
   Duration a ->
   -- | Pace.
   Pace d a
 derivePace distance duration =
-  mkPace $ duration .% distance.unDistance.unPositive
+  mkPace $ duration .% distance.unDistance
 
 -- | Given an existentially-quantified distance and a duration, derives
 -- the pace.
@@ -113,7 +113,7 @@ deriveSomePace ::
   forall a.
   (Fromℤ a, Ord a, Semifield a, Show a) =>
   -- | Existentially-quantified distance.
-  SomeDistance (Positive a) ->
+  SomeDistance a ->
   -- | Duration.
   Duration a ->
   -- | Pace.
@@ -143,7 +143,9 @@ deriveDuration distance pace = pace.unPace .* distance.unDistance
 -- Different distance units are converted.
 deriveSomeDuration ::
   ( Fromℤ a,
-    MGroup a
+    Ord a,
+    Semifield a,
+    Show a
   ) =>
   -- | Existentially-quantified distance.
   SomeDistance a ->
@@ -168,15 +170,15 @@ deriveDistance ::
   -- | Distance.
   Duration a ->
   -- | Pace.
-  Pace d (Positive a) ->
+  Pace d a ->
   -- | Distance.
   Distance d a
 deriveDistance duration (MkPace (MkDuration paceDuration)) =
   MkDistance $ scaleDuration duration
   where
     -- monomorphic on Second so that we have to use toSeconds
-    scaleDuration :: Duration a -> a
-    scaleDuration = (.unDuration) . (.% paceDuration.unPositive)
+    scaleDuration :: Duration a -> Positive a
+    scaleDuration = (.unDuration) . (.% paceDuration)
 
 -- | Given a duration and existentially-quantified pace, derives the
 -- distance.
@@ -186,7 +188,7 @@ deriveSomeDistance ::
   -- | Duration.
   Duration a ->
   -- | Existentially-quantified Pace.
-  SomePace (Positive a) ->
+  SomePace a ->
   -- | Existentially-quantified Distance.
   SomeDistance a
 deriveSomeDistance duration (MkSomePace space pace) =

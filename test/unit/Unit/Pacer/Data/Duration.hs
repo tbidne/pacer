@@ -5,12 +5,8 @@ module Unit.Pacer.Data.Duration
     tests,
 
     -- * Generators
-    genSeconds,
-    genSecondsPos,
     genDuration,
-    genDurationPos,
     genDurationPosText,
-    genDurationText,
   )
 where
 
@@ -46,11 +42,9 @@ testParseDurationCases :: TestTree
 testParseDurationCases = testCase "Parses Duration" $ do
   for_ strs $ \s -> do
     Ok (mkDurationD 12_600) @=? Parser.parse s
-    Ok (mkDurationPD 12_600) @=? Parser.parse s
 
   for_ zstrs $ \s -> do
-    Ok (mkDurationD 0) @=? Parser.parse s
-    assertErr "PDouble zero" $ Parser.parse @(Duration PDouble) s
+    assertErr "PDouble zero" $ Parser.parse @(Duration Double) s
   where
     -- All the same time value
     strs =
@@ -75,9 +69,8 @@ testParseDurationCases = testCase "Parses Duration" $ do
 
 testParseDurationFailureCases :: TestTree
 testParseDurationFailureCases = testCase "Parse failures" $ do
-  for_ vals $ \(d, t) -> do
+  for_ vals $ \(d, t) ->
     assertErr d $ Parser.parse @(Duration Double) t
-    assertErr d $ Parser.parse @(Duration PDouble) t
   where
     vals =
       [ ("Empty", ""),
@@ -95,12 +88,13 @@ equalityTests =
 
 testEquivClass :: TestTree
 testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
-  t <- forAll genDuration
+  -- 1.1 Needed so that below subtraction does not cause an error.
+  t <- forAll (genDurationGtN 1.1)
 
-  let tgt = t .+. MkDuration 1.1
-      tgte = t .+. MkDuration 0.9
-      tlt = t .-. MkDuration 1.1
-      tlte = t .-. MkDuration 0.9
+  let tgt = t .+. MkDuration (fromℚ 1.1)
+      tgte = t .+. MkDuration (fromℚ 0.9)
+      tlt = unsafeSub 1.1 t
+      tlte = unsafeSub 0.9 t
 
   t === tlte
   t === tgte
@@ -108,6 +102,9 @@ testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
   t /== tlt
   where
     desc = "Tests equality equivalence class"
+
+    unsafeSub n =
+      Duration.liftDuration (\x -> unsafePositive $ x.unPositive - n)
 
 testEqualityCases :: TestTree
 testEqualityCases = testCase "Tests expected equality cases" $ do
@@ -185,7 +182,7 @@ testHrMinSecCasesData = testPropertyNamed name desc $ withTests 1 $ property $ d
 
     vals :: [((Word32, Word32, Word32), Duration Double)]
     vals =
-      [ ((6, 0, 0), MkDuration 21599.5)
+      [ ((6, 0, 0), MkDuration $ unsafePositive 21599.5)
       ]
 
     go ::
@@ -199,32 +196,13 @@ testHrMinSecCasesData = testPropertyNamed name desc $ withTests 1 $ property $ d
       e === r
 
 genDuration :: Gen (Duration Double)
-genDuration = do
-  t <- Utils.genDoubleNN
+genDuration = MkDuration <$> Utils.genDoublePos
 
-  pure $ MkDuration t
-
-genSecondsPos :: Gen (Duration PDouble)
-genSecondsPos = MkDuration <$> Utils.genDoublePos
-
-genSeconds :: Gen (Duration Double)
-genSeconds = MkDuration <$> Utils.genDouble
-
-genDurationPos :: Gen (Duration PDouble)
-genDurationPos = do
-  t <- Utils.genDoublePos
-  pure $ MkDuration t
+genDurationGtN :: Double -> Gen (Duration Double)
+genDurationGtN x = MkDuration . (.+. unsafePositive x) <$> Utils.genDoublePos
 
 -- Generates a time string like "1d2h3m4s", where we have between 1 and 4
 -- units.
-genDurationText :: Gen Text
-genDurationText = do
-  toTake <- G.integral (R.linear 1 4)
-  fullStrShuffled <- genAllUnitsShuffled
-  let someUnits = snd <$> sortOn fst (take toTake fullStrShuffled)
-
-  pure $ mconcat someUnits
-
 genDurationPosText :: Gen Text
 genDurationPosText = do
   toTake <- G.integral (R.linear 0 3)
@@ -236,14 +214,6 @@ genDurationPosText = do
 -- Because unit order matters, we need to pair time strings w/ an index for
 -- sorting after shuffling.
 type TimeUnitIndexed = Tuple2 Word8 Text
-
-genAllUnitsShuffled :: Gen (List TimeUnitIndexed)
-genAllUnitsShuffled = do
-  d <- (<> "d") <$> Utils.genTextℕ
-  h <- (<> "h") <$> Utils.genTextℕ
-  m <- (<> "m") <$> Utils.genTextℕ
-  s <- (<> "s") <$> Utils.genTextℕ
-  G.shuffle $ zip [0 ..] [d, h, m, s]
 
 genAllUnitsShuffledPos :: Gen (Tuple2 TimeUnitIndexed (List TimeUnitIndexed))
 genAllUnitsShuffledPos = do

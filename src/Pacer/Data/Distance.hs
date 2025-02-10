@@ -3,21 +3,14 @@ module Pacer.Data.Distance
   ( -- * Distance
     Distance (..),
 
-    -- * Some Distance
-    SomeDistance (..),
-
-    -- * Units
-    DistanceUnit (..),
-
-    -- * Aliases
+    -- ** Aliases
     Meters,
     Kilometers,
     Miles,
 
-    -- * Hiding Distance
-    HasDistance (..),
-
-    -- * Misc
+    -- ** Functions
+    liftDist,
+    liftDist2,
     forceUnit,
 
     -- ** Distances
@@ -25,6 +18,19 @@ module Pacer.Data.Distance
     halfMarathon,
     k_10,
     k_5,
+
+    -- * Some Distance
+    SomeDistance (..),
+
+    -- ** Functions
+    liftSomeDist,
+    liftSomeDist2,
+
+    -- * Units
+    DistanceUnit (..),
+
+    -- * Hiding Distance
+    HasDistance (..),
   )
 where
 
@@ -47,8 +53,7 @@ import Text.Printf (printf)
 
 -- | Represents a numeric distance with units.
 type Distance :: DistanceUnit -> Type -> Type
-newtype Distance d a = MkDistance {unDistance :: a}
-  deriving stock (Functor)
+newtype Distance d a = MkDistance {unDistance :: Positive a}
   deriving newtype (MetricSpace)
 
 -------------------------------------------------------------------------------
@@ -98,53 +103,25 @@ instance (Display a, SingI d, Toℚ a) => Display (Distance d a) where
 instance (ASemigroup a) => ASemigroup (Distance d a) where
   (.+.) = liftDist2 (.+.)
 
-instance (AMonoid a) => AMonoid (Distance d a) where
-  zero = MkDistance zero
-
-instance (AGroup a) => AGroup (Distance d a) where
-  (.-.) = liftDist2 (.-.)
-
-instance (MSemigroup a) => MSemiSpace (Distance d a) a where
+instance (MSemigroup a) => MSemiSpace (Distance d a) (Positive a) where
   MkDistance x .* k = MkDistance (x .*. k)
 
-instance (MGroup a) => MSpace (Distance d a) a where
+instance (MGroup a) => MSpace (Distance d a) (Positive a) where
   MkDistance x .% k = MkDistance (x .%. k)
-
-instance (Semiring a) => Semimodule (Distance d a) a
-
-instance (Semifield a) => SemivectorSpace (Distance d a) a
-
-instance (Ring a) => Module (Distance d a) a
-
-instance (Field a) => VectorSpace (Distance d a) a
-
--------------------------------------------------------------------------------
---                             Numeric Conversions                           --
--------------------------------------------------------------------------------
-
-instance (Fromℚ a) => FromRational (Distance d a) where
-  fromQ = MkDistance . fromQ
-
-instance (Toℚ a) => ToRational (Distance d a) where
-  toQ (MkDistance x) = toQ x
-
-instance (Fromℤ a) => FromInteger (Distance d a) where
-  fromZ = MkDistance . fromZ
-
-instance (Toℤ a) => ToInteger (Distance d a) where
-  toZ (MkDistance x) = toZ x
-
-instance (Fromℝ a) => FromReal (Distance d a) where
-  fromR = MkDistance . fromR
-
-instance (Toℝ a) => ToReal (Distance d a) where
-  toR (MkDistance x) = toR x
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
 -------------------------------------------------------------------------------
 
-instance (Fromℤ a, MGroup a, SingI d) => ConvertDistance (Distance d a) where
+instance
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a,
+    SingI d
+  ) =>
+  ConvertDistance (Distance d a)
+  where
   type ConvertedDistance (Distance d a) e = Distance e a
   type ToConstraints (Distance d a) _ = ()
 
@@ -179,9 +156,12 @@ instance (SingI d) => HasDistance (Distance d a) where
 -- See NOTE: [SomeDistance Parsing]
 
 instance
-  ( Fromℚ a,
-    SingI d,
-    Parser a
+  ( AMonoid a,
+    Fromℚ a,
+    Parser a,
+    Ord a,
+    Show a,
+    SingI d
   ) =>
   Parser (Distance d a)
   where
@@ -195,8 +175,14 @@ instance
 --                                    Misc                                   --
 -------------------------------------------------------------------------------
 
+liftDist ::
+  (Positive a -> Positive a) ->
+  Distance d a ->
+  Distance d a
+liftDist f (MkDistance x) = MkDistance (f x)
+
 liftDist2 ::
-  (a -> a -> a) ->
+  (Positive a -> Positive a -> Positive a) ->
   Distance d a ->
   Distance d a ->
   Distance d a
@@ -215,22 +201,31 @@ data SomeDistance a where
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
 
-deriving stock instance Functor SomeDistance
-
-instance (Fromℤ a, MetricSpace a, MGroup a) => Eq (SomeDistance a) where
+instance
+  ( Fromℤ a,
+    MetricSpace a,
+    MGroup a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  Eq (SomeDistance a)
+  where
   t1 == t2 = convertToMeters t1 == convertToMeters t2
 
 instance
   ( Fromℤ a,
     MetricSpace a,
     MGroup a,
-    Ord a
+    Ord a,
+    Semifield a,
+    Show a
   ) =>
   Ord (SomeDistance a)
   where
   t1 <= t2 = convertToMeters t1 <= convertToMeters t2
 
-instance HasField "unSomeDistance" (SomeDistance a) a where
+instance HasField "unSomeDistance" (SomeDistance a) (Positive a) where
   getField (MkSomeDistance _ (MkDistance x)) = x
 
 instance (Show a) => Show (SomeDistance a) where
@@ -251,61 +246,33 @@ instance (Display a, Toℚ a) => Display (SomeDistance a) where
 -------------------------------------------------------------------------------
 
 instance
-  ( ASemigroup a,
-    Fromℤ a,
-    MGroup a
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a
   ) =>
   ASemigroup (SomeDistance a)
   where
   (.+.) = liftSomeDist2 (.+.)
 
-instance (Fromℤ a, Semifield a) => AMonoid (SomeDistance a) where
-  zero = MkSomeDistance SMeter zero
-
-instance (Field a, Fromℤ a) => AGroup (SomeDistance a) where
-  (.-.) = liftSomeDist2 (.-.)
-
-instance (MSemigroup a) => MSemiSpace (SomeDistance a) a where
+instance (MSemigroup a) => MSemiSpace (SomeDistance a) (Positive a) where
   MkSomeDistance u x .* k = MkSomeDistance u (x .* k)
 
-instance (MGroup a) => MSpace (SomeDistance a) a where
+instance (MGroup a) => MSpace (SomeDistance a) (Positive a) where
   MkSomeDistance u x .% k = MkSomeDistance u (x .% k)
-
-instance (Fromℤ a, Semifield a) => Semimodule (SomeDistance a) a
-
-instance (Fromℤ a, Semifield a) => SemivectorSpace (SomeDistance a) a
-
-instance (Field a, Fromℤ a) => Module (SomeDistance a) a
-
-instance (Field a, Fromℤ a) => VectorSpace (SomeDistance a) a
-
--------------------------------------------------------------------------------
---                             Numeric Conversions                           --
--------------------------------------------------------------------------------
-
-instance (Fromℚ a) => FromRational (SomeDistance a) where
-  fromQ = MkSomeDistance SMeter . fromQ
-
-instance (Fromℤ a, MGroup a, Toℚ a) => ToRational (SomeDistance a) where
-  toQ = toQ . convertToMeters
-
-instance (Fromℝ a) => FromReal (SomeDistance a) where
-  fromR = MkSomeDistance SMeter . fromR
-
-instance (Fromℤ a, MGroup a, Toℝ a) => ToReal (SomeDistance a) where
-  toR = toR . convertToMeters
-
-instance (Fromℤ a) => FromInteger (SomeDistance a) where
-  fromZ = MkSomeDistance SMeter . fromZ
-
-instance (Fromℤ a, MGroup a, Toℤ a) => ToInteger (SomeDistance a) where
-  toZ = toZ . convertToMeters
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
 -------------------------------------------------------------------------------
 
-instance (Fromℤ a, MGroup a) => ConvertDistance (SomeDistance a) where
+instance
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  ConvertDistance (SomeDistance a)
+  where
   type ConvertedDistance (SomeDistance a) e = Distance e a
   type ToConstraints (SomeDistance a) _ = ()
 
@@ -330,7 +297,15 @@ instance HasDistance (SomeDistance a) where
 --
 -- Uses Distance's instance and adds units e.g. '4 km'.
 -- See NOTE: [Distance Parsing]
-instance (Fromℚ a, Parser a) => Parser (SomeDistance a) where
+instance
+  ( AMonoid a,
+    Fromℚ a,
+    Ord a,
+    Parser a,
+    Show a
+  ) =>
+  Parser (SomeDistance a)
+  where
   parser =
     distanceParser >>= \case
       DistParseMarathon -> pure $ MkSomeDistance SKilometer marathon
@@ -363,8 +338,15 @@ distanceParser = do
 --                                    Misc                                   --
 -------------------------------------------------------------------------------
 
+liftSomeDist ::
+  (Fromℤ a, Ord a, Semifield a, Show a) =>
+  (forall d. Distance d a -> Distance d a) ->
+  SomeDistance a ->
+  SomeDistance a
+liftSomeDist f x = hideDistance (f $ convertToMeters x)
+
 liftSomeDist2 ::
-  (Fromℤ a, MGroup a) =>
+  (Fromℤ a, Ord a, Semifield a, Show a) =>
   (forall d. Distance d a -> Distance d a -> Distance d a) ->
   SomeDistance a ->
   SomeDistance a ->
@@ -374,30 +356,37 @@ liftSomeDist2 f x y =
 
 -- NOTE: Values hardcoded rather than multiplied by factor to avoid some
 -- (minor) float rounding.
+--
+-- Also, it might be nice to use TH here instead of the unsafe fromℚ.
+-- Alas, typed TH does not work with class constraints, apparently:
+--
+-- https://stackoverflow.com/a/65406350
+--
+-- Fleeting attempts with untyped TH do not work either.
 
 -- | Marathon.
-marathon :: forall d a. (Fromℚ a, SingI d) => Distance d a
+marathon :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
 marathon = case sing @d of
   SMeter -> MkDistance $ fromℚ 42_195
   SKilometer -> MkDistance $ fromℚ 42.195
   SMile -> MkDistance $ fromℚ 26.2188
 
 -- | Half marathon.
-halfMarathon :: forall d a. (Fromℚ a, SingI d) => Distance d a
+halfMarathon :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
 halfMarathon = case sing @d of
   SMeter -> MkDistance $ fromℚ 21_097.5
   SKilometer -> MkDistance $ fromℚ 21.0975
   SMile -> MkDistance $ fromℚ 13.1094
 
 -- | 10 km.
-k_10 :: forall d a. (Fromℚ a, SingI d) => Distance d a
+k_10 :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
 k_10 = case sing @d of
   SMeter -> MkDistance $ fromℚ 10_000
   SKilometer -> MkDistance $ fromℚ 10
   SMile -> MkDistance $ fromℚ 6.21371
 
 -- | 5 km.
-k_5 :: forall d a. (Fromℚ a, SingI d) => Distance d a
+k_5 :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
 k_5 = case sing @d of
   SMeter -> MkDistance $ fromℚ 5_000
   SKilometer -> MkDistance $ fromℚ 5

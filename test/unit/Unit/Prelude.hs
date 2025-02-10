@@ -28,15 +28,10 @@ module Unit.Prelude
 
     -- * Constructors
     mkDistanceD,
-    mkDistancePD,
     mkSomeDistanceD,
-    mkSomeDistancePD,
     mkDurationD,
-    mkDurationPD,
     mkPaceD,
-    mkPacePD,
     mkSomePaceD,
-    mkSomePacePD,
 
     -- * Misc
     pShowBS,
@@ -149,34 +144,19 @@ hdiff :: (Show a, Show b) => a -> (a -> b -> Bool) -> b -> PropertyT IO ()
 hdiff = H.diff
 
 mkDistanceD :: forall t. Double -> Distance t Double
-mkDistanceD = MkDistance
-
-mkDistancePD :: forall t. Double -> Distance t PDouble
-mkDistancePD = MkDistance . unsafePositive
+mkDistanceD = MkDistance . unsafePositive
 
 mkSomeDistanceD :: SDistanceUnit d -> Double -> SomeDistance Double
 mkSomeDistanceD s = MkSomeDistance s . mkDistanceD
 
-mkSomeDistancePD :: SDistanceUnit d -> Double -> SomeDistance PDouble
-mkSomeDistancePD s = MkSomeDistance s . mkDistancePD
-
 mkDurationD :: Double -> Duration Double
-mkDurationD = MkDuration
-
-mkDurationPD :: Double -> Duration PDouble
-mkDurationPD = MkDuration . unsafePositive
+mkDurationD = MkDuration . unsafePositive
 
 mkPaceD :: forall d. (PaceDistF d) => Double -> Pace d Double
-mkPaceD = MkPace . MkDuration
-
-mkPacePD :: forall d. (PaceDistF d) => Double -> Pace d PDouble
-mkPacePD = MkPace . MkDuration . unsafePositive
+mkPaceD = MkPace . MkDuration . unsafePositive
 
 mkSomePaceD :: forall d. (PaceDistF d) => SDistanceUnit d -> Double -> SomePace Double
 mkSomePaceD s = MkSomePace s . mkPaceD
-
-mkSomePacePD :: forall d. (PaceDistF d) => SDistanceUnit d -> Double -> SomePace PDouble
-mkSomePacePD s = MkSomePace s . mkPacePD
 
 data GoldenParams = MkGoldenParams
   { testDesc :: TestName,

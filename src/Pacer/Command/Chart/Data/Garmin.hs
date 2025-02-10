@@ -68,8 +68,11 @@ data GarminRun d a = MkGarminRun
   deriving stock (Eq, Show)
 
 instance
-  ( Fromℚ a,
+  ( AMonoid a,
+    Fromℚ a,
+    Ord a,
     P.Parser a,
+    Show a,
     SingI d
   ) =>
   FromNamedRecord (GarminAct d a)
@@ -83,9 +86,11 @@ instance
 
 parseGarminRow ::
   forall a d.
-  ( Fromℚ a,
+  ( AMonoid a,
+    Fromℚ a,
+    Ord a,
     P.Parser a,
-    P.Parser (Duration a),
+    Show a,
     SingI d
   ) =>
   NamedRecord ->
@@ -158,11 +163,11 @@ readRunsCsv @es inputDistUnit csvPath = do
       ByteString ->
       Eff es (List (SomeRun Double))
     bsToRuns d bs =
-      case Csv.decodeByName @(GarminAct d PDouble) (fromStrictBS bs) of
+      case Csv.decodeByName @(GarminAct d Double) (fromStrictBS bs) of
         Left err -> throwM $ GarminDecode err
         Right (_, rs) -> foldGarmin [] rs
 
-    toSomeRun :: (SingI d) => GarminRun d PDouble -> SomeRun Double
+    toSomeRun :: (SingI d) => GarminRun d Double -> SomeRun Double
     toSomeRun @d gr =
       MkSomeRun (sing @d)
         $ MkRun
@@ -177,7 +182,7 @@ readRunsCsv @es inputDistUnit csvPath = do
       forall d.
       (SingI d) =>
       List (SomeRun Double) ->
-      Records (GarminAct d PDouble) ->
+      Records (GarminAct d Double) ->
       Eff es (List (SomeRun Double))
     foldGarmin acc = \case
       (Nil Nothing leftover) -> do

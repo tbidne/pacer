@@ -245,17 +245,17 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
       where
         runMoment = MomentTimestamp r.datetime
 
-    applyDist :: SomeRun a -> FilterOp -> SomeDistance (Positive a) -> Bool
+    applyDist :: SomeRun a -> FilterOp -> SomeDistance a -> Bool
     applyDist (MkSomeRun @runDist sr r) op fDist =
       withSingI sr $ (opToFun op) r.distance fDist'
       where
-        fDist' :: Distance runDist (Positive a)
+        fDist' :: Distance runDist a
         fDist' = withSingI sr $ DistU.convertDistance runDist fDist
 
-    applyDur :: SomeRun a -> FilterOp -> Duration (Positive a) -> Bool
+    applyDur :: SomeRun a -> FilterOp -> Duration a -> Bool
     applyDur (MkSomeRun _ r) op = (opToFun op) r.duration
 
-    applyPace :: SomeRun a -> FilterOp -> SomePace (Positive a) -> Bool
+    applyPace :: SomeRun a -> FilterOp -> SomePace a -> Bool
     applyPace someRun@(MkSomeRun _ _) op (MkSomePace sfp fPace) =
       -- 1. convert someRun to runPace
       case Run.deriveSomePace someRun of
@@ -264,7 +264,7 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
           withSingI srp
             $ withSingI sfp
             $ case DistU.convertDistance runDist fPace of
-              fPace' -> (opToFun op) runPace ((.unPositive) <$> fPace')
+              fPace' -> (opToFun op) runPace fPace'
 
     opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
     opToFun FilterOpEq = (==)

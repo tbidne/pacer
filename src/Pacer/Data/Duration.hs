@@ -9,6 +9,8 @@ module Pacer.Data.Duration
 
     -- ** Functions
     toTimeString,
+    liftDuration,
+    liftDuration2,
   )
 where
 
@@ -22,8 +24,8 @@ import Pacer.Prelude
 
 -- | Represents time as seconds.
 type Duration :: Type -> Type
-newtype Duration a = MkDuration {unDuration :: a}
-  deriving stock (Functor, Show)
+newtype Duration a = MkDuration {unDuration :: Positive a}
+  deriving stock (Show)
 
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
@@ -69,47 +71,11 @@ instance
 instance (ASemigroup a) => ASemigroup (Duration a) where
   (.+.) = liftDuration2 (.+.)
 
-instance (AMonoid a) => AMonoid (Duration a) where
-  zero = MkDuration zero
-
-instance (AGroup a) => AGroup (Duration a) where
-  (.-.) = liftDuration2 (.-.)
-
-instance (MSemigroup a) => MSemiSpace (Duration a) a where
+instance (MSemigroup a) => MSemiSpace (Duration a) (Positive a) where
   MkDuration x .* k = MkDuration (x .*. k)
 
-instance (MGroup a) => MSpace (Duration a) a where
+instance (MGroup a) => MSpace (Duration a) (Positive a) where
   MkDuration x .% k = MkDuration (x .%. k)
-
-instance (Semiring a) => Semimodule (Duration a) a
-
-instance (Semifield a) => SemivectorSpace (Duration a) a
-
-instance (Ring a) => Module (Duration a) a
-
-instance (Field a) => VectorSpace (Duration a) a
-
--------------------------------------------------------------------------------
---                             Numeric Conversions                           --
--------------------------------------------------------------------------------
-
-instance (Fromℚ a) => FromRational (Duration a) where
-  fromQ = MkDuration . fromQ
-
-instance (Toℚ a) => ToRational (Duration a) where
-  toQ (MkDuration x) = toQ x
-
-instance (Fromℤ a) => FromInteger (Duration a) where
-  fromZ = MkDuration . fromℤ
-
-instance (Toℤ a) => ToInteger (Duration a) where
-  toZ (MkDuration x) = toZ x
-
-instance (Fromℝ a) => FromReal (Duration a) where
-  fromR = MkDuration . fromR
-
-instance (Toℝ a) => ToReal (Duration a) where
-  toR (MkDuration x) = toR x
 
 -------------------------------------------------------------------------------
 --                                   Parsing                                 --
@@ -124,44 +90,32 @@ instance (Toℝ a) => ToReal (Duration a) where
 -- See NOTE: [SomeDuration Parsing]
 
 instance
-  {-# OVERLAPPABLE #-}
-  (Fromℤ a) =>
+  (AMonoid a, Fromℤ a, Ord a, Show a) =>
   Parser (Duration a)
   where
   parser = do
     -- read text like "1d2h3m4s", parse w/ relative time into seconds.
-    seconds <- P.parseTimeString
-    -- convert to requested units
-    pure $ MkDuration seconds
-
-instance
-  {-# OVERLAPPING #-}
-  ( Fromℤ a,
-    Ord a,
-    Semifield a,
-    Show a
-  ) =>
-  Parser (Duration (Positive a))
-  where
-  parser = do
-    -- reuse non-positive parser
-    MkDuration x <- parser @(Duration a)
-    y <- mkPositiveFail x
-    pure $ MkDuration y
+    MkDuration <$> P.parsePosTimeString
 
 -------------------------------------------------------------------------------
 --                                    Misc                                   --
 -------------------------------------------------------------------------------
 
+liftDuration ::
+  (Positive a -> Positive a) ->
+  Duration a ->
+  Duration a
+liftDuration f (MkDuration x) = MkDuration (f x)
+
 liftDuration2 ::
-  (a -> a -> a) ->
+  (Positive a -> Positive a -> Positive a) ->
   Duration a ->
   Duration a ->
   Duration a
 liftDuration2 f (MkDuration x) (MkDuration y) = MkDuration (f x y)
 
 toHrMinSec :: (Toℚ a) => Duration a -> Tuple3 Word32 Word32 Word32
-toHrMinSec d = normalizeTime (h_init, m_init, s_init)
+toHrMinSec (MkDuration d) = normalizeTime (h_init, m_init, s_init)
   where
     -- total_seconds: duration in seconds, via a -> Rational -> Double
     total_seconds :: Double

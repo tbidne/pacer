@@ -130,7 +130,7 @@ genTextDoublePos = do
     [ showt <$> genInt,
       do
         n <- genInt
-        d <- G.integral @_ @Int (R.exponentialFrom 1 1 1_000)
+        d <- genFrac
         pure
           $ mconcat
             [ showt n,
@@ -140,6 +140,9 @@ genTextDoublePos = do
     ]
   where
     genInt = G.integral @_ @Int (R.exponentialFrom 1 1 1_000_000)
+
+    -- gen 2 decimal places max
+    genFrac = G.integral @_ @Int (R.exponentialFrom 0 0 99)
 
 -- | Generate double text like "25.349".
 genTextDoubleMax :: Int -> Gen Text

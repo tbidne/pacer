@@ -62,7 +62,7 @@ import Pacer.Prelude
 -- an entirely different meaning. Therefore it makes sense to have the units
 -- optional here, so we might as well make the units optional wherever
 -- sensible.
-type PaceOptUnits a = Either (SomePace (Positive a)) (Duration (Positive a))
+type PaceOptUnits a = Either (SomePace a) (Duration a)
 
 paceOptUnitsParserHelp ::
   forall a.
@@ -102,9 +102,9 @@ paceOptUnitsParserHelp helpTxt =
 
 data DistancePaceArgs a = MkDistancePaceArgs
   { -- | Possible distance.
-    mSomeDistance :: Maybe (SomeDistance (Positive a)),
+    mSomeDistance :: Maybe (SomeDistance a),
     -- | Possible pace.
-    mSomePace :: Maybe (SomePace (Positive a))
+    mSomePace :: Maybe (SomePace a)
   }
   deriving stock (Eq, Show)
 
@@ -131,11 +131,11 @@ dpArgsParser = do
 -- exactly 2 and 1, respectively.
 data DistanceDurationPaceArgs a = MkDistanceDurationPaceArgs
   { -- | Possible duration.
-    mDuration :: Maybe (Duration (Positive a)),
+    mDuration :: Maybe (Duration a),
     -- | Possible pace.
     mPaceOptUnits :: Maybe (PaceOptUnits a),
     -- | Possible distance.
-    mSomeDistance :: Maybe (SomeDistance (Positive a))
+    mSomeDistance :: Maybe (SomeDistance a)
   }
   deriving stock (Eq, Show)
 
@@ -182,7 +182,7 @@ durationParser ::
     Semifield a,
     Show a
   ) =>
-  Parser (Duration (Positive a))
+  Parser (Duration a)
 durationParser =
   OA.option
     readParseable
@@ -201,7 +201,7 @@ someDistanceParser ::
     P.Parser a,
     Show a
   ) =>
-  Parser (SomeDistance (Positive a))
+  Parser (SomeDistance a)
 someDistanceParser =
   OA.option
     readParseable
@@ -219,7 +219,7 @@ somePaceParser ::
     Semifield a,
     Show a
   ) =>
-  Parser (SomePace (Positive a))
+  Parser (SomePace a)
 somePaceParser =
   OA.option
     readParseable

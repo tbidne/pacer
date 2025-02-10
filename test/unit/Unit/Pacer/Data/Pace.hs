@@ -4,7 +4,6 @@ module Unit.Pacer.Data.Pace
 
     -- * Generators
     genSomePace,
-    genSomePacePos,
   )
 where
 
@@ -63,29 +62,19 @@ testParsePaceCases = testCase "Parses text to expected SomePace" $ do
   -- because of the PaceDistF constraint.
   for_ vals $ \(e, t) -> do
     Ok (mkPaceD @Kilometer e) @=? Parser.parse t
-    Ok (mkPacePD @Kilometer e) @=? Parser.parse t
     Ok (mkPaceD @Mile e) @=? Parser.parse t
-    Ok (mkPacePD @Mile e) @=? Parser.parse t
 
     Ok (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
-    Ok (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /km")
     Ok (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /kilometer")
-    Ok (mkSomePacePD SKilometer e) @=? Parser.parse (t <> " /kilometer")
     Ok (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
-    Ok (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mi")
     Ok (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mile")
-    Ok (mkSomePacePD SMile e) @=? Parser.parse (t <> " /mile")
 
-  for_ zVals $ \(e, t) -> do
-    Ok (mkPaceD @Kilometer e) @=? Parser.parse t
-    assertErr "PDouble zero" $ Parser.parse @(Pace Kilometer PDouble) t
-    Ok (mkPaceD @Mile e) @=? Parser.parse t
-    assertErr "PDouble zero" $ Parser.parse @(Pace Mile PDouble) t
+  for_ zVals $ \t -> do
+    assertErr "PDouble zero" $ Parser.parse @(Pace Kilometer Double) t
+    assertErr "PDouble zero" $ Parser.parse @(Pace Mile Double) t
 
-    Ok (mkSomePaceD SKilometer e) @=? Parser.parse (t <> " /km")
-    assertErr "PDouble zero" $ Parser.parse @(SomePace PDouble) (t <> " /km")
-    Ok (mkSomePaceD SMile e) @=? Parser.parse (t <> " /mi")
-    assertErr "PDouble zero" $ Parser.parse @(Pace Mile PDouble) (t <> " /mi")
+    assertErr "PDouble zero" $ Parser.parse @(SomePace Double) (t <> " /km")
+    assertErr "PDouble zero" $ Parser.parse @(Pace Mile Double) (t <> " /mi")
   where
     vals =
       [ (3_600, "1h"),
@@ -98,13 +87,13 @@ testParsePaceCases = testCase "Parses text to expected SomePace" $ do
       ]
 
     zVals =
-      [ (0, "0h"),
-        (0, "0h0m"),
-        (0, "0h0m00s"),
-        (0, "0m"),
-        (0, "0m0s"),
-        (0, "0s"),
-        (0, "0")
+      [ "0h",
+        "0h0m",
+        "0h0m00s",
+        "0m",
+        "0m0s",
+        "0s",
+        "0"
       ]
 
 testParsePaceFailureCases :: TestTree
@@ -113,21 +102,15 @@ testParsePaceFailureCases = testCase "Parse failures" $ do
   for_ bothVals $ \(d, t) -> do
     assertErr d $ Parser.parseAll @(Pace Kilometer Double) t
     assertErr d $ Parser.parseAll @(Pace Mile Double) t
-    assertErr d $ Parser.parseAll @(Pace Kilometer PDouble) t
-    assertErr d $ Parser.parseAll @(Pace Mile PDouble) t
 
     assertErr d $ Parser.parseAll @(SomePace Double) t
-    assertErr d $ Parser.parseAll @(SomePace PDouble) t
 
   for_ vals $ \(d, t) -> do
     assertErr d $ Parser.parseAll @(Pace Kilometer Double) t
-    assertErr d $ Parser.parseAll @(Pace Kilometer PDouble) t
     assertErr d $ Parser.parseAll @(Pace Mile Double) t
-    assertErr d $ Parser.parseAll @(Pace Mile PDouble) t
 
   for_ someVals $ \(d, t) -> do
     assertErr d $ Parser.parseAll @(SomePace Double) t
-    assertErr d $ Parser.parseAll @(SomePace PDouble) t
   where
     bothVals =
       [ ("Empty", ""),
@@ -152,13 +135,13 @@ displayTests =
 
 testDisplayCases :: TestTree
 testDisplayCases = testCase "Displays expected" $ do
-  "5'20\" /km" @=? display (MkPace @Kilometer @Double (MkDuration 320))
-  "5'20\" /mi" @=? display (MkPace @Mile @Double (MkDuration 320))
-  "5'20\" /km" @=? display (MkSomePace @_ @Double SKilometer (MkPace $ MkDuration 320))
-  "5'20\" /mi" @=? display (MkSomePace @_ @Double SMile (MkPace $ MkDuration 320))
+  "5'20\" /km" @=? display (MkPace @Kilometer @Double (MkDuration $ fromℤ 320))
+  "5'20\" /mi" @=? display (MkPace @Mile @Double (MkDuration $ fromℤ 320))
+  "5'20\" /km" @=? display (MkSomePace @_ @Double SKilometer (MkPace $ MkDuration $ fromℤ 320))
+  "5'20\" /mi" @=? display (MkSomePace @_ @Double SMile (MkPace $ MkDuration $ fromℤ 320))
 
 genPaceText :: Gen Text
-genPaceText = D.genDurationText
+genPaceText = D.genDurationPosText
 
 genSomePaceText :: Gen Text
 genSomePaceText = do
@@ -176,17 +159,7 @@ genSomePaceText = do
 genSomePace :: Gen (SomePace Double)
 genSomePace = do
   u <- Units.genDistanceUnit
-  seconds <- Duration.genSeconds
-
-  case u of
-    Meter -> pure $ MkSomePace SKilometer (MkPace seconds)
-    Kilometer -> pure $ MkSomePace SKilometer (MkPace seconds)
-    Mile -> pure $ MkSomePace SMile (MkPace seconds)
-
-genSomePacePos :: Gen (SomePace PDouble)
-genSomePacePos = do
-  u <- Units.genDistanceUnit
-  seconds <- Duration.genSecondsPos
+  seconds <- Duration.genDuration
 
   case u of
     Meter -> pure $ MkSomePace SKilometer (MkPace seconds)

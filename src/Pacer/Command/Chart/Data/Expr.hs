@@ -92,16 +92,17 @@ instance Parser FilterOp where
 
 -- | Ways in which we can filter runs.
 data FilterType a
-  = FilterDistance FilterOp (SomeDistance (Positive a))
-  | FilterDuration FilterOp (Duration (Positive a))
+  = FilterDistance FilterOp (SomeDistance a)
+  | FilterDuration FilterOp (Duration a)
   | -- | Filters by label equality.
     FilterLabel Text
   | FilterDate FilterOp Moment
-  | FilterPace FilterOp (SomePace (Positive a))
+  | FilterPace FilterOp (SomePace a)
   deriving stock (Eq, Show)
 
 instance
   ( AMonoid a,
+    Display a,
     Fromℤ a,
     MSemigroup a,
     Ord a,

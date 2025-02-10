@@ -17,7 +17,8 @@ import Pacer.Prelude
 -- | Handles scale command.
 handle ::
   forall es a.
-  ( Fromℤ a,
+  ( Display a,
+    Fromℤ a,
     HasCallStack,
     Ord a,
     Semifield a,

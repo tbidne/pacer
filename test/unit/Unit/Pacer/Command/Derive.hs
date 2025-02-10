@@ -6,8 +6,7 @@ where
 
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Data.Distance
-  ( Distance (MkDistance),
-    SomeDistance (MkSomeDistance),
+  ( SomeDistance (MkSomeDistance),
   )
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer),
@@ -17,8 +16,8 @@ import Pacer.Data.Distance.Units
       ),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Duration (MkDuration))
-import Pacer.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
+import Pacer.Data.Duration (Duration)
+import Pacer.Data.Pace (SomePace)
 import Unit.Pacer.Data.Distance qualified as Unit.Distance
 import Unit.Pacer.Data.Duration qualified as Unit.Duration
 import Unit.Pacer.Data.Pace qualified as Unit.Pace
@@ -43,7 +42,7 @@ testDeriveDistance =
     (go <$> quantities)
   where
     go (paceTxt, distTxt, durationTxt) = testCase desc $ do
-      let pace :: SomePace PDouble
+      let pace :: SomePace Double
           pace = parseOrDie paceTxt
 
           -- When calculating distance, pace must be given units, and the
@@ -51,7 +50,7 @@ testDeriveDistance =
           -- our arguments in quantities may be given in meters (for other
           -- testing), here it must be km. We therefore convert meters to
           -- kilometers.
-          distOut = parseOrDie @(SomeDistance PDouble) distTxt
+          distOut = parseOrDie @(SomeDistance Double) distTxt
           distOut' = case distOut of
             MkSomeDistance s dist -> case s of
               SMeter ->
@@ -112,7 +111,7 @@ testDerivePace =
     (go <$> quantities)
   where
     go (paceTxt, distTxt, durationTxt) = testCase desc $ do
-      let dist :: SomeDistance PDouble
+      let dist :: SomeDistance Double
           dist = parseOrDie distTxt
 
           paceDispTxt = display $ parseOrDie @(SomePace Double) paceTxt
@@ -134,13 +133,13 @@ testDerivePace =
                 paceTxt
               ]
 
-displaySomeDistance :: Duration Double -> SomePace PDouble -> Text
+displaySomeDistance :: Duration Double -> SomePace Double -> Text
 displaySomeDistance duration = display . Derive.deriveSomeDistance duration
 
 displaySomeDuration :: SomeDistance Double -> SomePace Double -> Text
 displaySomeDuration dist = display . Derive.deriveSomeDuration dist
 
-displaySomePace :: SomeDistance PDouble -> Duration Double -> Text
+displaySomePace :: SomeDistance Double -> Duration Double -> Text
 displaySomePace dist = display . Derive.deriveSomePace dist
 
 -- Pace, Distance, Time for testing calculations. In general, these values
@@ -172,28 +171,19 @@ quantities =
 testDeriveDistanceInvariance :: TestTree
 testDeriveDistanceInvariance = testPropertyNamed name desc $ property $ do
   -- Setup
-  durationPos <- forAll Unit.Duration.genSecondsPos
-  pacePos <- forAll Unit.Pace.genSomePacePos
-
-  let durationN = (.unPositive) <$> durationPos
-      paceN = (.unPositive) <$> pacePos
+  duration <- forAll Unit.Duration.genDuration
+  pace <- forAll Unit.Pace.genSomePace
 
   -- Derive Distance
-  let distDerivedN = Derive.deriveSomeDistance durationN pacePos
-  distDerivedPos <- case mkPositive <$> distDerivedN of
-    MkSomeDistance _ (MkDistance Nothing) -> do
-      annotate $ "Derived distance should be non-zero: " ++ show distDerivedN
-      failure
-    MkSomeDistance s (MkDistance (Just d)) ->
-      pure $ MkSomeDistance s (MkDistance d)
+  let distDerived = Derive.deriveSomeDistance duration pace
 
   -- Use derived Distance to derive duration and pace
-  let durationDerivedN = Derive.deriveSomeDuration distDerivedN paceN
-      paceDerivedN = Derive.deriveSomePace distDerivedPos durationN
+  let durationDerived = Derive.deriveSomeDuration distDerived pace
+      paceDerived = Derive.deriveSomePace distDerived duration
 
   -- Comparisons
-  durationN === durationDerivedN
-  paceN === paceDerivedN
+  duration === durationDerived
+  pace === paceDerived
   where
     name = "testDeriveDistanceInvariance"
     desc = "Tests derived distance invariants"
@@ -201,29 +191,20 @@ testDeriveDistanceInvariance = testPropertyNamed name desc $ property $ do
 testDeriveDurationInvariance :: TestTree
 testDeriveDurationInvariance = testPropertyNamed name desc $ property $ do
   -- Setup
-  distPos <- forAll Unit.Distance.genSomeDistancePos
-  pacePos <- forAll Unit.Pace.genSomePacePos
-
-  let distN = (.unPositive) <$> distPos
-      paceN = (.unPositive) <$> pacePos
+  dist <- forAll Unit.Distance.genSomeDistance
+  pace <- forAll Unit.Pace.genSomePace
 
   -- Derive Duration
-  let durationDerivedN = Derive.deriveSomeDuration distN paceN
+  let durationDerived = Derive.deriveSomeDuration dist pace
 
   -- Use derived Duration to derive distance and pace
-  let distDerivedN = Derive.deriveSomeDistance durationDerivedN pacePos
-  distDerivedPos <- case mkPositive <$> distDerivedN of
-    MkSomeDistance _ (MkDistance Nothing) -> do
-      annotate $ "Derived distance should be non-zero: " ++ show distDerivedN
-      failure
-    MkSomeDistance s (MkDistance (Just d)) ->
-      pure $ MkSomeDistance s (MkDistance d)
+  let distDerived = Derive.deriveSomeDistance durationDerived pace
 
-  let paceDerivedN = Derive.deriveSomePace distDerivedPos durationDerivedN
+  let paceDerived = Derive.deriveSomePace distDerived durationDerived
 
   -- Comparisons
-  distN === distDerivedN
-  paceN === paceDerivedN
+  dist === distDerived
+  pace === paceDerived
   where
     name = "testDeriveDurationInvariance"
     desc = "Tests derived distance invariants"
@@ -231,30 +212,19 @@ testDeriveDurationInvariance = testPropertyNamed name desc $ property $ do
 testDerivePaceInvariance :: TestTree
 testDerivePaceInvariance = testPropertyNamed name desc $ property $ do
   -- Setup
-  distPos <- forAll Unit.Distance.genSomeDistancePos
-  durationPos <- forAll Unit.Duration.genSecondsPos
-
-  let distN = (.unPositive) <$> distPos
-      durationN = (.unPositive) <$> durationPos
+  dist <- forAll Unit.Distance.genSomeDistance
+  duration <- forAll Unit.Duration.genDuration
 
   -- Derive Pace
-  let paceDerivedN = Derive.deriveSomePace distPos durationN
-
-  paceDerivedPos <- case mkPositive <$> paceDerivedN of
-    MkSomePace _ (MkPace (MkDuration Nothing)) -> do
-      annotate $ "Derived pace should be non-zero: " ++ show paceDerivedN
-      failure
-    MkSomePace s (MkPace (MkDuration (Just seconds))) ->
-      pure $ MkSomePace s (MkPace (MkDuration seconds))
+  let paceDerived = Derive.deriveSomePace dist duration
 
   -- Use derived Pace to derive distance and duration
-  let distDeriveN =
-        Derive.deriveSomeDistance durationN paceDerivedPos
-      durationDerivedN = Derive.deriveSomeDuration distN paceDerivedN
+  let distDerived = Derive.deriveSomeDistance duration paceDerived
+      durationDerived = Derive.deriveSomeDuration dist paceDerived
 
   -- Comparisons
-  distN === distDeriveN
-  durationN === durationDerivedN
+  dist === distDerived
+  duration === durationDerived
   where
     name = "testDerivePaceInvariance"
     desc = "Tests derived pace invariants"
