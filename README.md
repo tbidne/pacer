@@ -70,7 +70,7 @@ will generate an html page with several charts like this one:
 
 ![example_chart](examples/chart.png)
 
-See the `examples/` director for more information.
+See the `examples/` directory for more information.
 
 ## Convert
 
