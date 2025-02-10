@@ -197,6 +197,10 @@ Once you have `stack`, `pacer` can be built with `stack build` or installed glob
 
 * [nix](https://nixos.org/download.html)
 
+> [!TIP]
+>
+> The nix build comes packaged with `node`, so there is no need to install it separately to use the `chart` command.
+
 ### Manually
 
 Building with `nix` uses [flakes](https://nixos.wiki/wiki/Flakes). `pacer` can be built with `nix build`, which will compile and run the tests.

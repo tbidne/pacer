@@ -162,8 +162,14 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           nix_path: nixpkgs=channel:nixos-unstable
 
-      - name: Compile & Test
+      - name: Compile & run tests
         run: nix build -L
+
+      # Enter dev shell w/o npm.
+      # yamllint disable rule:line-length
+      - name: Test executable
+        run: nix develop --unset PATH .#ci -c bash -c ".github/scripts/nix_test.sh"
+        # yamllint enable
 
   lint:
     runs-on: "ubuntu-latest"
@@ -181,7 +187,7 @@ jobs:
           nix run .#format
           git diff --exit-code --color=always
 
-      - name: HLint
+      - name: Lint
         run: nix run .#lint
 # TODO: Re-enable once hlint is working with ghc 9.10.
 #

@@ -117,6 +117,7 @@
             inherit pkgs;
             mkDrv = false;
           };
+          node = pkgs.nodejs_23;
 
           mkPkg =
             returnShellEnv:
@@ -124,6 +125,24 @@
               inherit compiler pkgs returnShellEnv;
               name = "pacer";
               root = ./.;
+
+              modifier =
+                drv:
+                drv.overrideAttrs (oldAttrs: {
+                  # So wrapProgram is available in postFixup
+                  nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ [ pkgs.makeWrapper ];
+
+                  # This is apparently unnecessary, but knowing what version of
+                  # node pacer is using could be helpful.
+                  installPhase =
+                    oldAttrs.installPhase
+                    + ''
+                      ln -s ${node.out}/bin/npm $out/bin/npm
+                    '';
+                  postFixup = ''
+                    wrapProgram $out/bin/pacer --prefix PATH : ${pkgs.lib.makeBinPath webDeps}
+                  '';
+                });
 
               # TODO: Once hlint is back to working with our GHC we can
               # use nix-hs-utils.mkDevTools ++ webDeps.
@@ -143,13 +162,20 @@
             '';
           };
 
-          webDeps = [ pkgs.nodejs_23 ];
+          webDeps = [ node ];
         in
         {
           packages.default = mkPkg false;
 
           devShells = {
             default = mkPkg true;
+
+            # Blank shell intended to be used with --unset PATH, to test that
+            # we are correctly bundling node dep (default github image has
+            # node, but we want to ensure we are using __our__ dep).
+            ci = pkgs.mkShell {
+              buildInputs = [ ];
+            };
 
             stack = pkgs.mkShell {
               buildInputs = [
