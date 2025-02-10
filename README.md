@@ -58,40 +58,12 @@ Charts are generated from two inputs:
 >
 > The `chart` command requires `npm` (nodejs) to be installed: https://nodejs.org/en/download
 
-### Usage
-
-```
-Usage: pacer chart [--chart-requests PATH] [-c|--clean] [-d|--data PATH]
-                   [-j|--json] [--runs PATH]
-
-  Generates charts based on a chart-requests file and a runs file. Requires npm
-  to be installed.
-
-
-Available options:
-  --chart-requests PATH    Optional path to chart-requests file. Overrides
-                           --data.
-
-  -c,--clean               If active, cleans prior build files.
-
-  -d,--data PATH           Path to data directory i.e. where we search for
-                           chart-requests file and runs file. If not given,
-                           defaults to the XDG config e.g. ~/.config/pacer/.
-
-  -j,--json                If active, stops after generating the intermediate
-                           json file. Primarily used for testing.
-
-  --runs PATH              Optional path to runs file. Overrides --data.
-
-  -h,--help                Show this help text
-```
-
 ### Examples
 
 Building the example here i.e.
 
 ```
-$ pacer chart -d examples/
+$ pacer chart --data examples/
 ```
 
 will generate an html page with several charts like this one:
@@ -103,25 +75,6 @@ See the `examples/` director for more information.
 ## Convert
 
 The `convert` command converts quantities to different units.
-
-### Usage
-
-```
-Usage: pacer convert [--distance DIST_STR] [--pace TIME_STR (/UNIT)]
-                     (-u|--unit UNIT)
-
-  Converts a quantity. Requires exactly one quantity and the unit.
-
-
-Available options:
-  --distance DIST_STR      A distance with units e.g. '4 km'.
-
-  --pace TIME_STR (/UNIT)  A pace e.g. '4m30s /km', '1h5m /mi'.
-
-  -u,--unit UNIT           Output unit e.g. 'km', 'miles'.
-
-  -h,--help                Show this help text
-```
 
 ### Examples
 
@@ -140,30 +93,6 @@ $ pacer convert --pace '5m20s /mi' --unit km
 ## Derive
 
 The `derive` command derives a third quantity from two others.
-
-### Usage
-
-```
-Usage: pacer derive [--duration TIME_STR] [--pace TIME_STR [/UNIT]]
-                    [--distance DIST_STR] [-u|--unit UNIT]
-
-  Given two quantities, derives the third. For instance, given a distance and a
-  duration, derives the pace.
-
-
-Available options:
-  --duration TIME_STR      A length of time e.g. '1h2m3s'.
-
-  --pace TIME_STR [/UNIT]  A pace e.g. '4m30s /km', '1h5m /mi', '4m30'. If the
-                           units are not given, we use the distance's units.
-                           Only kilometers and miles are allowed.
-
-  --distance DIST_STR      A distance with units e.g. '4 km'.
-
-  -u,--unit UNIT           Output unit e.g. 'km', 'miles'.
-
-  -h,--help                Show this help text
-```
 
 ### Examples
 
@@ -191,29 +120,6 @@ $ pacer derive --pace '5m45s /mi' --duration 20m
 ## Scale
 
 The `scale` command is used for scaling a single quantity.
-
-### Usage
-
-```
-Usage: pacer scale [--duration TIME_STR] [--pace TIME_STR [/UNIT]]
-                   [--distance DIST_STR] [-u|--unit UNIT] (-k|--factor POS_INT)
-
-  Scales a quantity. Requires exactly one quantity and the scale factor.
-
-
-Available options:
-  --duration TIME_STR      A length of time e.g. '1h2m3s'.
-
-  --pace TIME_STR [/UNIT]  A pace e.g. '4m30s /km', '1h5m /mi', '4m30'.
-
-  --distance DIST_STR      A distance with units e.g. '4 km'.
-
-  -u,--unit UNIT           Output unit e.g. 'km', 'miles'.
-
-  -k,--factor POS_INT      The scaling factor.
-
-  -h,--help                Show this help text
-```
 
 ### Examples
 
