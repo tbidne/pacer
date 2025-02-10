@@ -674,6 +674,108 @@ build/charts.json
         }
       }
     }
+  },
+  {
+    "datasets": {
+      "xAxis": [
+        "2022-12-05",
+        "2024-10-07",
+        "2024-10-14",
+        "2024-10-21",
+        "2024-10-28",
+        "2025-01-13",
+        "2025-01-20",
+        "2025-02-03"
+      ],
+      "yAxes": [
+        {
+          "data": [
+            11.63,
+            21.0975,
+            37.18,
+            42.195,
+            42.195,
+            3.77,
+            30.27,
+            11.510000000000002
+          ],
+          "fill": false,
+          "label": "distance",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y"
+        }
+      ]
+    },
+    "extra": {},
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
+        "title": {
+          "align": "center",
+          "color": "#c3c3c3",
+          "display": true,
+          "font": {
+            "size": 24
+          },
+          "text": "Runs by week"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
+        }
+      },
+      "pointHitRadius": 20,
+      "responsive": true,
+      "scales": {
+        "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "datetime"
+          },
+          "type": "timeseries"
+        },
+        "y": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "km"
+          }
+        }
+      }
+    }
   }
 ]
 

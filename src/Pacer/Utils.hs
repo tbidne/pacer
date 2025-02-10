@@ -13,6 +13,9 @@ module Pacer.Utils
     showtPath,
     showListF,
 
+    -- * Seq
+    seqGroupBy,
+
     -- * Misc
     PaceMetersErrMsg,
   )
@@ -20,6 +23,7 @@ where
 
 import Data.Aeson (Key, KeyValue ((.=)), ToJSON)
 import Data.Aeson.Types (Pair)
+import Data.Sequence qualified as Seq
 import FileSystem.OsPath qualified as OsPath
 import Pacer.Prelude
 import TOML (DecodeTOML (tomlDecoder), Decoder)
@@ -58,3 +62,12 @@ showListF f xs@(_ : _) = "[" <> go xs
     go [] = "]"
     go [y] = f y <> "]"
     go (y : ys) = f y <> ", " <> go ys
+
+seqGroupBy :: forall a. (a -> a -> Bool) -> Seq a -> Seq (NESeq a)
+seqGroupBy p = go
+  where
+    go :: Seq a -> Seq (NESeq a)
+    go Seq.Empty = Seq.Empty
+    go (x :<| xs) = (x :<|| ys) :<| go zs
+      where
+        (ys, zs) = Seq.spanl (p x) xs

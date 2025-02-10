@@ -11,6 +11,7 @@ module Pacer.Data.Distance
     -- ** Functions
     liftDist,
     liftDist2,
+    liftDistLeft2,
     forceUnit,
 
     -- ** Distances
@@ -25,6 +26,7 @@ module Pacer.Data.Distance
     -- ** Functions
     liftSomeDist,
     liftSomeDist2,
+    liftSomeDistLeft2,
 
     -- * Units
     DistanceUnit (..),
@@ -40,6 +42,7 @@ import Pacer.Data.Distance.Units
   ( ConvertDistance (ConvertedDistance, ToConstraints, convertDistance_),
     DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SKilometer, SMeter, SMile),
+    convertDistance,
     convertToMeters,
   )
 import Pacer.Prelude
@@ -187,6 +190,15 @@ liftDist2 ::
   Distance d a ->
   Distance d a
 liftDist2 f (MkDistance x) (MkDistance y) = MkDistance (f x y)
+
+liftDistLeft2 ::
+  forall d1 d2 a.
+  (Fromℤ a, Ord a, Semifield a, Show a, SingI d1, SingI d2) =>
+  (forall d. Distance d a -> Distance d a -> Distance d a) ->
+  Distance d1 a ->
+  Distance d2 a ->
+  Distance d1 a
+liftDistLeft2 f x = f x . convertDistance_ @_ @d1
 
 -------------------------------------------------------------------------------
 --                                SomeDistance                               --
@@ -345,6 +357,8 @@ liftSomeDist ::
   SomeDistance a
 liftSomeDist f x = hideDistance (f $ convertToMeters x)
 
+-- | Lifts a binary 'Distance' function to 'SomeDistance' by converting both
+-- arguments to meters.
 liftSomeDist2 ::
   (Fromℤ a, Ord a, Semifield a, Show a) =>
   (forall d. Distance d a -> Distance d a -> Distance d a) ->
@@ -353,6 +367,19 @@ liftSomeDist2 ::
   SomeDistance a
 liftSomeDist2 f x y =
   hideDistance (convertToMeters x `f` convertToMeters y)
+
+-- | Like 'liftSomeDist2', except we convert to the LHS units.
+liftSomeDistLeft2 ::
+  (Fromℤ a, Ord a, Semifield a, Show a) =>
+  (forall d. Distance d a -> Distance d a -> Distance d a) ->
+  SomeDistance a ->
+  SomeDistance a ->
+  SomeDistance a
+liftSomeDistLeft2 f (MkSomeDistance sx x) (MkSomeDistance sy y) =
+  withSingI sy $ case sx of
+    SMeter -> MkSomeDistance sx (x `f` convertToMeters y)
+    SKilometer -> MkSomeDistance sx (x `f` convertDistance Kilometer y)
+    SMile -> MkSomeDistance sx (x `f` convertDistance Mile y)
 
 -- NOTE: Values hardcoded rather than multiplied by factor to avoid some
 -- (minor) float rounding.

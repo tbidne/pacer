@@ -1,14 +1,32 @@
 module Pacer.Command.Chart.Data.Time
   ( -- * Timestamp
     Timestamp (..),
+
+    -- ** Conversions
+    timestampToYear,
+    timestampToYearMonth,
+
+    -- ** Predicates
     overlaps,
+    sameYear,
+    sameMonth,
+    sameWeek,
+
+    -- ** Rounding
+    roundTimestampYear,
+    roundTimestampMonth,
+    roundTimestampWeek,
+
+    -- ** Formatting
     fmtTimestamp,
 
     -- * Month
     Month (..),
+    monthToTimeMoY,
 
     -- * Year
     Year (..),
+    yearToTime,
 
     -- * Moment
     Moment (..),
@@ -33,6 +51,7 @@ import Data.Time
   )
 import Data.Time qualified as Time
 import Data.Time.Calendar qualified as Cal
+import Data.Time.Calendar.WeekDate qualified as Week
 import Data.Time.Format qualified as Format
 import Data.Time.LocalTime qualified as LT
 import Numeric.Data.Interval.Algebra
@@ -41,6 +60,7 @@ import Numeric.Data.Interval.Algebra
   )
 import Numeric.Data.Interval.Algebra qualified as Interval
 import Pacer.Class.Parser (Parser (parser))
+import Pacer.Data.Result (ResultDefault, errorErr)
 import Pacer.Prelude
 import TOML (DecodeTOML (tomlDecoder))
 import Text.Megaparsec qualified as MP
@@ -247,6 +267,20 @@ instance Display Month where
     Nov -> "11"
     Dec -> "12"
 
+monthToTimeMoY :: Month -> Int
+monthToTimeMoY Jan = 1
+monthToTimeMoY Feb = 2
+monthToTimeMoY Mar = 3
+monthToTimeMoY Apr = 4
+monthToTimeMoY May = 5
+monthToTimeMoY Jun = 6
+monthToTimeMoY Jul = 7
+monthToTimeMoY Aug = 8
+monthToTimeMoY Sep = 9
+monthToTimeMoY Oct = 10
+monthToTimeMoY Nov = 11
+monthToTimeMoY Dec = 12
+
 -------------------------------------------------------------------------------
 --                                   Year                                    --
 -------------------------------------------------------------------------------
@@ -276,6 +310,9 @@ instance Parser Year where
       Just y -> pure $ MkYear y
       Nothing ->
         fail $ "Expected a year in 1950 - 2099, received: " ++ show word
+
+yearToTime :: Year -> Integer
+yearToTime y = fromIntegral @Word16 @Integer y.unYear.unInterval
 
 -------------------------------------------------------------------------------
 --                                 Timestamp                                 --
@@ -421,50 +458,99 @@ x .< y = not (y .<= x)
 infix 4 .<
 
 timestampToYear :: Timestamp -> Year
-timestampToYear = \case
-  (TimestampDate d) -> toYear d
-  (TimestampTime (LocalTime d _)) -> toYear d
-  (TimestampZoned (ZonedTime (LocalTime d _) _)) -> toYear d
+timestampToYear = f . timestampToDay
   where
-    toYear :: Day -> Year
-    toYear =
-      MkYear
-        . Interval.unsafeInterval
-        . fromIntegral @Integer @Word16
-        . (\(y, _, _) -> y)
-        . Cal.toGregorian
+    f = fst . errorErr . dayToYearMonth
+
+roundTimestampYear :: Timestamp -> Timestamp
+roundTimestampYear ts = TimestampDate newDay
+  where
+    day = timestampToDay ts
+    (y, _, _) = Cal.toGregorian day
+
+    newDay = Cal.fromGregorian y 1 1
+
+roundTimestampMonth :: Timestamp -> Timestamp
+roundTimestampMonth ts = TimestampDate newDay
+  where
+    day = timestampToDay ts
+    (y, moy, _) = Cal.toGregorian day
+
+    newDay = Cal.fromGregorian y moy 1
+
+roundTimestampWeek :: Timestamp -> Timestamp
+roundTimestampWeek ts = TimestampDate newDay
+  where
+    day = timestampToDay ts
+
+    (y, woy, _) =
+      Week.toWeekCalendar Week.FirstWholeWeek Week.Monday day
+
+    newDay =
+      Week.fromWeekCalendar
+        Week.FirstWholeWeek
+        Week.Monday
+        y
+        woy
+        Week.Monday
 
 timestampToYearMonth :: Timestamp -> Tuple2 Year Month
-timestampToYearMonth = \case
-  (TimestampDate d) -> toYearMonth d
-  (TimestampTime (LocalTime d _)) -> toYearMonth d
-  (TimestampZoned (ZonedTime (LocalTime d _) _)) -> toYearMonth d
-  where
-    toYearMonth :: Day -> Tuple2 Year Month
-    toYearMonth =
-      (\(y, m, _) -> (toYear y, toMonth m))
-        . Cal.toGregorian
+timestampToYearMonth = errorErr . dayToYearMonth . timestampToDay
 
-    toYear :: Integer -> Year
-    toYear =
-      MkYear
-        . Interval.unsafeInterval
+timestampToDay :: Timestamp -> Day
+timestampToDay = \case
+  (TimestampDate d) -> d
+  (TimestampTime (LocalTime d _)) -> d
+  (TimestampZoned (ZonedTime (LocalTime d _) _)) -> d
+
+sameYear :: Timestamp -> Timestamp -> Bool
+sameYear ts1 ts2 = y1 == y2
+  where
+    y1 = timestampToYear ts1
+    y2 = timestampToYear ts2
+
+sameMonth :: Timestamp -> Timestamp -> Bool
+sameMonth ts1 ts2 = ym1 == ym2
+  where
+    ym1 = timestampToYearMonth ts1
+    ym2 = timestampToYearMonth ts2
+
+sameWeek :: Timestamp -> Timestamp -> Bool
+sameWeek ts1 ts2 = y1 == y2 && w1 == w2
+  where
+    (y1, w1, _) = timestampToYearMonthWeek ts1
+    (y2, w2, _) = timestampToYearMonthWeek ts2
+
+    timestampToYearMonthWeek = Week.toWeekDate . timestampToDay
+
+dayToYearMonth :: Day -> ResultDefault (Tuple2 Year Month)
+dayToYearMonth =
+  (\(y, m, _) -> liftA2 (,) (intToYear y) (moyToMonth m))
+    . Cal.toGregorian
+
+intToYear :: Integer -> ResultDefault Year
+intToYear i = case f i of
+  Nothing -> fail $ "Unexpected year: " ++ show i
+  Just x -> pure $ MkYear x
+  where
+    f =
+      Interval.mkInterval
         . fromIntegral @Integer @Word16
 
-    toMonth :: Cal.MonthOfYear -> Month
-    toMonth 1 = Jan
-    toMonth 2 = Feb
-    toMonth 3 = Mar
-    toMonth 4 = Apr
-    toMonth 5 = May
-    toMonth 6 = Jun
-    toMonth 7 = Jul
-    toMonth 8 = Aug
-    toMonth 9 = Sep
-    toMonth 10 = Oct
-    toMonth 11 = Nov
-    toMonth 12 = Dec
-    toMonth other =
-      error
-        $ "Expected month in 1-12: "
-        ++ show other
+moyToMonth :: Cal.MonthOfYear -> ResultDefault Month
+moyToMonth 1 = pure Jan
+moyToMonth 2 = pure Feb
+moyToMonth 3 = pure Mar
+moyToMonth 4 = pure Apr
+moyToMonth 5 = pure May
+moyToMonth 6 = pure Jun
+moyToMonth 7 = pure Jul
+moyToMonth 8 = pure Aug
+moyToMonth 9 = pure Sep
+moyToMonth 10 = pure Oct
+moyToMonth 11 = pure Nov
+moyToMonth 12 = pure Dec
+moyToMonth other =
+  fail
+    $ "Expected month in 1-12: "
+    ++ show other
