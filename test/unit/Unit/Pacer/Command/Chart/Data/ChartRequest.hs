@@ -20,7 +20,7 @@ testParseExampleChartRequestsToml = testGoldenParams params
   where
     params =
       MkGoldenParams
-        { testDesc = "Parses example chart-requsts.toml",
+        { testDesc = "Parses example chart-requests.toml",
           testName = [osp|testParseExampleChartRequestsToml|],
           runner = do
             contents <- decodeUtf8ThrowM =<< readBinaryFileIO path
