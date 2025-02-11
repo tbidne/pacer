@@ -22,10 +22,12 @@ The most explicit way to generate charts is to use the `--chart-requests` and `-
 
 - If `--data <dir>` was given:
   - `<dir>/<expected_filename(s)>`.
-- If toml config exists (explicit `--config` or found in `<xdg_config>` location ):
+- If toml config exists (explicit `--config` or found in `<xdg_config>` location):
   - `<config.path_type>`
   - `<config.data>/<expected_filename(s)>`
 - `<xdg_config>/<expected_filename(s)>` (e.g. `~/.config/pacer/expected_filename(s)`).
+
+In particular:
 
 #### chart-requests
 

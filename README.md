@@ -29,7 +29,7 @@
 
 # Introduction
 
-Pacer is a CLI application that provides commands useful for runners. Pacer offers roughly two different services:
+Pacer is a CLI application for runners. Pacer offers roughly two different services:
 
 1. Taking running data and generating graphical charts e.g. plotting runs by distance.
 
@@ -70,7 +70,7 @@ will generate an html page with several charts like this one:
 
 ![example_chart](examples/chart.png)
 
-See the `examples/` directory and the [faq.md](documentation/faq.md) for more information.
+See the `examples/` directory and the [faq](documentation/faq.md) for more information.
 
 ## Convert
 
@@ -229,4 +229,4 @@ Then include this in the `systemPackages`:
 
 # FAQ
 
-See [faq.md](documentation/faq.md).
+See the [faq](documentation/faq.md).
