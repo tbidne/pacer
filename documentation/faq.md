@@ -6,6 +6,8 @@
 
 
 - [Charts](#charts)
+  - [How does file discovery work?](#how-does-file-discovery-work)
+  - [How do I use this with Garmin](#how-do-i-use-this-with-garmin)
   - [How do chart filters work?](#how-do-chart-filters-work)
 - [Running](#running)
   - [What is NPM, and why do I need it?](#what-is-npm-and-why-do-i-need-it)
@@ -13,6 +15,77 @@
   - [What units are available?](#what-units-are-available)
 
 ## Charts
+
+### How does file discovery work?
+
+The most explicit way to generate charts is to use the `--chart-requests` and `--runs` arguments. If these are not given, then we search for expected filenames in the following order:
+
+- If `--data <dir>` was given:
+  - `<dir>/<expected_filename(s)>`.
+- If toml config exists (explicit `--config` or found in `<xdg_config>` location ):
+  - `<config.path_type>`
+  - `<config.data>/<expected_filename(s)>`
+- `<xdg_config>/<expected_filename(s)>` (e.g. `~/.config/pacer/expected_filename(s)`).
+
+#### chart-requests
+
+The only "expected filename" here is `chart-requests.toml`, so this works out to be:
+
+- If `--data <dir>` was given:
+  - `<dir>/chart-requests.toml`.
+- If toml config exists:
+  - `<config.chart-requests>`.
+  - `<config.data>/chart-requests.toml`.
+- `<xdg_config>/chart-requests.toml`
+
+#### runs
+
+On the other hand, runs have three possible "expected filenames":
+
+- `runs.toml` (custom format)
+- `Activities.csv` (garmin)
+- `activities.csv` (garmin)
+
+Therefore this works out to be:
+
+- If `--data <dir>` was given:
+  - `<dir>/runs.toml`.
+  - `<dir>/Activities.csv`.
+  - `<dir>/activities.csv`.
+- If toml config exists:
+  - `<config.runs>`.
+  - `<config.data>/runs.toml`.
+  - `<config.data>/Activities.csv`.
+  - `<config.data>/activities.csv`.
+- `xdg_config/runs.toml`
+- `xdg_config/Activities.csv`.
+- `xdg_config/activities.csv`.
+
+See [here](#how-do-i-use-this-with-garmin) for more on controlling the `runs` search order.
+
+### How do I use this with Garmin?
+
+In addition to the custom `runs.toml` format, we provide integration with garmin's `Activities.csv` file that can be downloaded from the website: https://connect.garmin.com/modern/activities.
+
+There are some caveats:
+
+- The `Activities.csv` file does not specify the units; it uses whatever the setting is on your device (e.g. watch). But we need to know what the units are, so we require this to be set in the `chart-requests.toml` file:
+
+    ```toml
+    [garmin]
+    unit = 'km'
+    ```
+
+    Note that garmin only support kilometers and miles.
+
+- Chart request `label` filters only work with the custom `runs.toml` format, since there is no way to attach a label to a run in garmin. Using a label filter with garmin will not be an automatic error, but if you have, say, `filters = ['label my_label']` in your `chart-requests.toml`, then no garmin run will satisfy this filter, so the chart will not be generated (which _is_ an error).
+
+- If you intend to have both `runs.toml` and `activities.csv` in the same directory, then the `--runs-type` flag can be useful. It does two things:
+
+    - Sets a priority. By default, if we find `runs.toml` and `activities.csv`, we will use `runs.toml` (see [above](#how-does-file-discovery-work)). Passing `--runs-type garmin` will instead use `activities.csv`.
+
+    - Determines parsing. Generally, we guess how to parse a file based on the file name and/or extension. For instance, if the file has the word `activities` in it or ends in `.csv`, we guess garmin. But if for some reason your filename has an unknown name/extension, then
+    we default to `toml`. Again, `--runs-type garmin` overrides this, using the garmin parsing.
 
 ### How do chart filters work?
 

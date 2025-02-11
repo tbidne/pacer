@@ -51,7 +51,7 @@ build/
 
 Charts are generated from two inputs:
 
-- A `runs.toml` file, containing a list of all runs the user may want to chart.
+- A `runs` file (`toml` or garmin `csv`), containing a list of all runs the user may want to chart.
 - A `chart-requests.toml` file, that determines how to construct the chart(s). The html page will contain a chart for each request in the file.
 
 > [!IMPORTANT]
@@ -70,7 +70,7 @@ will generate an html page with several charts like this one:
 
 ![example_chart](examples/chart.png)
 
-See the `examples/` directory for more information.
+See the `examples/` directory and the [faq.md](documentation/faq.md) for more information.
 
 ## Convert
 
