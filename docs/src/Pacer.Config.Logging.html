@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Config.Logging.html"><span class="hs-identifier">Pacer.Config.Logging</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Config.Logging.html#LogLevelParam"><span class="hs-identifier">LogLevelParam</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Config.Logging.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Functions</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Config.Logging.html#parseLogLevel"><span class="hs-identifier">parseLogLevel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html"><span class="hs-identifier">Effectful.Logger.Dynamic</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LogLevel"><span class="hs-identifier">LogLevel</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelDebug"><span class="hs-identifier">LevelDebug</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelError"><span class="hs-identifier">LevelError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelInfo"><span class="hs-identifier">LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelWarn"><span class="hs-identifier">LevelWarn</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OA</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Config.Utils.html"><span class="hs-identifier">Pacer.Config.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/p9rp3ysqa67fbhv05rs7g2kndgxz3lwq-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.html/TOML.html"><span class="hs-identifier">TOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier">DecodeTOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier">tomlDecoder</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">data</span><span> </span><span id="LogLevelParam"><span class="annot"><a href="Pacer.Config.Logging.html#LogLevelParam"><span class="hs-identifier hs-var">LogLevelParam</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LogNone"><span class="annot"><a href="Pacer.Config.Logging.html#LogNone"><span class="hs-identifier hs-var">LogNone</span></a></span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LogSome"><span class="annot"><a href="Pacer.Config.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549274"><span id="local-6989586621679549281"><span class="annot"><span class="annottext">LogLevelParam -&gt; LogLevelParam -&gt; Bool
+(LogLevelParam -&gt; LogLevelParam -&gt; Bool)
+-&gt; (LogLevelParam -&gt; LogLevelParam -&gt; Bool) -&gt; Eq LogLevelParam
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+== :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+$c/= :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+/= :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549286"><span id="local-6989586621679549292"><span id="local-6989586621679549296"><span class="annot"><span class="annottext">Int -&gt; LogLevelParam -&gt; ShowS
+[LogLevelParam] -&gt; ShowS
+LogLevelParam -&gt; String
+(Int -&gt; LogLevelParam -&gt; ShowS)
+-&gt; (LogLevelParam -&gt; String)
+-&gt; ([LogLevelParam] -&gt; ShowS)
+-&gt; Show LogLevelParam
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; LogLevelParam -&gt; ShowS
+showsPrec :: Int -&gt; LogLevelParam -&gt; ShowS
+$cshow :: LogLevelParam -&gt; String
+show :: LogLevelParam -&gt; String
+$cshowList :: [LogLevelParam] -&gt; ShowS
+showList :: [LogLevelParam] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Pacer.Config.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621679549309"><span class="annot"><span class="annottext">tomlDecoder :: Decoder LogLevelParam
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Text
+-&gt; (Text -&gt; Decoder LogLevelParam) -&gt; Decoder LogLevelParam
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Decoder LogLevelParam
+forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogLevelParam
+</span><a href="Pacer.Config.Logging.html#parseLogLevel"><span class="hs-identifier hs-var">parseLogLevel</span></a></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="annot"><a href="Pacer.Config.Logging.html#parser"><span class="hs-identifier hs-type">parser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Config.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span><span>
+</span><span id="line-28"></span><span id="parser"><span class="annot"><span class="annottext">parser :: Parser LogLevelParam
+</span><a href="Pacer.Config.Logging.html#parser"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="annottext">ReadM LogLevelParam
+-&gt; Mod OptionFields LogLevelParam -&gt; Parser LogLevelParam
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ReadM Text
+forall s. IsString s =&gt; ReadM s
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#str"><span class="hs-identifier hs-var">OA.str</span></a></span><span> </span><span class="annot"><span class="annottext">ReadM Text -&gt; (Text -&gt; ReadM LogLevelParam) -&gt; ReadM LogLevelParam
+forall a b. ReadM a -&gt; (a -&gt; ReadM b) -&gt; ReadM b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ReadM LogLevelParam
+forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogLevelParam
+</span><a href="Pacer.Config.Logging.html#parseLogLevel"><span class="hs-identifier hs-var">parseLogLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">(Mod OptionFields LogLevelParam -&gt; Parser LogLevelParam)
+-&gt; Mod OptionFields LogLevelParam -&gt; Parser LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields LogLevelParam] -&gt; Mod OptionFields LogLevelParam
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-32"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogLevelParam
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;log-level&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogLevelParam
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+forall a. IsString a =&gt; a
+</span><a href="Pacer.Config.Logging.html#logLvlStr"><span class="hs-identifier hs-var">logLvlStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogLevelParam
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><a href="Pacer.Config.Utils.html#mkHelp"><span class="hs-identifier hs-var">Utils.mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Optional log level. Defaults to 'info'.&quot;</span></span><span>
+</span><span id="line-35"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span id="local-6989586621679549226"><span class="annot"><a href="Pacer.Config.Logging.html#parseLogLevel"><span class="hs-identifier hs-type">parseLogLevel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679549226"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679549226"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Pacer.Config.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span></span><span>
+</span><span id="line-38"></span><span id="parseLogLevel"><span class="annot"><span class="annottext">parseLogLevel :: forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogLevelParam
+</span><a href="Pacer.Config.Logging.html#parseLogLevel"><span class="hs-identifier hs-var hs-var">parseLogLevel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;none&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">LogLevelParam
+</span><a href="Pacer.Config.Logging.html#LogNone"><span class="hs-identifier hs-var">LogNone</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;debug&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Config.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelDebug"><span class="hs-identifier hs-var">LevelDebug</span></a></span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;info&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Config.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;warn&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Config.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelWarn"><span class="hs-identifier hs-var">LevelWarn</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Config.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679549343"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679549343"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">String -&gt; m LogLevelParam
+forall a. String -&gt; m a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">(String -&gt; m LogLevelParam) -&gt; String -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-48"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Expected one of &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>          </span><span class="annot"><span class="annottext">Text
+forall a. IsString a =&gt; a
+</span><a href="Pacer.Config.Logging.html#logLvlStr"><span class="hs-identifier hs-var">logLvlStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;, received: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679549343"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><span id="line-52"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span id="local-6989586621679549239"><span class="annot"><a href="Pacer.Config.Logging.html#logLvlStr"><span class="hs-identifier hs-type">logLvlStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621679549239"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679549239"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-55"></span><span id="logLvlStr"><span class="annot"><span class="annottext">logLvlStr :: forall a. IsString a =&gt; a
+</span><a href="Pacer.Config.Logging.html#logLvlStr"><span class="hs-identifier hs-var hs-var">logLvlStr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;(none | debug | info | warn | error)&quot;</span></span><span>
+</span><span id="line-56"></span></pre></body></html>

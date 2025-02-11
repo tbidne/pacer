@@ -1,0 +1,363 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Chart CLI parsing.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Args.html"><span class="hs-identifier">Pacer.Command.Chart.Args</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Args.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OA</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html"><span class="hs-identifier">Pacer.Command.Chart.Params</span></a></span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ChartParams"><span class="hs-identifier">ChartParams</span></a></span><span>
+</span><span id="line-11"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#MkChartParams"><span class="hs-identifier">MkChartParams</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#chartRequestsPath"><span class="hs-identifier">chartRequestsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#cleanInstall"><span class="hs-identifier">cleanInstall</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#dataDir"><span class="hs-identifier">dataDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#json"><span class="hs-identifier">json</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#runsPath"><span class="hs-identifier">runsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#runsType"><span class="hs-identifier">runsType</span></a></span><span>
+</span><span id="line-18"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ChartParamsArgs"><span class="hs-identifier">ChartParamsArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#RunsType"><span class="hs-identifier">RunsType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Params.html#RunsDefault"><span class="hs-identifier">RunsDefault</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#RunsGarmin"><span class="hs-identifier">RunsGarmin</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Config.Utils.html"><span class="hs-identifier">Pacer.Config.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/p9rp3ysqa67fbhv05rs7g2kndgxz3lwq-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="annot"><span class="hs-comment">-- | Parse chart args.</span></span><span>
+</span><span id="line-26"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#parser"><span class="hs-identifier hs-type">parser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ChartParamsArgs"><span class="hs-identifier hs-type">ChartParamsArgs</span></a></span><span>
+</span><span id="line-27"></span><span id="parser"><span class="annot"><span class="annottext">parser :: Parser ChartParamsArgs
+</span><a href="Pacer.Command.Chart.Args.html#parser"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679552683"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679552683"><span class="hs-identifier hs-var">chartRequestsPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mChartRequestsParser"><span class="hs-identifier hs-var">mChartRequestsParser</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621679552685"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679552685"><span class="hs-identifier hs-var">cleanInstall</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><a href="Pacer.Command.Chart.Args.html#cleanInstallParser"><span class="hs-identifier hs-var">cleanInstallParser</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621679552687"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679552687"><span class="hs-identifier hs-var">dataDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#dataDirParser"><span class="hs-identifier hs-var">dataDirParser</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621679552689"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679552689"><span class="hs-identifier hs-var">json</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><a href="Pacer.Command.Chart.Args.html#jsonParser"><span class="hs-identifier hs-var">jsonParser</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621679552691"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679552691"><span class="hs-identifier hs-var">runsPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mRunsParser"><span class="hs-identifier hs-var">mRunsParser</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621679552693"><span class="annot"><span class="annottext">Maybe RunsType
+</span><a href="#local-6989586621679552693"><span class="hs-identifier hs-var">runsType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe RunsType)
+</span><a href="Pacer.Command.Chart.Args.html#runsTypeParser"><span class="hs-identifier hs-var">runsTypeParser</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#MkChartParams"><span class="hs-identifier hs-type">MkChartParams</span></a></span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+PathF 'ConfigPhaseArgs File
+chartRequestsPath :: PathF 'ConfigPhaseArgs File
+chartRequestsPath :: Maybe OsPath
+</span><a href="Pacer.Command.Chart.Params.html#chartRequestsPath"><span class="hs-identifier hs-var hs-var">chartRequestsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">Bool
+cleanInstall :: Bool
+cleanInstall :: Bool
+</span><a href="Pacer.Command.Chart.Params.html#cleanInstall"><span class="hs-identifier hs-var hs-var">cleanInstall</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>        </span><span class="annot"><span class="annottext">Maybe OsPath
+PathF 'ConfigPhaseArgs Dir
+dataDir :: PathF 'ConfigPhaseArgs Dir
+dataDir :: Maybe OsPath
+</span><a href="Pacer.Command.Chart.Params.html#dataDir"><span class="hs-identifier hs-var hs-var">dataDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">Bool
+json :: Bool
+json :: Bool
+</span><a href="Pacer.Command.Chart.Params.html#json"><span class="hs-identifier hs-var hs-var">json</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">Maybe OsPath
+PathF 'ConfigPhaseArgs File
+runsPath :: PathF 'ConfigPhaseArgs File
+runsPath :: Maybe OsPath
+</span><a href="Pacer.Command.Chart.Params.html#runsPath"><span class="hs-identifier hs-var hs-var">runsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">Maybe RunsType
+runsType :: Maybe RunsType
+runsType :: Maybe RunsType
+</span><a href="Pacer.Command.Chart.Params.html#runsType"><span class="hs-identifier hs-var hs-var">runsType</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#mChartRequestsParser"><span class="hs-identifier hs-type">mChartRequestsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span id="mChartRequestsParser"><span class="annot"><span class="annottext">mChartRequestsParser :: Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mChartRequestsParser"><span class="hs-identifier hs-var hs-var">mChartRequestsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><span class="annottext">Maybe Char -&gt; String -&gt; String -&gt; String -&gt; Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mOsPathParser"><span class="hs-identifier hs-var">mOsPathParser</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Char
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;chart-requests&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;PATH&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552696"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>    </span><span id="local-6989586621679552696"><span class="annot"><span class="annottext">helpTxt :: String
+</span><a href="#local-6989586621679552696"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Optional path to chart-requests file. Overrides --data.&quot;</span></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#mRunsParser"><span class="hs-identifier hs-type">mRunsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span id="mRunsParser"><span class="annot"><span class="annottext">mRunsParser :: Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mRunsParser"><span class="hs-identifier hs-var hs-var">mRunsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Char -&gt; String -&gt; String -&gt; String -&gt; Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mOsPathParser"><span class="hs-identifier hs-var">mOsPathParser</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Char
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;runs&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;PATH&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552698"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621679552698"><span class="annot"><span class="annottext">helpTxt :: String
+</span><a href="#local-6989586621679552698"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Optional path to runs file. Overrides --data.&quot;</span></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#dataDirParser"><span class="hs-identifier hs-type">dataDirParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span id="dataDirParser"><span class="annot"><span class="annottext">dataDirParser :: Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#dataDirParser"><span class="hs-identifier hs-var hs-var">dataDirParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Char -&gt; String -&gt; String -&gt; String -&gt; Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mOsPathParser"><span class="hs-identifier hs-var">mOsPathParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Maybe Char
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'d'</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;PATH&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552700"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621679552700"><span class="annot"><span class="annottext">helpTxt :: String
+</span><a href="#local-6989586621679552700"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-61"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Path to data directory i.e. where we search for chart-requests &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;file and runs file. If not given, defaults to the &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;XDG config e.g. ~/.config/pacer/.&quot;</span></span><span>
+</span><span id="line-64"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#mOsPathParser"><span class="hs-identifier hs-type">mOsPathParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span id="mOsPathParser"><span class="annot"><span class="annottext">mOsPathParser :: Maybe Char -&gt; String -&gt; String -&gt; String -&gt; Parser (Maybe OsPath)
+</span><a href="Pacer.Command.Chart.Args.html#mOsPathParser"><span class="hs-identifier hs-var hs-var">mOsPathParser</span></a></span></span><span> </span><span id="local-6989586621679552707"><span class="annot"><span class="annottext">Maybe Char
+</span><a href="#local-6989586621679552707"><span class="hs-identifier hs-var">mShort</span></a></span></span><span> </span><span id="local-6989586621679552708"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552708"><span class="hs-identifier hs-var">long</span></a></span></span><span> </span><span id="local-6989586621679552709"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552709"><span class="hs-identifier hs-var">metavar</span></a></span></span><span> </span><span id="local-6989586621679552710"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552710"><span class="hs-identifier hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><span class="annottext">Parser OsPath -&gt; Parser (Maybe OsPath)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">(Parser OsPath -&gt; Parser (Maybe OsPath))
+-&gt; Parser OsPath -&gt; Parser (Maybe OsPath)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReadM OsPath -&gt; Mod OptionFields OsPath -&gt; Parser OsPath
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">ReadM OsPath
+</span><a href="Pacer.Config.Utils.html#readOsPath"><span class="hs-identifier hs-var">Utils.readOsPath</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields OsPath] -&gt; Mod OptionFields OsPath
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-77"></span><span>          </span><span class="annot"><span class="annottext">([Mod OptionFields OsPath] -&gt; Mod OptionFields OsPath)
+-&gt; [Mod OptionFields OsPath] -&gt; Mod OptionFields OsPath
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields OsPath
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552708"><span class="hs-identifier hs-var">long</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields OsPath
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552709"><span class="hs-identifier hs-var">metavar</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields OsPath
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><a href="Pacer.Config.Utils.html#mkHelp"><span class="hs-identifier hs-var">Utils.mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679552710"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-80"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-81"></span><span>          </span><span class="annot"><span class="annottext">[Mod OptionFields OsPath]
+-&gt; [Mod OptionFields OsPath] -&gt; [Mod OptionFields OsPath]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields OsPath]
+</span><a href="#local-6989586621679552717"><span class="hs-identifier hs-var">shortXs</span></a></span><span>
+</span><span id="line-82"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>    </span><span id="local-6989586621679552717"><span class="annot"><span class="annottext">shortXs :: [Mod OptionFields OsPath]
+</span><a href="#local-6989586621679552717"><span class="hs-identifier hs-var hs-var">shortXs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields OsPath]
+-&gt; (Char -&gt; [Mod OptionFields OsPath])
+-&gt; Maybe Char
+-&gt; [Mod OptionFields OsPath]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Mod OptionFields OsPath
+-&gt; [Mod OptionFields OsPath] -&gt; [Mod OptionFields OsPath]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Mod OptionFields OsPath -&gt; [Mod OptionFields OsPath])
+-&gt; (Char -&gt; Mod OptionFields OsPath)
+-&gt; Char
+-&gt; [Mod OptionFields OsPath]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields OsPath
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">OA.short</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Char
+</span><a href="#local-6989586621679552707"><span class="hs-identifier hs-var">mShort</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#jsonParser"><span class="hs-identifier hs-type">jsonParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-87"></span><span id="jsonParser"><span class="annot"><span class="annottext">jsonParser :: Parser Bool
+</span><a href="Pacer.Command.Chart.Args.html#jsonParser"><span class="hs-identifier hs-var hs-var">jsonParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#switch"><span class="hs-identifier hs-var">OA.switch</span></a></span><span>
+</span><span id="line-89"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod FlagFields Bool] -&gt; Mod FlagFields Bool
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-90"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">OA.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'j'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;json&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><a href="Pacer.Config.Utils.html#mkHelp"><span class="hs-identifier hs-var">Utils.mkHelp</span></a></span><span>
+</span><span id="line-93"></span><span>            </span><span class="annot"><span class="annottext">(String -&gt; Mod FlagFields Bool) -&gt; String -&gt; Mod FlagFields Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-94"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;If active, stops after generating the intermediate json &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;file. Primarily used for testing.&quot;</span></span><span>
+</span><span id="line-96"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-97"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-98"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#runsTypeParser"><span class="hs-identifier hs-type">runsTypeParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#RunsType"><span class="hs-identifier hs-type">RunsType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span id="runsTypeParser"><span class="annot"><span class="annottext">runsTypeParser :: Parser (Maybe RunsType)
+</span><a href="Pacer.Command.Chart.Args.html#runsTypeParser"><span class="hs-identifier hs-var hs-var">runsTypeParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><span class="annottext">Parser RunsType -&gt; Parser (Maybe RunsType)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span>
+</span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">(Parser RunsType -&gt; Parser (Maybe RunsType))
+-&gt; Parser RunsType -&gt; Parser (Maybe RunsType)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReadM RunsType -&gt; Mod OptionFields RunsType -&gt; Parser RunsType
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-104"></span><span>      </span><span class="annot"><span class="annottext">ReadM RunsType
+</span><a href="#local-6989586621679552722"><span class="hs-identifier hs-var">readRunsType</span></a></span><span>
+</span><span id="line-105"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields RunsType] -&gt; Mod OptionFields RunsType
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-106"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields RunsType
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;runs-type&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>            </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields RunsType
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;(default | garmin)&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>            </span><span class="annot"><span class="annottext">[String] -&gt; Mod OptionFields RunsType
+forall (f :: * -&gt; *) a. [String] -&gt; Mod f a
+</span><a href="Pacer.Config.Utils.html#mkMultiHelp"><span class="hs-identifier hs-var">Utils.mkMultiHelp</span></a></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679552724"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-109"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-110"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621679552724"><span class="annot"><span class="annottext">helpTxt :: [String]
+</span><a href="#local-6989586621679552724"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-114"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Runs-type has two effects:&quot;</span></span><span>
+</span><span id="line-115"></span><span>          </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>        </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-117"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;1. If -- in the course of searching for a runs file (i.e. &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;no explicit path) -- we encounter both a runs.toml and an &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>            </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;activities.csv, we will use the one specified by runs-type.&quot;</span></span><span>
+</span><span id="line-120"></span><span>          </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>        </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-122"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;2. We use it to determine how to parse the runs file i.e. &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>            </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;toml (default) or csv (garmin).&quot;</span></span><span>
+</span><span id="line-124"></span><span>          </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>        </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-126"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;If runs-type is not specified, we use heuristics to guess &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>            </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;how to parse the file i.e. name / file-extension.&quot;</span></span><span>
+</span><span id="line-128"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-129"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621679552722"><span class="annot"><span class="annottext">readRunsType :: ReadM RunsType
+</span><a href="#local-6989586621679552722"><span class="hs-identifier hs-var hs-var">readRunsType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-131"></span><span>      </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; ReadM s
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#str"><span class="hs-identifier hs-var">OA.str</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="annottext">ReadM Text -&gt; (Text -&gt; ReadM RunsType) -&gt; ReadM RunsType
+forall a b. ReadM a -&gt; (a -&gt; ReadM b) -&gt; ReadM b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-132"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;default&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunsType -&gt; ReadM RunsType
+forall a. a -&gt; ReadM a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RunsType
+</span><a href="Pacer.Command.Chart.Params.html#RunsDefault"><span class="hs-identifier hs-var">RunsDefault</span></a></span><span>
+</span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;garmin&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunsType -&gt; ReadM RunsType
+forall a. a -&gt; ReadM a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RunsType
+</span><a href="Pacer.Command.Chart.Params.html#RunsGarmin"><span class="hs-identifier hs-var">RunsGarmin</span></a></span><span>
+</span><span id="line-134"></span><span>        </span><span id="local-6989586621679552757"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679552757"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-135"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ReadM RunsType
+forall a. String -&gt; ReadM a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-136"></span><span>            </span><span class="annot"><span class="annottext">(String -&gt; ReadM RunsType) -&gt; String -&gt; ReadM RunsType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-137"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Expected one of (default | garmin), received: '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-138"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679552757"><span class="hs-identifier hs-var">other</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;'&quot;</span></span><span>
+</span><span id="line-140"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="annot"><a href="Pacer.Command.Chart.Args.html#cleanInstallParser"><span class="hs-identifier hs-type">cleanInstallParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-143"></span><span id="cleanInstallParser"><span class="annot"><span class="annottext">cleanInstallParser :: Parser Bool
+</span><a href="Pacer.Command.Chart.Args.html#cleanInstallParser"><span class="hs-identifier hs-var hs-var">cleanInstallParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#switch"><span class="hs-identifier hs-var">OA.switch</span></a></span><span>
+</span><span id="line-145"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod FlagFields Bool] -&gt; Mod FlagFields Bool
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-146"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">OA.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'c'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/na1yvrqv00pzpcf8mvx8xbhibdj0hhmv-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;clean&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><a href="Pacer.Config.Utils.html#mkHelp"><span class="hs-identifier hs-var">Utils.mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;If active, cleans prior build files.&quot;</span></span><span>
+</span><span id="line-149"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span></pre></body></html>

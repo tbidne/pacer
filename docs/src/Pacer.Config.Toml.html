@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html"><span class="hs-identifier">Pacer.Config.Toml</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#Toml"><span class="hs-identifier">Toml</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Config.Toml.html#TomlWithPath"><span class="hs-identifier">TomlWithPath</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html"><span class="hs-identifier">FileSystem.OsPath</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OsPath</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Config.Logging.html"><span class="hs-identifier">Pacer.Config.Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Config.Logging.html#LogLevelParam"><span class="hs-identifier">LogLevelParam</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.html/TOML.html"><span class="hs-identifier">TOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier">DecodeTOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier">tomlDecoder</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier">getFieldOptWith</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="annot"><span class="hs-comment">-- | Toml with its parent directory.</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">data</span><span> </span><span id="TomlWithPath"><span class="annot"><a href="Pacer.Config.Toml.html#TomlWithPath"><span class="hs-identifier hs-var">TomlWithPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkTomlWithPath"><span class="annot"><a href="Pacer.Config.Toml.html#MkTomlWithPath"><span class="hs-identifier hs-var">MkTomlWithPath</span></a></span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Directory containing the toml file. Used for resolving relative paths.</span></span><span>
+</span><span id="line-15"></span><span>    </span><span id="dirPath"><span class="annot"><span class="annottext">TomlWithPath -&gt; Path Abs Dir
+</span><a href="Pacer.Config.Toml.html#dirPath"><span class="hs-identifier hs-var hs-var">dirPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Toml config.</span></span><span>
+</span><span id="line-17"></span><span>    </span><span id="toml"><span class="annot"><span class="annottext">TomlWithPath -&gt; Toml
+</span><a href="Pacer.Config.Toml.html#toml"><span class="hs-identifier hs-var hs-var">toml</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#Toml"><span class="hs-identifier hs-type">Toml</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549386"><span id="local-6989586621679549392"><span class="annot"><span class="annottext">TomlWithPath -&gt; TomlWithPath -&gt; Bool
+(TomlWithPath -&gt; TomlWithPath -&gt; Bool)
+-&gt; (TomlWithPath -&gt; TomlWithPath -&gt; Bool) -&gt; Eq TomlWithPath
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: TomlWithPath -&gt; TomlWithPath -&gt; Bool
+== :: TomlWithPath -&gt; TomlWithPath -&gt; Bool
+$c/= :: TomlWithPath -&gt; TomlWithPath -&gt; Bool
+/= :: TomlWithPath -&gt; TomlWithPath -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549397"><span id="local-6989586621679549405"><span id="local-6989586621679549409"><span class="annot"><span class="annottext">Int -&gt; TomlWithPath -&gt; ShowS
+[TomlWithPath] -&gt; ShowS
+TomlWithPath -&gt; String
+(Int -&gt; TomlWithPath -&gt; ShowS)
+-&gt; (TomlWithPath -&gt; String)
+-&gt; ([TomlWithPath] -&gt; ShowS)
+-&gt; Show TomlWithPath
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TomlWithPath -&gt; ShowS
+showsPrec :: Int -&gt; TomlWithPath -&gt; ShowS
+$cshow :: TomlWithPath -&gt; String
+show :: TomlWithPath -&gt; String
+$cshowList :: [TomlWithPath] -&gt; ShowS
+showList :: [TomlWithPath] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- NOTE: [User Path]</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- Paths that come from users must be OsPath and not Path since the</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- latter requires us to enforce that the user typed either an absolute or</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- relative path, but not both, but that is overly restrictive.</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="annot"><span class="hs-comment">-- | Toml configuration.</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">data</span><span> </span><span id="Toml"><span class="annot"><a href="Pacer.Config.Toml.html#Toml"><span class="hs-identifier hs-var">Toml</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkToml"><span class="annot"><a href="Pacer.Config.Toml.html#MkToml"><span class="hs-identifier hs-var">MkToml</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Optional path to directory with runs file and chart-requests.toml.</span></span><span>
+</span><span id="line-30"></span><span>    </span><span id="dataDir"><span class="annot"><span class="annottext">Toml -&gt; Maybe OsPath
+</span><a href="Pacer.Config.Toml.html#dataDir"><span class="hs-identifier hs-var hs-var">dataDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional path to chart-requests.toml.</span></span><span>
+</span><span id="line-32"></span><span>    </span><span id="chartRequestsPath"><span class="annot"><span class="annottext">Toml -&gt; Maybe OsPath
+</span><a href="Pacer.Config.Toml.html#chartRequestsPath"><span class="hs-identifier hs-var hs-var">chartRequestsPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional logging.</span></span><span>
+</span><span id="line-34"></span><span>    </span><span id="logLevel"><span class="annot"><span class="annottext">Toml -&gt; Maybe LogLevelParam
+</span><a href="Pacer.Config.Toml.html#logLevel"><span class="hs-identifier hs-var hs-var">logLevel</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Config.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional path to runs file.</span></span><span>
+</span><span id="line-36"></span><span>    </span><span id="runsPath"><span class="annot"><span class="annottext">Toml -&gt; Maybe OsPath
+</span><a href="Pacer.Config.Toml.html#runsPath"><span class="hs-identifier hs-var hs-var">runsPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549419"><span id="local-6989586621679549428"><span class="annot"><span class="annottext">Toml -&gt; Toml -&gt; Bool
+(Toml -&gt; Toml -&gt; Bool) -&gt; (Toml -&gt; Toml -&gt; Bool) -&gt; Eq Toml
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Toml -&gt; Toml -&gt; Bool
+== :: Toml -&gt; Toml -&gt; Bool
+$c/= :: Toml -&gt; Toml -&gt; Bool
+/= :: Toml -&gt; Toml -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549433"><span id="local-6989586621679549443"><span id="local-6989586621679549446"><span class="annot"><span class="annottext">Int -&gt; Toml -&gt; ShowS
+[Toml] -&gt; ShowS
+Toml -&gt; String
+(Int -&gt; Toml -&gt; ShowS)
+-&gt; (Toml -&gt; String) -&gt; ([Toml] -&gt; ShowS) -&gt; Show Toml
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Toml -&gt; ShowS
+showsPrec :: Int -&gt; Toml -&gt; ShowS
+$cshow :: Toml -&gt; String
+show :: Toml -&gt; String
+$cshowList :: [Toml] -&gt; ShowS
+showList :: [Toml] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#Toml"><span class="hs-identifier hs-type">Toml</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621679549466"><span class="annot"><span class="annottext">tomlDecoder :: Decoder Toml
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-42"></span><span>    </span><span id="local-6989586621679549467"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679549467"><span class="hs-identifier hs-var">dataDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder OsPath -&gt; Text -&gt; Decoder (Maybe OsPath)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder OsPath
+</span><a href="#local-6989586621679549468"><span class="hs-identifier hs-var">decodeOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;data&quot;</span></span><span>
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621679549469"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679549469"><span class="hs-identifier hs-var">chartRequestsPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder OsPath -&gt; Text -&gt; Decoder (Maybe OsPath)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder OsPath
+</span><a href="#local-6989586621679549468"><span class="hs-identifier hs-var">decodeOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;chart-requests&quot;</span></span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621679549470"><span class="annot"><span class="annottext">Maybe LogLevelParam
+</span><a href="#local-6989586621679549470"><span class="hs-identifier hs-var">logLevel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder LogLevelParam -&gt; Text -&gt; Decoder (Maybe LogLevelParam)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder LogLevelParam
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;log-level&quot;</span></span><span>
+</span><span id="line-45"></span><span>    </span><span id="local-6989586621679549471"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679549471"><span class="hs-identifier hs-var">runsPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder OsPath -&gt; Text -&gt; Decoder (Maybe OsPath)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder OsPath
+</span><a href="#local-6989586621679549468"><span class="hs-identifier hs-var">decodeOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;runs&quot;</span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-48"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#MkToml"><span class="hs-identifier hs-type">MkToml</span></a></span><span>
+</span><span id="line-49"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+dataDir :: Maybe OsPath
+dataDir :: Maybe OsPath
+</span><a href="Pacer.Config.Toml.html#dataDir"><span class="hs-identifier hs-var hs-var">dataDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>          </span><span class="annot"><span class="annottext">Maybe OsPath
+chartRequestsPath :: Maybe OsPath
+chartRequestsPath :: Maybe OsPath
+</span><a href="Pacer.Config.Toml.html#chartRequestsPath"><span class="hs-identifier hs-var hs-var">chartRequestsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>          </span><span class="annot"><span class="annottext">Maybe LogLevelParam
+logLevel :: Maybe LogLevelParam
+logLevel :: Maybe LogLevelParam
+</span><a href="Pacer.Config.Toml.html#logLevel"><span class="hs-identifier hs-var hs-var">logLevel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>          </span><span class="annot"><span class="annottext">Maybe OsPath
+runsPath :: Maybe OsPath
+runsPath :: Maybe OsPath
+</span><a href="Pacer.Config.Toml.html#runsPath"><span class="hs-identifier hs-var hs-var">runsPath</span></a></span><span>
+</span><span id="line-53"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621679549468"><span class="annot"><span class="annottext">decodeOsPath :: Decoder OsPath
+</span><a href="#local-6989586621679549468"><span class="hs-identifier hs-var hs-var">decodeOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder String
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder String -&gt; (String -&gt; Decoder OsPath) -&gt; Decoder OsPath
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder OsPath
+forall (m :: * -&gt; *).
+(HasCallStack, MonadFail m) =&gt;
+String -&gt; m OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#encodeValidFail"><span class="hs-identifier hs-var">OsPath.encodeValidFail</span></a></span><span>
+</span><span id="line-56"></span></pre></body></html>

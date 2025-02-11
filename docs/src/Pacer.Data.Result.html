@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Data.Result.html"><span class="hs-identifier">Pacer.Data.Result</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier">Result</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Data.Result.html#ResultDefault"><span class="hs-identifier">ResultDefault</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier">errorErr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier">failErr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bifoldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bifoldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">bifoldMap</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="annot"><span class="hs-comment">-- | General type for error handling, with convenient MonadFail instance.</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="Result"><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-var">Result</span></a></span></span><span> </span><span id="local-6989586621679543328"><span class="annot"><a href="#local-6989586621679543328"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span id="local-6989586621679543329"><span class="annot"><a href="#local-6989586621679543329"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Err"><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679543328"><span class="hs-identifier hs-type">e</span></a></span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Ok"><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679543329"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679543465"><span id="local-6989586621679543472"><span class="annot"><span class="annottext">Result e a -&gt; Result e a -&gt; Bool
+(Result e a -&gt; Result e a -&gt; Bool)
+-&gt; (Result e a -&gt; Result e a -&gt; Bool) -&gt; Eq (Result e a)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall e a. (Eq e, Eq a) =&gt; Result e a -&gt; Result e a -&gt; Bool
+$c== :: forall e a. (Eq e, Eq a) =&gt; Result e a -&gt; Result e a -&gt; Bool
+== :: Result e a -&gt; Result e a -&gt; Bool
+$c/= :: forall e a. (Eq e, Eq a) =&gt; Result e a -&gt; Result e a -&gt; Bool
+/= :: Result e a -&gt; Result e a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543477"><span id="local-6989586621679543479"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b)
+-&gt; (forall a b. a -&gt; Result e b -&gt; Result e a)
+-&gt; Functor (Result e)
+forall a b. a -&gt; Result e b -&gt; Result e a
+forall a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+forall e a b. a -&gt; Result e b -&gt; Result e a
+forall e a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall e a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+fmap :: forall a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+$c&lt;$ :: forall e a b. a -&gt; Result e b -&gt; Result e a
+&lt;$ :: forall a b. a -&gt; Result e b -&gt; Result e a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543486"><span id="local-6989586621679543493"><span id="local-6989586621679543497"><span class="annot"><span class="annottext">Int -&gt; Result e a -&gt; ShowS
+[Result e a] -&gt; ShowS
+Result e a -&gt; String
+(Int -&gt; Result e a -&gt; ShowS)
+-&gt; (Result e a -&gt; String)
+-&gt; ([Result e a] -&gt; ShowS)
+-&gt; Show (Result e a)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall e a. (Show e, Show a) =&gt; Int -&gt; Result e a -&gt; ShowS
+forall e a. (Show e, Show a) =&gt; [Result e a] -&gt; ShowS
+forall e a. (Show e, Show a) =&gt; Result e a -&gt; String
+$cshowsPrec :: forall e a. (Show e, Show a) =&gt; Int -&gt; Result e a -&gt; ShowS
+showsPrec :: Int -&gt; Result e a -&gt; ShowS
+$cshow :: forall e a. (Show e, Show a) =&gt; Result e a -&gt; String
+show :: Result e a -&gt; String
+$cshowList :: forall e a. (Show e, Show a) =&gt; [Result e a] -&gt; ShowS
+showList :: [Result e a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">type</span><span> </span><span id="ResultDefault"><span class="annot"><a href="Pacer.Data.Result.html#ResultDefault"><span class="hs-identifier hs-var">ResultDefault</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543324"><span id="local-6989586621679543506"><span id="local-6989586621679543510"><span id="local-6989586621679543513"><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543324"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621679543516"><span class="annot"><span class="annottext">pure :: forall a. a -&gt; Result e a
+</span><span class="hs-identifier hs-var hs-var hs-var">pure</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e a
+forall e a. a -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543517"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679543517"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679543518"><span class="annot"><span class="annottext">&lt;*&gt; :: forall a b. Result e (a -&gt; b) -&gt; Result e a -&gt; Result e b
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;*&gt;</span></span></span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543519"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543519"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; Result e b
+forall e a. a -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679543517"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543519"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543520"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543520"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Result e a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543520"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="annottext">Result e (a -&gt; b)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543521"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543521"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543521"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543337"><span id="local-6989586621679543526"><span id="local-6989586621679543530"><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543337"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543533"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543533"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679543534"><span class="annot"><span class="annottext">&gt;&gt;= :: forall a b. Result e a -&gt; (a -&gt; Result e b) -&gt; Result e b
+</span><span class="hs-operator hs-var hs-var hs-var">&gt;&gt;=</span></span></span><span> </span><span id="local-6989586621679543535"><span class="annot"><span class="annottext">a -&gt; Result e b
+</span><a href="#local-6989586621679543535"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e b
+</span><a href="#local-6989586621679543535"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543533"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543536"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543536"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543536"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543364"><span id="local-6989586621679543538"><span id="local-6989586621679543544"><span id="local-6989586621679543549"><span id="local-6989586621679543555"><span id="local-6989586621679543558"><span id="local-6989586621679543561"><span id="local-6989586621679543564"><span id="local-6989586621679543567"><span id="local-6989586621679543570"><span id="local-6989586621679543573"><span id="local-6989586621679543576"><span id="local-6989586621679543579"><span id="local-6989586621679543584"><span id="local-6989586621679543589"><span id="local-6989586621679543594"><span id="local-6989586621679543599"><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543364"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621679543604"><span class="annot"><span class="annottext">foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Result e a -&gt; b
+</span><a href="#local-6989586621679543604"><span class="hs-identifier hs-var hs-var hs-var">foldr</span></a></span></span><span> </span><span class="annot"><span class="annottext">a -&gt; b -&gt; b
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679543606"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543606"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543606"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">foldr</span></span><span> </span><span id="local-6989586621679543607"><span class="annot"><span class="annottext">a -&gt; b -&gt; b
+</span><a href="#local-6989586621679543607"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679543608"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543608"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543609"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543609"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; b -&gt; b
+</span><a href="#local-6989586621679543607"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543609"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543608"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543381"><span id="local-6989586621679543617"><span id="local-6989586621679543623"><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543381"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621679543633"><span class="annot"><span class="annottext">sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+Result e (f a) -&gt; f (Result e a)
+</span><a href="#local-6989586621679543633"><span class="hs-identifier hs-var hs-var hs-var">sequenceA</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543635"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543635"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Result e a -&gt; f (Result e a)
+forall a. a -&gt; f a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">e -&gt; Result e a
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543635"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">sequenceA</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543636"><span class="annot"><span class="annottext">f a
+</span><a href="#local-6989586621679543636"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e a
+forall e a. a -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Result e a) -&gt; f a -&gt; f (Result e a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">f a
+</span><a href="#local-6989586621679543636"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621679543642"><span class="annot"><span class="annottext">traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Result e a -&gt; f (Result e b)
+</span><a href="#local-6989586621679543642"><span class="hs-identifier hs-var hs-var hs-var">traverse</span></a></span></span><span> </span><span class="annot"><span class="annottext">a -&gt; f b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543644"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543644"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Result e b -&gt; f (Result e b)
+forall a. a -&gt; f a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679543644"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">traverse</span></span><span> </span><span id="local-6989586621679543645"><span class="annot"><span class="annottext">a -&gt; f b
+</span><a href="#local-6989586621679543645"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543646"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543646"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; Result e b
+forall e a. a -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">(b -&gt; Result e b) -&gt; f b -&gt; f (Result e b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; f b
+</span><a href="#local-6989586621679543645"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543646"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543393"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621679543393"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543393"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679543656"><span class="annot"><span class="annottext">fail :: forall a. String -&gt; Result e a
+</span><span class="hs-identifier hs-var hs-var hs-var">fail</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e a
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">(e -&gt; Result e a) -&gt; (String -&gt; e) -&gt; String -&gt; Result e a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; e
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">fromString</span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543662"><span id="local-6989586621679543666"><span class="annot"><span class="hs-identifier hs-type">Bifunctor</span></span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621679543669"><span class="annot"><span class="annottext">bimap :: forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; Result a c -&gt; Result b d
+</span><a href="#local-6989586621679543669"><span class="hs-identifier hs-var hs-var hs-var">bimap</span></a></span></span><span> </span><span id="local-6989586621679543671"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679543671"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="annot"><span class="annottext">c -&gt; d
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543672"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543672"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; Result b d
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679543671"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543672"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">bimap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679543673"><span class="annot"><span class="annottext">c -&gt; d
+</span><a href="#local-6989586621679543673"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543674"><span class="annot"><span class="annottext">c
+</span><a href="#local-6989586621679543674"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">d -&gt; Result b d
+forall e a. a -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">c -&gt; d
+</span><a href="#local-6989586621679543673"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">c
+</span><a href="#local-6989586621679543674"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543676"><span id="local-6989586621679543683"><span id="local-6989586621679543686"><span class="annot"><span class="hs-identifier hs-type">Bifoldable</span></span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679543690"><span class="annot"><span class="annottext">bifoldMap :: forall m a b. Monoid m =&gt; (a -&gt; m) -&gt; (b -&gt; m) -&gt; Result a b -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var">bifoldMap</span></span></span><span> </span><span id="local-6989586621679543691"><span class="annot"><span class="annottext">a -&gt; m
+</span><a href="#local-6989586621679543691"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="annot"><span class="annottext">b -&gt; m
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543692"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543692"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; m
+</span><a href="#local-6989586621679543691"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543692"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">bifoldMap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; m
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679543693"><span class="annot"><span class="annottext">b -&gt; m
+</span><a href="#local-6989586621679543693"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543694"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543694"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; m
+</span><a href="#local-6989586621679543693"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543694"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bitraversable</span></span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679543706"><span class="annot"><span class="annottext">bitraverse :: forall (f :: * -&gt; *) a c b d.
+Applicative f =&gt;
+(a -&gt; f c) -&gt; (b -&gt; f d) -&gt; Result a b -&gt; f (Result c d)
+</span><a href="#local-6989586621679543706"><span class="hs-identifier hs-var hs-var hs-var">bitraverse</span></a></span></span><span> </span><span id="local-6989586621679543708"><span class="annot"><span class="annottext">a -&gt; f c
+</span><a href="#local-6989586621679543708"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="annot"><span class="annottext">b -&gt; f d
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543709"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543709"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">c -&gt; Result c d
+forall e a. e -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">(c -&gt; Result c d) -&gt; f c -&gt; f (Result c d)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; f c
+</span><a href="#local-6989586621679543708"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543709"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">bitraverse</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; f c
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679543710"><span class="annot"><span class="annottext">b -&gt; f d
+</span><a href="#local-6989586621679543710"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543711"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543711"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">d -&gt; Result c d
+forall e a. a -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">(d -&gt; Result c d) -&gt; f d -&gt; f (Result c d)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; f d
+</span><a href="#local-6989586621679543710"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679543711"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span id="local-6989586621679543448"><span class="annot"><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-type">errorErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#ResultDefault"><span class="hs-identifier hs-type">ResultDefault</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543448"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679543448"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-59"></span><span id="errorErr"><span class="annot"><span class="annottext">errorErr :: forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var hs-var">errorErr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543715"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543715"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543715"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-60"></span><span class="annot"><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543716"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543716"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; a
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543716"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span id="local-6989586621679543453"><span id="local-6989586621679543454"><span class="annot"><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-type">failErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679543453"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Data.Result.html#ResultDefault"><span class="hs-identifier hs-type">ResultDefault</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543454"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679543453"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543454"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-63"></span><span id="failErr"><span class="annot"><span class="annottext">failErr :: forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var hs-var">failErr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679543725"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543725"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; m a
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679543725"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679543726"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543726"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; m a
+forall a. String -&gt; m a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543726"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-65"></span></pre></body></html>

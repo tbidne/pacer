@@ -1,0 +1,407 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartRequest</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * ChartRequest</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier">ChartRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier">YAxisType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Garmin</span></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#GarminSettings"><span class="hs-identifier">GarminSettings</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * ChartRequests</span></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier">ChartRequests</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.html/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier">toJSON</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Result.html"><span class="hs-identifier">Pacer.Data.Result</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier">failErr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/p9rp3ysqa67fbhv05rs7g2kndgxz3lwq-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.html/TOML.html"><span class="hs-identifier">TOML</span></a></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier">DecodeTOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier">tomlDecoder</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.html/TOML.html"><span class="hs-identifier">TOML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="annot"><span class="hs-comment">-- | Possibly y-axes.</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="YAxisType"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier hs-var">YAxisType</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="YAxisDistance"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDistance"><span class="hs-identifier hs-var">YAxisDistance</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="YAxisDuration"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDuration"><span class="hs-identifier hs-var">YAxisDuration</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="YAxisPace"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisPace"><span class="hs-identifier hs-var">YAxisPace</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679554574"><span id="local-6989586621679554579"><span class="annot"><span class="annottext">YAxisType -&gt; YAxisType -&gt; Bool
+(YAxisType -&gt; YAxisType -&gt; Bool)
+-&gt; (YAxisType -&gt; YAxisType -&gt; Bool) -&gt; Eq YAxisType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: YAxisType -&gt; YAxisType -&gt; Bool
+== :: YAxisType -&gt; YAxisType -&gt; Bool
+$c/= :: YAxisType -&gt; YAxisType -&gt; Bool
+/= :: YAxisType -&gt; YAxisType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679554584"><span id="local-6989586621679554586"><span id="local-6989586621679554590"><span class="annot"><span class="annottext">Int -&gt; YAxisType -&gt; ShowS
+[YAxisType] -&gt; ShowS
+YAxisType -&gt; String
+(Int -&gt; YAxisType -&gt; ShowS)
+-&gt; (YAxisType -&gt; String)
+-&gt; ([YAxisType] -&gt; ShowS)
+-&gt; Show YAxisType
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; YAxisType -&gt; ShowS
+showsPrec :: Int -&gt; YAxisType -&gt; ShowS
+$cshow :: YAxisType -&gt; String
+show :: YAxisType -&gt; String
+$cshowList :: [YAxisType] -&gt; ShowS
+showList :: [YAxisType] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier hs-type">YAxisType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621679554619"><span class="annot"><span class="annottext">tomlDecoder :: Decoder YAxisType
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="annottext">forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="annottext">Decoder Text -&gt; (Text -&gt; Decoder YAxisType) -&gt; Decoder YAxisType
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;distance&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">YAxisType -&gt; Decoder YAxisType
+forall a. a -&gt; Decoder a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDistance"><span class="hs-identifier hs-var">YAxisDistance</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;duration&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">YAxisType -&gt; Decoder YAxisType
+forall a. a -&gt; Decoder a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDuration"><span class="hs-identifier hs-var">YAxisDuration</span></a></span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;pace&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">YAxisType -&gt; Decoder YAxisType
+forall a. a -&gt; Decoder a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisPace"><span class="hs-identifier hs-var">YAxisPace</span></a></span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621679554620"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679554620"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder YAxisType
+forall a. String -&gt; Decoder a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Decoder YAxisType) -&gt; String -&gt; Decoder YAxisType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679554622"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-42"></span><span>        </span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>          </span><span id="local-6989586621679554622"><span class="annot"><span class="annottext">err :: Text
+</span><a href="#local-6989586621679554622"><span class="hs-identifier hs-var hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-44"></span><span>            </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-45"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unexpected y-axis, '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679554620"><span class="hs-identifier hs-var">other</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;', expected one of (distance|duration|pace).&quot;</span></span><span>
+</span><span id="line-48"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679554625"><span id="local-6989586621679554629"><span id="local-6989586621679554632"><span id="local-6989586621679554635"><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier hs-type">YAxisType</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679554642"><span class="annot"><span class="annottext">toJSON :: YAxisType -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDistance"><span class="hs-identifier hs-var">YAxisDistance</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;distance&quot;</span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDuration"><span class="hs-identifier hs-var">YAxisDuration</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;duration&quot;</span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisPace"><span class="hs-identifier hs-var">YAxisPace</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;pace&quot;</span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="annot"><span class="hs-comment">-- | Chart request type.</span></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">data</span><span> </span><span id="ChartRequest"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier hs-var">ChartRequest</span></a></span></span><span> </span><span id="local-6989586621679554494"><span class="annot"><a href="#local-6989586621679554494"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkChartRequest"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#MkChartRequest"><span class="hs-identifier hs-var">MkChartRequest</span></a></span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Optional text description.</span></span><span>
+</span><span id="line-58"></span><span>    </span><span id="description"><span class="annot"><span class="annottext">forall a. ChartRequest a -&gt; Maybe Text
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional list of filters to apply. The filters are &quot;AND'd&quot; together.</span></span><span>
+</span><span id="line-60"></span><span>    </span><span id="filters"><span class="annot"><span class="annottext">forall a. ChartRequest a -&gt; [FilterExpr a]
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#filters"><span class="hs-identifier hs-var hs-var">filters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#FilterExpr"><span class="hs-identifier hs-type">FilterExpr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554494"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Title for this chart.</span></span><span>
+</span><span id="line-62"></span><span>    </span><span id="title"><span class="annot"><span class="annottext">forall a. ChartRequest a -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#title"><span class="hs-identifier hs-var hs-var">title</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional output unit.</span></span><span>
+</span><span id="line-64"></span><span>    </span><span id="unit"><span class="annot"><span class="annottext">forall a. ChartRequest a -&gt; Maybe DistanceUnit
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#unit"><span class="hs-keyword hs-var hs-var">unit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Y-axis value.</span></span><span>
+</span><span id="line-66"></span><span>    </span><span id="yAxis"><span class="annot"><span class="annottext">forall a. ChartRequest a -&gt; YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#yAxis"><span class="hs-identifier hs-var hs-var">yAxis</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier hs-type">YAxisType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional second y-axis.</span></span><span>
+</span><span id="line-68"></span><span>    </span><span id="y1Axis"><span class="annot"><span class="annottext">forall a. ChartRequest a -&gt; Maybe YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#y1Axis"><span class="hs-identifier hs-var hs-var">y1Axis</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier hs-type">YAxisType</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679554656"><span id="local-6989586621679554669"><span class="annot"><span class="annottext">ChartRequest a -&gt; ChartRequest a -&gt; Bool
+(ChartRequest a -&gt; ChartRequest a -&gt; Bool)
+-&gt; (ChartRequest a -&gt; ChartRequest a -&gt; Bool)
+-&gt; Eq (ChartRequest a)
+forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+ChartRequest a -&gt; ChartRequest a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+ChartRequest a -&gt; ChartRequest a -&gt; Bool
+== :: ChartRequest a -&gt; ChartRequest a -&gt; Bool
+$c/= :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+ChartRequest a -&gt; ChartRequest a -&gt; Bool
+/= :: ChartRequest a -&gt; ChartRequest a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679554678"><span id="local-6989586621679554693"><span id="local-6989586621679554697"><span class="annot"><span class="annottext">Int -&gt; ChartRequest a -&gt; ShowS
+[ChartRequest a] -&gt; ShowS
+ChartRequest a -&gt; String
+(Int -&gt; ChartRequest a -&gt; ShowS)
+-&gt; (ChartRequest a -&gt; String)
+-&gt; ([ChartRequest a] -&gt; ShowS)
+-&gt; Show (ChartRequest a)
+forall a. Show a =&gt; Int -&gt; ChartRequest a -&gt; ShowS
+forall a. Show a =&gt; [ChartRequest a] -&gt; ShowS
+forall a. Show a =&gt; ChartRequest a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; ChartRequest a -&gt; ShowS
+showsPrec :: Int -&gt; ChartRequest a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; ChartRequest a -&gt; String
+show :: ChartRequest a -&gt; String
+$cshowList :: forall a. Show a =&gt; [ChartRequest a] -&gt; ShowS
+showList :: [ChartRequest a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621679554524"><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554524"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679554524"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554524"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554524"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679554524"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier hs-type">ChartRequest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554524"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621679554734"><span class="annot"><span class="annottext">tomlDecoder :: Decoder (ChartRequest a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621679554735"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621679554735"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder Text -&gt; Text -&gt; Decoder (Maybe Text)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;description&quot;</span></span><span>
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621679554737"><span class="annot"><span class="annottext">[FilterExpr a]
+</span><a href="#local-6989586621679554737"><span class="hs-identifier hs-var">filters</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Decoder [FilterExpr a]
+forall a. DecodeTOML a =&gt; Text -&gt; Decoder [a]
+</span><a href="Pacer.Utils.html#getFieldOptArrayOf"><span class="hs-identifier hs-var">Utils.getFieldOptArrayOf</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;filters&quot;</span></span><span>
+</span><span id="line-84"></span><span>    </span><span id="local-6989586621679554739"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679554739"><span class="hs-identifier hs-var">title</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder Text -&gt; Text -&gt; Decoder Text
+forall a. Decoder a -&gt; Text -&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldWith"><span class="hs-identifier hs-var">TOML.getFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;title&quot;</span></span><span>
+</span><span id="line-85"></span><span>    </span><span id="local-6989586621679554741"><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><a href="#local-6989586621679554741"><span class="hs-keyword hs-var">unit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder DistanceUnit -&gt; Text -&gt; Decoder (Maybe DistanceUnit)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder DistanceUnit
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;unit&quot;</span></span><span>
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621679554742"><span class="annot"><span class="annottext">YAxisType
+</span><a href="#local-6989586621679554742"><span class="hs-identifier hs-var">yAxis</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder YAxisType -&gt; Text -&gt; Decoder YAxisType
+forall a. Decoder a -&gt; Text -&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldWith"><span class="hs-identifier hs-var">TOML.getFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder YAxisType
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;y-axis&quot;</span></span><span>
+</span><span id="line-87"></span><span>    </span><span id="local-6989586621679554743"><span class="annot"><span class="annottext">Maybe YAxisType
+</span><a href="#local-6989586621679554743"><span class="hs-identifier hs-var">y1Axis</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder YAxisType -&gt; Text -&gt; Decoder (Maybe YAxisType)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder YAxisType
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;y1-axis&quot;</span></span><span>
+</span><span id="line-88"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-89"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#MkChartRequest"><span class="hs-identifier hs-type">MkChartRequest</span></a></span><span>
+</span><span id="line-90"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+description :: Maybe Text
+description :: Maybe Text
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>          </span><span class="annot"><span class="annottext">[FilterExpr a]
+filters :: [FilterExpr a]
+filters :: [FilterExpr a]
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#filters"><span class="hs-identifier hs-var hs-var">filters</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>          </span><span class="annot"><span class="annottext">Text
+title :: Text
+title :: Text
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#title"><span class="hs-identifier hs-var hs-var">title</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>          </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+unit :: Maybe DistanceUnit
+unit :: Maybe DistanceUnit
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#unit"><span class="hs-keyword hs-var hs-var">unit</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>          </span><span class="annot"><span class="annottext">YAxisType
+yAxis :: YAxisType
+yAxis :: YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#yAxis"><span class="hs-identifier hs-var hs-var">yAxis</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>          </span><span class="annot"><span class="annottext">Maybe YAxisType
+y1Axis :: Maybe YAxisType
+y1Axis :: Maybe YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#y1Axis"><span class="hs-identifier hs-var hs-var">y1Axis</span></a></span><span>
+</span><span id="line-96"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="annot"><span class="hs-comment">-- | Garmin settings for chart requests.</span></span><span>
+</span><span id="line-99"></span><span class="hs-keyword">newtype</span><span> </span><span id="GarminSettings"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#GarminSettings"><span class="hs-identifier hs-var">GarminSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkGarminSettings"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#MkGarminSettings"><span class="hs-identifier hs-var">MkGarminSettings</span></a></span></span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="distanceUnit"><span class="annot"><span class="annottext">GarminSettings -&gt; Maybe DistanceUnit
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#distanceUnit"><span class="hs-identifier hs-var hs-var">distanceUnit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-102"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679554747"><span id="local-6989586621679554751"><span class="annot"><span class="annottext">GarminSettings -&gt; GarminSettings -&gt; Bool
+(GarminSettings -&gt; GarminSettings -&gt; Bool)
+-&gt; (GarminSettings -&gt; GarminSettings -&gt; Bool) -&gt; Eq GarminSettings
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: GarminSettings -&gt; GarminSettings -&gt; Bool
+== :: GarminSettings -&gt; GarminSettings -&gt; Bool
+$c/= :: GarminSettings -&gt; GarminSettings -&gt; Bool
+/= :: GarminSettings -&gt; GarminSettings -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679554755"><span id="local-6989586621679554760"><span id="local-6989586621679554764"><span class="annot"><span class="annottext">Int -&gt; GarminSettings -&gt; ShowS
+[GarminSettings] -&gt; ShowS
+GarminSettings -&gt; String
+(Int -&gt; GarminSettings -&gt; ShowS)
+-&gt; (GarminSettings -&gt; String)
+-&gt; ([GarminSettings] -&gt; ShowS)
+-&gt; Show GarminSettings
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; GarminSettings -&gt; ShowS
+showsPrec :: Int -&gt; GarminSettings -&gt; ShowS
+$cshow :: GarminSettings -&gt; String
+show :: GarminSettings -&gt; String
+$cshowList :: [GarminSettings] -&gt; ShowS
+showList :: [GarminSettings] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#GarminSettings"><span class="hs-identifier hs-type">GarminSettings</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621679554780"><span class="annot"><span class="annottext">tomlDecoder :: Decoder GarminSettings
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-106"></span><span>    </span><span id="local-6989586621679554781"><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><a href="#local-6989586621679554781"><span class="hs-identifier hs-var">distanceUnit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">(Text -&gt; Decoder DistanceUnit)
+-&gt; Maybe Text -&gt; Decoder (Maybe DistanceUnit)
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Maybe a -&gt; f (Maybe b)
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResultDefault DistanceUnit -&gt; Decoder DistanceUnit
+forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault DistanceUnit -&gt; Decoder DistanceUnit)
+-&gt; (Text -&gt; ResultDefault DistanceUnit)
+-&gt; Text
+-&gt; Decoder DistanceUnit
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault DistanceUnit
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Decoder (Maybe DistanceUnit))
+-&gt; Decoder (Maybe Text) -&gt; Decoder (Maybe DistanceUnit)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;unit&quot;</span></span><span>
+</span><span id="line-109"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-110"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#MkGarminSettings"><span class="hs-identifier hs-type">MkGarminSettings</span></a></span><span>
+</span><span id="line-111"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+distanceUnit :: Maybe DistanceUnit
+distanceUnit :: Maybe DistanceUnit
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#distanceUnit"><span class="hs-identifier hs-var hs-var">distanceUnit</span></a></span><span>
+</span><span id="line-112"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="annot"><span class="hs-comment">-- | List of chart requests.</span></span><span>
+</span><span id="line-115"></span><span class="hs-keyword">data</span><span> </span><span id="ChartRequests"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier hs-var">ChartRequests</span></a></span></span><span> </span><span id="local-6989586621679554553"><span class="annot"><a href="#local-6989586621679554553"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkChartRequests"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#MkChartRequests"><span class="hs-identifier hs-var">MkChartRequests</span></a></span></span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="chartRequests"><span class="annot"><span class="annottext">forall a. ChartRequests a -&gt; Seq (ChartRequest a)
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#chartRequests"><span class="hs-identifier hs-var hs-var">chartRequests</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier hs-type">ChartRequest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554553"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>    </span><span id="garminSettings"><span class="annot"><span class="annottext">forall a. ChartRequests a -&gt; Maybe GarminSettings
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#garminSettings"><span class="hs-identifier hs-var hs-var">garminSettings</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#GarminSettings"><span class="hs-identifier hs-type">GarminSettings</span></a></span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-119"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679554795"><span id="local-6989586621679554802"><span class="annot"><span class="annottext">ChartRequests a -&gt; ChartRequests a -&gt; Bool
+(ChartRequests a -&gt; ChartRequests a -&gt; Bool)
+-&gt; (ChartRequests a -&gt; ChartRequests a -&gt; Bool)
+-&gt; Eq (ChartRequests a)
+forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+ChartRequests a -&gt; ChartRequests a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+ChartRequests a -&gt; ChartRequests a -&gt; Bool
+== :: ChartRequests a -&gt; ChartRequests a -&gt; Bool
+$c/= :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+ChartRequests a -&gt; ChartRequests a -&gt; Bool
+/= :: ChartRequests a -&gt; ChartRequests a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679554807"><span id="local-6989586621679554815"><span id="local-6989586621679554819"><span class="annot"><span class="annottext">Int -&gt; ChartRequests a -&gt; ShowS
+[ChartRequests a] -&gt; ShowS
+ChartRequests a -&gt; String
+(Int -&gt; ChartRequests a -&gt; ShowS)
+-&gt; (ChartRequests a -&gt; String)
+-&gt; ([ChartRequests a] -&gt; ShowS)
+-&gt; Show (ChartRequests a)
+forall a. Show a =&gt; Int -&gt; ChartRequests a -&gt; ShowS
+forall a. Show a =&gt; [ChartRequests a] -&gt; ShowS
+forall a. Show a =&gt; ChartRequests a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; ChartRequests a -&gt; ShowS
+showsPrec :: Int -&gt; ChartRequests a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; ChartRequests a -&gt; String
+show :: ChartRequests a -&gt; String
+$cshowList :: forall a. Show a =&gt; [ChartRequests a] -&gt; ShowS
+showList :: [ChartRequests a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621679554565"><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679554565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679554565"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier hs-type">ChartRequests</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621679554836"><span class="annot"><span class="annottext">tomlDecoder :: Decoder (ChartRequests a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621679554837"><span class="annot"><span class="annottext">Maybe GarminSettings
+</span><a href="#local-6989586621679554837"><span class="hs-identifier hs-var">garminSettings</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder GarminSettings -&gt; Text -&gt; Decoder (Maybe GarminSettings)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">TOML.getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder GarminSettings
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;garmin&quot;</span></span><span>
+</span><span id="line-132"></span><span>    </span><span id="local-6989586621679554838"><span class="annot"><span class="annottext">Seq (ChartRequest a)
+</span><a href="#local-6989586621679554838"><span class="hs-identifier hs-var">chartRequests</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Seq (ChartRequest a))
+-&gt; Text -&gt; Decoder (Seq (ChartRequest a))
+forall a. Decoder a -&gt; Text -&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#getFieldWith"><span class="hs-identifier hs-var">TOML.getFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder (Seq (ChartRequest a))
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;charts&quot;</span></span><span>
+</span><span id="line-133"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-134"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#MkChartRequests"><span class="hs-identifier hs-type">MkChartRequests</span></a></span><span>
+</span><span id="line-135"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Seq (ChartRequest a)
+chartRequests :: Seq (ChartRequest a)
+chartRequests :: Seq (ChartRequest a)
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#chartRequests"><span class="hs-identifier hs-var hs-var">chartRequests</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>          </span><span class="annot"><span class="annottext">Maybe GarminSettings
+garminSettings :: Maybe GarminSettings
+garminSettings :: Maybe GarminSettings
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#garminSettings"><span class="hs-identifier hs-var hs-var">garminSettings</span></a></span><span>
+</span><span id="line-137"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-138"></span></pre></body></html>

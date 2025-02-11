@@ -1,0 +1,587 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Driver.html"><span class="hs-identifier">Pacer.Driver</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Main</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Driver.html#runApp"><span class="hs-identifier">runApp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Logger</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Driver.html#runLogger"><span class="hs-identifier">runLogger</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html"><span class="hs-identifier">Effectful.FileSystem.PathReader.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PR</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html"><span class="hs-identifier">Effectful.Logger.Dynamic</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier">Logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LoggerLog"><span class="hs-identifier">LoggerLog</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html"><span class="hs-identifier">Effectful.Logger.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Logger</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html"><span class="hs-identifier">Effectful.LoggerNS.Static</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html"><span class="hs-identifier">Effectful.LoggerNS.Static</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LoggerNS</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html"><span class="hs-identifier">FileSystem.Path</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Path</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.html"><span class="hs-identifier">Pacer.Command</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.html#Command"><span class="hs-identifier">Command</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.html#Chart"><span class="hs-identifier">Chart</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.html#Convert"><span class="hs-identifier">Convert</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.html#Derive"><span class="hs-identifier">Derive</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.html#Scale"><span class="hs-identifier">Scale</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Pacer.Command.html#CommandPhaseArgs"><span class="hs-identifier">CommandPhaseArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.html"><span class="hs-identifier">Pacer.Command</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Command</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.html"><span class="hs-identifier">Pacer.Command.Chart</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Chart</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Convert.html"><span class="hs-identifier">Pacer.Command.Convert</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Convert</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.html"><span class="hs-identifier">Pacer.Command.Derive</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Derive</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Scale.html"><span class="hs-identifier">Pacer.Command.Scale</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Scale</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Config.Args.html"><span class="hs-identifier">Pacer.Config.Args</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Config.Args.html#Args"><span class="hs-identifier">Args</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Config.Args.html#command"><span class="hs-identifier">command</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Config.Args.html#configPath"><span class="hs-identifier">configPath</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Config.Args.html#parserInfo"><span class="hs-identifier">parserInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Config.Env.html"><span class="hs-identifier">Pacer.Config.Env</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Config.Env.Types.html"><span class="hs-identifier">Pacer.Config.Env.Types</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Config.Env.Types.html#CachedPaths"><span class="hs-identifier">CachedPaths</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Config.Env.Types.html#MkCachedPaths"><span class="hs-identifier">MkCachedPaths</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Config.Env.Types.html#xdgConfigPath"><span class="hs-identifier">xdgConfigPath</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Pacer.Config.Env.Types.html#LogEnv"><span class="hs-identifier">LogEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Config.Env.Types.html#logLevel"><span class="hs-identifier">logLevel</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html"><span class="hs-identifier">Pacer.Config.Toml</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Config.Toml.html#Toml"><span class="hs-identifier">Toml</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#TomlWithPath"><span class="hs-identifier">TomlWithPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Config.Toml.html#MkTomlWithPath"><span class="hs-identifier">MkTomlWithPath</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#toml"><span class="hs-identifier">toml</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.OsPath</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">FP</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.html/TOML.html"><span class="hs-identifier">TOML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="local-6989586621679557889"><span class="annot"><a href="Pacer.Driver.html#runApp"><span class="hs-identifier hs-type">runApp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="file:///nix/store/a1y0mjxz8kggpa9kb21nzdxnr2k6mwn6-effectful-2.5.1.0-doc/share/doc/effectful-2.5.1.0/html/src/Effectful.Concurrent.Effect.html/Effectful.Concurrent.Effect.html#Concurrent"><span class="hs-identifier hs-type">Concurrent</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#FileWriter"><span class="hs-identifier hs-type">FileWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/optparse-effectful-0.1-3bda8cfcee9b97f9b3858190fcb32229c59ba0578ae5e1592b97fd1498ed59c3/share/doc/html/src/Effectful.Optparse.Static.html/Effectful.Optparse.Static.html#Optparse"><span class="hs-identifier hs-type">Optparse</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#PathWriter"><span class="hs-identifier hs-type">PathWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/terminal-effectful-0.1-0a4c7ec604a47b736519469978c18d0cc863da1968477772acff57f73ad5b490/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#Terminal"><span class="hs-identifier hs-type">Terminal</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/time-effectful-0.1-fbb43293e926ff3beedc1595b078d403e183890fd008a34997dc526ea8829f02/share/doc/html/src/Effectful.Time.Dynamic.html/Effectful.Time.Dynamic.html#Time"><span class="hs-identifier hs-type">Time</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/typed-process-dynamic-effectful-0.1-fdcda08ce42199486c38dfd32d8dcea9afb8f30ad4af55aa99a1b0498821f749/share/doc/html/src/Effectful.Process.Typed.Dynamic.html/Effectful.Process.Typed.Dynamic.html#TypedProcess"><span class="hs-identifier hs-type">TypedProcess</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557889"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-52"></span><span id="runApp"><span class="annot"><span class="annottext">runApp :: forall (es :: [Effect]).
+(HasCallStack, Concurrent :&gt; es, FileReader :&gt; es,
+ FileWriter :&gt; es, Optparse :&gt; es, PathReader :&gt; es,
+ PathWriter :&gt; es, Terminal :&gt; es, Time :&gt; es,
+ TypedProcess :&gt; es) =&gt;
+Eff es ()
+</span><a href="Pacer.Driver.html#runApp"><span class="hs-identifier hs-var hs-var">runApp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Config -&gt; Eff es ()) -&gt; Eff es ()
+forall (es :: [Effect]) a.
+(HasCallStack, FileReader :&gt; es, PathReader :&gt; es,
+ Optparse :&gt; es) =&gt;
+(Config -&gt; Eff es a) -&gt; Eff es a
+</span><a href="Pacer.Driver.html#withEnv"><span class="hs-identifier hs-var">withEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Config -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Concurrent :&gt; es, FileReader :&gt; es,
+ FileWriter :&gt; es, PathReader :&gt; es, PathWriter :&gt; es,
+ Terminal :&gt; es, Time :&gt; es, TypedProcess :&gt; es) =&gt;
+Config -&gt; Eff es ()
+</span><a href="Pacer.Driver.html#runCommand"><span class="hs-identifier hs-var">runCommand</span></a></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span id="local-6989586621679557904"><span class="annot"><a href="Pacer.Driver.html#runCommand"><span class="hs-identifier hs-type">runCommand</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="file:///nix/store/a1y0mjxz8kggpa9kb21nzdxnr2k6mwn6-effectful-2.5.1.0-doc/share/doc/effectful-2.5.1.0/html/src/Effectful.Concurrent.Effect.html/Effectful.Concurrent.Effect.html#Concurrent"><span class="hs-identifier hs-type">Concurrent</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#FileWriter"><span class="hs-identifier hs-type">FileWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#PathWriter"><span class="hs-identifier hs-type">PathWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/terminal-effectful-0.1-0a4c7ec604a47b736519469978c18d0cc863da1968477772acff57f73ad5b490/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#Terminal"><span class="hs-identifier hs-type">Terminal</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/time-effectful-0.1-fbb43293e926ff3beedc1595b078d403e183890fd008a34997dc526ea8829f02/share/doc/html/src/Effectful.Time.Dynamic.html/Effectful.Time.Dynamic.html#Time"><span class="hs-identifier hs-type">Time</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/typed-process-dynamic-effectful-0.1-fdcda08ce42199486c38dfd32d8dcea9afb8f30ad4af55aa99a1b0498821f749/share/doc/html/src/Effectful.Process.Typed.Dynamic.html/Effectful.Process.Typed.Dynamic.html#TypedProcess"><span class="hs-identifier hs-type">TypedProcess</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Pacer.Driver.html#Config"><span class="hs-identifier hs-type">Config</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557904"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-67"></span><span id="runCommand"><span class="annot"><span class="annottext">runCommand :: forall (es :: [Effect]).
+(HasCallStack, Concurrent :&gt; es, FileReader :&gt; es,
+ FileWriter :&gt; es, PathReader :&gt; es, PathWriter :&gt; es,
+ Terminal :&gt; es, Time :&gt; es, TypedProcess :&gt; es) =&gt;
+Config -&gt; Eff es ()
+</span><a href="Pacer.Driver.html#runCommand"><span class="hs-identifier hs-var hs-var">runCommand</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679558220"><span class="annot"><span class="annottext">CommandPhaseArgs Double
+</span><a href="#local-6989586621679558220"><span class="hs-identifier hs-var">cmd</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679558221"><span class="annot"><span class="annottext">Maybe TomlWithPath
+</span><a href="#local-6989586621679558221"><span class="hs-identifier hs-var">mToml</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679558222"><span class="annot"><span class="annottext">CachedPaths
+</span><a href="#local-6989586621679558222"><span class="hs-identifier hs-var">cachedPaths</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679558223"><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679558223"><span class="hs-identifier hs-var">logEnv</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Eff (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff es ()
+</span><a href="#local-6989586621679558224"><span class="hs-identifier hs-var">runner</span></a></span><span> </span><span class="annot"><span class="annottext">(Eff
+   (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+ -&gt; Eff es ())
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Eff (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+forall {es :: [Effect]} {b}. (Logger :&gt; es) =&gt; Eff es b -&gt; Eff es b
+</span><a href="#local-6989586621679558225"><span class="hs-identifier hs-var">logAndRethrow</span></a></span><span> </span><span class="annot"><span class="annottext">(Eff
+   (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+ -&gt; Eff
+      (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ())
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679558226"><span class="annot"><span class="annottext">CommandPhaseFinal Double
+</span><a href="#local-6989586621679558226"><span class="hs-identifier hs-var">command</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CommandPhaseArgs Double
+-&gt; Maybe TomlWithPath
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es)
+     (CommandPhaseFinal Double)
+forall (es :: [Effect]) a.
+(HasCallStack, Logger :&gt; es, LoggerNS :&gt; es, PathReader :&gt; es,
+ State CachedPaths :&gt; es) =&gt;
+CommandPhaseArgs a
+-&gt; Maybe TomlWithPath -&gt; Eff es (CommandPhaseFinal a)
+</span><a href="Pacer.Command.html#evolvePhase"><span class="hs-identifier hs-var">Command.evolvePhase</span></a></span><span> </span><span class="annot"><span class="annottext">CommandPhaseArgs Double
+</span><a href="#local-6989586621679558220"><span class="hs-identifier hs-var">cmd</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TomlWithPath
+</span><a href="#local-6989586621679558221"><span class="hs-identifier hs-var">mToml</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CommandPhaseFinal Double
+</span><a href="#local-6989586621679558226"><span class="hs-identifier hs-var">command</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><a href="Pacer.Command.html#Chart"><span class="hs-identifier hs-type">Chart</span></a></span><span> </span><span id="local-6989586621679558228"><span class="annot"><span class="annottext">ChartParams 'ConfigPhaseFinal
+</span><a href="#local-6989586621679558228"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ChartParams 'ConfigPhaseFinal
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, FileWriter :&gt; es, Logger :&gt; es,
+ LoggerNS :&gt; es, PathReader :&gt; es, PathWriter :&gt; es,
+ TypedProcess :&gt; es) =&gt;
+ChartParams 'ConfigPhaseFinal -&gt; Eff es ()
+</span><a href="Pacer.Command.Chart.html#handle"><span class="hs-identifier hs-var">Chart.handle</span></a></span><span> </span><span class="annot"><span class="annottext">ChartParams 'ConfigPhaseFinal
+</span><a href="#local-6989586621679558228"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><a href="Pacer.Command.html#Convert"><span class="hs-identifier hs-type">Convert</span></a></span><span> </span><span id="local-6989586621679558230"><span class="annot"><span class="annottext">ConvertParams 'ConfigPhaseFinal Double
+</span><a href="#local-6989586621679558230"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConvertParams 'ConfigPhaseFinal Double
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+forall (es :: [Effect]) a.
+(Display a, From&#8484; a, HasCallStack, Ord a, Semifield a, Show a,
+ Terminal :&gt; es, To&#8474; a) =&gt;
+ConvertParamsFinal a -&gt; Eff es ()
+</span><a href="Pacer.Command.Convert.html#handle"><span class="hs-identifier hs-var">Convert.handle</span></a></span><span> </span><span class="annot"><span class="annottext">ConvertParams 'ConfigPhaseFinal Double
+</span><a href="#local-6989586621679558230"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="Pacer.Command.html#Derive"><span class="hs-identifier hs-type">Derive</span></a></span><span> </span><span id="local-6989586621679558232"><span class="annot"><span class="annottext">DeriveParams 'ConfigPhaseFinal Double
+</span><a href="#local-6989586621679558232"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeriveParams 'ConfigPhaseFinal Double
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+forall (es :: [Effect]) a.
+(Display a, From&#8484; a, HasCallStack, Ord a, Semifield a, Show a,
+ Terminal :&gt; es, To&#8474; a) =&gt;
+DeriveParamsFinal a -&gt; Eff es ()
+</span><a href="Pacer.Command.Derive.html#handle"><span class="hs-identifier hs-var">Derive.handle</span></a></span><span> </span><span class="annot"><span class="annottext">DeriveParams 'ConfigPhaseFinal Double
+</span><a href="#local-6989586621679558232"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><a href="Pacer.Command.html#Scale"><span class="hs-identifier hs-type">Scale</span></a></span><span> </span><span id="local-6989586621679558234"><span class="annot"><span class="annottext">ScaleParams 'ConfigPhaseFinal Double
+</span><a href="#local-6989586621679558234"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScaleParams 'ConfigPhaseFinal Double
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+forall (es :: [Effect]) a.
+(Display a, From&#8484; a, HasCallStack, Ord a, Semifield a, Show a,
+ Terminal :&gt; es, To&#8474; a) =&gt;
+ScaleParamsFinal a -&gt; Eff es ()
+</span><a href="Pacer.Command.Scale.html#handle"><span class="hs-identifier hs-var">Scale.handle</span></a></span><span> </span><span class="annot"><span class="annottext">ScaleParams 'ConfigPhaseFinal Double
+</span><a href="#local-6989586621679558234"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621679558224"><span class="annot"><span class="annottext">runner :: Eff (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff es ()
+</span><a href="#local-6989586621679558224"><span class="hs-identifier hs-var hs-var">runner</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">CachedPaths -&gt; Eff (State CachedPaths : es) () -&gt; Eff es ()
+forall s (es :: [Effect]) a.
+HasCallStack =&gt;
+s -&gt; Eff (State s : es) a -&gt; Eff es a
+</span><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.State.Static.Local.html/Effectful.State.Static.Local.html#evalState"><span class="hs-identifier hs-var">evalState</span></a></span><span> </span><span class="annot"><span class="annottext">CachedPaths
+</span><a href="#local-6989586621679558222"><span class="hs-identifier hs-var">cachedPaths</span></a></span><span>
+</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">(Eff (State CachedPaths : es) () -&gt; Eff es ())
+-&gt; (Eff
+      (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+    -&gt; Eff (State CachedPaths : es) ())
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff es ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogEnv
+-&gt; Eff (Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff (State CachedPaths : es) ()
+forall r (es :: [Effect]) a.
+HasCallStack =&gt;
+r -&gt; Eff (Reader r : es) a -&gt; Eff es a
+</span><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Reader.Static.html/Effectful.Reader.Static.html#runReader"><span class="hs-identifier hs-var">runReader</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679558223"><span class="hs-identifier hs-var">logEnv</span></a></span><span>
+</span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">(Eff (Reader LogEnv : State CachedPaths : es) ()
+ -&gt; Eff (State CachedPaths : es) ())
+-&gt; (Eff
+      (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+    -&gt; Eff (Reader LogEnv : State CachedPaths : es) ())
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff (State CachedPaths : es) ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Namespace
+-&gt; Eff (LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff (Reader LogEnv : State CachedPaths : es) ()
+forall (es :: [Effect]) a.
+HasCallStack =&gt;
+Namespace -&gt; Eff (LoggerNS : es) a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#runLoggerNS"><span class="hs-identifier hs-var">runLoggerNS</span></a></span><span> </span><span class="annot"><span class="annottext">Namespace
+</span><span class="hs-string">&quot;main&quot;</span></span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">(Eff (LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+ -&gt; Eff (Reader LogEnv : State CachedPaths : es) ())
+-&gt; (Eff
+      (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+    -&gt; Eff (LoggerNS : Reader LogEnv : State CachedPaths : es) ())
+-&gt; Eff
+     (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff (Reader LogEnv : State CachedPaths : es) ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Eff (Logger : LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+-&gt; Eff (LoggerNS : Reader LogEnv : State CachedPaths : es) ()
+forall (es :: [Effect]) a.
+(HasCallStack, Concurrent :&gt; es, LoggerNS :&gt; es,
+ Reader LogEnv :&gt; es, Terminal :&gt; es, Time :&gt; es) =&gt;
+Eff (Logger : es) a -&gt; Eff es a
+</span><a href="Pacer.Driver.html#runLogger"><span class="hs-identifier hs-var">runLogger</span></a></span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621679558225"><span class="annot"><span class="annottext">logAndRethrow :: Eff es b -&gt; Eff es b
+</span><a href="#local-6989586621679558225"><span class="hs-identifier hs-var hs-var">logAndRethrow</span></a></span></span><span> </span><span id="local-6989586621679558261"><span class="annot"><span class="annottext">Eff es b
+</span><a href="#local-6989586621679558261"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span>      </span><span class="annot"><span class="annottext">Eff es b -&gt; Eff es (Either SomeException b)
+forall (m :: * -&gt; *) a.
+(HasCallStack, MonadCatch m) =&gt;
+m a -&gt; m (Either SomeException a)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/exception-utils-0.1-2086ace44b64608182ad6df99643969985e496efdc66b90ce9622ed5509d37dc/share/doc/html/src/Control.Exception.Utils.html/Control.Exception.Utils.html#trySync"><span class="hs-identifier hs-var">trySync</span></a></span><span> </span><span class="annot"><span class="annottext">Eff es b
+</span><a href="#local-6989586621679558261"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Eff es (Either SomeException b)
+-&gt; (Either SomeException b -&gt; Eff es b) -&gt; Eff es b
+forall a b. Eff es a -&gt; (a -&gt; Eff es b) -&gt; Eff es b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-83"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679558263"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679558263"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">b -&gt; Eff es b
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679558263"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679558264"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679558264"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-85"></span><span>          </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logFatal"><span class="hs-identifier hs-type">Logger.logFatal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Text
+forall e. Exception e =&gt; e -&gt; Text
+</span><a href="Pacer.Prelude.html#displayExceptiont"><span class="hs-identifier hs-var">displayExceptiont</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679558264"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-86"></span><span>          </span><span class="annot"><span class="annottext">SomeException -&gt; Eff es b
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679558264"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span id="local-6989586621679557902"><span id="local-6989586621679557903"><span class="annot"><a href="Pacer.Driver.html#withEnv"><span class="hs-identifier hs-type">withEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557902"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557902"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/optparse-effectful-0.1-3bda8cfcee9b97f9b3858190fcb32229c59ba0578ae5e1592b97fd1498ed59c3/share/doc/html/src/Effectful.Optparse.Static.html/Effectful.Optparse.Static.html#Optparse"><span class="hs-identifier hs-type">Optparse</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557902"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Driver.html#Config"><span class="hs-identifier hs-type">Config</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557902"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557903"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557902"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557903"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-96"></span><span id="withEnv"><span class="annot"><span class="annottext">withEnv :: forall (es :: [Effect]) a.
+(HasCallStack, FileReader :&gt; es, PathReader :&gt; es,
+ Optparse :&gt; es) =&gt;
+(Config -&gt; Eff es a) -&gt; Eff es a
+</span><a href="Pacer.Driver.html#withEnv"><span class="hs-identifier hs-var hs-var">withEnv</span></a></span></span><span> </span><span id="local-6989586621679558284"><span class="annot"><span class="annottext">Config -&gt; Eff es a
+</span><a href="#local-6989586621679558284"><span class="hs-identifier hs-var">onEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Eff es Config
+forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, PathReader :&gt; es,
+ Optparse :&gt; es) =&gt;
+Eff es Config
+</span><a href="Pacer.Driver.html#getConfiguration"><span class="hs-identifier hs-var">getConfiguration</span></a></span><span> </span><span class="annot"><span class="annottext">Eff es Config -&gt; (Config -&gt; Eff es a) -&gt; Eff es a
+forall a b. Eff es a -&gt; (a -&gt; Eff es b) -&gt; Eff es b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Config -&gt; Eff es a
+</span><a href="#local-6989586621679558284"><span class="hs-identifier hs-var">onEnv</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">type</span><span> </span><span id="Config"><span class="annot"><a href="Pacer.Driver.html#Config"><span class="hs-identifier hs-var">Config</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Tuple4</span></span><span>
+</span><span id="line-100"></span><span>    </span><span class="hs-comment">-- Command to run, before evolution</span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.html#CommandPhaseArgs"><span class="hs-identifier hs-type">CommandPhaseArgs</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>    </span><span class="hs-comment">-- Possible toml config</span><span>
+</span><span id="line-103"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#TomlWithPath"><span class="hs-identifier hs-type">TomlWithPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>    </span><span class="hs-comment">-- Cached paths</span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><a href="Pacer.Config.Env.Types.html#CachedPaths"><span class="hs-identifier hs-type">CachedPaths</span></a></span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-comment">-- Logging env</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><a href="Pacer.Config.Env.Types.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span id="local-6989586621679557996"><span class="annot"><a href="Pacer.Driver.html#getConfiguration"><span class="hs-identifier hs-type">getConfiguration</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557996"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557996"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/optparse-effectful-0.1-3bda8cfcee9b97f9b3858190fcb32229c59ba0578ae5e1592b97fd1498ed59c3/share/doc/html/src/Effectful.Optparse.Static.html/Effectful.Optparse.Static.html#Optparse"><span class="hs-identifier hs-type">Optparse</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557996"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557996"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="Pacer.Driver.html#Config"><span class="hs-identifier hs-type">Config</span></a></span></span><span>
+</span><span id="line-116"></span><span id="getConfiguration"><span class="annot"><span class="annottext">getConfiguration :: forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, PathReader :&gt; es,
+ Optparse :&gt; es) =&gt;
+Eff es Config
+</span><a href="Pacer.Driver.html#getConfiguration"><span class="hs-identifier hs-var hs-var">getConfiguration</span></a></span></span><span> </span><span class="hs-glyph">@</span><span id="local-6989586621679558343"><span class="annot"><a href="#local-6989586621679558343"><span class="hs-identifier hs-type hs-type">es</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621679558344"><span class="annot"><span class="annottext">Args Double
+</span><a href="#local-6989586621679558344"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParserInfo (Args Double) -&gt; Eff es (Args Double)
+forall (es :: [Effect]) a.
+(HasCallStack, Optparse :&gt; es) =&gt;
+ParserInfo a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/optparse-effectful-0.1-3bda8cfcee9b97f9b3858190fcb32229c59ba0578ae5e1592b97fd1498ed59c3/share/doc/html/src/Effectful.Optparse.Static.html/Effectful.Optparse.Static.html#execParser"><span class="hs-identifier hs-var">execParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+(From&#8474; a, Ord a, Parser a, Semifield a, Show a) =&gt;
+ParserInfo (Args a)
+</span><a href="Pacer.Config.Args.html#parserInfo"><span class="hs-identifier hs-var">parserInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span>  </span><span class="hs-comment">-- Get toml and xdg config, if necessary.</span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621679558346"><span class="annot"><span class="annottext">Maybe (Path Abs Dir)
+</span><a href="#local-6989586621679558346"><span class="hs-identifier hs-var">mXdgConfig</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679558347"><span class="annot"><span class="annottext">Maybe TomlWithPath
+</span><a href="#local-6989586621679558347"><span class="hs-identifier hs-var">mToml</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-121"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Args Double
+</span><a href="#local-6989586621679558344"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">configPath</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-122"></span><span>      </span><span class="hs-comment">-- No config path, try xdg</span><span>
+</span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-124"></span><span>        </span><span id="local-6989586621679558348"><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679558348"><span class="hs-identifier hs-var">xdgConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Eff es (Path Abs Dir)
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Eff es (Path Abs Dir)
+</span><a href="Pacer.Prelude.html#getXdgConfigPath"><span class="hs-identifier hs-var">getXdgConfigPath</span></a></span><span>
+</span><span id="line-125"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679558350"><span class="annot"><span class="annottext">path :: Path Abs File
+</span><a href="#local-6989586621679558350"><span class="hs-identifier hs-var hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679558348"><span class="hs-identifier hs-var">xdgConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel File -&gt; Path Abs File
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="">[relfile|config.toml|]</span></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span>        </span><span id="local-6989586621679558355"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679558355"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff es Bool
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+OsPath -&gt; Eff es Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#doesFileExist"><span class="hs-identifier hs-var">PR.doesFileExist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#pathToOsPath"><span class="hs-identifier hs-var">pathToOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679558350"><span class="hs-identifier hs-var">path</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679558355"><span class="hs-identifier hs-var">exists</span></a></span><span>
+</span><span id="line-129"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-130"></span><span>            </span><span id="local-6989586621679558358"><span class="annot"><span class="annottext">Toml
+</span><a href="#local-6989586621679558358"><span class="hs-identifier hs-var">toml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; Eff es Toml
+forall b t. Path b t -&gt; Eff es Toml
+</span><a href="#local-6989586621679558359"><span class="hs-identifier hs-var">readToml</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679558350"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><span id="line-131"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679558360"><span class="annot"><span class="annottext">tomlPath :: TomlWithPath
+</span><a href="#local-6989586621679558360"><span class="hs-identifier hs-var hs-var">tomlPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Toml -&gt; TomlWithPath
+</span><a href="Pacer.Config.Toml.html#MkTomlWithPath"><span class="hs-identifier hs-var">MkTomlWithPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679558348"><span class="hs-identifier hs-var">xdgConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Toml
+</span><a href="#local-6989586621679558358"><span class="hs-identifier hs-var">toml</span></a></span><span>
+</span><span id="line-132"></span><span>            </span><span class="annot"><span class="annottext">(Maybe (Path Abs Dir), Maybe TomlWithPath)
+-&gt; Eff es (Maybe (Path Abs Dir), Maybe TomlWithPath)
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">((Maybe (Path Abs Dir), Maybe TomlWithPath)
+ -&gt; Eff es (Maybe (Path Abs Dir), Maybe TomlWithPath))
+-&gt; (Maybe (Path Abs Dir), Maybe TomlWithPath)
+-&gt; Eff es (Maybe (Path Abs Dir), Maybe TomlWithPath)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Maybe (Path Abs Dir)
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679558348"><span class="hs-identifier hs-var">xdgConfig</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TomlWithPath -&gt; Maybe TomlWithPath
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TomlWithPath
+</span><a href="#local-6989586621679558360"><span class="hs-identifier hs-var">tomlPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">(Maybe (Path Abs Dir), Maybe TomlWithPath)
+-&gt; Eff es (Maybe (Path Abs Dir), Maybe TomlWithPath)
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Maybe (Path Abs Dir)
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679558348"><span class="hs-identifier hs-var">xdgConfig</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe TomlWithPath
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>      </span><span class="hs-comment">-- Config path exists, use it.</span><span>
+</span><span id="line-135"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679558361"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679558361"><span class="hs-identifier hs-var">configPath</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-136"></span><span>        </span><span id="local-6989586621679558362"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679558362"><span class="hs-identifier hs-var">absPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff es (Path Abs File)
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+OsPath -&gt; Eff es (Path Abs File)
+</span><a href="Pacer.Prelude.html#parseCanonicalAbsFile"><span class="hs-identifier hs-var">parseCanonicalAbsFile</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679558361"><span class="hs-identifier hs-var">configPath</span></a></span><span>
+</span><span id="line-137"></span><span>        </span><span id="local-6989586621679558364"><span class="annot"><span class="annottext">Toml
+</span><a href="#local-6989586621679558364"><span class="hs-identifier hs-var">toml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; Eff es Toml
+forall b t. Path b t -&gt; Eff es Toml
+</span><a href="#local-6989586621679558359"><span class="hs-identifier hs-var">readToml</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679558362"><span class="hs-identifier hs-var">absPath</span></a></span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span>        </span><span id="local-6989586621679558365"><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679558365"><span class="hs-identifier hs-var">absTomlDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff es (Path Abs Dir)
+forall (m :: * -&gt; *).
+(HasCallStack, MonadThrow m) =&gt;
+OsPath -&gt; m (Path Abs Dir)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#parseAbsDir"><span class="hs-identifier hs-var">Path.parseAbsDir</span></a></span><span> </span><span class="annot"><span class="annottext">(OsPath -&gt; Eff es (Path Abs Dir))
+-&gt; OsPath -&gt; Eff es (Path Abs Dir)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; OsPath
+</span><span class="hs-identifier hs-var">FP.takeDirectory</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#pathToOsPath"><span class="hs-identifier hs-var">pathToOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679558362"><span class="hs-identifier hs-var">absPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679558368"><span class="annot"><span class="annottext">tomlPath :: TomlWithPath
+</span><a href="#local-6989586621679558368"><span class="hs-identifier hs-var hs-var">tomlPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Toml -&gt; TomlWithPath
+</span><a href="Pacer.Config.Toml.html#MkTomlWithPath"><span class="hs-identifier hs-var">MkTomlWithPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679558365"><span class="hs-identifier hs-var">absTomlDir</span></a></span><span> </span><span class="annot"><span class="annottext">Toml
+</span><a href="#local-6989586621679558364"><span class="hs-identifier hs-var">toml</span></a></span><span>
+</span><span id="line-142"></span><span>        </span><span class="annot"><span class="annottext">(Maybe (Path Abs Dir), Maybe TomlWithPath)
+-&gt; Eff es (Maybe (Path Abs Dir), Maybe TomlWithPath)
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (Path Abs Dir)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TomlWithPath -&gt; Maybe TomlWithPath
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TomlWithPath
+</span><a href="#local-6989586621679558368"><span class="hs-identifier hs-var">tomlPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679558369"><span class="annot"><span class="annottext">cachedPaths :: CachedPaths
+</span><a href="#local-6989586621679558369"><span class="hs-identifier hs-var hs-var">cachedPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-145"></span><span>        </span><span class="annot"><a href="Pacer.Config.Env.Types.html#MkCachedPaths"><span class="hs-identifier hs-type">MkCachedPaths</span></a></span><span>
+</span><span id="line-146"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">xdgConfigPath :: Maybe (Path Abs Dir)
+</span><a href="Pacer.Config.Env.Types.html#xdgConfigPath"><span class="hs-identifier hs-var">xdgConfigPath</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Path Abs Dir)
+</span><a href="#local-6989586621679558346"><span class="hs-identifier hs-var">mXdgConfig</span></a></span><span>
+</span><span id="line-147"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-148"></span><span>      </span><span id="local-6989586621679558370"><span class="annot"><span class="annottext">logEnv :: LogEnv
+</span><a href="#local-6989586621679558370"><span class="hs-identifier hs-var hs-var">logEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Args Double -&gt; Maybe Toml -&gt; LogEnv
+forall a. Args a -&gt; Maybe Toml -&gt; LogEnv
+</span><a href="Pacer.Config.Env.html#mkLogEnv"><span class="hs-identifier hs-var">Env.mkLogEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Args Double
+</span><a href="#local-6989586621679558344"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe TomlWithPath
+</span><a href="#local-6989586621679558347"><span class="hs-identifier hs-var">mToml</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TomlWithPath -&gt; (TomlWithPath -&gt; Toml) -&gt; Maybe Toml
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-operator">.</span><span class="hs-identifier">toml</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span>  </span><span class="annot"><span class="annottext">Config -&gt; Eff es Config
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Args Double
+</span><a href="#local-6989586621679558344"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">command</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe TomlWithPath
+</span><a href="#local-6989586621679558347"><span class="hs-identifier hs-var">mToml</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">CachedPaths
+</span><a href="#local-6989586621679558369"><span class="hs-identifier hs-var">cachedPaths</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679558370"><span class="hs-identifier hs-var">logEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621679558024"><span id="local-6989586621679558025"><span class="annot"><a href="#local-6989586621679558359"><span class="hs-identifier hs-type">readToml</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><a href="#local-6989586621679558024"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679558025"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679558343"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="Pacer.Config.Toml.html#Toml"><span class="hs-identifier hs-type">Toml</span></a></span></span></span><span>
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621679558359"><span class="annot"><span class="annottext">readToml :: forall b t. Path b t -&gt; Eff es Toml
+</span><a href="#local-6989586621679558359"><span class="hs-identifier hs-var hs-var">readToml</span></a></span></span><span> </span><span id="local-6989586621679558384"><span class="annot"><span class="annottext">Path b t
+</span><a href="#local-6989586621679558384"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-154"></span><span>      </span><span id="local-6989586621679558385"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679558385"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff es Text
+forall (es :: [Effect]).
+(FileReader :&gt; es, HasCallStack) =&gt;
+OsPath -&gt; Eff es Text
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#readFileUtf8ThrowM"><span class="hs-identifier hs-var">readFileUtf8ThrowM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path b t -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#pathToOsPath"><span class="hs-identifier hs-var">pathToOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path b t
+</span><a href="#local-6989586621679558384"><span class="hs-identifier hs-var">path</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-155"></span><span>      </span><span class="annot"><span class="annottext">Either TOMLError Toml -&gt; Eff es Toml
+forall e (m :: * -&gt; *) a.
+(HasCallStack, Exception e, MonadThrow m) =&gt;
+Either e a -&gt; m a
+</span><a href="Pacer.Prelude.html#throwLeft"><span class="hs-identifier hs-var">throwLeft</span></a></span><span> </span><span class="annot"><span class="annottext">(Either TOMLError Toml -&gt; Eff es Toml)
+-&gt; Either TOMLError Toml -&gt; Eff es Toml
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either TOMLError Toml
+forall a. DecodeTOML a =&gt; Text -&gt; Either TOMLError a
+</span><a href="file:///nix/store/hhmgp167z1l1r6ysri0nfdyp3zrkh2k3-toml-reader-0.2.1.0-doc/share/doc/toml-reader-0.2.1.0/html/src/TOML.Decode.html/TOML.Decode.html#decode"><span class="hs-identifier hs-var">TOML.decode</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679558385"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span id="local-6989586621679557967"><span id="local-6989586621679557968"><span class="annot"><a href="Pacer.Driver.html#runLogger"><span class="hs-identifier hs-type">runLogger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><a href="file:///nix/store/a1y0mjxz8kggpa9kb21nzdxnr2k6mwn6-effectful-2.5.1.0-doc/share/doc/effectful-2.5.1.0/html/src/Effectful.Concurrent.Effect.html/Effectful.Concurrent.Effect.html#Concurrent"><span class="hs-identifier hs-type">Concurrent</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557967"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#LoggerNS"><span class="hs-identifier hs-type">LoggerNS</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557967"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>    </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Reader.Static.html/Effectful.Reader.Static.html#Reader"><span class="hs-identifier hs-type">Reader</span></a></span><span> </span><span class="annot"><a href="Pacer.Config.Env.Types.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557967"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-162"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/terminal-effectful-0.1-0a4c7ec604a47b736519469978c18d0cc863da1968477772acff57f73ad5b490/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#Terminal"><span class="hs-identifier hs-type">Terminal</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557967"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/time-effectful-0.1-fbb43293e926ff3beedc1595b078d403e183890fd008a34997dc526ea8829f02/share/doc/html/src/Effectful.Time.Dynamic.html/Effectful.Time.Dynamic.html#Time"><span class="hs-identifier hs-type">Time</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557967"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><a href="#local-6989586621679557967"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679557968"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-166"></span><span>  </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557967"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679557968"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-167"></span><span id="runLogger"><span class="annot"><span class="annottext">runLogger :: forall (es :: [Effect]) a.
+(HasCallStack, Concurrent :&gt; es, LoggerNS :&gt; es,
+ Reader LogEnv :&gt; es, Terminal :&gt; es, Time :&gt; es) =&gt;
+Eff (Logger : es) a -&gt; Eff es a
+</span><a href="Pacer.Driver.html#runLogger"><span class="hs-identifier hs-var hs-var">runLogger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EffectHandler_ Logger es -&gt; Eff (Logger : es) a -&gt; Eff es a
+forall (e :: Effect) (es :: [Effect]) a.
+(HasCallStack, DispatchOf e ~ 'Dynamic) =&gt;
+EffectHandler_ e es -&gt; Eff (e : es) a -&gt; Eff es a
+</span><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Dispatch.Dynamic.html/Effectful.Dispatch.Dynamic.html#interpret_"><span class="hs-identifier hs-var">interpret_</span></a></span><span> </span><span class="annot"><span class="annottext">(EffectHandler_ Logger es -&gt; Eff (Logger : es) a -&gt; Eff es a)
+-&gt; EffectHandler_ Logger es -&gt; Eff (Logger : es) a -&gt; Eff es a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-168"></span><span>  </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LoggerLog"><span class="hs-identifier hs-type">LoggerLog</span></a></span><span> </span><span id="local-6989586621679558412"><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621679558412"><span class="hs-identifier hs-var">_loc</span></a></span></span><span> </span><span id="local-6989586621679558413"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679558413"><span class="hs-identifier hs-var">_logSrc</span></a></span></span><span> </span><span id="local-6989586621679558414"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679558414"><span class="hs-identifier hs-var">lvl</span></a></span></span><span> </span><span id="local-6989586621679558415"><span class="annot"><span class="annottext">msg
+</span><a href="#local-6989586621679558415"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621679558416"><span class="annot"><span class="annottext">Maybe LogLevel
+</span><a href="#local-6989586621679558416"><span class="hs-identifier hs-var">mLogLevel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall r (es :: [Effect]) a.
+(HasCallStack, Reader r :&gt; es) =&gt;
+(r -&gt; a) -&gt; Eff es a
+</span><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Reader.Static.html/Effectful.Reader.Static.html#asks"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Pacer.Config.Env.Types.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-operator">.</span><span class="hs-identifier">logLevel</span><span class="hs-special">)</span><span>
+</span><span id="line-170"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel
+</span><a href="#local-6989586621679558416"><span class="hs-identifier hs-var">mLogLevel</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-171"></span><span>      </span><span class="annot"><span class="annottext">Maybe LogLevel
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Eff es a
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679558418"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679558418"><span class="hs-identifier hs-var">logLevel</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-173"></span><span>        </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevel -&gt; (HasCallStack =&gt; Eff es ()) -&gt; Eff es ()
+forall (f :: * -&gt; *).
+(Applicative f, HasCallStack) =&gt;
+LogLevel -&gt; LogLevel -&gt; (HasCallStack =&gt; f ()) -&gt; f ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-effectful-0.1-20f135ba0747884d45d5485f586b70004386497455cd8173a2b18b8b881ceaef/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#guardLevel"><span class="hs-identifier hs-var">Logger.guardLevel</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679558418"><span class="hs-identifier hs-var">logLevel</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679558414"><span class="hs-identifier hs-var">lvl</span></a></span><span> </span><span class="annot"><span class="annottext">((HasCallStack =&gt; Eff es ()) -&gt; Eff es ())
+-&gt; (HasCallStack =&gt; Eff es ()) -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-174"></span><span>          </span><span id="local-6989586621679558431"><span class="annot"><span class="annottext">LogStr
+</span><a href="#local-6989586621679558431"><span class="hs-identifier hs-var">formatted</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">LogFormatter -&gt; LogLevel -&gt; msg -&gt; Eff es LogStr
+forall (es :: [Effect]) msg.
+(Concurrent :&gt; es, HasCallStack, LoggerNS :&gt; es, Time :&gt; es,
+ ToLogStr msg) =&gt;
+LogFormatter -&gt; LogLevel -&gt; msg -&gt; Eff es LogStr
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#formatLog"><span class="hs-identifier hs-var">LoggerNS.formatLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogFormatter
+</span><a href="#local-6989586621679558433"><span class="hs-identifier hs-var">fmt</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679558414"><span class="hs-identifier hs-var">lvl</span></a></span><span> </span><span class="annot"><span class="annottext">msg
+</span><a href="#local-6989586621679558415"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-175"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679558434"><span class="annot"><span class="annottext">txt :: Text
+</span><a href="#local-6989586621679558434"><span class="hs-identifier hs-var hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogStr -&gt; Text
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Utils.html/Effectful.LoggerNS.Utils.html#logStrToText"><span class="hs-identifier hs-var">LoggerNS.logStrToText</span></a></span><span> </span><span class="annot"><span class="annottext">LogStr
+</span><a href="#local-6989586621679558431"><span class="hs-identifier hs-var">formatted</span></a></span><span>
+</span><span id="line-176"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/terminal-effectful-0.1-0a4c7ec604a47b736519469978c18d0cc863da1968477772acff57f73ad5b490/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putText"><span class="hs-identifier hs-var">putText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679558434"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-177"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-178"></span><span>      </span><span id="local-6989586621679558433"><span class="annot"><span class="annottext">fmt :: LogFormatter
+</span><a href="#local-6989586621679558433"><span class="hs-identifier hs-var hs-var">fmt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-179"></span><span>        </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Utils.html/Effectful.LoggerNS.Utils.html#MkLogFormatter"><span class="hs-identifier hs-type">MkLogFormatter</span></a></span><span>
+</span><span id="line-180"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">locStrategy :: LocStrategy
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Utils.html/Effectful.LoggerNS.Utils.html#locStrategy"><span class="hs-identifier hs-var">locStrategy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LocStrategy
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Utils.html/Effectful.LoggerNS.Utils.html#LocNone"><span class="hs-identifier hs-var">LocNone</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-181"></span><span>            </span><span class="annot"><span class="annottext">newline :: Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Utils.html/Effectful.LoggerNS.Utils.html#newline"><span class="hs-identifier hs-var">newline</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span>
+</span><span id="line-182"></span><span>            </span><span class="annot"><span class="annottext">threadLabel :: Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Utils.html/Effectful.LoggerNS.Utils.html#threadLabel"><span class="hs-identifier hs-var">threadLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span>
+</span><span id="line-183"></span><span>            </span><span class="annot"><span class="annottext">timezone :: Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/logger-ns-effectful-0.1-4cf7ed5c5a7b5d4aa4ffbdc3ff2a554677f88ccb2c4fbe3f408d58cc6a2526b6/share/doc/html/src/Effectful.LoggerNS.Utils.html/Effectful.LoggerNS.Utils.html#timezone"><span class="hs-identifier hs-var">timezone</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-184"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-185"></span></pre></body></html>

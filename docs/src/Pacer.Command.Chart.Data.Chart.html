@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Chart</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Chart"><span class="hs-identifier">Chart</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#mkChart"><span class="hs-identifier">mkChart</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#mkCharts"><span class="hs-identifier">mkCharts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#KeyValue"><span class="hs-identifier">KeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier">toJSON</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Asn</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartData.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartData.html#ChartData"><span class="hs-identifier">ChartData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartData.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartData</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ChartData</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartExtra</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#ChartExtra"><span class="hs-identifier">ChartExtra</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartExtra</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ChartExtra</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartOptions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#ChartOptions"><span class="hs-identifier">ChartOptions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartOptions</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ChartOptions</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartRequest</span></a></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier">ChartRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#unit"><span class="hs-keyword">unit</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier">ChartRequests</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#chartRequests"><span class="hs-identifier">chartRequests</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Run.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Run</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Run.html#SomeRuns"><span class="hs-identifier">SomeRuns</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html#HasDistance"><span class="hs-identifier">HasDistance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#distanceUnitOf"><span class="hs-identifier">distanceUnitOf</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Exception.html"><span class="hs-identifier">Pacer.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Exception.html#CreateChartE"><span class="hs-identifier">CreateChartE</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="annot"><span class="hs-comment">-- | Holds all data associated to a single chart.</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">data</span><span> </span><span id="Chart"><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Chart"><span class="hs-identifier hs-var">Chart</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkChart"><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#MkChart"><span class="hs-identifier hs-var">MkChart</span></a></span></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Chart data.</span></span><span>
+</span><span id="line-28"></span><span>    </span><span id="chartData"><span class="annot"><span class="annottext">Chart -&gt; ChartData
+</span><a href="Pacer.Command.Chart.Data.Chart.html#chartData"><span class="hs-identifier hs-var hs-var">chartData</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartData.html#ChartData"><span class="hs-identifier hs-type">ChartData</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Chart extra.</span></span><span>
+</span><span id="line-30"></span><span>    </span><span id="chartExtra"><span class="annot"><span class="annottext">Chart -&gt; ChartExtra
+</span><a href="Pacer.Command.Chart.Data.Chart.html#chartExtra"><span class="hs-identifier hs-var hs-var">chartExtra</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#ChartExtra"><span class="hs-identifier hs-type">ChartExtra</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Chart options.</span></span><span>
+</span><span id="line-32"></span><span>    </span><span id="chartOptions"><span class="annot"><span class="annottext">Chart -&gt; ChartOptions
+</span><a href="Pacer.Command.Chart.Data.Chart.html#chartOptions"><span class="hs-identifier hs-var hs-var">chartOptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#ChartOptions"><span class="hs-identifier hs-type">ChartOptions</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679556077"><span id="local-6989586621679556085"><span class="annot"><span class="annottext">Chart -&gt; Chart -&gt; Bool
+(Chart -&gt; Chart -&gt; Bool) -&gt; (Chart -&gt; Chart -&gt; Bool) -&gt; Eq Chart
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Chart -&gt; Chart -&gt; Bool
+== :: Chart -&gt; Chart -&gt; Bool
+$c/= :: Chart -&gt; Chart -&gt; Bool
+/= :: Chart -&gt; Chart -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679556090"><span id="local-6989586621679556100"><span id="local-6989586621679556104"><span class="annot"><span class="annottext">Int -&gt; Chart -&gt; ShowS
+[Chart] -&gt; ShowS
+Chart -&gt; String
+(Int -&gt; Chart -&gt; ShowS)
+-&gt; (Chart -&gt; String) -&gt; ([Chart] -&gt; ShowS) -&gt; Show Chart
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Chart -&gt; ShowS
+showsPrec :: Int -&gt; Chart -&gt; ShowS
+$cshow :: Chart -&gt; String
+show :: Chart -&gt; String
+$cshowList :: [Chart] -&gt; ShowS
+showList :: [Chart] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679556110"><span id="local-6989586621679556114"><span id="local-6989586621679556117"><span id="local-6989586621679556120"><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Chart"><span class="hs-identifier hs-type">Chart</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621679556142"><span class="annot"><span class="annottext">toJSON :: Chart -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621679556143"><span class="annot"><span class="annottext">Chart
+</span><a href="#local-6989586621679556143"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;datasets&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; ChartData -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Chart
+</span><a href="#local-6989586621679556143"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">chartData</span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;extra&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; ChartExtra -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Chart
+</span><a href="#local-6989586621679556143"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">chartExtra</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;options&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; ChartOptions -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Chart
+</span><a href="#local-6989586621679556143"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">chartOptions</span><span>
+</span><span id="line-42"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="annot"><span class="hs-comment">-- | Given runs and chart requests, generates a series of charts, or the</span></span><span>
+</span><span id="line-45"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#mkCharts"><span class="hs-identifier hs-type">mkCharts</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679556029"><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#From%2124"><span class="hs-identifier hs-type">From&#8484;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Algebra.MetricSpace.html/Numeric.Algebra.MetricSpace.html#MetricSpace"><span class="hs-identifier hs-type">MetricSpace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Convert.Real.html/Numeric.Convert.Real.html#To%211D"><span class="hs-identifier hs-type">To&#8477;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Run.html#SomeRuns"><span class="hs-identifier hs-type">SomeRuns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier hs-type">ChartRequests</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556029"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#CreateChartE"><span class="hs-identifier hs-type">CreateChartE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Chart"><span class="hs-identifier hs-type">Chart</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span id="mkCharts"><span class="annot"><span class="annottext">mkCharts :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a, To&#8477; a) =&gt;
+SomeRuns a -&gt; ChartRequests a -&gt; Either CreateChartE (Seq Chart)
+</span><a href="Pacer.Command.Chart.Data.Chart.html#mkCharts"><span class="hs-identifier hs-var hs-var">mkCharts</span></a></span></span><span> </span><span id="local-6989586621679556164"><span class="annot"><span class="annottext">SomeRuns a
+</span><a href="#local-6989586621679556164"><span class="hs-identifier hs-var">runs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ChartRequest a -&gt; Either CreateChartE Chart)
+-&gt; Seq (ChartRequest a) -&gt; Either CreateChartE (Seq Chart)
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Seq a -&gt; f (Seq b)
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeRuns a -&gt; ChartRequest a -&gt; Either CreateChartE Chart
+forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a, To&#8477; a) =&gt;
+SomeRuns a -&gt; ChartRequest a -&gt; Either CreateChartE Chart
+</span><a href="Pacer.Command.Chart.Data.Chart.html#mkChart"><span class="hs-identifier hs-var">mkChart</span></a></span><span> </span><span class="annot"><span class="annottext">SomeRuns a
+</span><a href="#local-6989586621679556164"><span class="hs-identifier hs-var">runs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Seq (ChartRequest a) -&gt; Either CreateChartE (Seq Chart))
+-&gt; (ChartRequests a -&gt; Seq (ChartRequest a))
+-&gt; ChartRequests a
+-&gt; Either CreateChartE (Seq Chart)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="hs-operator">.</span><span class="hs-identifier">chartRequests</span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#mkChart"><span class="hs-identifier hs-type">mkChart</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679556046"><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#From%2124"><span class="hs-identifier hs-type">From&#8484;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Algebra.MetricSpace.html/Numeric.Algebra.MetricSpace.html#MetricSpace"><span class="hs-identifier hs-type">MetricSpace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/algebra-simple-0.1-4f0bfaebf300855c2fe9b63d00619e6a79bdb86de7ae27810a8882b639e39665/share/doc/html/src/Numeric.Convert.Real.html/Numeric.Convert.Real.html#To%211D"><span class="hs-identifier hs-type">To&#8477;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Run.html#SomeRuns"><span class="hs-identifier hs-type">SomeRuns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier hs-type">ChartRequest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556046"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#CreateChartE"><span class="hs-identifier hs-type">CreateChartE</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Chart"><span class="hs-identifier hs-type">Chart</span></a></span><span>
+</span><span id="line-71"></span><span id="mkChart"><span class="annot"><span class="annottext">mkChart :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a, To&#8477; a) =&gt;
+SomeRuns a -&gt; ChartRequest a -&gt; Either CreateChartE Chart
+</span><a href="Pacer.Command.Chart.Data.Chart.html#mkChart"><span class="hs-identifier hs-var hs-var">mkChart</span></a></span></span><span> </span><span id="local-6989586621679556184"><span class="annot"><span class="annottext">SomeRuns a
+</span><a href="#local-6989586621679556184"><span class="hs-identifier hs-var">someRuns</span></a></span></span><span> </span><span id="local-6989586621679556185"><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679556185"><span class="hs-identifier hs-var">request</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChartData -&gt; Chart
+</span><a href="#local-6989586621679556186"><span class="hs-identifier hs-var">toChart</span></a></span><span> </span><span class="annot"><span class="annottext">(ChartData -&gt; Chart)
+-&gt; Either CreateChartE ChartData -&gt; Either CreateChartE Chart
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Either CreateChartE ChartData
+</span><a href="#local-6989586621679556188"><span class="hs-identifier hs-var">eChartData</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621679556188"><span class="annot"><span class="annottext">eChartData :: Either CreateChartE ChartData
+</span><a href="#local-6989586621679556188"><span class="hs-identifier hs-var hs-var">eChartData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+-&gt; SomeRuns a -&gt; ChartRequest a -&gt; Either CreateChartE ChartData
+forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a, To&#8477; a) =&gt;
+DistanceUnit
+-&gt; SomeRuns a -&gt; ChartRequest a -&gt; Either CreateChartE ChartData
+</span><a href="Pacer.Command.Chart.Data.ChartData.html#mkChartData"><span class="hs-identifier hs-var">ChartData.mkChartData</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679556190"><span class="hs-identifier hs-var">finalDistUnit</span></a></span><span> </span><span class="annot"><span class="annottext">SomeRuns a
+</span><a href="#local-6989586621679556184"><span class="hs-identifier hs-var">someRuns</span></a></span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679556185"><span class="hs-identifier hs-var">request</span></a></span><span>
+</span><span id="line-74"></span><span>    </span><span id="local-6989586621679556191"><span class="annot"><span class="annottext">chartExtra :: ChartExtra
+</span><a href="#local-6989586621679556191"><span class="hs-identifier hs-var hs-var">chartExtra</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChartRequest a -&gt; ChartExtra
+forall a. ChartRequest a -&gt; ChartExtra
+</span><a href="Pacer.Command.Chart.Data.ChartExtra.html#mkChartExtra"><span class="hs-identifier hs-var">ChartExtra.mkChartExtra</span></a></span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679556185"><span class="hs-identifier hs-var">request</span></a></span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621679556193"><span class="annot"><span class="annottext">chartOptions :: ChartOptions
+</span><a href="#local-6989586621679556193"><span class="hs-identifier hs-var hs-var">chartOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DistanceUnit -&gt; ChartRequest a -&gt; ChartOptions
+forall a. DistanceUnit -&gt; ChartRequest a -&gt; ChartOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#mkChartOptions"><span class="hs-identifier hs-var">ChartOptions.mkChartOptions</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679556190"><span class="hs-identifier hs-var">finalDistUnit</span></a></span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679556185"><span class="hs-identifier hs-var">request</span></a></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679556186"><span class="annot"><span class="annottext">toChart :: ChartData -&gt; Chart
+</span><a href="#local-6989586621679556186"><span class="hs-identifier hs-var hs-var">toChart</span></a></span></span><span> </span><span id="local-6989586621679556195"><span class="annot"><span class="annottext">ChartData
+</span><a href="#local-6989586621679556195"><span class="hs-identifier hs-var">chartData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#MkChart"><span class="hs-identifier hs-type">MkChart</span></a></span><span>
+</span><span id="line-79"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ChartData
+chartData :: ChartData
+chartData :: ChartData
+</span><a href="Pacer.Command.Chart.Data.Chart.html#chartData"><span class="hs-identifier hs-var hs-var">chartData</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>          </span><span class="annot"><span class="annottext">ChartExtra
+chartExtra :: ChartExtra
+chartExtra :: ChartExtra
+</span><a href="Pacer.Command.Chart.Data.Chart.html#chartExtra"><span class="hs-identifier hs-var hs-var">chartExtra</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>          </span><span class="annot"><span class="annottext">ChartOptions
+chartOptions :: ChartOptions
+chartOptions :: ChartOptions
+</span><a href="Pacer.Command.Chart.Data.Chart.html#chartOptions"><span class="hs-identifier hs-var hs-var">chartOptions</span></a></span><span>
+</span><span id="line-82"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><a href="#local-6989586621679556190"><span class="hs-identifier hs-type">finalDistUnit</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span>
+</span><span id="line-85"></span><span>    </span><span id="local-6989586621679556190"><span class="annot"><span class="annottext">finalDistUnit :: DistanceUnit
+</span><a href="#local-6989586621679556190"><span class="hs-identifier hs-var hs-var">finalDistUnit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DistanceUnit -&gt; Maybe DistanceUnit -&gt; DistanceUnit
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeRuns a -&gt; DistanceUnit
+forall a. HasDistance a =&gt; a -&gt; DistanceUnit
+</span><a href="Pacer.Data.Distance.html#distanceUnitOf"><span class="hs-identifier hs-var">distanceUnitOf</span></a></span><span> </span><span class="annot"><span class="annottext">SomeRuns a
+</span><a href="#local-6989586621679556184"><span class="hs-identifier hs-var">someRuns</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679556185"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span>
+</span><span id="line-86"></span></pre></body></html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartOptions</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#ChartOptions"><span class="hs-identifier">ChartOptions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#mkChartOptions"><span class="hs-identifier">mkChartOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#KeyValue"><span class="hs-identifier">KeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier">toJSON</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Asn</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.html/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Pair"><span class="hs-identifier">Pair</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartRequest</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier">ChartRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#title"><span class="hs-identifier">title</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#y1Axis"><span class="hs-identifier">y1Axis</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#yAxis"><span class="hs-identifier">yAxis</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier">YAxisType</span></a></span><span>
+</span><span id="line-13"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDistance"><span class="hs-identifier">YAxisDistance</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDuration"><span class="hs-identifier">YAxisDuration</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisPace"><span class="hs-identifier">YAxisPace</span></a></span><span>
+</span><span id="line-16"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><span class="hs-comment">-- | Possible y-axis positions.</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="YPosition"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YPosition"><span class="hs-identifier hs-var">YPosition</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="YLeft"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YLeft"><span class="hs-identifier hs-var">YLeft</span></a></span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="YRight"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YRight"><span class="hs-identifier hs-var">YRight</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679554911"><span id="local-6989586621679554916"><span class="annot"><span class="annottext">YPosition -&gt; YPosition -&gt; Bool
+(YPosition -&gt; YPosition -&gt; Bool)
+-&gt; (YPosition -&gt; YPosition -&gt; Bool) -&gt; Eq YPosition
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: YPosition -&gt; YPosition -&gt; Bool
+== :: YPosition -&gt; YPosition -&gt; Bool
+$c/= :: YPosition -&gt; YPosition -&gt; Bool
+/= :: YPosition -&gt; YPosition -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679554921"><span id="local-6989586621679554923"><span id="local-6989586621679554927"><span class="annot"><span class="annottext">Int -&gt; YPosition -&gt; ShowS
+[YPosition] -&gt; ShowS
+YPosition -&gt; String
+(Int -&gt; YPosition -&gt; ShowS)
+-&gt; (YPosition -&gt; String)
+-&gt; ([YPosition] -&gt; ShowS)
+-&gt; Show YPosition
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; YPosition -&gt; ShowS
+showsPrec :: Int -&gt; YPosition -&gt; ShowS
+$cshow :: YPosition -&gt; String
+show :: YPosition -&gt; String
+$cshowList :: [YPosition] -&gt; ShowS
+showList :: [YPosition] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679554933"><span id="local-6989586621679554937"><span id="local-6989586621679554940"><span id="local-6989586621679554943"><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YPosition"><span class="hs-identifier hs-type">YPosition</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679554949"><span class="annot"><span class="annottext">toJSON :: YPosition -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">YPosition
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#YLeft"><span class="hs-identifier hs-var">YLeft</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;left&quot;</span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">YPosition
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#YRight"><span class="hs-identifier hs-var">YRight</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;right&quot;</span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><span class="hs-comment">-- | Y-axis options.</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">data</span><span> </span><span id="YOptions"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YOptions"><span class="hs-identifier hs-var">YOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkYOptions"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#MkYOptions"><span class="hs-identifier hs-var">MkYOptions</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Label that appears on the (vertical) y-axis itself.</span></span><span>
+</span><span id="line-34"></span><span>    </span><span id="label"><span class="annot"><span class="annottext">YOptions -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#label"><span class="hs-keyword hs-var hs-var">label</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Y-axis position.</span></span><span>
+</span><span id="line-36"></span><span>    </span><span id="position"><span class="annot"><span class="annottext">YOptions -&gt; YPosition
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#position"><span class="hs-identifier hs-var hs-var">position</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YPosition"><span class="hs-identifier hs-type">YPosition</span></a></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679554954"><span id="local-6989586621679554959"><span class="annot"><span class="annottext">YOptions -&gt; YOptions -&gt; Bool
+(YOptions -&gt; YOptions -&gt; Bool)
+-&gt; (YOptions -&gt; YOptions -&gt; Bool) -&gt; Eq YOptions
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: YOptions -&gt; YOptions -&gt; Bool
+== :: YOptions -&gt; YOptions -&gt; Bool
+$c/= :: YOptions -&gt; YOptions -&gt; Bool
+/= :: YOptions -&gt; YOptions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679554963"><span id="local-6989586621679554970"><span id="local-6989586621679554974"><span class="annot"><span class="annottext">Int -&gt; YOptions -&gt; ShowS
+[YOptions] -&gt; ShowS
+YOptions -&gt; String
+(Int -&gt; YOptions -&gt; ShowS)
+-&gt; (YOptions -&gt; String) -&gt; ([YOptions] -&gt; ShowS) -&gt; Show YOptions
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; YOptions -&gt; ShowS
+showsPrec :: Int -&gt; YOptions -&gt; ShowS
+$cshow :: YOptions -&gt; String
+show :: YOptions -&gt; String
+$cshowList :: [YOptions] -&gt; ShowS
+showList :: [YOptions] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679554978"><span id="local-6989586621679554982"><span id="local-6989586621679554985"><span id="local-6989586621679554988"><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YOptions"><span class="hs-identifier hs-type">YOptions</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621679555009"><span class="annot"><span class="annottext">toJSON :: YOptions -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621679555010"><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555010"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;position&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; YPosition -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555010"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">position</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>          </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;title&quot;</span></span><span>
+</span><span id="line-45"></span><span>            </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-46"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;color&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#textColor"><span class="hs-identifier hs-var">textColor</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>                </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;display&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Bool -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>                </span><span class="annot"><span class="annottext">Pair
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#labelFontOpts"><span class="hs-identifier hs-var">labelFontOpts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>                </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;text&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555010"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">label</span><span>
+</span><span id="line-50"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-51"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Pair]
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#commonOpts"><span class="hs-identifier hs-var">commonOpts</span></a></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="annot"><span class="hs-comment">-- | Chart option data.</span></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">data</span><span> </span><span id="ChartOptions"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#ChartOptions"><span class="hs-identifier hs-var">ChartOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkChartOptions"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#MkChartOptions"><span class="hs-identifier hs-var">MkChartOptions</span></a></span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Overall chart title.</span></span><span>
+</span><span id="line-57"></span><span>    </span><span id="title"><span class="annot"><span class="annottext">ChartOptions -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#title"><span class="hs-identifier hs-var hs-var">title</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Y-axis options.</span></span><span>
+</span><span id="line-59"></span><span>    </span><span id="yOptions"><span class="annot"><span class="annottext">ChartOptions -&gt; YOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#yOptions"><span class="hs-identifier hs-var hs-var">yOptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YOptions"><span class="hs-identifier hs-type">YOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Possible y1-axis options.</span></span><span>
+</span><span id="line-61"></span><span>    </span><span id="y1Options"><span class="annot"><span class="annottext">ChartOptions -&gt; Maybe YOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#y1Options"><span class="hs-identifier hs-var hs-var">y1Options</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#YOptions"><span class="hs-identifier hs-type">YOptions</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679555020"><span id="local-6989586621679555026"><span class="annot"><span class="annottext">ChartOptions -&gt; ChartOptions -&gt; Bool
+(ChartOptions -&gt; ChartOptions -&gt; Bool)
+-&gt; (ChartOptions -&gt; ChartOptions -&gt; Bool) -&gt; Eq ChartOptions
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ChartOptions -&gt; ChartOptions -&gt; Bool
+== :: ChartOptions -&gt; ChartOptions -&gt; Bool
+$c/= :: ChartOptions -&gt; ChartOptions -&gt; Bool
+/= :: ChartOptions -&gt; ChartOptions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679555030"><span id="local-6989586621679555037"><span id="local-6989586621679555041"><span class="annot"><span class="annottext">Int -&gt; ChartOptions -&gt; ShowS
+[ChartOptions] -&gt; ShowS
+ChartOptions -&gt; String
+(Int -&gt; ChartOptions -&gt; ShowS)
+-&gt; (ChartOptions -&gt; String)
+-&gt; ([ChartOptions] -&gt; ShowS)
+-&gt; Show ChartOptions
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ChartOptions -&gt; ShowS
+showsPrec :: Int -&gt; ChartOptions -&gt; ShowS
+$cshow :: ChartOptions -&gt; String
+show :: ChartOptions -&gt; String
+$cshowList :: [ChartOptions] -&gt; ShowS
+showList :: [ChartOptions] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679555045"><span id="local-6989586621679555049"><span id="local-6989586621679555052"><span id="local-6989586621679555055"><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#ChartOptions"><span class="hs-identifier hs-type">ChartOptions</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621679555137"><span class="annot"><span class="annottext">toJSON :: ChartOptions -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621679555138"><span class="annot"><span class="annottext">ChartOptions
+</span><a href="#local-6989586621679555138"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-68"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;plugins&quot;</span></span><span>
+</span><span id="line-69"></span><span>          </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-70"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;legend&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679555139"><span class="hs-identifier hs-var">legendOpts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;title&quot;</span></span><span>
+</span><span id="line-72"></span><span>                </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-73"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;align&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#t"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;center&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>                    </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;color&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#textColor"><span class="hs-identifier hs-var">textColor</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>                    </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;display&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Bool -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>                    </span><span class="annot"><span class="annottext">Int -&gt; Pair
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#fontOpts"><span class="hs-identifier hs-var">fontOpts</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">24</span></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>                    </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;text&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ChartOptions
+</span><a href="#local-6989586621679555138"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">title</span><span>
+</span><span id="line-78"></span><span>                  </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;tooltip&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679555142"><span class="hs-identifier hs-var">tooltipOpts</span></a></span><span>
+</span><span id="line-80"></span><span>            </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;pointHitRadius&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#i"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">20</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- tooltip hitbox</span><span>
+</span><span id="line-82"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;responsive&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Bool -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;maintainAspectRatio&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Bool -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;scales&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679555144"><span class="hs-identifier hs-var">scales</span></a></span><span>
+</span><span id="line-85"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>      </span><span id="local-6989586621679555144"><span class="annot"><span class="annottext">scales :: Value
+</span><a href="#local-6989586621679555144"><span class="hs-identifier hs-var hs-var">scales</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-89"></span><span>          </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;x&quot;</span></span><span>
+</span><span id="line-90"></span><span>                </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-91"></span><span>                  </span><span class="hs-special">(</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;time&quot;</span></span><span>
+</span><span id="line-92"></span><span>                        </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-93"></span><span>                          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;displayFormats&quot;</span></span><span>
+</span><span id="line-94"></span><span>                              </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-95"></span><span>                                </span><span class="hs-special">[</span><span> </span><span class="hs-comment">-- NOTE: Keeping the lablel relatively concise as it</span><span>
+</span><span id="line-96"></span><span>                                  </span><span class="hs-comment">-- is more readable, and the tooltip contains the full</span><span>
+</span><span id="line-97"></span><span>                                  </span><span class="hs-comment">-- timestamp anyway.</span><span>
+</span><span id="line-98"></span><span>                                  </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;day&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#t"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;dd MMM yy&quot;</span></span><span>
+</span><span id="line-99"></span><span>                                </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>                            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;unit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#t"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;day&quot;</span></span><span>
+</span><span id="line-101"></span><span>                          </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>                      </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;title&quot;</span></span><span>
+</span><span id="line-103"></span><span>                        </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-104"></span><span>                          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;color&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#textColor"><span class="hs-identifier hs-var">textColor</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>                            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;display&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Bool -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>                            </span><span class="annot"><span class="annottext">Pair
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#labelFontOpts"><span class="hs-identifier hs-var">labelFontOpts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>                            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;text&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#t"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;datetime&quot;</span></span><span>
+</span><span id="line-108"></span><span>                          </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>                      </span><span class="hs-comment">-- NOTE: timeseries over cartesian (string &quot;time&quot;) as the</span><span>
+</span><span id="line-110"></span><span>                      </span><span class="hs-comment">-- spaces out events equally, while the latter spaces</span><span>
+</span><span id="line-111"></span><span>                      </span><span class="hs-comment">-- relative to the actual time difference. But this is</span><span>
+</span><span id="line-112"></span><span>                      </span><span class="hs-comment">-- usually quite silly as e.g. official marathons may be</span><span>
+</span><span id="line-113"></span><span>                      </span><span class="hs-comment">-- very spaces out, and this provides no actual value.</span><span>
+</span><span id="line-114"></span><span>                      </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#t"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;timeseries&quot;</span></span><span>
+</span><span id="line-115"></span><span>                    </span><span class="hs-special">]</span><span>
+</span><span id="line-116"></span><span>                      </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Pair]
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#commonOpts"><span class="hs-identifier hs-var">commonOpts</span></a></span><span>
+</span><span id="line-117"></span><span>                  </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;y&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; YOptions -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ChartOptions
+</span><a href="#local-6989586621679555138"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">yOptions</span><span>
+</span><span id="line-119"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-120"></span><span>          </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; (YOptions -&gt; [Pair]) -&gt; Maybe YOptions -&gt; [Pair]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679555146"><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555146"><span class="hs-identifier hs-var">z</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;y1&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; YOptions -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555146"><span class="hs-identifier hs-var">z</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ChartOptions
+</span><a href="#local-6989586621679555138"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">y1Options</span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span>      </span><span id="local-6989586621679555139"><span class="annot"><span class="annottext">legendOpts :: Value
+</span><a href="#local-6989586621679555139"><span class="hs-identifier hs-var hs-var">legendOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-123"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-124"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;labels&quot;</span></span><span>
+</span><span id="line-125"></span><span>              </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-126"></span><span>                </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;color&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#textColor"><span class="hs-identifier hs-var">textColor</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-127"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span>      </span><span id="local-6989586621679555142"><span class="annot"><span class="annottext">tooltipOpts :: Value
+</span><a href="#local-6989586621679555142"><span class="hs-identifier hs-var hs-var">tooltipOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-130"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-131"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;backgroundColor&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#tooltipBackgroundColor"><span class="hs-identifier hs-var">tooltipBackgroundColor</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;bodyColor&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#tooltipTextColor"><span class="hs-identifier hs-var">tooltipTextColor</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;titleColor&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#tooltipTextColor"><span class="hs-identifier hs-var">tooltipTextColor</span></a></span><span>
+</span><span id="line-134"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- | Creates a chart options from the request. The distance unit is used</span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- for labeling the axis.</span><span>
+</span><span id="line-138"></span><span id="local-6989586621679554874"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#mkChartOptions"><span class="hs-identifier hs-type">mkChartOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier hs-type">ChartRequest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679554874"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#ChartOptions"><span class="hs-identifier hs-type">ChartOptions</span></a></span></span><span>
+</span><span id="line-139"></span><span id="mkChartOptions"><span class="annot"><span class="annottext">mkChartOptions :: forall a. DistanceUnit -&gt; ChartRequest a -&gt; ChartOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#mkChartOptions"><span class="hs-identifier hs-var hs-var">mkChartOptions</span></a></span></span><span> </span><span id="local-6989586621679555178"><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679555178"><span class="hs-identifier hs-var">dunit</span></a></span></span><span> </span><span id="local-6989586621679555179"><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679555179"><span class="hs-identifier hs-var">request</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-140"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#MkChartOptions"><span class="hs-identifier hs-type">MkChartOptions</span></a></span><span>
+</span><span id="line-141"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">title :: Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#title"><span class="hs-identifier hs-var">title</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679555179"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">title</span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>      </span><span class="annot"><span class="annottext">YOptions
+yOptions :: YOptions
+yOptions :: YOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#yOptions"><span class="hs-identifier hs-var hs-var">yOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>      </span><span class="annot"><span class="annottext">Maybe YOptions
+y1Options :: Maybe YOptions
+y1Options :: Maybe YOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#y1Options"><span class="hs-identifier hs-var hs-var">y1Options</span></a></span><span>
+</span><span id="line-144"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-146"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679555180"><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555180"><span class="hs-identifier hs-var">yOptions</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679555181"><span class="annot"><span class="annottext">Maybe YOptions
+</span><a href="#local-6989586621679555181"><span class="hs-identifier hs-var">y1Options</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679555179"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">y1Axis</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">Maybe YAxisType
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-148"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679555182"><span class="annot"><span class="annottext">lbl :: Text
+</span><a href="#local-6989586621679555182"><span class="hs-identifier hs-var hs-var">lbl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">YAxisType -&gt; Text
+</span><a href="#local-6989586621679555183"><span class="hs-identifier hs-var">mkYLabel</span></a></span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679555179"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">yAxis</span><span>
+</span><span id="line-149"></span><span>            </span><span id="local-6989586621679555184"><span class="annot"><span class="annottext">opts :: YOptions
+</span><a href="#local-6989586621679555184"><span class="hs-identifier hs-var hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; YPosition -&gt; YOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#MkYOptions"><span class="hs-identifier hs-var">MkYOptions</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679555182"><span class="hs-identifier hs-var">lbl</span></a></span><span> </span><span class="annot"><span class="annottext">YPosition
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#YLeft"><span class="hs-identifier hs-var">YLeft</span></a></span><span>
+</span><span id="line-150"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555184"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe YOptions
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679555185"><span class="annot"><span class="annottext">YAxisType
+</span><a href="#local-6989586621679555185"><span class="hs-identifier hs-var">y1Axis</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-152"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679555186"><span class="annot"><span class="annottext">lbl :: Text
+</span><a href="#local-6989586621679555186"><span class="hs-identifier hs-var hs-var">lbl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">YAxisType -&gt; Text
+</span><a href="#local-6989586621679555183"><span class="hs-identifier hs-var">mkYLabel</span></a></span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679555179"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">yAxis</span><span>
+</span><span id="line-153"></span><span>            </span><span id="local-6989586621679555187"><span class="annot"><span class="annottext">opts :: YOptions
+</span><a href="#local-6989586621679555187"><span class="hs-identifier hs-var hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; YPosition -&gt; YOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#MkYOptions"><span class="hs-identifier hs-var">MkYOptions</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679555186"><span class="hs-identifier hs-var">lbl</span></a></span><span> </span><span class="annot"><span class="annottext">YPosition
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#YLeft"><span class="hs-identifier hs-var">YLeft</span></a></span><span>
+</span><span id="line-154"></span><span>            </span><span id="local-6989586621679555188"><span class="annot"><span class="annottext">lbl1 :: Text
+</span><a href="#local-6989586621679555188"><span class="hs-identifier hs-var hs-var">lbl1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">YAxisType -&gt; Text
+</span><a href="#local-6989586621679555183"><span class="hs-identifier hs-var">mkYLabel</span></a></span><span> </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="#local-6989586621679555185"><span class="hs-identifier hs-var">y1Axis</span></a></span><span>
+</span><span id="line-155"></span><span>            </span><span id="local-6989586621679555189"><span class="annot"><span class="annottext">opts1 :: YOptions
+</span><a href="#local-6989586621679555189"><span class="hs-identifier hs-var hs-var">opts1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; YPosition -&gt; YOptions
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#MkYOptions"><span class="hs-identifier hs-var">MkYOptions</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679555188"><span class="hs-identifier hs-var">lbl1</span></a></span><span> </span><span class="annot"><span class="annottext">YPosition
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#YRight"><span class="hs-identifier hs-var">YRight</span></a></span><span>
+</span><span id="line-156"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555187"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">YOptions -&gt; Maybe YOptions
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">YOptions
+</span><a href="#local-6989586621679555189"><span class="hs-identifier hs-var">opts1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-157"></span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><a href="#local-6989586621679555183"><span class="hs-identifier hs-type">mkYLabel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisType"><span class="hs-identifier hs-type">YAxisType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-159"></span><span>    </span><span id="local-6989586621679555183"><span class="annot"><span class="annottext">mkYLabel :: YAxisType -&gt; Text
+</span><a href="#local-6989586621679555183"><span class="hs-identifier hs-var hs-var">mkYLabel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDistance"><span class="hs-identifier hs-var">YAxisDistance</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679555190"><span class="hs-identifier hs-var">dstTxt</span></a></span><span>
+</span><span id="line-161"></span><span>      </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisDuration"><span class="hs-identifier hs-var">YAxisDuration</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;time&quot;</span></span><span>
+</span><span id="line-162"></span><span>      </span><span class="annot"><span class="annottext">YAxisType
+</span><a href="Pacer.Command.Chart.Data.ChartRequest.html#YAxisPace"><span class="hs-identifier hs-var">YAxisPace</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;pace /&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679555190"><span class="hs-identifier hs-var">dstTxt</span></a></span><span>
+</span><span id="line-163"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-164"></span><span>        </span><span id="local-6989586621679555190"><span class="annot"><span class="annottext">dstTxt :: Text
+</span><a href="#local-6989586621679555190"><span class="hs-identifier hs-var hs-var">dstTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DistanceUnit -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/6v8jpffkznmds2lbnzck1zg6i3vr1lli-text-display-0.0.5.2-doc/share/doc/text-display-0.0.5.2/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679555178"><span class="hs-identifier hs-var">dunit</span></a></span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#commonOpts"><span class="hs-identifier hs-type">commonOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Pair"><span class="hs-identifier hs-type">Pair</span></a></span><span>
+</span><span id="line-167"></span><span id="commonOpts"><span class="annot"><span class="annottext">commonOpts :: [Pair]
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#commonOpts"><span class="hs-identifier hs-var hs-var">commonOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-168"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Pair
+</span><a href="#local-6989586621679555192"><span class="hs-identifier hs-var">gripOpts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-169"></span><span>    </span><span class="annot"><span class="annottext">Pair
+</span><a href="#local-6989586621679555193"><span class="hs-identifier hs-var">ticksOpts</span></a></span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-172"></span><span>    </span><span id="local-6989586621679555192"><span class="annot"><span class="annottext">gripOpts :: Pair
+</span><a href="#local-6989586621679555192"><span class="hs-identifier hs-var hs-var">gripOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-173"></span><span>      </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;grid&quot;</span></span><span>
+</span><span id="line-174"></span><span>        </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-175"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;color&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#gridColor"><span class="hs-identifier hs-var">gridColor</span></a></span><span>
+</span><span id="line-176"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-177"></span><span>    </span><span id="local-6989586621679555193"><span class="annot"><span class="annottext">ticksOpts :: Pair
+</span><a href="#local-6989586621679555193"><span class="hs-identifier hs-var hs-var">ticksOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-178"></span><span>      </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;ticks&quot;</span></span><span>
+</span><span id="line-179"></span><span>        </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-180"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;color&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#textColor"><span class="hs-identifier hs-var">textColor</span></a></span><span>
+</span><span id="line-181"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#labelFontOpts"><span class="hs-identifier hs-type">labelFontOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Pair"><span class="hs-identifier hs-type">Pair</span></a></span><span>
+</span><span id="line-184"></span><span id="labelFontOpts"><span class="annot"><span class="annottext">labelFontOpts :: Pair
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#labelFontOpts"><span class="hs-identifier hs-var hs-var">labelFontOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Pair
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#fontOpts"><span class="hs-identifier hs-var">fontOpts</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">16</span></span><span>
+</span><span id="line-185"></span><span>
+</span><span id="line-186"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#fontOpts"><span class="hs-identifier hs-type">fontOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Pair"><span class="hs-identifier hs-type">Pair</span></a></span><span>
+</span><span id="line-187"></span><span id="fontOpts"><span class="annot"><span class="annottext">fontOpts :: Int -&gt; Pair
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#fontOpts"><span class="hs-identifier hs-var hs-var">fontOpts</span></a></span></span><span> </span><span id="local-6989586621679555211"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679555211"><span class="hs-identifier hs-var">sz</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;font&quot;</span></span><span>
+</span><span id="line-189"></span><span>    </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span>
+</span><span id="line-190"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;size&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///nix/store/m5bbfvzay9fdxmrdjak7m9aw90yzby1j-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#i"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679555211"><span class="hs-identifier hs-var">sz</span></a></span><span>
+</span><span id="line-191"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-192"></span><span>
+</span><span id="line-193"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#gridColor"><span class="hs-identifier hs-type">gridColor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-194"></span><span id="gridColor"><span class="annot"><span class="annottext">gridColor :: Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#gridColor"><span class="hs-identifier hs-var hs-var">gridColor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;#393939&quot;</span></span><span>
+</span><span id="line-195"></span><span>
+</span><span id="line-196"></span><span class="hs-comment">-- NOTE: [Text Color]</span><span>
+</span><span id="line-197"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#textColor"><span class="hs-identifier hs-type">textColor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-198"></span><span id="textColor"><span class="annot"><span class="annottext">textColor :: Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#textColor"><span class="hs-identifier hs-var hs-var">textColor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;#c3c3c3&quot;</span></span><span>
+</span><span id="line-199"></span><span>
+</span><span id="line-200"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#tooltipBackgroundColor"><span class="hs-identifier hs-type">tooltipBackgroundColor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-201"></span><span id="tooltipBackgroundColor"><span class="annot"><span class="annottext">tooltipBackgroundColor :: Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#tooltipBackgroundColor"><span class="hs-identifier hs-var hs-var">tooltipBackgroundColor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;rgba(204, 204, 204, 0.75)&quot;</span></span><span>
+</span><span id="line-202"></span><span>
+</span><span id="line-203"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#tooltipTextColor"><span class="hs-identifier hs-type">tooltipTextColor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-204"></span><span id="tooltipTextColor"><span class="annot"><span class="annottext">tooltipTextColor :: Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#tooltipTextColor"><span class="hs-identifier hs-var hs-var">tooltipTextColor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;black&quot;</span></span><span>
+</span><span id="line-205"></span><span>
+</span><span id="line-206"></span><span class="annot"><span class="hs-comment">-- | TODO: This can be replaced with -XNamedDefaults once it is available.</span></span><span>
+</span><span id="line-207"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#t"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-208"></span><span id="t"><span class="annot"><span class="annottext">t :: Text -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#t"><span class="hs-identifier hs-var hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-209"></span><span>
+</span><span id="line-210"></span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartOptions.html#i"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-211"></span><span id="i"><span class="annot"><span class="annottext">i :: Int -&gt; Int
+</span><a href="Pacer.Command.Chart.Data.ChartOptions.html#i"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-212"></span></pre></body></html>

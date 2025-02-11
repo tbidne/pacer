@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Web.Paths.html"><span class="hs-identifier">Pacer.Web.Paths</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Internal paths</span></span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalPaths"><span class="hs-identifier">webInternalPaths</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier">webInternalDirs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier">webInternalFiles</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Paths</span></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier">webDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#dataDir"><span class="hs-identifier">dataDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#distDir"><span class="hs-identifier">distDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#getWebPath"><span class="hs-identifier">getWebPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Functions</span></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#readWebDirTH"><span class="hs-identifier">readWebDirTH</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.IO.html/FileSystem.IO.html"><span class="hs-identifier">FileSystem.IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.IO.html/FileSystem.IO.html#readBinaryFileIO"><span class="hs-identifier">readBinaryFileIO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Code</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Web.Utils.html"><span class="hs-identifier">Pacer.Web.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WUtils</span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="annot"><span class="hs-comment">-- | Reads the web directory at compile-time.</span></span><span>
+</span><span id="line-26"></span><span class="annot"><a href="Pacer.Web.Paths.html#readWebDirTH"><span class="hs-identifier hs-type">readWebDirTH</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Code</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span id="readWebDirTH"><span class="annot"><span class="annottext">readWebDirTH :: Code Q [(Path Rel File, ByteString)]
+</span><a href="Pacer.Web.Paths.html#readWebDirTH"><span class="hs-identifier hs-var hs-var">readWebDirTH</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO [(Path Rel File, ByteString)]
+-&gt; Code Q [(Path Rel File, ByteString)]
+forall a. (HasCallStack, Lift a) =&gt; IO a -&gt; Code Q a
+</span><a href="Pacer.Web.Utils.html#liftIOToTH"><span class="hs-identifier hs-var">WUtils.liftIOToTH</span></a></span><span> </span><span class="annot"><span class="annottext">(IO [(Path Rel File, ByteString)]
+ -&gt; Code Q [(Path Rel File, ByteString)])
+-&gt; IO [(Path Rel File, ByteString)]
+-&gt; Code Q [(Path Rel File, ByteString)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Path Rel File]
+-&gt; (Path Rel File -&gt; IO (Path Rel File, ByteString))
+-&gt; IO [(Path Rel File, ByteString)]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f (t b)
+</span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">[Path Rel File]
+</span><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-var">webInternalFiles</span></a></span><span> </span><span class="annot"><span class="annottext">((Path Rel File -&gt; IO (Path Rel File, ByteString))
+ -&gt; IO [(Path Rel File, ByteString)])
+-&gt; (Path Rel File -&gt; IO (Path Rel File, ByteString))
+-&gt; IO [(Path Rel File, ByteString)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679556389"><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679556389"><span class="hs-identifier hs-var">fileName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679556390"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679556390"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; IO ByteString
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.IO.html/FileSystem.IO.html#readBinaryFileIO"><span class="hs-identifier hs-var">readBinaryFileIO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Rel File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#pathToOsPath"><span class="hs-identifier hs-var">pathToOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Path Rel File -&gt; OsPath) -&gt; Path Rel File -&gt; OsPath
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-var">webDir</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel Dir -&gt; Path Rel File -&gt; Path Rel File
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679556389"><span class="hs-identifier hs-var">fileName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679556389"><span class="hs-identifier hs-var">fileName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679556390"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><span class="hs-comment">-- | List of all paths used in frontend build.</span></span><span>
+</span><span id="line-32"></span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalPaths"><span class="hs-identifier hs-type">webInternalPaths</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span id="webInternalPaths"><span class="annot"><span class="annottext">webInternalPaths :: ([Path Rel Dir], [Path Rel File])
+</span><a href="Pacer.Web.Paths.html#webInternalPaths"><span class="hs-identifier hs-var hs-var">webInternalPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Path Rel Dir]
+</span><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier hs-var">webInternalDirs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Path Rel File]
+</span><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-var">webInternalFiles</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="annot"><span class="hs-comment">-- | List of all dirs used in frontend build.</span></span><span>
+</span><span id="line-36"></span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier hs-type">webInternalDirs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span id="webInternalDirs"><span class="annot"><span class="annottext">webInternalDirs :: [Path Rel Dir]
+</span><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier hs-var hs-var">webInternalDirs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="">[reldir|src|]</span></span><span class="hs-special">]</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="annot"><span class="hs-comment">-- | List of all files used in frontend build.</span></span><span>
+</span><span id="line-40"></span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-type">webInternalFiles</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span id="webInternalFiles"><span class="annot"><span class="annottext">webInternalFiles :: [Path Rel File]
+</span><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-var hs-var">webInternalFiles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="">[relfile|package-lock.json|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="">[relfile|package.json|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="">[relfile|tsconfig.json|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="">[relfile|webpack.config.js|]</span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">[Path Rel File] -&gt; [Path Rel File] -&gt; [Path Rel File]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Path Rel File]
+</span><a href="#local-6989586621679556396"><span class="hs-identifier hs-var">srcFiles</span></a></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>    </span><span id="local-6989586621679556396"><span class="annot"><span class="annottext">srcFiles :: [Path Rel File]
+</span><a href="#local-6989586621679556396"><span class="hs-identifier hs-var hs-var">srcFiles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-50"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="">[reldir|src|]</span></span><span> </span><span class="annot"><span class="annottext">Path Rel Dir -&gt; Path Rel File -&gt; Path Rel File
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">(Path Rel File -&gt; Path Rel File)
+-&gt; [Path Rel File] -&gt; [Path Rel File]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="">[relfile|build_charts.ts|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>              </span><span class="annot"><span class="">[relfile|index.html|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>              </span><span class="annot"><span class="">[relfile|index.ts|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>              </span><span class="annot"><span class="">[relfile|style.css|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>              </span><span class="annot"><span class="">[relfile|types.ts|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>              </span><span class="annot"><span class="">[relfile|utils.ts|]</span></span><span>
+</span><span id="line-57"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="annot"><span class="hs-comment">-- | Web dir name.</span></span><span>
+</span><span id="line-60"></span><span class="annot"><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-type">webDir</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-61"></span><span id="webDir"><span class="annot"><span class="annottext">webDir :: Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-var hs-var">webDir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[reldir|web|]</span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="annot"><span class="hs-comment">-- | Web data input dir relative to 'webDir'.</span></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Pacer.Web.Paths.html#dataDir"><span class="hs-identifier hs-type">dataDir</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-65"></span><span id="dataDir"><span class="annot"><span class="annottext">dataDir :: Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#dataDir"><span class="hs-identifier hs-var hs-var">dataDir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[reldir|data|]</span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="annot"><span class="hs-comment">-- | Web output dir relative to 'webDir'.</span></span><span>
+</span><span id="line-68"></span><span class="annot"><a href="Pacer.Web.Paths.html#distDir"><span class="hs-identifier hs-type">distDir</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-69"></span><span id="distDir"><span class="annot"><span class="annottext">distDir :: Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#distDir"><span class="hs-identifier hs-var hs-var">distDir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[reldir|dist|]</span></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="annot"><span class="hs-comment">-- | Web destination dir.</span></span><span>
+</span><span id="line-72"></span><span id="local-6989586621679556276"><span class="annot"><a href="Pacer.Web.Paths.html#getWebPath"><span class="hs-identifier hs-type">getWebPath</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-effectful-0.1-bb97a2e882e804e9424323925920d99958d1540844089fb7ad37437cbcf4ef8e/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556276"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="file:///nix/store/hmp5az0jqril7fhchlzpn3bynyp1wimw-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679556276"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-77"></span><span id="getWebPath"><span class="annot"><span class="annottext">getWebPath :: forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Eff es (Path Abs Dir)
+</span><a href="Pacer.Web.Paths.html#getWebPath"><span class="hs-identifier hs-var hs-var">getWebPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel Dir -&gt; Path Abs Dir
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-inplace/fs-utils-0.1-e0be67d24d00d763db2478c3a8516a8750588101eeab7fe898dc4351608aed6d/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-var">webDir</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Path Abs Dir -&gt; Path Abs Dir)
+-&gt; Eff es (Path Abs Dir) -&gt; Eff es (Path Abs Dir)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Eff es (Path Abs Dir)
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Eff es (Path Abs Dir)
+</span><a href="Pacer.Prelude.html#getXdgCachePath"><span class="hs-identifier hs-var">getXdgCachePath</span></a></span><span>
+</span><span id="line-78"></span></pre></body></html>
