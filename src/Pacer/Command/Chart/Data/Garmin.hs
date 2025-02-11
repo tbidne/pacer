@@ -126,8 +126,16 @@ parseGarminRow r = do
       MPC.char ':'
       m <- MP.takeP (Just "digits") 2
       MPC.char ':'
-      s <- MP.takeP (Just "digits") 2
-      failErr $ P.parseAll (h <> "h" <> m <> "m" <> s <> "s")
+
+      -- The last bit might not be an integer e.g. 00:23:40.5 (40.5), so we
+      -- take all, round it, then convert back to text for final parsing.
+      --
+      -- Kind of clumsy, but the alternative would be to give up rounding,
+      -- so we do it this way.
+      s <- P.parseDigits @Double
+      let sTxt = showt $ round @_ @Int s
+
+      failErr $ P.parseAll (h <> "h" <> m <> "m" <> sTxt <> "s")
 
     parseX :: forall x. (P.Parser x) => Text -> Parser x
     parseX = P.parseAll >>> failErr
