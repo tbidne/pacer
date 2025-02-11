@@ -129,8 +129,12 @@
               modifier =
                 drv:
                 drv.overrideAttrs (oldAttrs: {
-                  # So wrapProgram is available in postFixup
-                  nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ [ pkgs.makeWrapper ];
+                  # We have makeWrapper so wrapProgram is available in
+                  # postFixup. Git is needed to run the tests (git diff).
+                  nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ [
+                    pkgs.git
+                    pkgs.makeWrapper
+                  ];
 
                   # This is apparently unnecessary, but knowing what version of
                   # node pacer is using could be helpful.

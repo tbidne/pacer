@@ -48,25 +48,9 @@ jobs:
         id: unit
         run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000'
 
-      - uses: actions/upload-artifact@v4
-        name: Unit tests upload
-        if: ${{ failure() && steps.unit.conclusion == 'failure' }}
-        with:
-          name: unit-tests-artifacts-${{ matrix.os }}
-          path: |
-            test/unit/goldens
-
       - name: Functional tests
         id: functional
         run: cabal test pacer:functional
-
-      - uses: actions/upload-artifact@v4
-        name: Functional tests upload
-        if: ${{ failure() && steps.functional.conclusion == 'failure' }}
-        with:
-          name: functional-tests-artifacts-${{ matrix.os }}
-          path: |
-            test/functional/goldens
 
       - name: Generate charts html/hs
 
@@ -112,25 +96,9 @@ jobs:
         run: stack test pacer:test:unit --ghc-options -Werror --test-arguments '--hedgehog-tests 1000000'
       # yamllint enable
 
-      - uses: actions/upload-artifact@v4
-        name: Unit tests upload
-        if: ${{ failure() && steps.unit.conclusion == 'failure' }}
-        with:
-          name: stack-unit-tests-artifacts
-          path: |
-            test/unit/goldens
-
       - name: Functional tests
         id: functional
         run: stack test pacer:test:functional --ghc-options -Werror
-
-      - uses: actions/upload-artifact@v4
-        name: Functional tests upload
-        if: ${{ failure() && steps.functional.conclusion == 'failure' }}
-        with:
-          name: stack-functional-tests-artifacts
-          path: |
-            test/functional/goldens
 
       - name: Generate charts html/hs
 

@@ -69,9 +69,10 @@ import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
 import Pacer.Data.Result (Result (Err, Ok), errorErr)
 import Pacer.Prelude as X hiding (IO)
+import System.FilePath (FilePath)
 import System.IO as X (IO)
 import Test.Tasty as X (TestName, TestTree, testGroup)
-import Test.Tasty.Golden as X (goldenVsFile)
+import Test.Tasty.Golden as X (goldenVsFileDiff)
 import Test.Tasty.HUnit as X
   ( Assertion,
     assertBool,
@@ -174,7 +175,7 @@ testGoldenParamsOs goldenParams = testGoldenParams goldenParams'
 
 testGoldenParams :: GoldenParams -> TestTree
 testGoldenParams goldenParams =
-  goldenVsFile goldenParams.testDesc goldenPath actualPath $ do
+  goldenDiff goldenParams.testDesc goldenPath actualPath $ do
     trySync goldenParams.runner >>= \case
       Left err -> writeActualFile $ exToBs err
       Right bs -> writeActualFile bs
@@ -203,3 +204,17 @@ pShowBS = encodeUtf8 . toStrictText . Pretty.pShowOpt opts
       Pretty.defaultOutputOptionsNoColor
         { Pretty.outputOptionsIndentAmount = 2
         }
+
+-- See NOTE: [Golden test diffing]
+goldenDiff :: TestName -> FilePath -> FilePath -> IO () -> TestTree
+goldenDiff x = goldenVsFileDiff x diffArgs
+  where
+    diffArgs ref new =
+      [ "git",
+        "diff",
+        "--exit-code",
+        "--color=always",
+        "--no-index",
+        ref,
+        new
+      ]

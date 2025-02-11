@@ -58,10 +58,11 @@ import Pacer.Driver (runApp)
 import Pacer.Exception (TomlE (MkTomlE), displayInnerMatchKnown)
 import Pacer.Prelude as X hiding (IO)
 import System.Environment (withArgs)
+import System.FilePath (FilePath)
 import System.IO as X (IO)
 import System.OsPath qualified as OsPath
 import Test.Tasty as X (TestName, TestTree, testGroup)
-import Test.Tasty.Golden as X (goldenVsFile)
+import Test.Tasty.Golden as X (goldenVsFileDiff)
 import Test.Tasty.HUnit as X
   ( Assertion,
     assertBool,
@@ -320,8 +321,8 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
     dataDir = unsafeDecode $ basePath </> testName
 
 testGoldenParams :: IO OsPath -> GoldenParams -> TestTree
-testGoldenParams getTestDir goldenParams = do
-  goldenVsFile goldenParams.testDesc goldenPath actualPath $ do
+testGoldenParams getTestDir goldenParams =
+  goldenDiff goldenParams.testDesc goldenPath actualPath $ do
     testDir <- getTestDir
 
     let args = goldenParams.mkArgs testDir
@@ -375,3 +376,31 @@ incIORef ::
   (FuncEnv -> IORef Word8) ->
   Eff es ()
 incIORef toRef = asks toRef >>= \r -> modifyIORef' r (+ 1)
+
+-- NOTE: [Golden test diffing]
+--
+-- We use a custom diff (git diff) over the default (goldenVsFile)
+-- because the former will print the diff in the actual test output, while
+-- the latter just says something like "files are different" and fails.
+-- This means we need to check the actual files to see the diff ourselves.
+--
+-- This is minor annoyance locally but it's a real issue on CI, since we have
+-- to upload the files (ensuring paths don't collide), download them, then
+-- diff locally.
+--
+-- This way is much simpler, and only requires git.
+goldenDiff :: TestName -> FilePath -> FilePath -> IO () -> TestTree
+goldenDiff x = goldenVsFileDiff x diffArgs
+  where
+    -- Apparently, the 'diff' program exists for windows and unix on CI. Thus
+    -- the arguments ["diff", "-u" "--color=always", ref, new] also seem fine.
+    -- Nevertheless, we use git as it is also likely to always be around.
+    diffArgs ref new =
+      [ "git",
+        "diff",
+        "--exit-code",
+        "--color=always",
+        "--no-index",
+        ref,
+        new
+      ]
