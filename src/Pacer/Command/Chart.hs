@@ -29,7 +29,6 @@ import Effectful.FileSystem.PathWriter.Dynamic qualified as PW
 import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.Process.Typed.Dynamic qualified as TP
 import FileSystem.OsPath (decodeLenient, decodeThrowM)
-import FileSystem.Path qualified as Path
 import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
 import Pacer.Command.Chart.Data.Chart (Chart)
 import Pacer.Command.Chart.Data.Chart qualified as Chart
@@ -42,10 +41,19 @@ import Pacer.Command.Chart.Data.Run
   ( SomeRuns,
   )
 import Pacer.Command.Chart.Params
-  ( ChartParams (chartRequestsPath, cleanInstall, json, runsPath, runsType),
+  ( ChartParams
+      ( buildDir,
+        chartRequestsPath,
+        cleanInstall,
+        json,
+        runsPath,
+        runsType
+      ),
     ChartParamsFinal,
     RunsType (RunsDefault, RunsGarmin),
   )
+import Pacer.Config.Env.Types (CachedPaths)
+import Pacer.Config.Env.Types qualified as Types
 import Pacer.Data.Distance.Units (DistanceUnit)
 import Pacer.Exception
   ( GarminE (GarminUnitRequired),
@@ -70,6 +78,7 @@ handle ::
     LoggerNS :> es,
     PathReader :> es,
     PathWriter :> es,
+    State CachedPaths :> es,
     TypedProcess :> es
   ) =>
   ChartParamsFinal ->
@@ -84,14 +93,18 @@ createCharts ::
     LoggerNS :> es,
     PathReader :> es,
     PathWriter :> es,
+    State CachedPaths :> es,
     TypedProcess :> es
   ) =>
   ChartParamsFinal ->
   Eff es ()
 createCharts params = addNamespace "createCharts" $ do
-  cwdOsPath <- PR.getCurrentDirectory
-  cwdPath <- Path.parseAbsDir cwdOsPath
+  cwdPath <- Types.getCachedCurrentDirectory
+  let cwdOsPath = pathToOsPath cwdPath
 
+  $(Logger.logInfo)
+    $ "Using build-dir: "
+    <> (Utils.showtPath params.buildDir)
   $(Logger.logInfo)
     $ "Using chart-requests: "
     <> (Utils.showtPath params.chartRequestsPath)
@@ -100,7 +113,7 @@ createCharts params = addNamespace "createCharts" $ do
   if params.json
     then do
       -- params.json is active, so stop after json generation
-      let jsonPath = cwdPath <</>> jsonName
+      let jsonPath = params.buildDir <</>> jsonName
       createChartsJsonFile
         True
         params.runsType
@@ -198,17 +211,16 @@ createCharts params = addNamespace "createCharts" $ do
       $(Logger.logInfo)
         $ mconcat
           [ "Successfully created charts in '",
-            packText (decodeLenient buildDest),
+            packText (decodeLenient buildDirOsPath),
             "' directory"
           ]
   where
+    buildDirOsPath = pathToOsPath params.buildDir
     copyConfig =
       MkCopyDirConfig
         { overwrite = OverwriteNone,
-          targetName = TargetNameLiteral buildDest
+          targetName = TargetNameLiteral buildDirOsPath
         }
-
-    buildDest = [osp|build|]
 
 runNpm ::
   ( HasCallStack,

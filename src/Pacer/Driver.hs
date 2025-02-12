@@ -28,7 +28,7 @@ import Pacer.Command.Scale qualified as Scale
 import Pacer.Config.Args (Args (command, configPath), parserInfo)
 import Pacer.Config.Env qualified as Env
 import Pacer.Config.Env.Types
-  ( CachedPaths (MkCachedPaths, xdgConfigPath),
+  ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
     LogEnv (logLevel),
   )
 import Pacer.Config.Toml (Toml, TomlWithPath (MkTomlWithPath, toml))
@@ -143,7 +143,8 @@ getConfiguration @es = do
 
   let cachedPaths =
         MkCachedPaths
-          { xdgConfigPath = mXdgConfig
+          { currentDirectory = Nothing,
+            xdgConfigPath = mXdgConfig
           }
       logEnv = Env.mkLogEnv args (mToml <&> (.toml))
 

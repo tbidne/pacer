@@ -14,6 +14,7 @@ module Pacer.Command.Chart.Params
     evolvePhase,
 
     -- * Type families
+    BuildDirF,
     PathF,
   )
 where
@@ -24,11 +25,12 @@ import FileSystem.Path qualified as Path
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
 import Pacer.Config.Env.Types (CachedPaths, getCachedXdgConfigPath)
+import Pacer.Config.Env.Types qualified as Types
 import Pacer.Config.Phase
   ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
   )
 import Pacer.Config.Toml
-  ( Toml (chartRequestsPath, dataDir, runsPath),
+  ( Toml (chartBuildDir, chartRequestsPath, dataDir, runsPath),
     TomlWithPath (dirPath, toml),
   )
 import Pacer.Exception
@@ -72,10 +74,17 @@ type family PathF p t where
           :<>: TE.Text "' invalid for PathF."
       )
 
+type BuildDirF :: ConfigPhase -> Type
+type family BuildDirF p where
+  BuildDirF ConfigPhaseArgs = Maybe OsPath
+  BuildDirF ConfigPhaseFinal = Path Abs Dir
+
 -- | Chart params.
 type ChartParams :: ConfigPhase -> Type
 data ChartParams p = MkChartParams
-  { -- | If true, copies clean install of web dir and installs node deps.
+  { -- | Build directory.
+    buildDir :: BuildDirF p,
+    -- | If true, copies clean install of web dir and installs node deps.
     cleanInstall :: Bool,
     -- | Optional path to chart-requests.toml.
     chartRequestsPath :: PathF p File,
@@ -95,13 +104,15 @@ type ChartParamsArgs = ChartParams ConfigPhaseArgs
 type ChartParamsFinal = ChartParams ConfigPhaseFinal
 
 deriving stock instance
-  ( Eq (PathF p Dir),
+  ( Eq (BuildDirF p),
+    Eq (PathF p Dir),
     Eq (PathF p File)
   ) =>
   Eq (ChartParams p)
 
 deriving stock instance
-  ( Show (PathF p Dir),
+  ( Show (BuildDirF p),
+    Show (PathF p Dir),
     Show (PathF p File)
   ) =>
   Show (ChartParams p)
@@ -123,9 +134,26 @@ evolvePhase @es params mTomlWithPath = do
   assertExists chartRequestsPath
   assertExists runsPath
 
+  buildDir <-
+    case params.buildDir of
+      Just d -> do
+        -- --build-dir exists, parse absolute or resolve relative to cwd
+        cwdPath <- Types.getCachedCurrentDirectory
+        customBuildDir cwdPath d
+      Nothing -> case mTomlWithPath of
+        Just t ->
+          case t.toml.chartBuildDir of
+            -- toml.build-dir exists, parse absolute or resolve relative to
+            -- toml path.
+            Just d -> customBuildDir t.dirPath d
+            -- otherwise use default, cwd/build
+            Nothing -> defaultBuildDir
+        Nothing -> defaultBuildDir
+
   pure
     $ MkChartParams
-      { cleanInstall = params.cleanInstall,
+      { buildDir,
+        cleanInstall = params.cleanInstall,
         chartRequestsPath,
         dataDir = (),
         json = params.json,
@@ -133,6 +161,19 @@ evolvePhase @es params mTomlWithPath = do
         runsType = params.runsType
       }
   where
+    defaultBuildDir :: Eff es (Path Abs Dir)
+    defaultBuildDir = do
+      cwdPath <- Types.getCachedCurrentDirectory
+      pure $ cwdPath <</>> [reldir|build|]
+
+    customBuildDir :: Path Abs Dir -> OsPath -> Eff es (Path Abs Dir)
+    customBuildDir absDir unknownDir =
+      handleUnknownPath
+        absDir
+        Path.parseAbsDir
+        Path.parseRelDir
+        unknownDir
+
     -- Retrieves (Tuple2 chart-requests-path runs-path)
     getChartInputs :: Eff es (Path Abs File, Path Abs File)
     getChartInputs = do
@@ -214,19 +255,19 @@ evolvePhase @es params mTomlWithPath = do
               -- 2.1. Toml.path exists, use it
               Just p ->
                 Just
-                  <$> handleTomlPath
+                  <$> handleUnknownPath
+                    tomlWithPath.dirPath
                     Path.parseAbsFile
                     Path.parseRelFile
-                    tomlWithPath.dirPath
                     p
               Nothing -> case tomlWithPath.toml.dataDir of
                 Just dataDir -> do
                   -- 2.2. Toml.data-dir/path exists, try it
                   tomlDataDirPath <-
-                    handleTomlPath
+                    handleUnknownPath
+                      tomlWithPath.dirPath
                       Path.parseAbsDir
                       Path.parseRelDir
-                      tomlWithPath.dirPath
                       dataDir
                   findFirstMatch tomlDataDirPath
                 Nothing -> pure Nothing
@@ -270,26 +311,26 @@ evolvePhase @es params mTomlWithPath = do
                   Utils.showtPath dataDir
                 ]
 
-    -- Handles toml config path, resolving any relative paths. Polymorphic
-    -- over file/dir path.
-    handleTomlPath ::
+    -- Handles an unknown (wrt. absolute/relative) path, resolving any
+    -- relative paths. Polymorphic over file/dir path.
+    handleUnknownPath ::
+      -- Containing dir for relative paths.
+      Path Abs Dir ->
       -- Absolute parser.
       (OsPath -> Eff es (Path Abs t)) ->
       -- Relative parser.
       (OsPath -> Eff es (Path Rel t)) ->
-      -- Dir containing the toml config.
-      Path Abs Dir ->
       -- Path to resolve
       OsPath ->
       Eff es (Path Abs t)
-    handleTomlPath absParser relParser tomlDir otherPath =
+    handleUnknownPath parentDir absParser relParser otherPath =
       if OsPath.isAbsolute otherPath
         -- Path is absolute, just parse it.
         then absParser otherPath
-        -- Path is relative, parse and combine with tomlDir.
+        -- Path is relative, parse and combine with parentDir.
         else do
           relFile <- relParser otherPath
-          pure $ tomlDir <</>> relFile
+          pure $ parentDir <</>> relFile
 
     assertExists :: (HasCallStack) => Path b t -> Eff es ()
     assertExists p = do

@@ -22,9 +22,13 @@ module Functional.Prelude
 where
 
 import Data.IORef qualified as Ref
+import Data.List qualified as L
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
+import Data.Text qualified as T
+import Effectful.FileSystem.FileWriter.Dynamic
+  ( FileWriter (WriteBinaryFile),
+  )
 import Effectful.FileSystem.PathReader.Dynamic
   ( PathReader
       ( CanonicalizePath,
@@ -185,9 +189,9 @@ runFileWriterMock ::
 runFileWriterMock = interpret_ $ \case
   WriteBinaryFile path bs -> do
     outFilesMapRef <- asks @FuncEnv (.outFilesMapRef)
-    modifyIORef' outFilesMapRef (Map.insert fileName bs)
+    modifyIORef' outFilesMapRef (Map.insert path' bs)
     where
-      fileName = OsPath.takeFileName path
+      path' = takeParentAndName path
   _ -> error "runFileWriterMock: unimplemented"
 
 runTerminalMock ::
@@ -310,7 +314,7 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
                 "--json"
               ],
           -- The chart tests will all write an output file charts.json
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc,
           testName = goldenName
         }
@@ -342,7 +346,15 @@ testGoldenParams getTestDir goldenParams =
             case Map.lookup expectedName outFilesMap of
               -- Found the write attempt in our env's map. Write it to compare
               -- it with the golden expectation.
-              Just bs -> writeActualFile bs
+              Just bs -> do
+                let fileNameBs =
+                      encodeUtf8
+                        -- normalize slashes for windows
+                        . T.replace "\\" "/"
+                        . packText
+                        . decodeLenient
+                        $ expectedName
+                writeActualFile $ fileNameBs <> "\n\n" <> bs
               -- Expected file not found, failure.
               Nothing -> do
                 let msg =
@@ -404,3 +416,10 @@ goldenDiff x = goldenVsFileDiff x diffArgs
         ref,
         new
       ]
+
+takeParentAndName :: OsPath -> OsPath
+takeParentAndName path = parentDir </> fileName
+  where
+    takeParentDir = L.last . OsPath.splitDirectories . OsPath.takeDirectory
+    parentDir = takeParentDir path
+    fileName = OsPath.takeFileName path

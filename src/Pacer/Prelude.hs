@@ -73,6 +73,7 @@ module Pacer.Prelude
     listToNESeq,
 
     -- * File IO
+    getCurrentDirectory,
     parseCanonicalAbsDir,
     parseCanonicalAbsFile,
 
@@ -231,8 +232,10 @@ import Effectful as X
   )
 import Effectful.Concurrent as X (Concurrent, runConcurrent)
 import Effectful.Dispatch.Dynamic as X
-  ( interpret,
+  ( interpose,
+    interpret,
     interpret_,
+    passthrough,
     reinterpret,
     reinterpret_,
     send,
@@ -565,6 +568,14 @@ firstA f = bitraverse f pure
 secondA :: (Bitraversable t, Applicative f) => (b -> f d) -> t c b -> f (t c d)
 secondA = bitraverse pure
 #endif
+
+-- | Current directory.
+getCurrentDirectory ::
+  ( HasCallStack,
+    PathReader :> es
+  ) =>
+  Eff es (Path Abs Dir)
+getCurrentDirectory = PR.getCurrentDirectory >>= parseCanonicalAbsDir
 
 -- | Xdg cache dir.
 getXdgCachePath ::

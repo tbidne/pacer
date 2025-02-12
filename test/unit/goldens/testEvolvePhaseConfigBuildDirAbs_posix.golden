@@ -1,5 +1,5 @@
 MkChartParams
-  { buildDir = "/cwd/build/"
+  { buildDir = "/abs/build-dir/"
   , cleanInstall = False
   , chartRequestsPath = "/root/xdg/config/pacer/chart-requests.toml"
   , dataDir = ()

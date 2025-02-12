@@ -1,5 +1,5 @@
 MkChartParams
-  { buildDir = "C:\cwd\build\"
+  { buildDir = "C:\root\config-data\build-dir\"
   , cleanInstall = False
   , chartRequestsPath = "C:\root\xdg\config\pacer\chart-requests.toml"
   , dataDir = ()
