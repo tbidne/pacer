@@ -30,7 +30,8 @@ import Pacer.Config.Phase
   ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
   )
 import Pacer.Config.Toml
-  ( Toml (chartBuildDir, chartRequestsPath, dataDir, runsPath),
+  ( ChartConfig (buildDir, chartRequestsPath, dataDir, runsPath),
+    Toml (chartConfig),
     TomlWithPath (dirPath, toml),
   )
 import Pacer.Exception
@@ -142,7 +143,7 @@ evolvePhase @es params mTomlWithPath = do
         customBuildDir cwdPath d
       Nothing -> case mTomlWithPath of
         Just t ->
-          case t.toml.chartBuildDir of
+          case t.toml.chartConfig >>= (.buildDir) of
             -- toml.build-dir exists, parse absolute or resolve relative to
             -- toml path.
             Just d -> customBuildDir t.dirPath d
@@ -182,7 +183,7 @@ evolvePhase @es params mTomlWithPath = do
           "chart-requests"
           [chartRequestsName]
           params.chartRequestsPath
-          (.chartRequestsPath)
+          (\t -> t.chartConfig >>= (.chartRequestsPath))
 
       -- If --runs-type is given, use it to influence the order of files
       -- we try to find. Note that our current implementation does NOT mean
@@ -208,7 +209,7 @@ evolvePhase @es params mTomlWithPath = do
           "runs"
           runsFileNames
           params.runsPath
-          (.runsPath)
+          (\t -> t.chartConfig >>= (.runsPath))
 
       pure (chartRequestsPath, runsPath)
 
@@ -260,7 +261,7 @@ evolvePhase @es params mTomlWithPath = do
                     Path.parseAbsFile
                     Path.parseRelFile
                     p
-              Nothing -> case tomlWithPath.toml.dataDir of
+              Nothing -> case tomlWithPath.toml.chartConfig >>= (.dataDir) of
                 Just dataDir -> do
                   -- 2.2. Toml.data-dir/path exists, try it
                   tomlDataDirPath <-
@@ -286,7 +287,8 @@ evolvePhase @es params mTomlWithPath = do
                 $ MkChartFileMissingE
                   { cliDataDir = params.dataDir,
                     expectedFiles = fileNames,
-                    tomlDataDir = mTomlWithPath >>= \t -> t.toml.dataDir,
+                    tomlDataDir =
+                      mTomlWithPath >>= \t -> t.toml.chartConfig >>= (.dataDir),
                     xdgDir
                   }
 
