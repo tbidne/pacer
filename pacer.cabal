@@ -225,6 +225,7 @@ test-suite functional
     , tasty-hedgehog
     , tasty-hunit
     , terminal-effectful
+    , text
 
   hs-source-dirs: test/functional
   ghc-options:    -threaded

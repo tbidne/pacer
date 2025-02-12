@@ -26,7 +26,9 @@ data TomlWithPath = MkTomlWithPath
 
 -- | Toml configuration.
 data Toml = MkToml
-  { -- | Optional path to directory with runs file and chart-requests.toml.
+  { -- | Chart build dir.
+    chartBuildDir :: Maybe OsPath,
+    -- | Optional path to directory with runs file and chart-requests.toml.
     dataDir :: Maybe OsPath,
     -- | Optional path to chart-requests.toml.
     chartRequestsPath :: Maybe OsPath,
@@ -39,6 +41,7 @@ data Toml = MkToml
 
 instance DecodeTOML Toml where
   tomlDecoder = do
+    chartBuildDir <- TOML.getFieldOptWith decodeOsPath "chart-build-dir"
     dataDir <- TOML.getFieldOptWith decodeOsPath "data"
     chartRequestsPath <- TOML.getFieldOptWith decodeOsPath "chart-requests"
     logLevel <- TOML.getFieldOptWith tomlDecoder "log-level"
@@ -46,7 +49,8 @@ instance DecodeTOML Toml where
 
     pure
       $ MkToml
-        { dataDir,
+        { chartBuildDir,
+          dataDir,
           chartRequestsPath,
           logLevel,
           runsPath

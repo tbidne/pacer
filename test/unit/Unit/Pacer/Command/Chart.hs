@@ -38,10 +38,12 @@ import Effectful.Process.Typed.Dynamic
   )
 import Effectful.Terminal.Dynamic (Terminal (PutStr, PutStrLn))
 import FileSystem.IO (readBinaryFileIO)
+import FileSystem.OsPath (decodeLenient)
 import Pacer.Command.Chart qualified as Chart
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
+        buildDir,
         chartRequestsPath,
         cleanInstall,
         dataDir,
@@ -90,7 +92,8 @@ testDefault = testCase "Default" $ do
   where
     params =
       MkChartParams
-        { cleanInstall = False,
+        { buildDir = Nothing,
+          cleanInstall = False,
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
@@ -111,7 +114,8 @@ testJson = testCase "With --json" $ do
   where
     params =
       MkChartParams
-        { cleanInstall = False,
+        { buildDir = Nothing,
+          cleanInstall = False,
           dataDir = Nothing,
           json = True,
           chartRequestsPath = Nothing,
@@ -133,7 +137,8 @@ testPathNodeModExists = testCase "node_modules exists" $ do
   where
     params =
       MkChartParams
-        { cleanInstall = False,
+        { buildDir = Nothing,
+          cleanInstall = False,
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
@@ -154,7 +159,8 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
   where
     params =
       MkChartParams
-        { cleanInstall = True,
+        { buildDir = Nothing,
+          cleanInstall = True,
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
@@ -190,7 +196,8 @@ testNoNpmFailure = testCase "No npm failure" $ do
         ]
     params =
       MkChartParams
-        { cleanInstall = False,
+        { buildDir = Nothing,
+          cleanInstall = False,
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
@@ -296,9 +303,23 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
       -- we need the current directory to return true, but it can be
       -- non-deterministic e.g. for out-of-tree builds, hence this check.
       currDir <- PRS.getCurrentDirectory
-      if p == currDir
+      -- The LHS might (always?) have a trailing separator since it's no
+      -- longer a hardcoded 'build' but possibly the result of e.g.
+      -- @cwdPath <</>> [reldir|build|]@. Presumably some part of this adds
+      -- the slash.
+      if OsPath.dropTrailingPathSeparator p == currDir
         then pure True
-        else error $ "doesDirectoryExist: unexpected: " ++ show other
+        else
+          error
+            $ mconcat
+              [ "doesDirectoryExist: unexpected dir name: '",
+                decodeLenient other,
+                "'\nfull path: '",
+                decodeLenient p,
+                "'\ncurrent path: '",
+                decodeLenient currDir,
+                "'\n"
+              ]
     where
       dirName = L.last $ OsPath.splitDirectories p
   DoesFileExist p ->

@@ -19,6 +19,7 @@ basicTests getTestDir =
     "Basic"
     [ testExampleChart getTestDir,
       testSimple getTestDir,
+      testSimpleBuildDir getTestDir,
       testFilter getTestDir,
       testFilterPreds getTestDir,
       testFilterDates getTestDir,
@@ -35,7 +36,7 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
     params =
       MkGoldenParams
         { mkArgs = const ["chart", "--data", dataDir, "--json"],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Generates example",
           testName = [osp|testExampleChart|]
         }
@@ -43,6 +44,26 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
 
 testSimple :: IO OsPath -> TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]
+
+testSimpleBuildDir :: IO OsPath -> TestTree
+testSimpleBuildDir getTestDir = testGoldenParams getTestDir params
+  where
+    params =
+      MkGoldenParams
+        { mkArgs =
+            const
+              [ "chart",
+                "--build-dir",
+                "another-build",
+                "--data",
+                dataDir,
+                "--json"
+              ],
+          outFileName = Just [ospPathSep|another-build/charts.json|],
+          testDesc = "Simple with build-dir",
+          testName = [osp|testSimpleBuildDir|]
+        }
+    dataDir = unsafeDecode [ospPathSep|test/functional/data/testSimpleBuildDir|]
 
 testFilter :: IO OsPath -> TestTree
 testFilter = testChart "Filter example" [osp|testFilter|]
@@ -82,12 +103,12 @@ testGarminChart getTestDir = testGoldenParams getTestDir params
                 runsPath,
                 "--json"
               ],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Generates garmin example",
           testName = [osp|testGarminChart|]
         }
-    chartRequestsPath = unsafeDecode [osp|examples/chart-requests-garmin.toml|]
-    runsPath = unsafeDecode [osp|examples/Activities.csv|]
+    chartRequestsPath = unsafeDecode [ospPathSep|examples/chart-requests-garmin.toml|]
+    runsPath = unsafeDecode [ospPathSep|examples/Activities.csv|]
 
 testGarminChartError :: IO OsPath -> TestTree
 testGarminChartError getTestDir = testGoldenParams getTestDir params
@@ -103,12 +124,12 @@ testGarminChartError getTestDir = testGoldenParams getTestDir params
                 runsPath,
                 "--json"
               ],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Garmin fails without chart-requests garmin.settings",
           testName = [osp|testGarminChartError|]
         }
-    chartRequestsPath = unsafeDecode [osp|examples/chart-requests.toml|]
-    runsPath = unsafeDecode [osp|examples/Activities.csv|]
+    chartRequestsPath = unsafeDecode [ospPathSep|examples/chart-requests.toml|]
+    runsPath = unsafeDecode [ospPathSep|examples/Activities.csv|]
 
 pathTests :: IO OsPath -> TestTree
 pathTests getTestDir =
@@ -128,7 +149,7 @@ testPathXdg getTestDir = testGoldenParams getTestDir params
     params =
       MkGoldenParams
         { mkArgs = const ["chart", "--json"],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "No paths uses XDG config",
           testName = [osp|testPathXdg|]
         }
@@ -147,7 +168,7 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
                 "--data",
                 dataDir
               ],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--chart-requests overrides --data",
           testName = [osp|testPathChartRequestsOverrideData|]
         }
@@ -165,7 +186,7 @@ testPathRunsOverrideData getTestDir = testGoldenParams getTestDir params
     params =
       MkGoldenParams
         { mkArgs = const ["chart", "--json", "--runs", runsPath, "--data", dataDir],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--runs overrides --data",
           testName = [osp|testPathRunsOverrideData|]
         }
@@ -180,7 +201,7 @@ testPathChartRequestsOverrideXdg getTestDir = testGoldenParams getTestDir params
     params =
       MkGoldenParams
         { mkArgs = const ["chart", "--json", "--chart-requests", chartRequestsPath],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--chart-requests overrides XDG",
           testName = [osp|testPathChartRequestsOverrideXdg|]
         }
@@ -194,7 +215,7 @@ testPathRunsOverrideXdg getTestDir = testGoldenParams getTestDir params
     params =
       MkGoldenParams
         { mkArgs = const ["chart", "--json", "--runs", runsPath],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--runs overrides XDG",
           testName = [osp|testPathRunsOverrideXdg|]
         }
@@ -207,7 +228,7 @@ testPathConfig getTestDir = testGoldenParams getTestDir params
     params =
       MkGoldenParams
         { mkArgs = const ["chart", "--json", "--config", configPath],
-          outFileName = Just [osp|charts.json|],
+          outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Uses explicit config",
           testName = [osp|testPathConfig|]
         }

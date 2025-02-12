@@ -1,5 +1,6 @@
 MkChartParams
-  { cleanInstall = False
+  { buildDir = "/cwd/build/"
+  , cleanInstall = False
   , chartRequestsPath = "/root/config-cr.toml"
   , dataDir = ()
   , json = False

@@ -9,6 +9,7 @@ import Options.Applicative qualified as OA
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
+        buildDir,
         chartRequestsPath,
         cleanInstall,
         dataDir,
@@ -25,6 +26,7 @@ import Pacer.Prelude
 -- | Parse chart args.
 parser :: Parser ChartParamsArgs
 parser = do
+  buildDir <- mBuildDirPath
   chartRequestsPath <- mChartRequestsParser
   cleanInstall <- cleanInstallParser
   dataDir <- dataDirParser
@@ -34,13 +36,20 @@ parser = do
 
   pure
     $ MkChartParams
-      { chartRequestsPath,
+      { buildDir,
+        chartRequestsPath,
         cleanInstall,
         dataDir,
         json,
         runsPath,
         runsType
       }
+
+mBuildDirPath :: Parser (Maybe OsPath)
+mBuildDirPath =
+  mOsPathParser Nothing "build-dir" "PATH" helpTxt
+  where
+    helpTxt = "Optional path to build directory. Defaults to ./build."
 
 mChartRequestsParser :: Parser (Maybe OsPath)
 mChartRequestsParser =
