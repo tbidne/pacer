@@ -407,6 +407,24 @@ import Numeric.Data.Positive.Algebra.Internal as X
         UnsafePositive
       ),
   )
+import Optics.Core as X
+  ( Lens,
+    Lens',
+    Prism,
+    Prism',
+    over',
+    set',
+    view,
+    (%),
+    (%?),
+    (^.),
+    _Just,
+    _Nothing,
+  )
+import Optics.TH as X
+  ( makeFieldLabelsNoPrefix,
+    makePrisms,
+  )
 import OsPath as X
   ( absdir,
     absfile,

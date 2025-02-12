@@ -1,13 +1,14 @@
+# Log level. Can be one of: none, debug, info, warn, error
+log-level = "none"
+
 # Optional toml config. Affects 'chart' command.
+[chart]
 
 # Path to chart-requests file. Overrides 'data' field.
 chart-requests = "./chart-requests.toml"
 
 # Data directory where we expect to find the chart-requests and run files.
 data = "./"
-
-# Log level. Can be one of: none, debug, info, warn, error
-log-level = "none"
 
 # Path to runs file. Overrides 'data' field.
 runs = "./runs.toml"

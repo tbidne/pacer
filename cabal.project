@@ -69,5 +69,6 @@ source-repository-package
 optimization: 2
 test-show-details: direct
 
+allow-newer: optics-th:template-haskell
 allow-newer: path:hashable
 allow-newer: unix-compat:time

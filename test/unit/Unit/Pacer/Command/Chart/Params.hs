@@ -32,14 +32,7 @@ import Pacer.Command.Chart.Params
 import Pacer.Command.Chart.Params qualified as Params
 import Pacer.Config.Env.Types (CachedPaths)
 import Pacer.Config.Toml
-  ( Toml
-      ( MkToml,
-        chartBuildDir,
-        chartRequestsPath,
-        dataDir,
-        logLevel,
-        runsPath
-      ),
+  ( Toml,
     TomlWithPath (MkTomlWithPath, dirPath, toml),
   )
 import Pacer.Exception qualified as Ex
@@ -100,14 +93,7 @@ testEvolvePhaseCliBuildDirAbs =
           runsPath = Nothing,
           runsType = Nothing
         }
-    toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+    toml = baseToml
 
 testEvolvePhaseCliBuildDirRel :: TestTree
 testEvolvePhaseCliBuildDirRel =
@@ -128,14 +114,7 @@ testEvolvePhaseCliBuildDirRel =
           runsPath = Nothing,
           runsType = Nothing
         }
-    toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+    toml = baseToml
 
 testEvolvePhaseConfigBuildDirAbs :: TestTree
 testEvolvePhaseConfigBuildDirAbs =
@@ -157,13 +136,10 @@ testEvolvePhaseConfigBuildDirAbs =
           runsType = Nothing
         }
     toml =
-      MkToml
-        { chartBuildDir = Just (pathToOsPath absBuildDir),
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+      set'
+        (#chartConfig %? #buildDir)
+        (Just (pathToOsPath absBuildDir))
+        baseToml
 
 testEvolvePhaseConfigBuildDirRel :: TestTree
 testEvolvePhaseConfigBuildDirRel =
@@ -185,13 +161,10 @@ testEvolvePhaseConfigBuildDirRel =
           runsType = Nothing
         }
     toml =
-      MkToml
-        { chartBuildDir = Just [osp|build-dir|],
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+      set'
+        (#chartConfig %? #buildDir)
+        (Just [osp|build-dir|])
+        baseToml
 
 testEvolvePhaseCliPaths :: TestTree
 testEvolvePhaseCliPaths =
@@ -213,13 +186,16 @@ testEvolvePhaseCliPaths =
           runsType = Nothing
         }
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Just [osp|config-cr.toml|],
-          dataDir = Just [osp|config-data|],
-          logLevel = Nothing,
-          runsPath = Just [osp|config-runs.toml|]
-        }
+      set'
+        (#chartConfig %? #runsPath)
+        (Just [osp|config-runs.toml|])
+        $ set'
+          (#chartConfig %? #dataDir)
+          (Just [osp|config-data|])
+        $ set'
+          (#chartConfig %? #chartRequestsPath)
+          (Just [osp|config-cr.toml|])
+          baseToml
 
 testEvolvePhaseCliData :: TestTree
 testEvolvePhaseCliData =
@@ -242,13 +218,16 @@ testEvolvePhaseCliData =
         }
 
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Just [osp|config-cr.toml|],
-          dataDir = Just [osp|config-data|],
-          logLevel = Nothing,
-          runsPath = Just [osp|config-runs.toml|]
-        }
+      set'
+        (#chartConfig %? #runsPath)
+        (Just [osp|config-runs.toml|])
+        $ set'
+          (#chartConfig %? #dataDir)
+          (Just [osp|config-data|])
+        $ set'
+          (#chartConfig %? #chartRequestsPath)
+          (Just [osp|config-cr.toml|])
+          baseToml
 
 testEvolvePhaseConfigAbsPaths :: TestTree
 testEvolvePhaseConfigAbsPaths =
@@ -273,13 +252,16 @@ testEvolvePhaseConfigAbsPaths =
         }
 
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Just $ rootOsPath </> [osp|config-cr.toml|],
-          dataDir = Just [osp|config-data|],
-          logLevel = Nothing,
-          runsPath = Just $ rootOsPath </> [osp|config-runs.toml|]
-        }
+      set'
+        (#chartConfig %? #runsPath)
+        (Just $ rootOsPath </> [osp|config-runs.toml|])
+        $ set'
+          (#chartConfig %? #dataDir)
+          (Just [osp|config-data|])
+        $ set'
+          (#chartConfig %? #chartRequestsPath)
+          (Just $ rootOsPath </> [osp|config-cr.toml|])
+          baseToml
 
 testEvolvePhaseConfigRelPaths :: TestTree
 testEvolvePhaseConfigRelPaths =
@@ -304,13 +286,16 @@ testEvolvePhaseConfigRelPaths =
         }
 
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Just [osp|rel-cr.toml|],
-          dataDir = Just [osp|config-data|],
-          logLevel = Nothing,
-          runsPath = Just [osp|rel-runs.toml|]
-        }
+      set'
+        (#chartConfig %? #runsPath)
+        (Just [osp|rel-runs.toml|])
+        $ set'
+          (#chartConfig %? #dataDir)
+          (Just [osp|config-data|])
+        $ set'
+          (#chartConfig %? #chartRequestsPath)
+          (Just [osp|rel-cr.toml|])
+          baseToml
 
 testEvolvePhaseConfigAbsData :: TestTree
 testEvolvePhaseConfigAbsData =
@@ -335,13 +320,10 @@ testEvolvePhaseConfigAbsData =
         }
 
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Just $ rootOsPath </> [osp|config-data|],
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+      set'
+        (#chartConfig %? #dataDir)
+        (Just $ rootOsPath </> [osp|config-data|])
+        baseToml
 
 testEvolvePhaseConfigRelData :: TestTree
 testEvolvePhaseConfigRelData =
@@ -366,13 +348,10 @@ testEvolvePhaseConfigRelData =
         }
 
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|./|],
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+      set'
+        (#chartConfig %? #dataDir)
+        (Just [osp|./|])
+        baseToml
 
 testEvolvePhaseXdgPaths :: TestTree
 testEvolvePhaseXdgPaths =
@@ -397,15 +376,12 @@ testEvolvePhaseXdgPaths =
         }
 
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          -- Even with config.data specified, we will skip to toml since the
-          -- former contains no paths.
-          dataDir = Just [osp|no-data|],
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+      -- Even with config.data specified, we will skip to toml since the
+      -- former contains no paths.
+      set'
+        (#chartConfig %? #dataDir)
+        (Just [osp|no-data|])
+        baseToml
 
 testEvolvePhaseGarmin :: TestTree
 testEvolvePhaseGarmin =
@@ -426,14 +402,7 @@ testEvolvePhaseGarmin =
           runsPath = Nothing,
           runsType = Nothing
         }
-    toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+    toml = baseToml
 
 testEvolvePhaseBothToml :: TestTree
 testEvolvePhaseBothToml =
@@ -454,14 +423,7 @@ testEvolvePhaseBothToml =
           runsPath = Nothing,
           runsType = Nothing
         }
-    toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+    toml = baseToml
 
 testEvolvePhaseBothTomlRunsType :: TestTree
 testEvolvePhaseBothTomlRunsType =
@@ -482,14 +444,7 @@ testEvolvePhaseBothTomlRunsType =
           runsPath = Nothing,
           runsType = Just RunsDefault
         }
-    toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+    toml = baseToml
 
 testEvolvePhaseBothGarmin :: TestTree
 testEvolvePhaseBothGarmin =
@@ -510,14 +465,7 @@ testEvolvePhaseBothGarmin =
           runsPath = Nothing,
           runsType = Just RunsGarmin
         }
-    toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+    toml = baseToml
 
 failureTests :: TestTree
 failureTests =
@@ -548,13 +496,16 @@ testEvolvePhaseCliPathsEx =
           runsType = Nothing
         }
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Just [osp|config-cr.toml|],
-          dataDir = Just [osp|config-data|],
-          logLevel = Nothing,
-          runsPath = Just [osp|config-runs.toml|]
-        }
+      set'
+        (#chartConfig %? #runsPath)
+        (Just [osp|rel-runs.toml|])
+        $ set'
+          (#chartConfig %? #dataDir)
+          (Just [osp|config-data|])
+        $ set'
+          (#chartConfig %? #chartRequestsPath)
+          (Just [osp|rel-cr.toml|])
+          baseToml
 
 testEvolvePhaseConfigPathsEx :: TestTree
 testEvolvePhaseConfigPathsEx =
@@ -576,13 +527,16 @@ testEvolvePhaseConfigPathsEx =
           runsType = Nothing
         }
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Just [osp|bad-cr.toml|],
-          dataDir = Just [osp|config-data|],
-          logLevel = Nothing,
-          runsPath = Just [osp|bad-runs.toml|]
-        }
+      set'
+        (#chartConfig %? #runsPath)
+        (Just [osp|bad-runs.toml|])
+        $ set'
+          (#chartConfig %? #dataDir)
+          (Just [osp|config-data|])
+        $ set'
+          (#chartConfig %? #chartRequestsPath)
+          (Just [osp|bad-cr.toml|])
+          baseToml
 
 testEvolvePhaseMissingEx :: TestTree
 testEvolvePhaseMissingEx =
@@ -604,13 +558,10 @@ testEvolvePhaseMissingEx =
           runsType = Nothing
         }
     toml =
-      MkToml
-        { chartBuildDir = Nothing,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|some-config-data|],
-          logLevel = Nothing,
-          runsPath = Nothing
-        }
+      set'
+        (#chartConfig %? #dataDir)
+        (Just [osp|some-config-data|])
+        baseToml
 
 data MockEnv = MkMockEnv
   { cachedPaths :: CachedPaths,
@@ -706,6 +657,9 @@ goldenRunnerXdg xdg params toml = do
 
 rootOsPath :: OsPath
 rootOsPath = pathToOsPath rootPath
+
+baseToml :: Toml
+baseToml = set' #chartConfig (Just mempty) mempty
 
 {- ORMOLU_DISABLE -}
 
