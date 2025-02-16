@@ -408,11 +408,17 @@ import Numeric.Data.Positive.Algebra.Internal as X
       ),
   )
 import Optics.Core as X
-  ( Lens,
+  ( AffineTraversal',
+    An_AffineTraversal,
+    Is,
+    Lens,
     Lens',
+    NoIx,
+    Optic',
     Prism,
     Prism',
     over',
+    preview,
     set',
     view,
     (%),

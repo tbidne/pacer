@@ -14,6 +14,7 @@ import Pacer.Command.Chart.Params
         cleanInstall,
         dataDir,
         json,
+        runLabelsPath,
         runsPath,
         runsType
       ),
@@ -31,6 +32,7 @@ parser = do
   cleanInstall <- cleanInstallParser
   dataDir <- dataDirParser
   json <- jsonParser
+  runLabelsPath <- mRunLabelsParser
   runsPath <- mRunsParser
   runsType <- runsTypeParser
 
@@ -41,6 +43,7 @@ parser = do
         cleanInstall,
         dataDir,
         json,
+        runLabelsPath,
         runsPath,
         runsType
       }
@@ -56,6 +59,11 @@ mChartRequestsParser =
   mOsPathParser Nothing "chart-requests" "PATH" helpTxt
   where
     helpTxt = "Optional path to chart-requests file. Overrides --data."
+
+mRunLabelsParser :: Parser (Maybe OsPath)
+mRunLabelsParser = mOsPathParser Nothing "run-labels" "PATH" helpTxt
+  where
+    helpTxt = "Optional path to run-labels file. Overrides --data."
 
 mRunsParser :: Parser (Maybe OsPath)
 mRunsParser = mOsPathParser Nothing "runs" "PATH" helpTxt

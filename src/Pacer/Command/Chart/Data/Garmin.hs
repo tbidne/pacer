@@ -23,6 +23,7 @@ import Data.Csv
   )
 import Data.Csv.Streaming (Records (Cons, Nil))
 import Data.Csv.Streaming qualified as Csv
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
 import Effectful.Logger.Dynamic qualified as Logger
@@ -182,7 +183,7 @@ readRunsCsv @es inputDistUnit csvPath = do
           { datetime = TimestampTime gr.datetime,
             distance = Distance.forceUnit gr.distance,
             duration = gr.duration,
-            labels = [],
+            labels = Set.fromList [],
             title = Just gr.title
           }
 

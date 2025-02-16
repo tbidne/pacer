@@ -51,6 +51,7 @@ deriving stock instance
     Eq (Convert.ConvertParamsF p a),
     Eq (Derive.DeriveQuantityF p a),
     Eq (Chart.BuildDirF p),
+    Eq (Chart.MPathF p File),
     Eq (Chart.PathF p Dir),
     Eq (Chart.PathF p File),
     Eq (Scale.ScaleQuantityF p a)
@@ -62,6 +63,7 @@ deriving stock instance
     Show (Convert.ConvertParamsF p a),
     Show (Derive.DeriveQuantityF p a),
     Show (Chart.BuildDirF p),
+    Show (Chart.MPathF p File),
     Show (Chart.PathF p Dir),
     Show (Chart.PathF p File),
     Show (Scale.ScaleQuantityF p a)

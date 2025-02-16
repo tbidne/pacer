@@ -19,6 +19,10 @@ import Data.Aeson.Encode.Pretty
     Indent (Spaces),
   )
 import Data.Aeson.Encode.Pretty qualified as AsnPretty
+import Data.Foldable qualified as F
+import Data.Map.Strict qualified as MP
+import Data.Set qualified as Set
+import Data.Set.NonEmpty qualified as NESet
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.FileSystem.PathWriter.Dynamic
   ( CopyDirConfig (MkCopyDirConfig),
@@ -38,14 +42,20 @@ import Pacer.Command.Chart.Data.ChartRequest
   )
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Data.Run
-  ( SomeRuns,
+  ( Run,
+    SomeRuns,
   )
+import Pacer.Command.Chart.Data.Run qualified as Run
+import Pacer.Command.Chart.Data.RunLabel (RunLabels (MkRunLabels))
+import Pacer.Command.Chart.Data.Time (Timestamp)
+import Pacer.Command.Chart.Data.Time qualified as T
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( buildDir,
         chartRequestsPath,
         cleanInstall,
         json,
+        runLabelsPath,
         runsPath,
         runsType
       ),
@@ -110,6 +120,11 @@ createCharts params = addNamespace "createCharts" $ do
     <> (Utils.showtPath params.chartRequestsPath)
   $(Logger.logInfo) $ "Using runs: " <> (Utils.showtPath params.runsPath)
 
+  case params.runLabelsPath of
+    Nothing -> $(Logger.logInfo) "No run-labels given"
+    Just p ->
+      $(Logger.logInfo) $ "Using run-labels: " <> (Utils.showtPath p)
+
   if params.json
     then do
       -- params.json is active, so stop after json generation
@@ -117,8 +132,7 @@ createCharts params = addNamespace "createCharts" $ do
       createChartsJsonFile
         True
         params.runsType
-        params.runsPath
-        params.chartRequestsPath
+        chartPaths
         jsonPath
     else do
       -- 1. Check that node exists
@@ -150,8 +164,7 @@ createCharts params = addNamespace "createCharts" $ do
       createChartsJsonFile
         False
         params.runsType
-        params.runsPath
-        params.chartRequestsPath
+        chartPaths
         jsonPath
 
       let setCurrDir = PW.setCurrentDirectory . pathToOsPath
@@ -215,6 +228,8 @@ createCharts params = addNamespace "createCharts" $ do
             "' directory"
           ]
   where
+    chartPaths =
+      (params.chartRequestsPath, params.runLabelsPath, params.runsPath)
     buildDirOsPath = pathToOsPath params.buildDir
     copyConfig =
       MkCopyDirConfig
@@ -250,13 +265,12 @@ createChartsJsonFile ::
   -- | Level to log the success message at.
   Bool ->
   Maybe RunsType ->
-  Path Abs File ->
-  Path Abs File ->
+  ChartPaths ->
   Path Abs File ->
   Eff es ()
-createChartsJsonFile logInfoLvl mRunsType runsPath requestsPath outJson =
+createChartsJsonFile logInfoLvl mRunsType chartPaths outJson =
   addNamespace "createChartsJsonFile" $ do
-    bs <- createChartsJsonBS mRunsType runsPath requestsPath
+    bs <- createChartsJsonBS mRunsType chartPaths
 
     let (dir, _) = OsPath.splitFileName outJsonOsPath
 
@@ -281,14 +295,11 @@ createChartsJsonBS ::
     LoggerNS :> es
   ) =>
   Maybe RunsType ->
-  -- | Path to runs file. Defaults to 'defRunsPath'.
-  Path Abs File ->
-  -- | Path to chart-requests.toml. Defaults to 'defChartRequestsPath'.
-  Path Abs File ->
+  ChartPaths ->
   Eff es LazyByteString
-createChartsJsonBS mRunsType runsPath chartRequestsPath =
+createChartsJsonBS mRunsType params =
   AsnPretty.encodePretty' cfg
-    <$> createChartSeq mRunsType runsPath chartRequestsPath
+    <$> createChartSeq mRunsType params
   where
     cfg =
       AsnPretty.defConfig
@@ -306,19 +317,39 @@ createChartSeq ::
     LoggerNS :> es
   ) =>
   Maybe RunsType ->
-  -- | Path to runs file
-  Path Abs File ->
-  -- | Path to chart-requests.toml
-  Path Abs File ->
+  ChartPaths ->
   Eff es (Seq Chart)
-createChartSeq mRunsType runsPath chartRequestsPath = addNamespace "createChartSeq" $ do
+createChartSeq mRunsType chartPaths = addNamespace "createChartSeq" $ do
   chartRequests <-
     readDecodeToml @(ChartRequests Double) (pathToOsPath chartRequestsPath)
 
   runs <- readRuns (chartRequests.garminSettings >>= (.distanceUnit))
 
-  throwLeft (Chart.mkCharts runs chartRequests)
+  -- If a labels file exists, use it to update the runs.
+  runsWithLabels <-
+    case mRunLabelsPath of
+      Nothing -> pure runs
+      Just runLabelsPath -> do
+        MkRunLabels runLabels <- readDecodeToml (pathToOsPath runLabelsPath)
+
+        let runLabelsList = MP.toList runLabels
+
+            updateLabels :: forall d a. Run d a -> Run d a
+            -- Performance here is not ideal, see
+            -- TODO: [Timestamp overlap lookup]
+            updateLabels r = case F.find p runLabelsList of
+              Nothing -> r
+              Just (_, labels) -> over' #labels (Set.union $ NESet.toSet labels) r
+              where
+                p :: Tuple2 Timestamp (NESet Text) -> Bool
+                p (ts, _) = T.overlaps ts r.datetime
+
+        pure $ Run.mapSomeRuns updateLabels runs
+
+  throwLeft (Chart.mkCharts runsWithLabels chartRequests)
   where
+    (chartRequestsPath, mRunLabelsPath, runsPath) = chartPaths
+
     runsOsPath = pathToOsPath runsPath
 
     -- DistanceUnit should be set if this is a garmin (csv) file.
@@ -340,6 +371,12 @@ createChartSeq mRunsType runsPath chartRequestsPath = addNamespace "createChartS
       case decode contents of
         Right t -> pure t
         Left err -> throwM $ MkTomlE path err
+
+type ChartPaths =
+  Tuple3
+    (Path Abs File) -- chart-requests
+    (Maybe (Path Abs File)) -- run-labels
+    (Path Abs File) -- runs
 
 jsonName :: Path Rel File
 jsonName = [relfile|charts.json|]

@@ -7,10 +7,10 @@ MkSomeRuns
           , distance = MkDistance
             ( UnsafePositive 21.0975 ) Kilometer
           , duration = MkDuration
-            { unDuration = UnsafePositive 900.0 }
-          , labels =
-            [ "official"
-            , "half-marathon"
+            { unDuration = UnsafePositive 4800.0 }
+          , labels = fromList
+            [ "half-marathon"
+            , "official"
             ]
           , title = Just "Some half marathon"
           }
@@ -24,7 +24,7 @@ MkSomeRuns
               ( UnsafePositive 5.0 ) Kilometer
             , duration = MkDuration
               { unDuration = UnsafePositive 1230.0 }
-            , labels = []
+            , labels = fromList []
             , title = Nothing
             }
           )
@@ -37,7 +37,7 @@ MkSomeRuns
               ( UnsafePositive 20.0 ) Mile
             , duration = MkDuration
               { unDuration = UnsafePositive 9654.0 }
-            , labels = [ "label1" ]
+            , labels = fromList [ "label1" ]
             , title = Nothing
             }
           )
@@ -50,9 +50,9 @@ MkSomeRuns
               ( UnsafePositive 42.195 ) Kilometer
             , duration = MkDuration
               { unDuration = UnsafePositive 12000.0 }
-            , labels =
-              [ "official"
-              , "marathon"
+            , labels = fromList
+              [ "marathon"
+              , "official"
               ]
             , title = Just "Some Marathon"
             }
@@ -66,9 +66,9 @@ MkSomeRuns
               ( UnsafePositive 42.195 ) Kilometer
             , duration = MkDuration
               { unDuration = UnsafePositive 18900.0 }
-            , labels =
-              [ "official"
-              , "marathon"
+            , labels = fromList
+              [ "marathon"
+              , "official"
               ]
             , title = Just "Another marathon"
             }

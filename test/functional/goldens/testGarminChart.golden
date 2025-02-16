@@ -5,6 +5,8 @@ build/charts.json
     "datasets": {
       "xAxis": [
         "2022-12-10T12:52:02",
+        "2024-10-10T12:00:00",
+        "2024-10-25T12:00:00",
         "2025-01-16T18:04:43",
         "2025-01-25T12:15:10",
         "2025-02-04T17:40:38",
@@ -14,6 +16,8 @@ build/charts.json
         {
           "data": [
             11.63,
+            21.1,
+            42.2,
             3.77,
             30.27,
             6.03,
@@ -103,6 +107,8 @@ build/charts.json
     "datasets": {
       "xAxis": [
         "2022-12-10T12:52:02",
+        "2024-10-10T12:00:00",
+        "2024-10-25T12:00:00",
         "2025-01-16T18:04:43",
         "2025-01-25T12:15:10",
         "2025-02-04T17:40:38",
@@ -112,6 +118,8 @@ build/charts.json
         {
           "data": [
             7.228091982597887,
+            13.113735239279055,
+            26.22747047855811,
             2.3430702299564947,
             18.812927284027346,
             3.747669359850839,
@@ -126,6 +134,8 @@ build/charts.json
         {
           "data": [
             504.4208082545142,
+            366.02843601895734,
+            457.53554502369667,
             455.81220159151195,
             527.2969937231583,
             479.23117744610283,
@@ -231,18 +241,307 @@ build/charts.json
   {
     "datasets": {
       "xAxis": [
-        "2025-01-16T18:04:43",
-        "2025-01-25T12:15:10",
-        "2025-02-04T17:40:38",
-        "2025-02-06T17:06:03"
+        "2024-10-25T12:00:00"
       ],
       "yAxes": [
         {
           "data": [
-            3.77,
-            30.27,
-            6.03,
-            5.48
+            12000
+          ],
+          "fill": false,
+          "label": "duration",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y"
+        },
+        {
+          "data": [
+            284.3601895734597
+          ],
+          "fill": false,
+          "label": "pace",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y1"
+        }
+      ]
+    },
+    "extra": {},
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
+        "title": {
+          "align": "center",
+          "color": "#c3c3c3",
+          "display": true,
+          "font": {
+            "size": 24
+          },
+          "text": "Marathons"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
+        }
+      },
+      "pointHitRadius": 20,
+      "responsive": true,
+      "scales": {
+        "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "datetime"
+          },
+          "type": "timeseries"
+        },
+        "y": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "time"
+          }
+        },
+        "y1": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "right",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "pace /km"
+          }
+        }
+      }
+    }
+  },
+  {
+    "datasets": {
+      "xAxis": [
+        "2024-10-10T12:00:00"
+      ],
+      "yAxes": [
+        {
+          "data": [
+            227.48815165876775
+          ],
+          "fill": false,
+          "label": "pace",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y"
+        }
+      ]
+    },
+    "extra": {},
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
+        "title": {
+          "align": "center",
+          "color": "#c3c3c3",
+          "display": true,
+          "font": {
+            "size": 24
+          },
+          "text": "Official non-marathons"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
+        }
+      },
+      "pointHitRadius": 20,
+      "responsive": true,
+      "scales": {
+        "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "datetime"
+          },
+          "type": "timeseries"
+        },
+        "y": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "pace /km"
+          }
+        }
+      }
+    }
+  },
+  {
+    "datasets": {
+      "xAxis": [
+        "2024-10-10T12:00:00",
+        "2024-10-25T12:00:00"
+      ],
+      "yAxes": [
+        {
+          "data": [
+            227.48815165876775,
+            284.3601895734597
+          ],
+          "fill": false,
+          "label": "pace",
+          "pointHoverRadius": 20,
+          "tension": 0,
+          "yAxisID": "y"
+        }
+      ]
+    },
+    "extra": {},
+    "options": {
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": {
+          "labels": {
+            "color": "#c3c3c3"
+          }
+        },
+        "title": {
+          "align": "center",
+          "color": "#c3c3c3",
+          "display": true,
+          "font": {
+            "size": 24
+          },
+          "text": "Marathons and half-marathons"
+        },
+        "tooltip": {
+          "backgroundColor": "rgba(204, 204, 204, 0.75)",
+          "bodyColor": "black",
+          "titleColor": "black"
+        }
+      },
+      "pointHitRadius": 20,
+      "responsive": true,
+      "scales": {
+        "x": {
+          "grid": {
+            "color": "#393939"
+          },
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "time": {
+            "displayFormats": {
+              "day": "dd MMM yy"
+            },
+            "unit": "day"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "datetime"
+          },
+          "type": "timeseries"
+        },
+        "y": {
+          "grid": {
+            "color": "#393939"
+          },
+          "position": "left",
+          "ticks": {
+            "color": "#c3c3c3"
+          },
+          "title": {
+            "color": "#c3c3c3",
+            "display": true,
+            "font": {
+              "size": 16
+            },
+            "text": "pace /km"
+          }
+        }
+      }
+    }
+  },
+  {
+    "datasets": {
+      "xAxis": [
+        "2024-10-25T12:00:00",
+        "2025-01-25T12:15:10"
+      ],
+      "yAxes": [
+        {
+          "data": [
+            42.2,
+            30.27
           ],
           "fill": false,
           "label": "distance",
@@ -252,10 +551,8 @@ build/charts.json
         },
         {
           "data": [
-            283.289124668435,
-            327.7172117608193,
-            297.8441127694859,
-            340.8759124087591
+            284.3601895734597,
+            327.7172117608193
           ],
           "fill": false,
           "label": "pace",

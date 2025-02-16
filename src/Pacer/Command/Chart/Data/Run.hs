@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Command.Chart.Data.Run
@@ -17,12 +18,15 @@ module Pacer.Command.Chart.Data.Run
     SomeRunsKey (..),
     SomeRuns (..),
     mkSomeRuns,
+    mapSomeRuns,
   )
 where
 
 import Data.Foldable qualified as F
 import Data.List.NonEmpty ((<|))
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
@@ -72,7 +76,7 @@ data Run dist a = MkRun
     -- | The run's total duration.
     duration :: Duration a,
     -- | Optional labels.
-    labels :: List Text,
+    labels :: Set Text,
     -- | Optional title.
     title :: Maybe Text
   }
@@ -183,7 +187,7 @@ instance
     datetime <- TOML.getFieldWith tomlDecoder "datetime"
     someDistance <- TOML.getFieldWith decodeDistance "distance"
     duration <- TOML.getFieldWith decodeDuration "duration"
-    labels <- Utils.getFieldOptArrayOf "labels"
+    labels <- Set.fromList <$> Utils.getFieldOptArrayOf "labels"
     title <- TOML.getFieldOptWith tomlDecoder "title"
 
     case someDistance of
@@ -394,6 +398,13 @@ type SomeRunsAcc a =
 findOverlap :: SomeRun a -> NonEmpty (SomeRunsKey a) -> Maybe (SomeRunsKey a)
 findOverlap (MkSomeRun _ r1) = F.find p
   where
+    -- TODO: [Timestamp overlap lookup]
+    --
+    -- It would be great if we found a decent way to account for overlaps that
+    -- doesn't require O(n) lookup e.g. at least O(lg n). For instance, maybe we
+    -- can store all possible "least upper bounds" for a given timestamp, and
+    -- lookup on that.
+
     p (MkSomeRunsKey (MkSomeRun _ r2)) = T.overlaps r1.datetime r2.datetime
 
 -------------------------------------------------------------------------------
@@ -422,3 +433,14 @@ applySomeRun2 ::
   r
 applySomeRun2 f p1 p2 =
   DistU.convertToMeters p1 `f` DistU.convertToMeters p2
+
+mapSomeRuns ::
+  (forall d. Run d a -> Run d a) ->
+  SomeRuns a ->
+  SomeRuns a
+mapSomeRuns f (MkSomeRuns s) = MkSomeRuns $ NESet.map g s
+  where
+    g (MkSomeRunsKey (MkSomeRun d r)) =
+      MkSomeRunsKey (MkSomeRun d (f r))
+
+makeFieldLabelsNoPrefix ''Run

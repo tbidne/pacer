@@ -99,6 +99,8 @@ testGarminChart getTestDir = testGoldenParams getTestDir params
               [ "chart",
                 "--chart-requests",
                 chartRequestsPath,
+                "--run-labels",
+                runLabelsPath,
                 "--runs",
                 runsPath,
                 "--json"
@@ -107,29 +109,14 @@ testGarminChart getTestDir = testGoldenParams getTestDir params
           testDesc = "Generates garmin example",
           testName = [osp|testGarminChart|]
         }
-    chartRequestsPath = unsafeDecode [ospPathSep|examples/chart-requests-garmin.toml|]
+    chartRequestsPath = unsafeDecode [ospPathSep|examples/chart-requests.toml|]
+    runLabelsPath = unsafeDecode [ospPathSep|examples/run-labels.toml|]
     runsPath = unsafeDecode [ospPathSep|examples/Activities.csv|]
 
 testGarminChartError :: IO OsPath -> TestTree
-testGarminChartError getTestDir = testGoldenParams getTestDir params
+testGarminChartError = testChart desc [osp|testGarminChartError|]
   where
-    params =
-      MkGoldenParams
-        { mkArgs =
-            const
-              [ "chart",
-                "--chart-requests",
-                chartRequestsPath,
-                "--runs",
-                runsPath,
-                "--json"
-              ],
-          outFileName = Just [ospPathSep|build/charts.json|],
-          testDesc = "Garmin fails without chart-requests garmin.settings",
-          testName = [osp|testGarminChartError|]
-        }
-    chartRequestsPath = unsafeDecode [ospPathSep|examples/chart-requests.toml|]
-    runsPath = unsafeDecode [ospPathSep|examples/Activities.csv|]
+    desc = "Garmin fails without chart-requests garmin.settings"
 
 pathTests :: IO OsPath -> TestTree
 pathTests getTestDir =

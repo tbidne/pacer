@@ -1,3 +1,7 @@
+# Only used for garmin activities.csv. Ignored for custom runs.toml.
+[garmin]
+unit = 'km'
+
 [[charts]]
 title = 'Runs by distance'
 y-axis = 'distance'

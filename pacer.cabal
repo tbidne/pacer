@@ -76,6 +76,7 @@ library
     Pacer.Command.Chart.Data.Expr
     Pacer.Command.Chart.Data.Garmin
     Pacer.Command.Chart.Data.Run
+    Pacer.Command.Chart.Data.RunLabel
     Pacer.Command.Chart.Data.Time
     Pacer.Command.Chart.Params
     Pacer.Command.Convert

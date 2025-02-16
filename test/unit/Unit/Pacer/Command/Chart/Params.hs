@@ -84,15 +84,10 @@ testEvolvePhaseCliBuildDirAbs =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Just (pathToOsPath absBuildDir),
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      set'
+        #buildDir
+        (Just (pathToOsPath absBuildDir))
+        baseChartParams
     toml = baseToml
 
 testEvolvePhaseCliBuildDirRel :: TestTree
@@ -105,15 +100,10 @@ testEvolvePhaseCliBuildDirRel =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Just [osp|build-dir|],
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      set'
+        #buildDir
+        (Just [osp|build-dir|])
+        baseChartParams
     toml = baseToml
 
 testEvolvePhaseConfigBuildDirAbs :: TestTree
@@ -125,16 +115,7 @@ testEvolvePhaseConfigBuildDirAbs =
         runner = goldenRunner params toml
       }
   where
-    params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+    params = baseChartParams
     toml =
       set'
         (#chartConfig %? #buildDir)
@@ -150,16 +131,7 @@ testEvolvePhaseConfigBuildDirRel =
         runner = goldenRunner params toml
       }
   where
-    params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+    params = baseChartParams
     toml =
       set'
         (#chartConfig %? #buildDir)
@@ -176,15 +148,15 @@ testEvolvePhaseCliPaths =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Just [osp|cli-cr.toml|],
-          dataDir = Just [osp|cli-data|],
-          json = False,
-          runsPath = Just [osp|cli-runs.toml|],
-          runsType = Nothing
-        }
+      set' #chartRequestsPath (Just [osp|cli-cr.toml|])
+        $ set'
+          #dataDir
+          (Just [osp|cli-data|])
+        $ set'
+          #runsPath
+          (Just [osp|cli-runs.toml|])
+          baseChartParams
+
     toml =
       set'
         (#chartConfig %? #runsPath)
@@ -207,15 +179,10 @@ testEvolvePhaseCliData =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|cli-data|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      set'
+        #dataDir
+        (Just [osp|cli-data|])
+        baseChartParams
 
     toml =
       set'
@@ -239,17 +206,12 @@ testEvolvePhaseConfigAbsPaths =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          -- Even with --data specified, we will skip to toml since the
-          -- former contains no paths.
-          dataDir = Just [osp|no-data|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      -- Even with --data specified, we will skip to toml since the
+      -- former contains no paths.
+      set'
+        #dataDir
+        (Just [osp|no-data|])
+        baseChartParams
 
     toml =
       set'
@@ -273,17 +235,12 @@ testEvolvePhaseConfigRelPaths =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          -- Even with --data specified, we will skip to toml since the
-          -- former contains no paths.
-          dataDir = Just [osp|no-data|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      -- Even with --data specified, we will skip to toml since the
+      -- former contains no paths.
+      set'
+        #dataDir
+        (Just [osp|no-data|])
+        baseChartParams
 
     toml =
       set'
@@ -307,17 +264,12 @@ testEvolvePhaseConfigAbsData =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          -- Even with --data specified, we will skip to toml since the
-          -- former contains no paths.
-          dataDir = Just [osp|no-data|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      -- Even with --data specified, we will skip to toml since the
+      -- former contains no paths.
+      set'
+        #dataDir
+        (Just [osp|no-data|])
+        baseChartParams
 
     toml =
       set'
@@ -335,17 +287,12 @@ testEvolvePhaseConfigRelData =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          -- Even with --data specified, we will skip to toml since the
-          -- former contains no paths.
-          dataDir = Just [osp|no-data|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      -- Even with --data specified, we will skip to toml since the
+      -- former contains no paths.
+      set'
+        #dataDir
+        (Just [osp|no-data|])
+        baseChartParams
 
     toml =
       set'
@@ -363,17 +310,12 @@ testEvolvePhaseXdgPaths =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          -- Even with --data specified, we will skip to toml since the
-          -- former contains no paths.
-          dataDir = Just [osp|no-data|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      -- Even with --data specified, we will skip to toml since the
+      -- former contains no paths.
+      set'
+        #dataDir
+        (Just [osp|no-data|])
+        baseChartParams
 
     toml =
       -- Even with config.data specified, we will skip to toml since the
@@ -393,15 +335,10 @@ testEvolvePhaseGarmin =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|cli-garmin|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      set'
+        #dataDir
+        (Just [osp|cli-garmin|])
+        baseChartParams
     toml = baseToml
 
 testEvolvePhaseBothToml :: TestTree
@@ -414,15 +351,10 @@ testEvolvePhaseBothToml =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|cli-both|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      set'
+        #dataDir
+        (Just [osp|cli-both|])
+        baseChartParams
     toml = baseToml
 
 testEvolvePhaseBothTomlRunsType :: TestTree
@@ -435,15 +367,11 @@ testEvolvePhaseBothTomlRunsType =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|cli-both|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Just RunsDefault
-        }
+      set' #runsType (Just RunsDefault)
+        $ set'
+          #dataDir
+          (Just [osp|cli-both|])
+          baseChartParams
     toml = baseToml
 
 testEvolvePhaseBothGarmin :: TestTree
@@ -456,15 +384,11 @@ testEvolvePhaseBothGarmin =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|cli-both|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Just RunsGarmin
-        }
+      set' #runsType (Just RunsGarmin)
+        $ set'
+          #dataDir
+          (Just [osp|cli-both|])
+          baseChartParams
     toml = baseToml
 
 failureTests :: TestTree
@@ -486,15 +410,14 @@ testEvolvePhaseCliPathsEx =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Just [osp|bad_cr.toml|],
-          dataDir = Just [osp|cli-data|],
-          json = False,
-          runsPath = Just [osp|bad_runs.toml|],
-          runsType = Nothing
-        }
+      set' #chartRequestsPath (Just [osp|bad_cr.toml|])
+        $ set'
+          #dataDir
+          (Just [osp|cli-data|])
+        $ set'
+          #runsPath
+          (Just [osp|bad_runs.toml|])
+          baseChartParams
     toml =
       set'
         (#chartConfig %? #runsPath)
@@ -516,16 +439,7 @@ testEvolvePhaseConfigPathsEx =
         runner = goldenRunner params toml
       }
   where
-    params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Nothing,
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+    params = baseChartParams
     toml =
       set'
         (#chartConfig %? #runsPath)
@@ -548,15 +462,10 @@ testEvolvePhaseMissingEx =
       }
   where
     params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          chartRequestsPath = Nothing,
-          dataDir = Just [osp|some-dir|],
-          json = False,
-          runsPath = Nothing,
-          runsType = Nothing
-        }
+      set'
+        #dataDir
+        (Just [osp|some-dir|])
+        baseChartParams
     toml =
       set'
         (#chartConfig %? #dataDir)
@@ -657,6 +566,19 @@ goldenRunnerXdg xdg params toml = do
 
 rootOsPath :: OsPath
 rootOsPath = pathToOsPath rootPath
+
+baseChartParams :: ChartParamsArgs
+baseChartParams =
+  MkChartParams
+    { buildDir = Nothing,
+      cleanInstall = False,
+      chartRequestsPath = Nothing,
+      dataDir = Nothing,
+      json = False,
+      runLabelsPath = Nothing,
+      runsPath = Nothing,
+      runsType = Nothing
+    }
 
 baseToml :: Toml
 baseToml = set' #chartConfig (Just mempty) mempty

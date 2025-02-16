@@ -87,5 +87,6 @@ MkChartRequests
       , y1Axis = Just YAxisPace
       }
     ]
-  , garminSettings = Nothing
+  , garminSettings = Just
+    ( MkGarminSettings { distanceUnit = Just Kilometer } )
   }
