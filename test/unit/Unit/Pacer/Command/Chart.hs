@@ -97,6 +97,7 @@ testDefault = testCase "Default" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
+          runLabelsPath = Nothing,
           runsPath = Nothing,
           runsType = Nothing
         }
@@ -119,6 +120,7 @@ testJson = testCase "With --json" $ do
           dataDir = Nothing,
           json = True,
           chartRequestsPath = Nothing,
+          runLabelsPath = Nothing,
           runsPath = Nothing,
           runsType = Nothing
         }
@@ -142,6 +144,7 @@ testPathNodeModExists = testCase "node_modules exists" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
+          runLabelsPath = Nothing,
           runsPath = Nothing,
           runsType = Nothing
         }
@@ -164,6 +167,7 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
+          runLabelsPath = Nothing,
           runsPath = Nothing,
           runsType = Nothing
         }
@@ -201,6 +205,7 @@ testNoNpmFailure = testCase "No npm failure" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
+          runLabelsPath = Nothing,
           runsPath = Nothing,
           runsType = Nothing
         }
@@ -271,6 +276,7 @@ runFileReaderMock = interpret_ $ \case
       knownFiles =
         Set.fromList
           [ [osp|chart-requests.toml|],
+            [osp|run-labels.toml|],
             [osp|runs.toml|]
           ]
 
@@ -323,9 +329,10 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     where
       dirName = L.last $ OsPath.splitDirectories p
   DoesFileExist p ->
-    if fileName `Set.member` knownFiles
-      then pure True
-      else error $ "doesFileExist: unexpected: '" ++ show fileName ++ "'"
+    if
+      | fileName `Set.member` knownFiles -> pure True
+      | fileName `Set.member` knownMissingFiles -> pure False
+      | otherwise -> error $ "doesFileExist: unexpected: '" ++ show fileName ++ "'"
     where
       (_dir, fileName) = OsPath.splitFileName p
 
@@ -344,6 +351,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
             [osp|utils.ts|],
             [osp|webpack.config.js|]
           ]
+      knownMissingFiles = Set.fromList [[osp|run-labels.toml|]]
   FindExecutable p -> case p of
     [osp|npm|] ->
       asks @ChartEnv (.coreEnv.npmExists) <&> \case

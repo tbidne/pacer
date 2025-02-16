@@ -62,27 +62,31 @@ data ChartConfig = MkChartConfig
     dataDir :: Maybe OsPath,
     -- | Optional path to chart-requests.toml.
     chartRequestsPath :: Maybe OsPath,
+    -- | Optional path to run-labels.toml.
+    runLabelsPath :: Maybe OsPath,
     -- | Optional path to runs file.
     runsPath :: Maybe OsPath
   }
   deriving stock (Eq, Show)
 
 instance Semigroup ChartConfig where
-  MkChartConfig x1 x2 x3 x4 <> MkChartConfig y1 y2 y3 y4 =
+  MkChartConfig x1 x2 x3 x4 x5 <> MkChartConfig y1 y2 y3 y4 y5 =
     MkChartConfig
       (x1 <|> y1)
       (x2 <|> y2)
       (x3 <|> y3)
       (x4 <|> y4)
+      (x5 <|> y5)
 
 instance Monoid ChartConfig where
-  mempty = MkChartConfig empty empty empty empty
+  mempty = MkChartConfig empty empty empty empty empty
 
 instance DecodeTOML ChartConfig where
   tomlDecoder = do
     buildDir <- TOML.getFieldOptWith decodeOsPath "build-dir"
     dataDir <- TOML.getFieldOptWith decodeOsPath "data"
     chartRequestsPath <- TOML.getFieldOptWith decodeOsPath "chart-requests"
+    runLabelsPath <- TOML.getFieldOptWith decodeOsPath "run-labels"
     runsPath <- TOML.getFieldOptWith decodeOsPath "runs"
 
     pure
@@ -90,6 +94,7 @@ instance DecodeTOML ChartConfig where
         { buildDir,
           dataDir,
           chartRequestsPath,
+          runLabelsPath,
           runsPath
         }
     where

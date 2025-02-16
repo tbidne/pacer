@@ -4,6 +4,7 @@ MkChartParams
   , chartRequestsPath = "/root/xdg/config/pacer/chart-requests.toml"
   , dataDir = ()
   , json = False
+  , runLabelsPath = Nothing
   , runsPath = "/root/xdg/config/pacer/runs.toml"
   , runsType = Nothing
   }

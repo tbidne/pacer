@@ -26,6 +26,6 @@ title= 'Another marathon'
 [[runs]]
 datetime = 2024-10-10T12:00:00-08:00
 distance = 'half-marathon'
-duration = '15m'
+duration = '1h20m'
 labels = ['official', 'half-marathon']
 title= 'Some half marathon'

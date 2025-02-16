@@ -4,6 +4,7 @@ MkChartParams
   , chartRequestsPath = "C:\root\cli-cr.toml"
   , dataDir = ()
   , json = False
+  , runLabelsPath = Nothing
   , runsPath = "C:\root\cli-runs.toml"
   , runsType = Nothing
   }
