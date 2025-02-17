@@ -152,6 +152,7 @@ evolvePhase @es params mTomlWithPath = do
 
   assertExists chartRequestsPath
   assertExists runsPath
+  for_ runLabelsPath assertExists
 
   buildDir <-
     case params.buildDir of
