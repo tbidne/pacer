@@ -351,7 +351,12 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
             [osp|utils.ts|],
             [osp|webpack.config.js|]
           ]
-      knownMissingFiles = Set.fromList [[osp|run-labels.toml|]]
+      knownMissingFiles =
+        Set.fromList
+          [ [osp|Activities.csv|],
+            [osp|activities.csv|],
+            [osp|run-labels.toml|]
+          ]
   FindExecutable p -> case p of
     [osp|npm|] ->
       asks @ChartEnv (.coreEnv.npmExists) <&> \case

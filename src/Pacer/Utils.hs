@@ -5,6 +5,7 @@ module Pacer.Utils
 
     -- * TOML
     getFieldOptArrayOf,
+    getFieldOptArrayOfWith,
 
     -- * Show
     showtOsPath,
@@ -25,9 +26,12 @@ import TOML (DecodeTOML (tomlDecoder), Decoder)
 import TOML qualified
 
 getFieldOptArrayOf :: (DecodeTOML a) => Text -> Decoder (List a)
-getFieldOptArrayOf =
+getFieldOptArrayOf = getFieldOptArrayOfWith tomlDecoder
+
+getFieldOptArrayOfWith :: Decoder a -> Text -> Decoder (List a)
+getFieldOptArrayOfWith decoder =
   fmap (fromMaybe [])
-    . TOML.getFieldOptWith (TOML.getArrayOf tomlDecoder)
+    . TOML.getFieldOptWith (TOML.getArrayOf decoder)
 
 encodeMaybes :: (ToJSON v) => List (Tuple2 Key (Maybe v)) -> List Pair
 encodeMaybes = (>>= encodeMaybe)

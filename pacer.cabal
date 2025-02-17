@@ -63,6 +63,7 @@ library
   other-modules:   Paths_pacer
   autogen-modules: Paths_pacer
   exposed-modules:
+    Pacer.Class.FromAlt
     Pacer.Class.Parser
     Pacer.Class.Units
     Pacer.Command
