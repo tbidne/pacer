@@ -16,7 +16,6 @@ import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as Parser
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Duration qualified as Duration
-import Pacer.Data.Result (Result (Ok))
 import Unit.Prelude
 import Unit.Utils qualified as Utils
 

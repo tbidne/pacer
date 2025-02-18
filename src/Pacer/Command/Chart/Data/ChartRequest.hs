@@ -18,19 +18,12 @@ module Pacer.Command.Chart.Data.ChartRequest
   )
 where
 
-import Data.Aeson (ToJSON)
-import Data.Aeson.Types (ToJSON (toJSON))
 import Pacer.Class.Parser (Parser)
-import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Expr
+import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Data.Distance (DistanceUnit)
-import Pacer.Data.Result (failErr)
 import Pacer.Prelude
+import Pacer.Utils ((.:?:))
 import Pacer.Utils qualified as Utils
-import TOML
-  ( DecodeTOML (tomlDecoder),
-  )
-import TOML qualified
 
 -- | Possibly y-axes.
 data YAxisType
@@ -39,20 +32,19 @@ data YAxisType
   | YAxisPace
   deriving stock (Eq, Show)
 
-instance DecodeTOML YAxisType where
-  tomlDecoder =
-    tomlDecoder @Text >>= \case
-      "distance" -> pure YAxisDistance
-      "duration" -> pure YAxisDuration
-      "pace" -> pure YAxisPace
-      other -> fail $ unpackText err
-        where
-          err =
-            mconcat
-              [ "Unexpected y-axis, '",
-                other,
-                "', expected one of (distance|duration|pace)."
-              ]
+instance FromJSON YAxisType where
+  parseJSON = asnWithText "YAxisType" $ \case
+    "distance" -> pure YAxisDistance
+    "duration" -> pure YAxisDuration
+    "pace" -> pure YAxisPace
+    other -> fail $ unpackText err
+      where
+        err =
+          mconcat
+            [ "Unexpected y-axis, '",
+              other,
+              "', expected one of (distance|duration|pace)."
+            ]
 
 instance ToJSON YAxisType where
   toJSON YAxisDistance = "distance"
@@ -65,39 +57,29 @@ data ChartSumPeriod
   | ChartSumYear
   deriving stock (Eq, Show)
 
-instance DecodeTOML ChartSumPeriod where
-  tomlDecoder =
-    tomlDecoder @Text >>= \case
-      "week" -> pure ChartSumWeek
-      "month" -> pure ChartSumMonth
-      "year" -> pure ChartSumYear
-      other -> fail $ unpackText $ "Unrecognized sum period: " <> other
+instance FromJSON ChartSumPeriod where
+  parseJSON = asnWithText "YAxisType" $ \case
+    "week" -> pure ChartSumWeek
+    "month" -> pure ChartSumMonth
+    "year" -> pure ChartSumYear
+    other -> fail $ unpackText $ "Unrecognized sum period: " <> other
 
 data ChartType
   = ChartTypeDefault
   | ChartTypeSum ChartSumPeriod
   deriving stock (Eq, Show)
 
-instance DecodeTOML ChartType where
-  tomlDecoder = do
-    TOML.getFieldWith @Text tomlDecoder "name" >>= \case
-      "default" -> pure ChartTypeDefault
+instance FromJSON ChartType where
+  parseJSON = asnWithObject "ChartType" $ \v -> do
+    n :: Text <- v .: "name"
+    case n of
+      "default" -> do
+        Utils.failUnknownFields "ChartType" ["name"] v
+        pure ChartTypeDefault
       "sum" -> do
-        -- FIXME: Apparently, the following:
-        --
-        --     [charts.type]
-        --     name = 'sum'
-        --
-        -- does NOT fail, even though we'd like it to, because once we have
-        -- a sum chart, we require the period. Instead it ends up as
-        -- chartType = Nothing on ChartRequest. Why does this not fail? My
-        -- guess is that it causes this entire parse to fail, so it is
-        -- considered an "unknown key", and unknown keys do not cause parse
-        -- failures. Ugh.
-        --
-        -- Maybe we should just switch to json?
-        p <- TOML.getFieldWith tomlDecoder "period"
-        pure $ ChartTypeSum p
+        period <- v .: "period"
+        Utils.failUnknownFields "ChartType" ["name", "period"] v
+        pure $ ChartTypeSum period
       other -> fail $ unpackText $ "Unrecognized chart type: " <> other
 
 -- | Chart request type.
@@ -126,16 +108,29 @@ instance
     Semifield a,
     Show a
   ) =>
-  DecodeTOML (ChartRequest a)
+  FromJSON (ChartRequest a)
   where
-  tomlDecoder = do
-    chartType <- TOML.getFieldOptWith tomlDecoder "type"
-    description <- TOML.getFieldOptWith tomlDecoder "description"
-    filters <- Utils.getFieldOptArrayOf "filters"
-    title <- TOML.getFieldWith tomlDecoder "title"
-    unit <- TOML.getFieldOptWith tomlDecoder "unit"
-    yAxis <- TOML.getFieldWith tomlDecoder "y-axis"
-    y1Axis <- TOML.getFieldOptWith tomlDecoder "y1-axis"
+  parseJSON = asnWithObject "ChartRequest" $ \v -> do
+    chartType <- v .:? "type"
+    description <- v .:? "description"
+    filters <- v .:?: "filters"
+    title <- v .: "title"
+    unit <- v .:? "unit"
+    yAxis <- v .: "y-axis"
+    y1Axis <- v .:? "y1-axis"
+
+    Utils.failUnknownFields
+      "ChartRequest"
+      [ "description",
+        "filters",
+        "title",
+        "type",
+        "unit",
+        "y-axis",
+        "y1-axis"
+      ]
+      v
+
     pure
       $ MkChartRequest
         { chartType,
@@ -153,11 +148,10 @@ newtype GarminSettings = MkGarminSettings
   }
   deriving stock (Eq, Show)
 
-instance DecodeTOML GarminSettings where
-  tomlDecoder = do
-    distanceUnit <-
-      traverse (failErr . P.parseAll)
-        =<< TOML.getFieldOptWith @Text tomlDecoder "unit"
+instance FromJSON GarminSettings where
+  parseJSON = asnWithObject "GarminSettings" $ \v -> do
+    distanceUnit <- v .:? "unit"
+    Utils.failUnknownFields "GarminSettings" ["unit"] v
     pure
       $ MkGarminSettings
         { distanceUnit
@@ -177,11 +171,12 @@ instance
     Semifield a,
     Show a
   ) =>
-  DecodeTOML (ChartRequests a)
+  FromJSON (ChartRequests a)
   where
-  tomlDecoder = do
-    garminSettings <- TOML.getFieldOptWith tomlDecoder "garmin"
-    chartRequests <- TOML.getFieldWith tomlDecoder "charts"
+  parseJSON = asnWithObject "ChartRequests" $ \v -> do
+    garminSettings <- v .:? "garmin"
+    chartRequests <- v .: "charts"
+    Utils.failUnknownFields "ChartRequests" ["charts", "garmin"] v
     pure
       $ MkChartRequests
         { chartRequests,

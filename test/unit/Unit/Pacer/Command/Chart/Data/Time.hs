@@ -28,7 +28,6 @@ import Pacer.Command.Chart.Data.Time
     (.==),
     (.>),
   )
-import Pacer.Data.Result (Result (Err, Ok))
 import Unit.Prelude
 
 tests :: TestTree

@@ -19,7 +19,7 @@ import Pacer.Command.Chart.Params
       ),
     ChartParamsArgs,
   )
-import Pacer.Config.Utils qualified as Utils
+import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 
 -- | Parse chart args.
@@ -67,7 +67,7 @@ mRunsParser = OA.many $ osPathParser Nothing "runs" "PATHs..." helpTxt
     helpTxt =
       mconcat
         [ "Optional path(s) to runs file(s). Overrides --data. We expect ",
-          "either default (.toml) or garmin (.csv) files."
+          "either default (.json) or garmin (.csv) files."
         ]
 
 dataDirParser :: Parser (Maybe OsPath)

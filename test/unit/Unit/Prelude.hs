@@ -67,7 +67,6 @@ import Pacer.Data.Distance
 import Pacer.Data.Distance.Units (SDistanceUnit)
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
-import Pacer.Data.Result (Result (Err, Ok), errorErr)
 import Pacer.Prelude as X hiding (IO)
 import System.FilePath (FilePath)
 import System.IO as X (IO)

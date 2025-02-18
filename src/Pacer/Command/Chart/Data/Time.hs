@@ -41,7 +41,6 @@ module Pacer.Command.Chart.Data.Time
   )
 where
 
-import Data.Aeson (ToJSON (toJSON))
 import Data.Char qualified as Ch
 import Data.Enum (Enum (fromEnum, toEnum))
 import Data.Time
@@ -60,9 +59,8 @@ import Numeric.Data.Interval.Algebra
   )
 import Numeric.Data.Interval.Algebra qualified as Interval
 import Pacer.Class.Parser (Parser (parser))
-import Pacer.Data.Result (ResultDefault, errorErr)
+import Pacer.Class.Parser qualified as P
 import Pacer.Prelude
-import TOML (DecodeTOML (tomlDecoder))
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
@@ -154,22 +152,20 @@ instance Display Timestamp where
     TimestampTime d -> displayBuilder $ show d
     TimestampZoned d -> displayBuilder $ show d
 
-instance DecodeTOML Timestamp where
-  tomlDecoder =
-    TimestampDate
-      <$> tomlDecoder
-      <|> TimestampTime
-      <$> tomlDecoder
-      <|> TimestampZoned
-      <$> tomlDecoder
-
 instance Parser Timestamp where
-  -- reuse toml instance since it is already done for us upstream.
   parser = do
     asum
       [ TimestampZoned <$> MP.try parser,
         TimestampTime <$> MP.try parser,
         TimestampDate <$> parser
+      ]
+
+instance FromJSON Timestamp where
+  parseJSON v =
+    asum
+      [ fmap TimestampDate . parseJSON $ v,
+        fmap TimestampTime . parseJSON $ v,
+        fmap TimestampZoned . parseJSON $ v
       ]
 
 instance ToJSON Timestamp where
@@ -347,6 +343,9 @@ instance Display Moment where
     MomentYear x -> displayBuilder x
     MomentMonth x y -> displayBuilder x <> "-" <> displayBuilder y
     MomentTimestamp x -> displayBuilder x
+
+instance FromJSON Moment where
+  parseJSON = asnWithText "Moment" (failErr . P.parseAll)
 
 instance Parser Moment where
   parser = do

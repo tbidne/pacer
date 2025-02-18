@@ -6,6 +6,7 @@ import Unit.Pacer.Command.Chart qualified
 import Unit.Pacer.Command.Chart.Data.ChartRequest qualified
 import Unit.Pacer.Command.Chart.Data.Expr qualified
 import Unit.Pacer.Command.Chart.Data.Run qualified
+import Unit.Pacer.Command.Chart.Data.RunLabel qualified
 import Unit.Pacer.Command.Chart.Data.Time qualified
 import Unit.Pacer.Command.Chart.Params qualified
 import Unit.Pacer.Command.Derive qualified
@@ -25,6 +26,7 @@ main =
         Unit.Pacer.Command.Chart.Data.ChartRequest.tests,
         Unit.Pacer.Command.Chart.Data.Expr.tests,
         Unit.Pacer.Command.Chart.Data.Run.tests,
+        Unit.Pacer.Command.Chart.Data.RunLabel.tests,
         Unit.Pacer.Command.Chart.Data.Time.tests,
         Unit.Pacer.Command.Chart.Params.tests,
         Unit.Pacer.Command.Derive.tests,

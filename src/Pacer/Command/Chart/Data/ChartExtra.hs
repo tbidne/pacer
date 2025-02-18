@@ -4,7 +4,6 @@ module Pacer.Command.Chart.Data.ChartExtra
   )
 where
 
-import Data.Aeson (ToJSON)
 import Data.Aeson qualified as Asn
 import Pacer.Command.Chart.Data.ChartRequest (ChartRequest (description))
 import Pacer.Prelude

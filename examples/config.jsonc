@@ -1,0 +1,13 @@
+{
+  // Log level. Can be one of: none, debug, info, warn, error
+  "log-level": "none",
+  // Optional chart config. Affects 'chart' command.
+  "chart": {
+    // Path to chart-requests file. Overrides 'data' field.
+    "chart-requests": "./chart-requests.jsonc",
+    // Data directory where we expect to find the chart-requests and run files.
+    "data": "./",
+    // Path to runs file(s). Overrides 'data' field.
+    "runs": ["./runs.jsonc"]
+  }
+}

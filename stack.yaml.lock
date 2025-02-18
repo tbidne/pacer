@@ -41,120 +41,133 @@ packages:
     commit: b7ca541cfdd8564bcebe5d38456fe7abf77885b8
     git: https://github.com/tbidne/bounds.git
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: concurrent-effectful
     pantry-tree:
-      sha256: e0a8eab7981bc015ee6a42b91c4f46c10953eb7727a511ca51584936daf691c5
-      size: 283
+      sha256: 06c0b1f1c904853b8f75ea4bf4de0f5cbd184f44fcc49e92db332db808e6439f
+      size: 245
     subdir: lib/concurrent-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/concurrent-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
+    git: https://github.com/tbidne/effectful-libs.git
+    name: effectful-utils
+    pantry-tree:
+      sha256: 1b641c74f4d7df3062dd193d6182169e1c408c97206bcf4ce7ba243fd91d3213
+      size: 236
+    subdir: lib/effectful-utils
+    version: '0.1'
+  original:
+    commit: 9697330f9fc02b31aead5924997e54511992a796
+    git: https://github.com/tbidne/effectful-libs.git
+    subdir: lib/effectful-utils
+- completed:
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: fs-effectful
     pantry-tree:
-      sha256: 88384175a7b78c88695f3bb9b2538f2fb522bd7d0934a5aeec5d2f72bb5f8a55
-      size: 1755
+      sha256: 3c21fa27fa17c8ce77857a97ca4ccfdc319e6c0ea90aa5230839745c6622387c
+      size: 1718
     subdir: lib/fs-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/fs-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: ioref-effectful
     pantry-tree:
-      sha256: 1668f6d0eb661880ea65cb569bbd30c24120ee7441fc7667d436c49ad781ac80
-      size: 273
+      sha256: 57036d174f13fb98c5b0ec36332c966d2d51d11799126b6ab82d5a2a85fccee5
+      size: 235
     subdir: lib/ioref-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/ioref-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: logger-effectful
     pantry-tree:
-      sha256: d1145dfcc8ae426bd98a8de704c5ca2d5d6255f2a1d056f948c9514699cf331c
-      size: 337
+      sha256: 9638224c92770032d0d9bb08f42b028f47922d73546ae61bd5358f988de7f609
+      size: 297
     subdir: lib/logger-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/logger-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: logger-ns-effectful
     pantry-tree:
-      sha256: b73f95d7b00eff5fd46ac80cd7e26579da43db3dba8921c6eab042144de38be9
-      size: 484
+      sha256: 0d924e435d4657f37885f93bf6e2300aa88bb0d20b0c592a4d743220dc451e3c
+      size: 446
     subdir: lib/logger-ns-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/logger-ns-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: optparse-effectful
     pantry-tree:
-      sha256: b41ac558875dfb4bc768b188a572c1b440f41339da740993108c2066450ddf18
-      size: 424
+      sha256: de75adf6ea69234f3bf78a222ae490e4aa952479210c03cdb49c0adfe586f8cb
+      size: 386
     subdir: lib/optparse-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/optparse-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: terminal-effectful
     pantry-tree:
-      sha256: 699c92372b660b9a0cc0f4aad1d82355cb6b93791d768a0f44a84b83c6a598c2
-      size: 353
+      sha256: 7abdf37d59829bb497b0aa9bcb989e11ab9f5f4dd2a29dd693e2e7600198e9f8
+      size: 315
     subdir: lib/terminal-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/terminal-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: time-effectful
     pantry-tree:
-      sha256: 965121237e5905cc52b5e1a7050006e0f6373aa7bc3a95d98b99bc09a4432128
-      size: 539
+      sha256: d4e0ff6160544f1734c3b41a9bfd327c9b9b46a709e65ee2bc9e5c11befca0da
+      size: 501
     subdir: lib/time-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/time-effectful
 - completed:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     name: typed-process-dynamic-effectful
     pantry-tree:
-      sha256: e25b2d01d76e8d0caf028088a70d0c6379323700e57b1cd15683813e0f919629
-      size: 299
+      sha256: bf69b8dcd3475b9731bc1e5a256b4b64963266b5324a979c3b8f6bca974219a0
+      size: 261
     subdir: lib/typed-process-dynamic-effectful
     version: '0.1'
   original:
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/typed-process-dynamic-effectful
 - completed:
@@ -169,15 +182,15 @@ packages:
     commit: e28b28ae3bc90a0336abf69eff28369b790f4e13
     git: https://github.com/tbidne/exception-utils.git
 - completed:
-    commit: e2273c91c411e1fe12347524065855ba8e34a481
+    commit: 83472bc22a938db0d3b4c02a24a52bfca0484637
     git: https://github.com/tbidne/fs-utils.git
     name: fs-utils
     pantry-tree:
-      sha256: ce9b6359d3c0c81bbbadda6eb6890eb3e6b52a93b27c54767f8a8f017caaac47
+      sha256: fdaee3d0e3ff48d1fb49c12be01277c6f39326a0d131cfa271fad0c9e4679dea
       size: 1103
     version: '0.1'
   original:
-    commit: e2273c91c411e1fe12347524065855ba8e34a481
+    commit: 83472bc22a938db0d3b4c02a24a52bfca0484637
     git: https://github.com/tbidne/fs-utils.git
 - completed:
     commit: 6bd6c1208bcda9f5d5ecb7ff45fafb91929cdea8

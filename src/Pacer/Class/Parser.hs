@@ -31,16 +31,19 @@ module Pacer.Class.Parser
     -- * Expressions
     prefix,
     binary,
+
+    -- * Misc
+    stripComments,
   )
 where
 
 import Control.Monad.Combinators.Expr (Operator (InfixL, Prefix))
+import Data.ByteString qualified as BS
 import Data.Char qualified as Ch
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
-import Pacer.Data.Result (Result (Err, Ok), ResultDefault)
 import Pacer.Prelude
 import Text.Megaparsec
   ( MonadParsec,
@@ -51,6 +54,7 @@ import Text.Megaparsec
     VisualStream,
   )
 import Text.Megaparsec qualified as MP
+import Text.Megaparsec.Byte qualified as MPB
 import Text.Megaparsec.Char qualified as MPC
 import Text.Megaparsec.Char.Lexer qualified as Lex
 import Text.Read qualified as TR
@@ -250,3 +254,76 @@ binary t f = InfixL (f <$ MPC.string t)
 
 prefix :: (MonadParsec e s m) => Tokens s -> (a -> a) -> Operator m a
 prefix t f = Prefix (f <$ MPC.string t)
+
+blexeme :: Parsec Void ByteString a -> Parsec Void ByteString a
+blexeme = Lex.lexeme MPB.space
+
+stripComments :: ByteString -> ResultDefault ByteString
+stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
+  where
+    bsParser :: Parsec Void ByteString (List ByteString)
+    bsParser =
+      some
+        $ asum
+          [ parseLineComment,
+            parseBlockComment,
+            parseNonComment,
+            parseOneFSlash
+          ]
+      where
+        parseNonComment :: Parsec Void ByteString ByteString
+        parseNonComment = MP.takeWhile1P (Just "text") (/= fslash)
+
+        parseOneFSlash :: Parsec Void ByteString ByteString
+        parseOneFSlash = do
+          c <- MPB.char fslash
+          MP.notFollowedBy $ MPB.char fslash <|> MPB.char star
+          pure $ BS.singleton c
+
+        parseLineComment :: Parsec Void ByteString ByteString
+        parseLineComment = do
+          parseLineCommentStart
+          _ <- MP.takeWhile1P (Just "text") (/= newline)
+          MPB.char newline
+          pure ""
+
+        parseLineCommentStart :: Parsec Void ByteString ()
+        parseLineCommentStart = void $ MPC.string "//"
+
+        parseBlockComment :: Parsec Void ByteString ByteString
+        parseBlockComment = do
+          parseStartBlock
+          takeUntilEndBlock
+          parseEndBlock
+          pure ""
+
+        takeUntilEndBlock :: Parsec Void ByteString ()
+        takeUntilEndBlock = void $ do
+          many
+            $ asum
+              [ parseNonStar,
+                parseOneStar
+              ]
+
+        parseNonStar :: Parsec Void ByteString ()
+        parseNonStar = void $ MP.takeWhile1P (Just "text") (/= star)
+
+        -- We need to backtrack (hence try) in case the first star
+        -- succeeds but the followedBy fails.
+        parseOneStar :: Parsec Void ByteString ()
+        parseOneStar = MP.try $ do
+          _ <- MPB.char star
+          MP.notFollowedBy $ MPB.char fslash
+          pure ()
+
+        parseStartBlock :: Parsec Void ByteString ()
+        parseStartBlock = void $ MPC.string "/*"
+
+        parseEndBlock :: Parsec Void ByteString ()
+        parseEndBlock = void $ MPC.string "*/"
+
+        fslash = i2w8 $ Ch.ord '/'
+        newline = i2w8 $ Ch.ord '\n'
+        star = i2w8 $ Ch.ord '*'
+
+        i2w8 = fromIntegral @Int @Word8

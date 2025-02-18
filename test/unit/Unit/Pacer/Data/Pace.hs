@@ -13,7 +13,6 @@ import Pacer.Data.Distance (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMile))
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Pace (Pace (MkPace), SomePace (MkSomePace))
-import Pacer.Data.Result (Result (Ok))
 import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Pacer.Data.Duration qualified as D
 import Unit.Pacer.Data.Duration qualified as Duration

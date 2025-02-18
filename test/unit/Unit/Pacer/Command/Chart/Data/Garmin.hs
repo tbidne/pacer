@@ -11,6 +11,7 @@ import Effectful.Logger.Dynamic
     ToLogStr (toLogStr),
     fromLogStr,
   )
+import FileSystem.Path qualified as Path
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Params
   ( RunsType (RunsDefault, RunsGarmin),
@@ -29,7 +30,7 @@ getRunsTypeTests =
   testGroup
     "getRunsType"
     [ testCsvGarmin,
-      testTomlDefault,
+      testJsonDefault,
       testNameGarmin,
       testNameActivities
     ]
@@ -40,9 +41,9 @@ testCsvGarmin = testCase ".csv returns garmin" $ do
   RunsGarmin @=? result
   [] @=? logs
 
-testTomlDefault :: TestTree
-testTomlDefault = testCase ".toml returns default" $ do
-  (logs, result) <- runGetRunsType [osp|file.toml|]
+testJsonDefault :: TestTree
+testJsonDefault = testCase ".json returns default" $ do
+  (logs, result) <- runGetRunsType [osp|file.json|]
   RunsDefault @=? result
   [] @=? logs
 
@@ -63,9 +64,10 @@ testNameActivities = testCase "name with 'activities' default" $ do
   [] @=? logs2
 
 runGetRunsType :: OsPath -> IO (Tuple2 (List Text) RunsType)
-runGetRunsType mRunsPath = do
+runGetRunsType runsOsPath = do
+  runsPath <- Path.parseAbsFile runsOsPath
   logsRef <- Ref.newIORef []
-  result <- runner logsRef $ Garmin.getRunsType mRunsPath
+  result <- runner logsRef $ Garmin.getRunsType runsPath
   logs <- Ref.readIORef logsRef
   pure (logs, result)
   where

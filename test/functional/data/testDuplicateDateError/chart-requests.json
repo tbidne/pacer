@@ -1,0 +1,17 @@
+{
+  "charts": [
+    {
+      "title": "Runs by distance",
+      "y-axis": "distance"
+    },
+    {
+      "title": "Runs by duration",
+      "y-axis": "duration",
+      "y1-axis": "distance"
+    },
+    {
+      "title": "Runs by pace",
+      "y-axis": "pace"
+    }
+  ]
+}

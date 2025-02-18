@@ -1,9 +1,9 @@
 MkChartParams
   { buildDir = "/root/config-data/build-dir/"
   , cleanInstall = False
-  , chartRequestsPath = "/root/xdg/config/pacer/chart-requests.toml"
+  , chartRequestsPath = "/root/xdg/config/pacer/chart-requests.json"
   , dataDir = ()
   , json = False
   , runLabelsPath = Nothing
-  , runPaths = "/root/xdg/config/pacer/runs.toml" :| []
+  , runPaths = "/root/xdg/config/pacer/runs.json" :| []
   }

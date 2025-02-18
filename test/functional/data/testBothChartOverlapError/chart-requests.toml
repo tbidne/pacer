@@ -1,7 +1,0 @@
-[garmin]
-unit = 'km'
-
-[[charts]]
-title = 'Runs by distance'
-y-axis = 'distance'
-description = 'This is some runs plotted by distance.'

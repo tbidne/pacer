@@ -1,0 +1,35 @@
+{
+  "runs": [
+    {
+      "datetime": "2024-10-15",
+      "distance": "5 km",
+      "duration": "16m30s"
+      // pace = 3'18" /km
+    },
+    {
+      "datetime": "2024-10-16",
+      "distance": "8 km",
+      "duration": "24m30s"
+      // pace = 3'04" /km
+    },
+    {
+      "datetime": "2024-10-17",
+      "distance": "10 km",
+      "duration": "42m"
+      // pace = 4'12" /km
+    },
+    {
+      "datetime": "2024-10-18",
+      "distance": "30 km",
+      "duration": "2h30m"
+      // pace = 5'0" /km
+    },
+    {
+      "datetime": "2024-10-19",
+      "distance": "45 km",
+      "duration": "3h30m"
+      // pace = 4'30" /km
+    }
+  ]
+}
+

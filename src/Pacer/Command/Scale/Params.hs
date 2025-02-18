@@ -16,8 +16,8 @@ module Pacer.Command.Scale.Params
   )
 where
 
-import Pacer.Config.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
-import Pacer.Config.Utils
+import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
+import Pacer.Configuration.Utils
   ( DistanceDurationPaceArgs
       ( mDuration,
         mPaceOptUnits,

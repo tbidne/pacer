@@ -1,0 +1,32 @@
+{
+  "charts": [
+    {
+      "title": "Chart 1",
+      "y-axis": "distance",
+      "filters": [
+        "datetime > 2023"
+      ]
+    },
+    {
+      "title": "Chart 2",
+      "y-axis": "distance",
+      "filters": [
+        "datetime >= 2023"
+      ]
+    },
+    {
+      "title": "Chart 3",
+      "y-axis": "distance",
+      "filters": [
+        "datetime < 2024"
+      ]
+    },
+    {
+      "title": "Chart 4",
+      "y-axis": "distance",
+      "filters": [
+        "datetime > 2024-09"
+      ]
+    }
+  ]
+}

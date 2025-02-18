@@ -53,7 +53,7 @@ import Pacer.Command.Chart.Params
     ChartParamsArgs,
   )
 import Pacer.Command.Chart.Params qualified as ChartParams
-import Pacer.Config.Env.Types (CachedPaths)
+import Pacer.Configuration.Env.Types (CachedPaths)
 import System.Exit (ExitCode (ExitSuccess))
 import System.OsPath qualified as OsPath
 import Test.Tasty.HUnit (assertEqual)
@@ -269,9 +269,12 @@ runFileReaderMock = interpret_ $ \case
       (_dir, fileName) = OsPath.splitFileName p
       knownFiles =
         Set.fromList
-          [ [osp|chart-requests.toml|],
-            [osp|run-labels.toml|],
-            [osp|runs.toml|]
+          [ [osp|chart-requests.json|],
+            [osp|chart-requests.jsonc|],
+            [osp|runs.json|],
+            [osp|runs.jsonc|],
+            [osp|run-labels.json|],
+            [osp|run-labels.jsonc|]
           ]
 
 runFileWriterMock ::
@@ -282,7 +285,7 @@ runFileWriterMock ::
   Eff es a
 runFileWriterMock = interpret_ $ \case
   WriteBinaryFile _ _ -> incIORef (.refsEnv.numFileWriterCalls)
-  _ -> error "runFileWriterMock: unimplemented"
+  other -> error $ "runFileWriterMock: unimplemented: " ++ (showEffectCons other)
 
 runPathReaderMock ::
   (IOE :> es, IORefE :> es, Reader ChartEnv :> es) =>
@@ -333,12 +336,14 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
       knownFiles =
         Set.fromList
           [ [osp|build_charts.ts|],
-            [osp|chart-requests.toml|],
+            [osp|chart-requests.json|],
+            [osp|chart-requests.jsonc|],
             [osp|index.html|],
             [osp|index.ts|],
             [osp|package.json|],
             [osp|package-lock.json|],
-            [osp|runs.toml|],
+            [osp|runs.json|],
+            [osp|runs.jsonc|],
             [osp|style.css|],
             [osp|tsconfig.json|],
             [osp|types.ts|],
@@ -349,7 +354,8 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
         Set.fromList
           [ [osp|Activities.csv|],
             [osp|activities.csv|],
-            [osp|run-labels.toml|]
+            [osp|run-labels.json|],
+            [osp|run-labels.jsonc|]
           ]
   FindExecutable p -> case p of
     [osp|npm|] ->
@@ -378,7 +384,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     where
       dirName = L.last $ OsPath.splitDirectories p
   PathIsSymbolicLink _ -> pure False
-  _ -> error "runPathReaderMock: unimplemented"
+  other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
   where
     knownDirs =
       Set.fromList
@@ -398,7 +404,7 @@ runPathWriterMock = interpret_ $ \case
   -- Needed when node_modules exists
   RemovePathForcibly _ -> incIORef (.refsEnv.numRemoveDirectoryCalls)
   SetCurrentDirectory _ -> pure ()
-  _ -> error "runPathWriterMock: unimplemented"
+  other -> error $ "runPathWriterMock: unimplemented: " ++ (showEffectCons other)
 
 runLoggerMock :: Eff (Logger : es) a -> Eff es a
 runLoggerMock = interpret_ $ \case
@@ -408,7 +414,7 @@ runTerminalMock :: Eff (Terminal : es) a -> Eff es a
 runTerminalMock = interpret_ $ \case
   PutStr _ -> pure ()
   PutStrLn _ -> pure ()
-  _ -> error "runTerminalMock: unimplemented"
+  other -> error $ "runTerminalMock: unimplemented: " ++ (showEffectCons other)
 
 runTypedProcessMock ::
   ( IORefE :> es,
@@ -423,7 +429,7 @@ runTypedProcessMock = interpret_ $ \case
     "Raw command: npm_exe run start" ->
       incIORef (.refsEnv.numNpmBuildCalls) $> mockResult
     other -> error $ "readProcess: unexpected: " ++ other
-  _ -> error "runTypedProcessMock: unimplemented"
+  other -> error $ "runTypedProcessMock: unimplemented: " ++ (showEffectCons other)
   where
     processConfigToCmd :: ProcessConfig i o e -> String
     processConfigToCmd = unpackText . T.strip . packText . show

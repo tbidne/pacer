@@ -7,7 +7,7 @@ module Pacer.Command.Chart.Data.ChartData
   )
 where
 
-import Data.Aeson (KeyValue ((.=)), ToJSON (toJSON), Value)
+import Data.Aeson (Value)
 import Data.Aeson qualified as Asn
 import Data.Foldable1 (foldl1')
 import Data.List (all)

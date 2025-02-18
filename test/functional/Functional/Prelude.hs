@@ -32,6 +32,7 @@ import Effectful.FileSystem.FileWriter.Dynamic
 import Effectful.FileSystem.PathReader.Dynamic
   ( PathReader
       ( CanonicalizePath,
+        DoesDirectoryExist,
         DoesFileExist,
         GetCurrentDirectory,
         GetXdgDirectory,
@@ -60,8 +61,8 @@ import Hedgehog as X
     (===),
   )
 import Pacer.Driver (displayInnerMatchKnown, runApp)
-import Pacer.Exception (TomlE (MkTomlE))
 import Pacer.Prelude as X hiding (IO)
+import Pacer.Utils (AesonPathE (MkAesonPathE))
 import System.Environment (withArgs)
 import System.FilePath (FilePath)
 import System.IO as X (IO)
@@ -99,6 +100,7 @@ runPathReaderMock ::
   Eff es a
 runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   CanonicalizePath p -> PRS.canonicalizePath p
+  DoesDirectoryExist p -> PRS.doesDirectoryExist p
   DoesFileExist p -> PRS.doesFileExist p
   GetCurrentDirectory -> PRS.getCurrentDirectory
   GetXdgDirectory d p -> case d of
@@ -109,7 +111,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     where
       baseName = [ospPathSep|test/functional/data/xdg|]
   ListDirectory p -> PRS.listDirectory p
-  _ -> error "runPathReaderMock: unimplemented"
+  other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
 
 type TestEffects =
   [ FileReader,
@@ -141,14 +143,14 @@ runTestEff env m = do
     . runFileWriterMock
     . runFileReader
     $ m
-    `catch` \(MkTomlE p err) -> do
-      -- HACK: The 'Duplicate date error' chart test throws a TomlE, which is
-      -- a problem for the golden tests because it includes a non-deterministic
-      -- absolute path. Thus we catch the exception and make the path
-      -- relative. If this ends up being flaky, we can simply use the file
-      -- name, which should be good enough.
+    `catch` \(MkAesonPathE p err) -> do
+      -- HACK: The 'Duplicate date error' chart test throws an AesonPathE,
+      -- which is a problem for the golden tests because it includes a
+      -- non-deterministic absolute path. Thus we catch the exception and
+      -- make the path relative. If this ends up being flaky, we can simply
+      -- use the file name, which should be good enough.
       p' <- makeRelativeToCurrentDirectoryIO p
-      throwM $ MkTomlE p' err
+      throwM $ MkAesonPathE p' err
   where
     makeRelativeToCurrentDirectoryIO =
       liftIO
@@ -194,7 +196,7 @@ runFileWriterMock = interpret_ $ \case
     modifyIORef' outFilesMapRef (Map.insert path' bs)
     where
       path' = takeParentAndName path
-  _ -> error "runFileWriterMock: unimplemented"
+  other -> error $ "runFileWriterMock: unimplemented: " ++ (showEffectCons other)
 
 runTerminalMock ::
   ( IORefE :> es,
@@ -209,7 +211,7 @@ runTerminalMock = interpret_ $ \case
   PutStrLn s -> do
     logsRef <- asks @FuncEnv (.logsRef)
     modifyIORef' logsRef (<> packText s)
-  _ -> error "runTerminalMock: unimplemented"
+  other -> error $ "runTerminalMock: unimplemented: " ++ (showEffectCons other)
 
 runMultiArgs :: (a -> List String) -> List (Word8, (a, Text)) -> IO ()
 runMultiArgs mkArgs vals =
@@ -265,8 +267,8 @@ data GoldenParams = MkGoldenParams
 -- | Given a text description and testName OsPath, creates a golden test.
 -- Expects the following to exist:
 --
--- - @data\/testName_runs.toml@
--- - @data\/testName_chart-requests.toml@
+-- - @data\/testName_runs.json@
+-- - @data\/testName_chart-requests.json@
 -- - @goldens\/testName.golden@
 --
 -- Note that, confusingly, the 'TestName' type is __not__ what we are

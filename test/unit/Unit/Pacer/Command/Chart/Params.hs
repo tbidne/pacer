@@ -9,6 +9,7 @@ import Data.Set qualified as Set
 import Effectful.FileSystem.PathReader.Dynamic
   ( PathReader
       ( CanonicalizePath,
+        DoesDirectoryExist,
         DoesFileExist,
         GetCurrentDirectory,
         GetXdgDirectory,
@@ -30,11 +31,11 @@ import Pacer.Command.Chart.Params
     ChartParamsFinal,
   )
 import Pacer.Command.Chart.Params qualified as Params
-import Pacer.Config.Env.Types (CachedPaths)
-import Pacer.Config.Toml
-  ( Toml,
-    TomlWithPath (MkTomlWithPath, dirPath, toml),
+import Pacer.Configuration.Config
+  ( Config,
+    ConfigWithPath (MkConfigWithPath, config, dirPath),
   )
+import Pacer.Configuration.Env.Types (CachedPaths)
 import Pacer.Driver (displayInnerMatchKnown)
 import System.OsPath qualified as OsPath
 import Unit.Prelude
@@ -79,7 +80,7 @@ testEvolvePhaseCliBuildDirAbs =
     $ MkGoldenParams
       { testDesc = "Uses CLI absolute build-dir",
         testName = [osp|testEvolvePhaseCliBuildDirAbs|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
@@ -87,7 +88,7 @@ testEvolvePhaseCliBuildDirAbs =
         #buildDir
         (Just (pathToOsPath absBuildDir))
         baseChartParams
-    toml = baseToml
+    config = baseConfig
 
 testEvolvePhaseCliBuildDirRel :: TestTree
 testEvolvePhaseCliBuildDirRel =
@@ -95,7 +96,7 @@ testEvolvePhaseCliBuildDirRel =
     $ MkGoldenParams
       { testDesc = "Uses CLI relative build-dir",
         testName = [osp|testEvolvePhaseCliBuildDirRel|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
@@ -103,7 +104,7 @@ testEvolvePhaseCliBuildDirRel =
         #buildDir
         (Just [osp|build-dir|])
         baseChartParams
-    toml = baseToml
+    config = baseConfig
 
 testEvolvePhaseConfigBuildDirAbs :: TestTree
 testEvolvePhaseConfigBuildDirAbs =
@@ -111,15 +112,15 @@ testEvolvePhaseConfigBuildDirAbs =
     $ MkGoldenParams
       { testDesc = "Uses config absolute build-dir",
         testName = [osp|testEvolvePhaseConfigBuildDirAbs|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params = baseChartParams
-    toml =
+    config =
       set'
         (#chartConfig %? #buildDir)
         (Just (pathToOsPath absBuildDir))
-        baseToml
+        baseConfig
 
 testEvolvePhaseConfigBuildDirRel :: TestTree
 testEvolvePhaseConfigBuildDirRel =
@@ -127,15 +128,15 @@ testEvolvePhaseConfigBuildDirRel =
     $ MkGoldenParams
       { testDesc = "Uses config relative build-dir",
         testName = [osp|testEvolvePhaseConfigBuildDirRel|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params = baseChartParams
-    toml =
+    config =
       set'
         (#chartConfig %? #buildDir)
         (Just [osp|build-dir|])
-        baseToml
+        baseConfig
 
 testEvolvePhaseCliPaths :: TestTree
 testEvolvePhaseCliPaths =
@@ -143,30 +144,30 @@ testEvolvePhaseCliPaths =
     $ MkGoldenParams
       { testDesc = "Uses CLI paths",
         testName = [osp|testEvolvePhaseCliPaths|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
-      set' #chartRequestsPath (Just [osp|cli-cr.toml|])
+      set' #chartRequestsPath (Just [osp|cli-cr.json|])
         $ set'
           #dataDir
           (Just [osp|cli-data|])
         $ set'
           #runPaths
-          [[osp|cli-runs.toml|]]
+          [[osp|cli-runs.json|]]
           baseChartParams
 
-    toml =
+    config =
       set'
         (#chartConfig %? #runPaths)
-        [[osp|config-runs.toml|]]
+        [[osp|config-runs.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
         $ set'
           (#chartConfig %? #chartRequestsPath)
-          (Just [osp|config-cr.toml|])
-          baseToml
+          (Just [osp|config-cr.json|])
+          baseConfig
 
 testEvolvePhaseCliData :: TestTree
 testEvolvePhaseCliData =
@@ -174,7 +175,7 @@ testEvolvePhaseCliData =
     $ MkGoldenParams
       { testDesc = "Uses CLI data",
         testName = [osp|testEvolvePhaseCliData|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
@@ -183,17 +184,17 @@ testEvolvePhaseCliData =
         (Just [osp|cli-data|])
         baseChartParams
 
-    toml =
+    config =
       set'
         (#chartConfig %? #runPaths)
-        [[osp|config-runs.toml|]]
+        [[osp|config-runs.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
         $ set'
           (#chartConfig %? #chartRequestsPath)
-          (Just [osp|config-cr.toml|])
-          baseToml
+          (Just [osp|config-cr.json|])
+          baseConfig
 
 testEvolvePhaseConfigAbsPaths :: TestTree
 testEvolvePhaseConfigAbsPaths =
@@ -201,28 +202,28 @@ testEvolvePhaseConfigAbsPaths =
     $ MkGoldenParams
       { testDesc = "Uses config absolute paths",
         testName = [osp|testEvolvePhaseConfigAbsPaths|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
-      -- Even with --data specified, we will skip to toml since the
+      -- Even with --data specified, we will skip to config since the
       -- former contains no paths.
       set'
         #dataDir
         (Just [osp|no-data|])
         baseChartParams
 
-    toml =
+    config =
       set'
         (#chartConfig %? #runPaths)
-        [rootOsPath </> [osp|config-runs.toml|]]
+        [rootOsPath </> [osp|config-runs.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
         $ set'
           (#chartConfig %? #chartRequestsPath)
-          (Just $ rootOsPath </> [osp|config-cr.toml|])
-          baseToml
+          (Just $ rootOsPath </> [osp|config-cr.json|])
+          baseConfig
 
 testEvolvePhaseConfigRelPaths :: TestTree
 testEvolvePhaseConfigRelPaths =
@@ -230,28 +231,28 @@ testEvolvePhaseConfigRelPaths =
     $ MkGoldenParams
       { testDesc = "Uses config relative paths",
         testName = [osp|testEvolvePhaseConfigRelPaths|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
-      -- Even with --data specified, we will skip to toml since the
+      -- Even with --data specified, we will skip to config since the
       -- former contains no paths.
       set'
         #dataDir
         (Just [osp|no-data|])
         baseChartParams
 
-    toml =
+    config =
       set'
         (#chartConfig %? #runPaths)
-        [[osp|rel-runs.toml|]]
+        [[osp|rel-runs.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
         $ set'
           (#chartConfig %? #chartRequestsPath)
-          (Just [osp|rel-cr.toml|])
-          baseToml
+          (Just [osp|rel-cr.json|])
+          baseConfig
 
 testEvolvePhaseConfigAbsData :: TestTree
 testEvolvePhaseConfigAbsData =
@@ -259,22 +260,22 @@ testEvolvePhaseConfigAbsData =
     $ MkGoldenParams
       { testDesc = "Uses config absolute data",
         testName = [osp|testEvolvePhaseConfigAbsData|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
-      -- Even with --data specified, we will skip to toml since the
+      -- Even with --data specified, we will skip to config since the
       -- former contains no paths.
       set'
         #dataDir
         (Just [osp|no-data|])
         baseChartParams
 
-    toml =
+    config =
       set'
         (#chartConfig %? #dataDir)
         (Just $ rootOsPath </> [osp|config-data|])
-        baseToml
+        baseConfig
 
 testEvolvePhaseConfigRelData :: TestTree
 testEvolvePhaseConfigRelData =
@@ -282,22 +283,22 @@ testEvolvePhaseConfigRelData =
     $ MkGoldenParams
       { testDesc = "Uses config relative data",
         testName = [osp|testEvolvePhaseConfigRelData|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
-      -- Even with --data specified, we will skip to toml since the
+      -- Even with --data specified, we will skip to config since the
       -- former contains no paths.
       set'
         #dataDir
         (Just [osp|no-data|])
         baseChartParams
 
-    toml =
+    config =
       set'
         (#chartConfig %? #dataDir)
         (Just [osp|./|])
-        baseToml
+        baseConfig
 
 testEvolvePhaseXdgPaths :: TestTree
 testEvolvePhaseXdgPaths =
@@ -305,24 +306,24 @@ testEvolvePhaseXdgPaths =
     $ MkGoldenParams
       { testDesc = "Uses xdg paths",
         testName = [osp|testEvolvePhaseXdgPaths|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
-      -- Even with --data specified, we will skip to toml since the
+      -- Even with --data specified, we will skip to config since the
       -- former contains no paths.
       set'
         #dataDir
         (Just [osp|no-data|])
         baseChartParams
 
-    toml =
-      -- Even with config.data specified, we will skip to toml since the
+    config =
+      -- Even with config.data specified, we will skip to config since the
       -- former contains no paths.
       set'
         (#chartConfig %? #dataDir)
         (Just [osp|no-data|])
-        baseToml
+        baseConfig
 
 testEvolvePhaseGarmin :: TestTree
 testEvolvePhaseGarmin =
@@ -330,7 +331,7 @@ testEvolvePhaseGarmin =
     $ MkGoldenParams
       { testDesc = "Uses garmin path",
         testName = [osp|testEvolvePhaseCliGarmin|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
@@ -338,15 +339,15 @@ testEvolvePhaseGarmin =
         #dataDir
         (Just [osp|cli-garmin|])
         baseChartParams
-    toml = baseToml
+    config = baseConfig
 
 testEvolvePhaseBoth :: TestTree
 testEvolvePhaseBoth =
   testGoldenParamsOs
     $ MkGoldenParams
-      { testDesc = "Uses TOML and Garmin when both runs types exist",
+      { testDesc = "Uses Json and Garmin when both runs types exist",
         testName = [osp|testEvolvePhaseBoth|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
@@ -354,7 +355,7 @@ testEvolvePhaseBoth =
         #dataDir
         (Just [osp|cli-both|])
         baseChartParams
-    toml = baseToml
+    config = baseConfig
 
 failureTests :: TestTree
 failureTests =
@@ -371,29 +372,29 @@ testEvolvePhaseCliPathsEx =
     $ MkGoldenParams
       { testDesc = "Exception for unknown CLI paths",
         testName = [osp|testEvolvePhaseCliPathsEx|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params =
-      set' #chartRequestsPath (Just [osp|bad_cr.toml|])
+      set' #chartRequestsPath (Just [osp|bad_cr.json|])
         $ set'
           #dataDir
           (Just [osp|cli-data|])
         $ set'
           #runPaths
-          [[osp|bad_runs.toml|]]
+          [[osp|bad_runs.json|]]
           baseChartParams
-    toml =
+    config =
       set'
         (#chartConfig %? #runPaths)
-        [[osp|rel-runs.toml|]]
+        [[osp|rel-runs.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
         $ set'
           (#chartConfig %? #chartRequestsPath)
-          (Just [osp|rel-cr.toml|])
-          baseToml
+          (Just [osp|rel-cr.json|])
+          baseConfig
 
 testEvolvePhaseConfigPathsEx :: TestTree
 testEvolvePhaseConfigPathsEx =
@@ -401,21 +402,21 @@ testEvolvePhaseConfigPathsEx =
     $ MkGoldenParams
       { testDesc = "Exception for unknown config paths",
         testName = [osp|testEvolvePhaseConfigPathsEx|],
-        runner = goldenRunner params toml
+        runner = goldenRunner params config
       }
   where
     params = baseChartParams
-    toml =
+    config =
       set'
         (#chartConfig %? #runPaths)
-        [[osp|bad-runs.toml|]]
+        [[osp|bad-runs.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
         $ set'
           (#chartConfig %? #chartRequestsPath)
-          (Just [osp|bad-cr.toml|])
-          baseToml
+          (Just [osp|bad-cr.json|])
+          baseConfig
 
 testEvolvePhaseMissingEx :: TestTree
 testEvolvePhaseMissingEx =
@@ -423,7 +424,7 @@ testEvolvePhaseMissingEx =
     $ MkGoldenParams
       { testDesc = "Exception for missing paths",
         testName = [osp|testEvolvePhaseMissingEx|],
-        runner = goldenRunnerXdg False params toml
+        runner = goldenRunnerXdg False params config
       }
   where
     params =
@@ -431,14 +432,15 @@ testEvolvePhaseMissingEx =
         #dataDir
         (Just [osp|some-dir|])
         baseChartParams
-    toml =
+    config =
       set'
         (#chartConfig %? #dataDir)
         (Just [osp|some-config-data|])
-        baseToml
+        baseConfig
 
 data MockEnv = MkMockEnv
   { cachedPaths :: CachedPaths,
+    knownDirectories :: Set OsPath,
     knownFiles :: Set OsPath,
     -- Returns xdg dir w/ expected files iff xdg is true
     xdg :: Bool
@@ -448,34 +450,49 @@ data MockEnv = MkMockEnv
 runEvolvePhase ::
   Bool ->
   ChartParamsArgs ->
-  Maybe TomlWithPath ->
+  Maybe ConfigWithPath ->
   IO ChartParamsFinal
-runEvolvePhase xdg params mToml = do
-  runner $ Params.evolvePhase params mToml
+runEvolvePhase xdg params mConfig = do
+  runner $ Params.evolvePhase params mConfig
   where
     env =
       MkMockEnv
         { cachedPaths = mempty,
+          knownDirectories =
+            Set.fromList
+              $ (rootOsPath </>)
+              <$> [ [ospPathSep|bad_xdg/config/pacer/|],
+                    [ospPathSep|cli-both/|],
+                    [ospPathSep|cli-data/|],
+                    [ospPathSep|cli-garmin/|],
+                    [ospPathSep|config-data/|],
+                    [ospPathSep|config-data/config-data/|],
+                    [ospPathSep|config-data/no-data/|],
+                    [ospPathSep|config-data/some-config-data/|],
+                    [ospPathSep|no-data/|],
+                    [ospPathSep|some-dir/|],
+                    [ospPathSep|xdg/config/pacer/|]
+                  ],
           knownFiles =
             Set.fromList
               $ (rootOsPath </>)
-              <$> [ [ospPathSep|cli-cr.toml|],
-                    [ospPathSep|cli-runs.toml|],
-                    [ospPathSep|cli-data/chart-requests.toml|],
-                    [ospPathSep|cli-data/runs.toml|],
+              <$> [ [ospPathSep|cli-cr.json|],
+                    [ospPathSep|cli-runs.json|],
+                    [ospPathSep|cli-data/chart-requests.json|],
+                    [ospPathSep|cli-data/runs.json|],
                     [ospPathSep|cli-garmin/activities.csv|],
-                    [ospPathSep|cli-garmin/chart-requests.toml|],
-                    [ospPathSep|cli-both/runs.toml|],
+                    [ospPathSep|cli-garmin/chart-requests.json|],
+                    [ospPathSep|cli-both/runs.json|],
                     [ospPathSep|cli-both/activities.csv|],
-                    [ospPathSep|cli-both/chart-requests.toml|],
-                    [ospPathSep|config-cr.toml|],
-                    [ospPathSep|config-runs.toml|],
-                    [ospPathSep|config-data/chart-requests.toml|],
-                    [ospPathSep|config-data/runs.toml|],
-                    [ospPathSep|config-data/rel-cr.toml|],
-                    [ospPathSep|config-data/rel-runs.toml|],
-                    [ospPathSep|xdg/config/pacer/chart-requests.toml|],
-                    [ospPathSep|xdg/config/pacer/runs.toml|]
+                    [ospPathSep|cli-both/chart-requests.json|],
+                    [ospPathSep|config-cr.json|],
+                    [ospPathSep|config-runs.json|],
+                    [ospPathSep|config-data/chart-requests.json|],
+                    [ospPathSep|config-data/runs.json|],
+                    [ospPathSep|config-data/rel-cr.json|],
+                    [ospPathSep|config-data/rel-runs.json|],
+                    [ospPathSep|xdg/config/pacer/chart-requests.json|],
+                    [ospPathSep|xdg/config/pacer/runs.json|]
                   ],
           xdg
         }
@@ -498,6 +515,11 @@ runPathReaderMock ::
   Eff es a
 runPathReaderMock = interpret_ $ \case
   CanonicalizePath p -> pure $ rootOsPath </> p
+  DoesDirectoryExist p -> do
+    knownDirs <- asks @MockEnv (.knownDirectories)
+    if p `Set.member` knownDirs
+      then pure True
+      else error $ "doesDirectoryExist: unknown dir: " ++ show p
   DoesFileExist p -> do
     knownFiles <- asks @MockEnv (.knownFiles)
     pure $ p `Set.member` knownFiles
@@ -513,29 +535,29 @@ runPathReaderMock = interpret_ $ \case
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
   ListDirectory p
     | dirName == [osp|cli-garmin|] ->
-        pure [[osp|activities.csv|], [osp|chart-requests.toml|]]
+        pure [[osp|activities.csv|], [osp|chart-requests.json|]]
     | dirName == [osp|cli-both|] ->
         pure
           [ [osp|activities.csv|],
-            [osp|chart-requests.toml|],
-            [osp|runs.toml|]
+            [osp|chart-requests.json|],
+            [osp|runs.json|]
           ]
     | otherwise -> pure []
     where
       dirName = L.last $ OsPath.splitDirectories p
-  _ -> error "runPathReaderMock: unimplemented"
+  other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
 
-goldenRunner :: ChartParamsArgs -> Toml -> IO ByteString
+goldenRunner :: ChartParamsArgs -> Config -> IO ByteString
 goldenRunner = goldenRunnerXdg True
 
-goldenRunnerXdg :: Bool -> ChartParamsArgs -> Toml -> IO ByteString
-goldenRunnerXdg xdg params toml = do
-  let tomlPath =
-        MkTomlWithPath
+goldenRunnerXdg :: Bool -> ChartParamsArgs -> Config -> IO ByteString
+goldenRunnerXdg xdg params config = do
+  let configPath =
+        MkConfigWithPath
           { dirPath = rootPath <</>> [reldir|config-data|],
-            toml
+            config
           }
-  trySync (runEvolvePhase xdg params (Just tomlPath)) <&> \case
+  trySync (runEvolvePhase xdg params (Just configPath)) <&> \case
     Right x -> pShowBS x
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
@@ -556,8 +578,8 @@ baseChartParams =
       runPaths = []
     }
 
-baseToml :: Toml
-baseToml = set' #chartConfig (Just mempty) mempty
+baseConfig :: Config
+baseConfig = set' #chartConfig (Just mempty) mempty
 
 {- ORMOLU_DISABLE -}
 

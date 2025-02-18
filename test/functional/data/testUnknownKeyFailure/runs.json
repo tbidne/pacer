@@ -1,0 +1,17 @@
+{
+  "runs": [
+    {
+      "datetime": "2024-10-15",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-20T14:30:00",
+      "distance": "20 miles",
+      "bad_key": 5,
+      "duration": "2h40m54s",
+      "another_problem": null,
+      "labels": []
+    }
+  ]
+}

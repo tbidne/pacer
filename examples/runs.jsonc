@@ -1,0 +1,47 @@
+{
+  "runs": [
+    {
+      "datetime": "2024-10-15",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-20T14:30:00",
+      "distance": "20 miles",
+      "duration": "2h40m54s",
+      "labels": [
+        "label1"
+      ]
+    },
+    {
+      "datetime": "2024-10-25T12:00:00-08:00",
+      "distance": "marathon",
+      "duration": "3h20m",
+      "labels": [
+        "marathon",
+        "official"
+      ],
+      "title": "Some Marathon"
+    },
+    {
+      "datetime": "2024-10-28T12:00:00-08:00",
+      "distance": "marathon",
+      "duration": "315m",
+      "labels": [
+        "marathon",
+        "official"
+      ],
+      "title": "Another marathon"
+    },
+    {
+      "datetime": "2024-10-10T12:00:00-08:00",
+      "distance": "half-marathon",
+      "duration": "1h20m",
+      "labels": [
+        "half-marathon",
+        "official"
+      ],
+      "title": "Some half marathon"
+    }
+  ]
+}

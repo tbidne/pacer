@@ -8,7 +8,7 @@ import Options.Applicative (Parser)
 import Options.Applicative qualified as OA
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Scale.Params
-import Pacer.Config.Utils qualified as Utils
+import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 
 -- | Parses scale params.

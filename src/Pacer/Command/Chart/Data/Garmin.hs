@@ -46,11 +46,10 @@ import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
   )
 import Pacer.Data.Duration (Duration)
-import Pacer.Data.Result (Result (Err, Ok), failErr)
 import Pacer.Exception
   ( GarminE (GarminDecode, GarminMeters, GarminOther),
   )
-import Pacer.Prelude
+import Pacer.Prelude hiding ((.:))
 import System.OsPath qualified as OsPath
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
@@ -149,11 +148,11 @@ readRunsCsv ::
     Logger :> es
   ) =>
   DistanceUnit ->
-  OsPath ->
+  Path Abs File ->
   Eff es (SomeRuns Double)
 readRunsCsv @es inputDistUnit csvPath = do
   -- 1. Read csv into bytestring.
-  bs <- readBinaryFile csvPath
+  bs <- readBinaryFile csvOsPath
 
   someRunsList <- case inputDistUnit of
     Meter -> throwM GarminMeters
@@ -164,6 +163,7 @@ readRunsCsv @es inputDistUnit csvPath = do
     Err err -> throwM $ GarminOther err
     Ok someRuns -> pure someRuns
   where
+    csvOsPath = pathToOsPath csvPath
     bsToTxt = decodeUtf8Lenient . toStrictBS
 
     bsToRuns ::
@@ -218,32 +218,34 @@ readRunsCsv @es inputDistUnit csvPath = do
         GarminActOther -> foldGarmin acc rs
         GarminActRun gr -> foldGarmin (toSomeRun @d gr : acc) rs
 
--- heuristics to decide if we should decode csv or toml.
+-- heuristics to decide if we should decode csv or json.
 getRunsType ::
   (Logger :> es) =>
   -- | Runs path.
-  OsPath ->
+  Path Abs File ->
   Eff es RunsType
-getRunsType runsOsPath = do
+getRunsType runsPath = do
   if
     -- 1. Ends w/ .csv -> read garmin csv
     | runsExt == [osp|.csv|] -> pure RunsGarmin
-    -- 2. Ends w/ .toml -> read custom toml
-    | runsExt == [osp|.toml|] -> pure RunsDefault
+    -- 2. Ends w/ .json -> read custom json
+    | runsExt == [osp|.json|] -> pure RunsDefault
+    | runsExt == [osp|.jsonc|] -> pure RunsDefault
     -- 3. Name contains the strings 'garmin' or 'activities', assume csv
     | "garmin" `T.isInfixOf` runsBaseNameTxt -> pure RunsGarmin
     | "activities" `T.isInfixOf` runsBaseNameTxt -> pure RunsGarmin
-    -- 4. Otherwise default to toml
+    -- 4. Otherwise default to json
     | otherwise -> do
         let msg =
               mconcat
                 [ "Unknown file type: '",
                   packText $ decodeLenient runsOsPath,
-                  "'. Guessing custom toml format."
+                  "'. Guessing custom json format."
                 ]
         $(Logger.logWarn) msg
         pure RunsDefault
   where
+    runsOsPath = pathToOsPath runsPath
     runsBaseName = OsPath.takeBaseName runsOsPath
     runsBaseNameTxt = T.toCaseFold $ packText $ decodeLenient runsBaseName
     runsExt = OsPath.takeExtension runsOsPath
