@@ -44,13 +44,14 @@ jobs:
       - name: Build
         run: cabal build exe:pacer
 
+      # yamllint disable rule:line-length
       - name: Unit tests
         id: unit
-        run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000'
+        run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000 --size-cutoff 100000'
 
       - name: Functional tests
         id: functional
-        run: cabal test pacer:functional
+        run: cabal test pacer:functional --test-options '--size-cutoff 100000'
 
       - name: Generate charts html/hs
 
@@ -64,6 +65,8 @@ jobs:
           cabal run pacer -- chart --data examples
           # Let's test it overwrites successfully
           cabal run pacer -- chart --data examples
+
+      # yamllint enable
 
   stack:
     strategy:

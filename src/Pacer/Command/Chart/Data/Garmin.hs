@@ -160,7 +160,7 @@ readRunsCsv @es inputDistUnit csvPath = do
     Kilometer -> bsToRuns Kilometer bs
     Mile -> bsToRuns Mile bs
 
-  case Run.mkSomeRuns someRunsList of
+  case Run.mkSomeRunsFail someRunsList of
     Err err -> throwM $ GarminOther err
     Ok someRuns -> pure someRuns
   where
@@ -221,40 +221,28 @@ readRunsCsv @es inputDistUnit csvPath = do
 -- heuristics to decide if we should decode csv or toml.
 getRunsType ::
   (Logger :> es) =>
-  -- | Specified runs type.
-  Maybe RunsType ->
   -- | Runs path.
   OsPath ->
   Eff es RunsType
-getRunsType mRunsType runsOsPath = do
-  let guess =
-        if
-          -- 1. Ends w/ .csv -> read garmin csv
-          | runsExt == [osp|.csv|] -> RunsGarmin
-          -- 2. Ends w/ .toml -> read custom toml
-          | runsExt == [osp|.toml|] -> RunsDefault
-          -- 3. Name contains the strings 'garmin' or 'activities', assume csv
-          | "garmin" `T.isInfixOf` runsBaseNameTxt -> RunsGarmin
-          | "activities" `T.isInfixOf` runsBaseNameTxt -> RunsGarmin
-          -- 4. Otherwise default to toml
-          | otherwise -> RunsDefault
-
-  case mRunsType of
-    Nothing -> pure guess
-    Just runsType ->
-      if runsType == guess
-        then pure runsType
-        else do
-          let msg =
-                mconcat
-                  [ "Specified runs type '",
-                    display runsType,
-                    "', but guessed '",
-                    display guess,
-                    "'; assuming the former."
-                  ]
-          $(Logger.logWarn) msg
-          pure runsType
+getRunsType runsOsPath = do
+  if
+    -- 1. Ends w/ .csv -> read garmin csv
+    | runsExt == [osp|.csv|] -> pure RunsGarmin
+    -- 2. Ends w/ .toml -> read custom toml
+    | runsExt == [osp|.toml|] -> pure RunsDefault
+    -- 3. Name contains the strings 'garmin' or 'activities', assume csv
+    | "garmin" `T.isInfixOf` runsBaseNameTxt -> pure RunsGarmin
+    | "activities" `T.isInfixOf` runsBaseNameTxt -> pure RunsGarmin
+    -- 4. Otherwise default to toml
+    | otherwise -> do
+        let msg =
+              mconcat
+                [ "Unknown file type: '",
+                  packText $ decodeLenient runsOsPath,
+                  "'. Guessing custom toml format."
+                ]
+        $(Logger.logWarn) msg
+        pure RunsDefault
   where
     runsBaseName = OsPath.takeBaseName runsOsPath
     runsBaseNameTxt = T.toCaseFold $ packText $ decodeLenient runsBaseName

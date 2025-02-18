@@ -11,6 +11,7 @@ where
 import FileSystem.OsPath qualified as OsPath
 import Pacer.Config.Logging (LogLevelParam)
 import Pacer.Prelude
+import Pacer.Utils qualified as U
 import TOML (DecodeTOML (tomlDecoder), getFieldOptWith)
 
 -- | Toml with its parent directory.
@@ -65,7 +66,7 @@ data ChartConfig = MkChartConfig
     -- | Optional path to run-labels.toml.
     runLabelsPath :: Maybe OsPath,
     -- | Optional path to runs file.
-    runsPath :: Maybe OsPath
+    runPaths :: List OsPath
   }
   deriving stock (Eq, Show)
 
@@ -76,10 +77,10 @@ instance Semigroup ChartConfig where
       (x2 <|> y2)
       (x3 <|> y3)
       (x4 <|> y4)
-      (x5 <|> y5)
+      (x5 ++ y5)
 
 instance Monoid ChartConfig where
-  mempty = MkChartConfig empty empty empty empty empty
+  mempty = MkChartConfig Nothing Nothing Nothing Nothing []
 
 instance DecodeTOML ChartConfig where
   tomlDecoder = do
@@ -87,7 +88,7 @@ instance DecodeTOML ChartConfig where
     dataDir <- TOML.getFieldOptWith decodeOsPath "data"
     chartRequestsPath <- TOML.getFieldOptWith decodeOsPath "chart-requests"
     runLabelsPath <- TOML.getFieldOptWith decodeOsPath "run-labels"
-    runsPath <- TOML.getFieldOptWith decodeOsPath "runs"
+    runPaths <- U.getFieldOptArrayOfWith decodeOsPath "runs"
 
     pure
       $ MkChartConfig
@@ -95,7 +96,7 @@ instance DecodeTOML ChartConfig where
           dataDir,
           chartRequestsPath,
           runLabelsPath,
-          runsPath
+          runPaths
         }
     where
       decodeOsPath = tomlDecoder >>= OsPath.encodeValidFail

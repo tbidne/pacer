@@ -54,6 +54,7 @@ deriving stock instance
     Eq (Chart.MPathF p File),
     Eq (Chart.PathF p Dir),
     Eq (Chart.PathF p File),
+    Eq (Chart.RunPathsF p),
     Eq (Scale.ScaleQuantityF p a)
   ) =>
   Eq (Command p a)
@@ -66,6 +67,7 @@ deriving stock instance
     Show (Chart.MPathF p File),
     Show (Chart.PathF p Dir),
     Show (Chart.PathF p File),
+    Show (Chart.RunPathsF p),
     Show (Scale.ScaleQuantityF p a)
   ) =>
   Show (Command p a)

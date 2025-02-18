@@ -31,75 +31,41 @@ getRunsTypeTests =
     [ testCsvGarmin,
       testTomlDefault,
       testNameGarmin,
-      testNameActivities,
-      testSpecifiedSameGuess,
-      testSpecifiedDifferentGuess
+      testNameActivities
     ]
 
 testCsvGarmin :: TestTree
 testCsvGarmin = testCase ".csv returns garmin" $ do
-  (logs, result) <- runGetRunsType Nothing [osp|file.csv|]
+  (logs, result) <- runGetRunsType [osp|file.csv|]
   RunsGarmin @=? result
   [] @=? logs
 
 testTomlDefault :: TestTree
 testTomlDefault = testCase ".toml returns default" $ do
-  (logs, result) <- runGetRunsType Nothing [osp|file.toml|]
+  (logs, result) <- runGetRunsType [osp|file.toml|]
   RunsDefault @=? result
   [] @=? logs
 
 testNameGarmin :: TestTree
 testNameGarmin = testCase "name with 'garmin' returns default" $ do
-  (logs, result) <- runGetRunsType Nothing [osp|file_garmin|]
+  (logs, result) <- runGetRunsType [osp|file_garmin|]
   RunsGarmin @=? result
   [] @=? logs
 
 testNameActivities :: TestTree
 testNameActivities = testCase "name with 'activities' default" $ do
-  (logs, result) <- runGetRunsType Nothing [osp|some_activities_thing|]
+  (logs, result) <- runGetRunsType [osp|some_activities_thing|]
   RunsGarmin @=? result
   [] @=? logs
 
-  (logs2, result2) <- runGetRunsType Nothing [osp|some_Activities_thing|]
+  (logs2, result2) <- runGetRunsType [osp|some_Activities_thing|]
   RunsGarmin @=? result2
   [] @=? logs2
 
-testSpecifiedSameGuess :: TestTree
-testSpecifiedSameGuess = testCase "Specified matches guess" $ do
-  (logs, result) <- runGetRunsType (Just RunsDefault) [osp|file.toml|]
-  RunsDefault @=? result
-  [] @=? logs
-
-  (logs2, result2) <- runGetRunsType (Just RunsGarmin) [osp|file.csv|]
-  RunsGarmin @=? result2
-  [] @=? logs2
-
-testSpecifiedDifferentGuess :: TestTree
-testSpecifiedDifferentGuess = testCase "Specified does not match guess" $ do
-  (logs, result) <- runGetRunsType (Just RunsGarmin) [osp|file.toml|]
-  RunsGarmin @=? result
-  [expected1] @=? logs
-
-  (logs2, result2) <- runGetRunsType (Just RunsDefault) [osp|file.csv|]
-  RunsDefault @=? result2
-  [expected2] @=? logs2
-  where
-    expected1 = msg "garmin (csv)" "default (toml)"
-    expected2 = msg "default (toml)" "garmin (csv)"
-
-    msg x y =
-      mconcat
-        [ "Specified runs type '",
-          x,
-          "', but guessed '",
-          y,
-          "'; assuming the former."
-        ]
-
-runGetRunsType :: Maybe RunsType -> OsPath -> IO (Tuple2 (List Text) RunsType)
-runGetRunsType mRunsType mRunsPath = do
+runGetRunsType :: OsPath -> IO (Tuple2 (List Text) RunsType)
+runGetRunsType mRunsPath = do
   logsRef <- Ref.newIORef []
-  result <- runner logsRef $ Garmin.getRunsType mRunsType mRunsPath
+  result <- runner logsRef $ Garmin.getRunsType mRunsPath
   logs <- Ref.readIORef logsRef
   pure (logs, result)
   where

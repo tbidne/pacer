@@ -5,6 +5,5 @@ MkChartParams
   , dataDir = ()
   , json = False
   , runLabelsPath = Nothing
-  , runsPath = "/root/cli-data/runs.toml"
-  , runsType = Nothing
+  , runPaths = "/root/cli-data/runs.toml" :| []
   }

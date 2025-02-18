@@ -34,7 +34,8 @@ import Effectful.FileSystem.PathReader.Dynamic
       ( CanonicalizePath,
         DoesFileExist,
         GetCurrentDirectory,
-        GetXdgDirectory
+        GetXdgDirectory,
+        ListDirectory
       ),
   )
 import Effectful.FileSystem.PathReader.Static qualified as PRS
@@ -58,8 +59,8 @@ import Hedgehog as X
     (/==),
     (===),
   )
-import Pacer.Driver (runApp)
-import Pacer.Exception (TomlE (MkTomlE), displayInnerMatchKnown)
+import Pacer.Driver (displayInnerMatchKnown, runApp)
+import Pacer.Exception (TomlE (MkTomlE))
 import Pacer.Prelude as X hiding (IO)
 import System.Environment (withArgs)
 import System.FilePath (FilePath)
@@ -107,6 +108,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     other -> error $ "Unexpected xdg type: " ++ show other
     where
       baseName = [ospPathSep|test/functional/data/xdg|]
+  ListDirectory p -> PRS.listDirectory p
   _ -> error "runPathReaderMock: unimplemented"
 
 type TestEffects =

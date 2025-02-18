@@ -15,11 +15,9 @@ import Pacer.Command.Chart.Params
         dataDir,
         json,
         runLabelsPath,
-        runsPath,
-        runsType
+        runPaths
       ),
     ChartParamsArgs,
-    RunsType (RunsDefault, RunsGarmin),
   )
 import Pacer.Config.Utils qualified as Utils
 import Pacer.Prelude
@@ -33,8 +31,7 @@ parser = do
   dataDir <- dataDirParser
   json <- jsonParser
   runLabelsPath <- mRunLabelsParser
-  runsPath <- mRunsParser
-  runsType <- runsTypeParser
+  runPaths <- mRunsParser
 
   pure
     $ MkChartParams
@@ -44,8 +41,7 @@ parser = do
         dataDir,
         json,
         runLabelsPath,
-        runsPath,
-        runsType
+        runPaths
       }
 
 mBuildDirPath :: Parser (Maybe OsPath)
@@ -65,10 +61,14 @@ mRunLabelsParser = mOsPathParser Nothing "run-labels" "PATH" helpTxt
   where
     helpTxt = "Optional path to run-labels file. Overrides --data."
 
-mRunsParser :: Parser (Maybe OsPath)
-mRunsParser = mOsPathParser Nothing "runs" "PATH" helpTxt
+mRunsParser :: Parser (List OsPath)
+mRunsParser = OA.many $ osPathParser Nothing "runs" "PATHs..." helpTxt
   where
-    helpTxt = "Optional path to runs file. Overrides --data."
+    helpTxt =
+      mconcat
+        [ "Optional path(s) to runs file(s). Overrides --data. We expect ",
+          "either default (.toml) or garmin (.csv) files."
+        ]
 
 dataDirParser :: Parser (Maybe OsPath)
 dataDirParser = mOsPathParser (Just 'd') "data" "PATH" helpTxt
@@ -86,17 +86,25 @@ mOsPathParser ::
   String ->
   String ->
   Parser (Maybe OsPath)
-mOsPathParser mShort long metavar helpTxt = do
-  OA.optional
-    $ OA.option
-      Utils.readOsPath
-      ( mconcat
-          $ [ OA.long long,
-              OA.metavar metavar,
-              Utils.mkHelp helpTxt
-            ]
-          ++ shortXs
-      )
+mOsPathParser mShort long metavar =
+  OA.optional . osPathParser mShort long metavar
+
+osPathParser ::
+  Maybe Char ->
+  String ->
+  String ->
+  String ->
+  Parser OsPath
+osPathParser mShort long metavar helpTxt = do
+  OA.option
+    Utils.readOsPath
+    ( mconcat
+        $ [ OA.long long,
+            OA.metavar metavar,
+            Utils.mkHelp helpTxt
+          ]
+        ++ shortXs
+    )
   where
     shortXs = maybe [] ((: []) . OA.short) mShort
 
@@ -113,48 +121,6 @@ jsonParser =
               ]
         ]
     )
-
-runsTypeParser :: Parser (Maybe RunsType)
-runsTypeParser =
-  OA.optional
-    $ OA.option
-      readRunsType
-      ( mconcat
-          [ OA.long "runs-type",
-            OA.metavar "(default | garmin)",
-            Utils.mkMultiHelp helpTxt
-          ]
-      )
-  where
-    helpTxt =
-      [ mconcat
-          [ "Runs-type has two effects:"
-          ],
-        mconcat
-          [ "1. If -- in the course of searching for a runs file (i.e. ",
-            "no explicit path) -- we encounter both a runs.toml and an ",
-            "activities.csv, we will use the one specified by runs-type."
-          ],
-        mconcat
-          [ "2. We use it to determine how to parse the runs file i.e. ",
-            "toml (default) or csv (garmin)."
-          ],
-        mconcat
-          [ "If runs-type is not specified, we use heuristics to guess ",
-            "how to parse the file i.e. name / file-extension."
-          ]
-      ]
-    readRunsType =
-      OA.str @Text >>= \case
-        "default" -> pure RunsDefault
-        "garmin" -> pure RunsGarmin
-        other ->
-          fail
-            $ mconcat
-              [ "Expected one of (default | garmin), received: '",
-                unpackText other,
-                "'"
-              ]
 
 cleanInstallParser :: Parser Bool
 cleanInstallParser =

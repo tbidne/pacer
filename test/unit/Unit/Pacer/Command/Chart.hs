@@ -48,8 +48,7 @@ import Pacer.Command.Chart.Params
         cleanInstall,
         dataDir,
         json,
-        runsPath,
-        runsType
+        runPaths
       ),
     ChartParamsArgs,
   )
@@ -98,8 +97,7 @@ testDefault = testCase "Default" $ do
           json = False,
           chartRequestsPath = Nothing,
           runLabelsPath = Nothing,
-          runsPath = Nothing,
-          runsType = Nothing
+          runPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -121,8 +119,7 @@ testJson = testCase "With --json" $ do
           json = True,
           chartRequestsPath = Nothing,
           runLabelsPath = Nothing,
-          runsPath = Nothing,
-          runsType = Nothing
+          runPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -145,8 +142,7 @@ testPathNodeModExists = testCase "node_modules exists" $ do
           json = False,
           chartRequestsPath = Nothing,
           runLabelsPath = Nothing,
-          runsPath = Nothing,
-          runsType = Nothing
+          runPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -168,8 +164,7 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
           json = False,
           chartRequestsPath = Nothing,
           runLabelsPath = Nothing,
-          runsPath = Nothing,
-          runsType = Nothing
+          runPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -206,8 +201,7 @@ testNoNpmFailure = testCase "No npm failure" $ do
           json = False,
           chartRequestsPath = Nothing,
           runLabelsPath = Nothing,
-          runsPath = Nothing,
-          runsType = Nothing
+          runPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -377,13 +371,20 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
         $> ([ospPathSep|test/unit/data/xdg/config|] </> p)
     other ->
       error $ "getXdgDirectory: unexpected: " ++ show other
-  ListDirectory p -> case dirName of
-    [osp|dist|] -> pure []
-    other -> error $ "listDirectory: unexpected: " ++ show other
+  ListDirectory p ->
+    if dirName `Set.member` knownDirs
+      then pure []
+      else error $ "listDirectory: unexpected: " ++ show dirName
     where
       dirName = L.last $ OsPath.splitDirectories p
   PathIsSymbolicLink _ -> pure False
   _ -> error "runPathReaderMock: unimplemented"
+  where
+    knownDirs =
+      Set.fromList
+        [ [osp|dist|],
+          [osp|pacer|]
+        ]
 
 runPathWriterMock ::
   ( IORefE :> es,

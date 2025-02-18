@@ -11,16 +11,9 @@ module Pacer.Exception
     CommandConvertE (..),
     CommandDeriveE (..),
     CommandScaleE (..),
-
-    -- * Misc
-    displayInnerMatchKnown,
-    knownExceptions,
   )
 where
 
-import Control.Exception (SomeException (SomeException))
-import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
-import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
 import Data.List qualified as L
 import FileSystem.OsPath (decodeLenient)
 import FileSystem.UTF8 (decodeUtf8Lenient)
@@ -227,23 +220,3 @@ instance Exception GarminE where
         [ "The 'garmin.unit' settings is required in chart-requests.toml ",
           "when used with a garmin runs file."
         ]
-
-displayInnerMatchKnown :: (Exception e) => e -> String
-displayInnerMatchKnown e =
-  if Ex.Ann.Utils.matchesException knownExceptions e
-    then case toException e of
-      SomeException innerEx -> displayException innerEx
-    else displayException e
-
-knownExceptions :: List ExceptionProxy
-knownExceptions =
-  [ MkExceptionProxy @ChartFileMissingE,
-    MkExceptionProxy @CommandConvertE,
-    MkExceptionProxy @CommandDeriveE,
-    MkExceptionProxy @CommandScaleE,
-    MkExceptionProxy @CreateChartE,
-    MkExceptionProxy @FileNotFoundE,
-    MkExceptionProxy @GarminE,
-    MkExceptionProxy @NpmE,
-    MkExceptionProxy @TomlE
-  ]

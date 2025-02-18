@@ -17,12 +17,16 @@ module Pacer.Command.Chart.Params
     BuildDirF,
     MPathF,
     PathF,
+    RunPathsF,
   )
 where
 
+import Data.Foldable qualified as F
 import Data.Functor.Identity (Identity (Identity))
+import Data.Text qualified as T
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
+import FileSystem.OsPath (decodeLenient, encodeLenient)
 import FileSystem.Path qualified as Path
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
@@ -98,6 +102,11 @@ type family MPathF p t where
           :<>: TE.Text "' invalid for MPathF."
       )
 
+type RunPathsF :: ConfigPhase -> Type
+type family RunPathsF p where
+  RunPathsF ConfigPhaseArgs = List OsPath
+  RunPathsF ConfigPhaseFinal = NonEmpty (Path Abs File)
+
 -- | Chart params.
 type ChartParams :: ConfigPhase -> Type
 data ChartParams p = MkChartParams
@@ -115,9 +124,7 @@ data ChartParams p = MkChartParams
     -- | Optional path to run labels file.
     runLabelsPath :: MPathF p File,
     -- | Optional path to runs file.
-    runsPath :: PathF p File,
-    -- | Optional specification for which runs type file we are using.
-    runsType :: Maybe RunsType
+    runPaths :: RunPathsF p
   }
 
 type ChartParamsArgs = ChartParams ConfigPhaseArgs
@@ -128,7 +135,8 @@ deriving stock instance
   ( Eq (BuildDirF p),
     Eq (MPathF p File),
     Eq (PathF p Dir),
-    Eq (PathF p File)
+    Eq (PathF p File),
+    Eq (RunPathsF p)
   ) =>
   Eq (ChartParams p)
 
@@ -136,7 +144,8 @@ deriving stock instance
   ( Show (BuildDirF p),
     Show (MPathF p File),
     Show (PathF p Dir),
-    Show (PathF p File)
+    Show (PathF p File),
+    Show (RunPathsF p)
   ) =>
   Show (ChartParams p)
 
@@ -152,11 +161,11 @@ evolvePhase ::
   Maybe TomlWithPath ->
   Eff es ChartParamsFinal
 evolvePhase @es params mTomlWithPath = do
-  (chartRequestsPath, runLabelsPath, runsPath) <-
+  (chartRequestsPath, runLabelsPath, runPaths) <-
     getChartInputs params mTomlWithPath
 
   assertExists chartRequestsPath
-  assertExists runsPath
+  for_ runPaths assertExists
   for_ runLabelsPath assertExists
 
   buildDir <-
@@ -183,8 +192,7 @@ evolvePhase @es params mTomlWithPath = do
         dataDir = (),
         json = params.json,
         runLabelsPath,
-        runsPath,
-        runsType = params.runsType
+        runPaths
       }
   where
     defaultBuildDir :: Eff es (Path Abs Dir)
@@ -200,7 +208,15 @@ evolvePhase @es params mTomlWithPath = do
         Path.parseRelDir
         unknownDir
 
--- Retrieves (Tuple2 chart-requests-path runs-path)
+type ChartInputs =
+  Tuple3
+    -- chart-requests
+    (Path Abs File)
+    -- run-labels
+    (Maybe (Path Abs File))
+    -- run-paths
+    (NonEmpty (Path Abs File))
+
 getChartInputs ::
   forall es.
   ( HasCallStack,
@@ -211,7 +227,7 @@ getChartInputs ::
   ) =>
   ChartParamsArgs ->
   Maybe TomlWithPath ->
-  Eff es (Tuple3 (Path Abs File) (Maybe (Path Abs File)) (Path Abs File))
+  Eff es ChartInputs
 getChartInputs params mTomlWithPath = do
   Identity chartRequestsPath <-
     resolveRequiredChartInput
@@ -223,34 +239,17 @@ getChartInputs params mTomlWithPath = do
       params.chartRequestsPath
       (#chartConfig %? #chartRequestsPath)
 
-  -- If --runs-type is given, use it to influence the order of files
-  -- we try to find. Note that our current implementation does NOT mean
-  -- that the specified type will always override the other. It just
-  -- determines which one we use when we find both __in the same
-  -- location__. In particular, suppose we have the following conditions:
-  --
-  --   1. --runs-type garmin
-  --   2. -d some-dir
-  --   3. some-dir/ has runs.toml __only__
-  --   4. xdg/ has runs.toml and Activities.garmin
-  --
-  -- Then we will still use runs.toml because it is in the higher priority
-  -- location (-d over xdg). OTOH, if we left out -d, we'd use,
-  -- Activities.garmin.
-  let runsFileNames = case params.runsType of
-        Nothing -> runsTomlName : runsGarmins
-        Just RunsDefault -> runsTomlName : runsGarmins
-        Just RunsGarmin -> runsGarmins ++ [runsTomlName]
+  let runsFileNames = [runsTomlName, runsGarminName]
 
-  Identity runsPath <-
+  runPaths <-
     resolveRequiredChartInput
-      @Maybe
+      @[]
       params
       mTomlWithPath
       "runs"
       runsFileNames
-      params.runsPath
-      (#chartConfig %? #runsPath)
+      params.runPaths
+      (#chartConfig %? #runPaths)
 
   runLabelsPath <-
     resolveChartInput
@@ -262,7 +261,7 @@ getChartInputs params mTomlWithPath = do
       params.runLabelsPath
       (#chartConfig %? #runLabelsPath)
 
-  pure (chartRequestsPath, runLabelsPath, runsPath)
+  pure (chartRequestsPath, runLabelsPath, runPaths)
 
 -- | Like 'resolveChartInput', except throws an exception if that path
 -- is not determined. Similarly, does not check actual file existence.
@@ -422,7 +421,7 @@ findTomlPath fileNames tomlSel (Just tomlWithPath) = addNamespace "findTomlPath"
       Nothing -> pure empty
 
 findXdgPath ::
-  ( Alternative f,
+  ( FromAlt f,
     HasCallStack,
     Logger :> es,
     LoggerNS :> es,
@@ -438,7 +437,8 @@ findXdgPath fileNames = addNamespace "findXdgPath" $ do
   findMatches fileNames xdgDir
 
 findMatches ::
-  ( Alternative f,
+  forall f es.
+  ( FromAlt f,
     HasCallStack,
     Logger :> es,
     PathReader :> es
@@ -450,16 +450,49 @@ findMatches ::
   Eff es (f (Path Abs File))
 findMatches fileNames dataDir = do
   $(Logger.logDebug) msg
+
+  allFiles <- PR.listDirectory dataDirOsPath
+
+  let go [] = pure empty
+      go (f : fs) = do
+        let path = dataDir <</>> f
+        exists <- PR.doesFileExist (pathToOsPath path)
+        if exists
+          then (pure path <|>) <$> go fs
+          else liftA2 (<|>) (searchCaseInsens f) (go fs)
+
+      searchCaseInsens :: Path Rel File -> Eff es (f (Path Abs File))
+      searchCaseInsens f = do
+        let p = pathToOsPath f
+            pLower = toLower p
+
+        case F.find ((==) pLower . toLower) allFiles of
+          Just osPath -> do
+            relFile <- Path.parseRelFile osPath
+            let absFile = dataDir <</>> relFile
+                warn =
+                  mconcat
+                    [ "Did not find exact match for '",
+                      packText $ Utils.showPath f,
+                      "' but found '",
+                      packText $ Utils.showPath absFile,
+                      "', using it."
+                    ]
+            $(Logger.logWarn) warn
+            pure $ pure absFile
+          Nothing -> pure empty
+
   go fileNames
   where
-    go [] = pure empty
-    go (f : fs) = do
-      let path = dataDir <</>> f
-      exists <- PR.doesFileExist (pathToOsPath path)
-      if exists
-        then (pure path <|>) <$> go fs
-        else go fs
+    toLower :: OsPath -> OsPath
+    toLower =
+      encodeLenient
+        . unpackText
+        . T.toCaseFold
+        . packText
+        . decodeLenient
 
+    dataDirOsPath = pathToOsPath dataDir
     msg =
       mconcat
         [ "Searching for path(s) ",
@@ -471,14 +504,8 @@ findMatches fileNames dataDir = do
 runsTomlName :: Path Rel File
 runsTomlName = [relfile|runs.toml|]
 
-runsGarmins :: List (Path Rel File)
-runsGarmins = [runsGarminName, runsGarminNameLower]
-
 runsGarminName :: Path Rel File
 runsGarminName = [relfile|Activities.csv|]
-
-runsGarminNameLower :: Path Rel File
-runsGarminNameLower = [relfile|activities.csv|]
 
 chartRequestsName :: Path Rel File
 chartRequestsName = [relfile|chart-requests.toml|]

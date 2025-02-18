@@ -13,6 +13,9 @@ module Pacer.Prelude
     (<<$>>),
     (<<&>>),
 
+    -- * Functions
+    identity,
+
     -- * ByteString
     LazyByteString,
     toStrictBS,
@@ -669,3 +672,6 @@ posixWindowsStr =
   if isPosix
     then "posix"
     else "windows"
+
+identity :: a -> a
+identity x = x

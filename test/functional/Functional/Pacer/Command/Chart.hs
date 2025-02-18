@@ -27,7 +27,10 @@ basicTests getTestDir =
       testFilterParseExprError getTestDir,
       testDuplicateDateError getTestDir,
       testGarminChart getTestDir,
-      testGarminChartError getTestDir
+      testDefaultAndGarminExamples getTestDir,
+      testCaseInsensitive getTestDir,
+      testGarminChartError getTestDir,
+      testBothChartOverlapError getTestDir
     ]
 
 testExampleChart :: IO OsPath -> TestTree
@@ -35,12 +38,21 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = const ["chart", "--data", dataDir, "--json"],
+        { mkArgs =
+            const
+              [ "chart",
+                "--data",
+                dataDir,
+                "--runs",
+                runsPath,
+                "--json"
+              ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Generates example",
           testName = [osp|testExampleChart|]
         }
     dataDir = unsafeDecode [osp|examples|]
+    runsPath = unsafeDecode [ospPathSep|examples/runs.toml|]
 
 testSimple :: IO OsPath -> TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]
@@ -90,33 +102,42 @@ testDuplicateDateError = testChartPosix True desc [osp|testDuplicateDateError|]
     desc = "Duplicate date error"
 
 testGarminChart :: IO OsPath -> TestTree
-testGarminChart getTestDir = testGoldenParams getTestDir params
+testGarminChart = testChart desc [osp|testGarminChart|]
+  where
+    desc = "Generates garmin example"
+
+testDefaultAndGarminExamples :: IO OsPath -> TestTree
+testDefaultAndGarminExamples getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
         { mkArgs =
             const
               [ "chart",
-                "--chart-requests",
-                chartRequestsPath,
-                "--run-labels",
-                runLabelsPath,
-                "--runs",
-                runsPath,
-                "--json"
+                "--json",
+                "--data",
+                dataDir
               ],
           outFileName = Just [ospPathSep|build/charts.json|],
-          testDesc = "Generates garmin example",
-          testName = [osp|testGarminChart|]
+          testDesc = "Generates example with default and garmin",
+          testName = [osp|testDefaultAndGarminExamples|]
         }
-    chartRequestsPath = unsafeDecode [ospPathSep|examples/chart-requests.toml|]
-    runLabelsPath = unsafeDecode [ospPathSep|examples/run-labels.toml|]
-    runsPath = unsafeDecode [ospPathSep|examples/Activities.csv|]
+    dataDir = unsafeDecode [osp|examples|]
+
+testCaseInsensitive :: IO OsPath -> TestTree
+testCaseInsensitive = testChart desc [osp|testCaseInsensitive|]
+  where
+    desc = "Case should not affect file discovery"
 
 testGarminChartError :: IO OsPath -> TestTree
 testGarminChartError = testChart desc [osp|testGarminChartError|]
   where
     desc = "Garmin fails without chart-requests garmin.settings"
+
+testBothChartOverlapError :: IO OsPath -> TestTree
+testBothChartOverlapError = testChart desc [osp|testBothChartOverlapError|]
+  where
+    desc = "Datetime overlap across multiple run files errors"
 
 pathTests :: IO OsPath -> TestTree
 pathTests getTestDir =
@@ -153,7 +174,9 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
                 "--chart-requests",
                 chartRequestsPath,
                 "--data",
-                dataDir
+                dataDir,
+                "--runs",
+                runsPath
               ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--chart-requests overrides --data",
@@ -162,6 +185,28 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
     chartRequestsPath =
       unsafeDecode
         [ospPathSep|test/functional/data/testSimple/chart-requests.toml|]
+
+    -- TODO:
+    --
+    -- We shouldn't _have_ to specify the runs file for this test, so why
+    -- do we? Due to reusing test files. The situation here is:
+    --
+    -- 1. We are using the examples data directory.
+    -- 2. We are providing a chart-requests path via
+    --    testSimple/chart-requests.toml
+    --
+    -- The intention is that testSimple/chart-requests.toml overrides
+    -- examples/chart-requests.toml, so we shouldn't care about runs.toml
+    -- at all. The problem is that the examples directory has both runs.toml
+    -- _and_ Activities.csv, so both files will be used for runs, hence
+    -- the chart-requests file needs to have its garmin-settings set.
+    -- But changing testSimple/chart-requests.toml would screw up that test.
+    --
+    -- The easiest solution for now is to explicitly provide --runs with the
+    -- toml file, so that we don't get a garmin error. But really we should
+    -- copy some files to a new testPathChartRequestsOverrideData
+    -- directory, to eliminate the test interference.
+    runsPath = unsafeDecode [ospPathSep|examples/runs.toml|]
 
     -- Arbitrarily using the examples as the data dir, since we want some
     -- non-XDG directory to be overwritten.
