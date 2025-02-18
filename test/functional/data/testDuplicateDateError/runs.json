@@ -1,0 +1,26 @@
+{
+  "runs": [
+    {
+      "title": "A 5k",
+      "datetime": "2024-10-20",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-20T14:30:00",
+      "distance": "20 miles",
+      "duration": "2h40m54s",
+      "labels": []
+    },
+    {
+      "title": "Some Marathon",
+      "datetime": "2024-10-25T12:00:00-08:00",
+      "distance": "marathon",
+      "duration": "3h20m",
+      "labels": [
+        "official",
+        "marathon"
+      ]
+    }
+  ]
+}

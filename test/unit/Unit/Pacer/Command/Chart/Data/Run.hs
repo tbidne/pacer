@@ -4,27 +4,27 @@ module Unit.Pacer.Command.Chart.Data.Run (tests) where
 
 import FileSystem.IO (readBinaryFileIO)
 import Pacer.Command.Chart.Data.Run (SomeRuns)
-import TOML (decode)
+import Pacer.Utils qualified as Utils
 import Unit.Prelude
 
 tests :: TestTree
 tests =
   testGroup
     "Pacer.Command.Chart.Data.Run"
-    [ testParseExampleRunsToml
+    [ testParseExampleRunsJson
     ]
 
-testParseExampleRunsToml :: TestTree
-testParseExampleRunsToml = testGoldenParams params
+testParseExampleRunsJson :: TestTree
+testParseExampleRunsJson = testGoldenParams params
   where
     params =
       MkGoldenParams
-        { testDesc = "Parses example runs.toml",
-          testName = [osp|testParseExampleRunsToml|],
+        { testDesc = "Parses example runs.jsonc",
+          testName = [osp|testParseExampleRunsJson|],
           runner = do
-            contents <- decodeUtf8ThrowM =<< readBinaryFileIO path
-            case decode @(SomeRuns Double) contents of
-              Right result -> pure $ pShowBS result
-              Left err -> throwM err
+            contents <- readBinaryFileIO path
+            case Utils.decodeJson @(SomeRuns Double) contents of
+              Ok result -> pure $ pShowBS result
+              Err err -> throwM err
         }
-    path = [ospPathSep|examples/runs.toml|]
+    path = [ospPathSep|examples/runs.jsonc|]

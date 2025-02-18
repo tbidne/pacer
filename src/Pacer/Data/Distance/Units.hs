@@ -24,9 +24,7 @@ where
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
 import Pacer.Class.Units (Units (baseFactor))
-import Pacer.Data.Result (failErr)
 import Pacer.Prelude
-import TOML (DecodeTOML (tomlDecoder))
 
 -------------------------------------------------------------------------------
 --                                    Core                                   --
@@ -64,8 +62,13 @@ instance Parser DistanceUnit where
         P.char 'm' $> Meter
       ]
 
-instance DecodeTOML DistanceUnit where
-  tomlDecoder = tomlDecoder >>= (failErr . P.parse)
+instance FromJSON DistanceUnit where
+  parseJSON = asnWithText "DistanceUnit" (failErr . P.parse)
+
+instance ToJSON DistanceUnit where
+  toJSON Meter = "m"
+  toJSON Kilometer = "km"
+  toJSON Mile = "mi"
 
 instance Units DistanceUnit where
   baseFactor Meter = fromℤ 1

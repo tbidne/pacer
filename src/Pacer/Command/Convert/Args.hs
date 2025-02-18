@@ -10,7 +10,7 @@ import Pacer.Command.Convert.Params
   ( ConvertParams (MkConvertParams, quantity, unit),
     ConvertParamsArgs,
   )
-import Pacer.Config.Utils qualified as Utils
+import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 
 -- | Parse convert args.

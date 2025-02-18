@@ -24,7 +24,6 @@ import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
     SDistanceUnit (SMeter),
   )
-import Pacer.Data.Result (Result (Ok))
 import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Prelude
 import Unit.Utils qualified as Utils

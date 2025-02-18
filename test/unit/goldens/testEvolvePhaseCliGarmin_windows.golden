@@ -1,7 +1,7 @@
 MkChartParams
   { buildDir = "C:\cwd\build\"
   , cleanInstall = False
-  , chartRequestsPath = "C:\root\cli-garmin\chart-requests.toml"
+  , chartRequestsPath = "C:\root\cli-garmin\chart-requests.json"
   , dataDir = ()
   , json = False
   , runLabelsPath = Nothing

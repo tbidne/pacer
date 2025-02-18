@@ -1,0 +1,41 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "charts": [
+    {
+      "title": "Runs by distance",
+      "y-axis": "distance",
+      "description": "This is some runs plotted by distance."
+    },
+    {
+      "title": "Runs by distance and pace",
+      "y-axis": "distance",
+      "y1-axis": "pace",
+      "description": "The same runs as before, but in miles.",
+      "unit": "mi"
+    },
+    {
+      "title": "Marathons",
+      "y-axis": "duration",
+      "y1-axis": "pace",
+      "filters": ["label marathon", "datetime >= 2024"]
+    },
+    {
+      "title": "Official non-marathons",
+      "y-axis": "pace",
+      "filters": ["label official", "not label marathon"]
+    },
+    {
+      "title": "Marathons and half-marathons",
+      "y-axis": "pace",
+      "filters": ["label half-marathon or label marathon"]
+    },
+    {
+      "title": "Long runs",
+      "y-axis": "distance",
+      "y1-axis": "pace",
+      "filters": ["distance >= 25 km"]
+    }
+  ]
+}

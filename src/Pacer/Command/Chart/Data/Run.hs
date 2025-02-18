@@ -29,8 +29,8 @@ import Data.Foldable qualified as F
 import Data.List.NonEmpty ((<|))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Set (Set)
-import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
+import Data.Tuple (uncurry)
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Time (Timestamp)
@@ -56,14 +56,9 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
-import Pacer.Data.Result (Result (Err, Ok), failErr)
 import Pacer.Prelude
+import Pacer.Utils ((.:?:))
 import Pacer.Utils qualified as Utils
-import TOML
-  ( DecodeTOML (tomlDecoder),
-    Decoder,
-  )
-import TOML qualified
 
 -------------------------------------------------------------------------------
 --                                    Run                                    --
@@ -184,19 +179,33 @@ instance
     Semifield a,
     Show a
   ) =>
-  DecodeTOML (SomeRun a)
+  FromJSON (SomeRun a)
   where
-  tomlDecoder = do
-    datetime <- TOML.getFieldWith tomlDecoder "datetime"
-    someDistance <- TOML.getFieldWith decodeDistance "distance"
-    duration <- TOML.getFieldWith decodeDuration "duration"
-    labels <- Set.fromList <$> Utils.getFieldOptArrayOf "labels"
-    title <- TOML.getFieldOptWith tomlDecoder "title"
+  parseJSON = asnWithObject "SomeRun" $ \v -> do
+    datetime <- v .: "datetime"
 
-    case someDistance of
+    someDistanceTxt <- v .: "distance"
+    someDistance <- (failErr . P.parse $ someDistanceTxt)
+
+    durationTxt <- v .: "duration"
+    duration <- (failErr . P.parse $ durationTxt)
+
+    labels <- v .:?: "labels"
+    title <- v .:? "title"
+
+    Utils.failUnknownFields
+      "SomeRun"
+      [ "datetime",
+        "distance",
+        "duration",
+        "labels",
+        "title"
+      ]
+      v
+
+    pure $ case someDistance of
       MkSomeDistance s distance ->
-        pure
-          $ MkSomeRun s
+        MkSomeRun s
           $ MkRun
             { datetime,
               distance,
@@ -204,26 +213,6 @@ instance
               labels,
               title
             }
-
-decodeDistance ::
-  ( AMonoid a,
-    Fromℚ a,
-    Ord a,
-    Parser a,
-    Show a
-  ) =>
-  Decoder (SomeDistance a)
-decodeDistance = tomlDecoder >>= (failErr . P.parse)
-
-decodeDuration ::
-  forall a.
-  ( AMonoid a,
-    Fromℤ a,
-    Ord a,
-    Show a
-  ) =>
-  Decoder (Duration a)
-decodeDuration = tomlDecoder >>= (failErr . P.parse)
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
@@ -318,6 +307,13 @@ instance HasDistance (SomeRuns a) where
 --                               Serialization                               --
 -------------------------------------------------------------------------------
 
+mkSomeRunsFail :: (MonadFail m) => List (SomeRun a) -> m (SomeRuns a)
+mkSomeRunsFail xs = case xs of
+  [] -> fail "Received empty list"
+  (y : ys) -> case mkSomeRuns (y :| ys) of
+    Err err -> fail $ displayException err
+    Ok x -> pure x
+
 instance
   ( Fromℚ a,
     Ord a,
@@ -325,17 +321,12 @@ instance
     Show a,
     Parser a
   ) =>
-  DecodeTOML (SomeRuns a)
+  FromJSON (SomeRuns a)
   where
-  tomlDecoder =
-    mkSomeRunsFail =<< TOML.getFieldWith (TOML.getArrayOf tomlDecoder) "runs"
-
-mkSomeRunsFail :: (MonadFail m) => List (SomeRun a) -> m (SomeRuns a)
-mkSomeRunsFail xs = case xs of
-  [] -> fail "Received empty list"
-  (y : ys) -> case mkSomeRuns (y :| ys) of
-    Err err -> fail $ displayException err
-    Ok x -> pure x
+  parseJSON = asnWithObject "SomeRuns" $ \v -> do
+    runs <- v .: "runs"
+    Utils.failUnknownFields "SomeRuns" ["runs"] v
+    mkSomeRunsFail runs
 
 data RunDatetimeOverlapE = MkRunDatetimeOverlapE
   { r1 :: Tuple2 (Maybe Text) Timestamp,
@@ -366,10 +357,11 @@ instance Exception RunDatetimeOverlapE where
           else (x2, x1)
 
 mkSomeRuns :: NonEmpty (SomeRun a) -> Result RunDatetimeOverlapE (SomeRuns a)
-mkSomeRuns (y@(MkSomeRun _ _) :| ys) = case eDuplicate of
-  Left ((ts1, mTitle1), (ts2, mTitle2)) ->
-    Err $ MkRunDatetimeOverlapE (mTitle1, ts1) (mTitle2, ts2)
-  Right mp -> Ok $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
+mkSomeRuns (y@(MkSomeRun _ _) :| ys) =
+  bimap
+    (uncurry MkRunDatetimeOverlapE)
+    (MkSomeRuns . NESet.fromList . toNonEmpty)
+    eDuplicate
   where
     -- The logic here is:
     --
@@ -399,20 +391,20 @@ mkSomeRuns (y@(MkSomeRun _ _) :| ys) = case eDuplicate of
     -- For overlaps, we want x == y == z and x /= z. It is unclear how
     -- to preserve this and achieve O(1) (or O(lg n)) lookup. Hopefully
     -- this does not impact performance too much.
-    eDuplicate = foldr go (Right $ NonEmpty.singleton (MkSomeRunsKey y)) ys
+    eDuplicate = foldr go (Ok $ NonEmpty.singleton (MkSomeRunsKey y)) ys
 
     go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
-    go _ (Left collision) = Left collision
-    go someRun@(MkSomeRun _ q) (Right someRuns) =
+    go _ (Err collision) = Err collision
+    go someRun@(MkSomeRun _ q) (Ok someRuns) =
       case findOverlap someRun someRuns of
-        Nothing -> Right $ (MkSomeRunsKey someRun) <| someRuns
+        Nothing -> Ok $ (MkSomeRunsKey someRun) <| someRuns
         Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
-          Left ((q.datetime, q.title), (collision.datetime, collision.title))
+          Err ((q.title, q.datetime), (collision.title, collision.datetime))
 
-type TitleAndTime = Tuple2 Timestamp (Maybe Text)
+type TitleAndTime = Tuple2 (Maybe Text) Timestamp
 
 type SomeRunsAcc a =
-  Either
+  Result
     (Tuple2 TitleAndTime TitleAndTime)
     (NonEmpty (SomeRunsKey a))
 

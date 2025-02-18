@@ -1,17 +1,32 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Pacer.Utils
   ( -- * JSON
+
+    -- ** Encoding
     encodeMaybe,
     encodeMaybes,
 
-    -- * TOML
-    getFieldOptArrayOf,
-    getFieldOptArrayOfWith,
+    -- ** Decoding
+    (.:?:),
+    failUnknownFields,
+    decodeJson,
+    AesonPathE (..),
+    readDecodeJson,
 
     -- * Show
     showtOsPath,
     showPath,
     showtPath,
     showListF,
+
+    -- * File discovery
+    SearchFiles (..),
+    FileAliases (..),
+    searchFiles,
+    searchFileAliases,
+    searchFilesToList,
 
     -- * Seq
     seqGroupBy,
@@ -21,21 +36,30 @@ module Pacer.Utils
   )
 where
 
-import Data.Aeson (Key, KeyValue ((.=)), ToJSON)
-import Data.Aeson.Types (Pair)
+import Data.Aeson (AesonException (AesonException), Key, (<?>))
+import Data.Aeson qualified as Asn
+import Data.Aeson.Key qualified as Key
+import Data.Aeson.KeyMap (KeyMap)
+import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.Types (JSONPathElement (Key), Pair)
+import Data.Aeson.Types qualified as AsnT
+import Data.Foldable qualified as F
+import Data.HashMap.Strict qualified as HMap
+import Data.HashSet qualified as HSet
+import Data.List qualified as L
+import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
+import Data.Text qualified as T
+import Effectful.FileSystem.PathReader.Dynamic qualified as PR
+import Effectful.Logger.Dynamic qualified as Logger
+import FileSystem.OsPath (decodeLenient, encodeLenient)
 import FileSystem.OsPath qualified as OsPath
+import FileSystem.Path qualified as Path
+import GHC.IsList (IsList (Item))
+import GHC.IsList qualified as IL
+import Pacer.Class.FromAlt (FromAlt, isNonEmpty)
+import Pacer.Class.Parser qualified as P
 import Pacer.Prelude
-import TOML (DecodeTOML (tomlDecoder), Decoder)
-import TOML qualified
-
-getFieldOptArrayOf :: (DecodeTOML a) => Text -> Decoder (List a)
-getFieldOptArrayOf = getFieldOptArrayOfWith tomlDecoder
-
-getFieldOptArrayOfWith :: Decoder a -> Text -> Decoder (List a)
-getFieldOptArrayOfWith decoder =
-  fmap (fromMaybe [])
-    . TOML.getFieldOptWith (TOML.getArrayOf decoder)
 
 encodeMaybes :: (ToJSON v) => List (Tuple2 Key (Maybe v)) -> List Pair
 encodeMaybes = (>>= encodeMaybe)
@@ -71,3 +95,240 @@ seqGroupBy p = go
     go (x :<| xs) = (x :<|| ys) :<| go zs
       where
         (ys, zs) = Seq.spanl (p x) xs
+
+data AesonPathE = MkAesonPathE OsPath String
+  deriving stock (Show)
+
+instance Exception AesonPathE where
+  displayException (MkAesonPathE p s) =
+    mconcat
+      [ "Error decoding json path '",
+        decodeLenient p,
+        "': ",
+        s
+      ]
+
+readDecodeJson ::
+  forall a es.
+  ( FileReader :> es,
+    FromJSON a,
+    HasCallStack
+  ) =>
+  Path Abs File ->
+  Eff es a
+readDecodeJson path = do
+  contents <- readBinaryFile osPath
+  throwErr
+    $ first toAesonPathE
+    $ decodeJson @a contents
+  where
+    osPath = pathToOsPath path
+    toAesonPathE (AesonException s) = MkAesonPathE osPath s
+
+failUnknownFields :: Key -> List Key -> KeyMap Asn.Value -> AsnT.Parser ()
+failUnknownFields name knownKeys kmap = do
+  case HSet.toList unknownKeys of
+    [] -> pure ()
+    unknownKeyList@(_ : _) ->
+      ( fail
+          $ mconcat
+            [ "Encountered unknown keys: ",
+              showKeys unknownKeyList
+            ]
+      )
+        <?> Key name
+  where
+    actualKeyMap = KM.toHashMap kmap
+    actualKeySet = HMap.keysSet actualKeyMap
+
+    knownKeySet = HSet.fromList knownKeys
+    unknownKeys = HSet.difference actualKeySet knownKeySet
+
+    showKeys :: List Key -> String
+    showKeys = show . L.sort . fmap Key.toString
+
+decodeJson :: (FromJSON a) => ByteString -> Result AesonException a
+decodeJson =
+  first AesonException
+    <<< fromEither
+    . Asn.eitherDecodeStrict
+    <=< P.stripComments
+
+-- | Decodes a json list into an 'IsList'. Like '(.:?)', omitted keys are fine
+-- and decode to an empty list.
+(.:?:) ::
+  forall l.
+  (FromJSON (Item l), IsList l) =>
+  Asn.Object ->
+  Key ->
+  AsnT.Parser l
+(.:?:) o k = do
+  o .:? k <&> \case
+    Nothing -> IL.fromList []
+    Just xs -> IL.fromList xs
+
+infixl 9 .:?:
+
+-- | Attempts to discover files based on 'SearchFiles' i.e.
+-- "expected" filenames. For each search file @s@, produces a search result
+-- @r@ per 'searchFile', and combines the result via '(<|>)'.
+--
+-- In other words, depending on choice of type variable @f@, can return
+-- multiple results ('List') or a single result ('Maybe').
+searchFiles ::
+  forall f es.
+  ( FromAlt f,
+    HasCallStack,
+    Logger :> es,
+    PathReader :> es
+  ) =>
+  -- | File names to search.
+  SearchFiles ->
+  -- | Data dir to search.
+  Path Abs Dir ->
+  Eff es (f (Path Abs File))
+searchFiles fileNames dataDir = do
+  $(Logger.logDebug) msg
+
+  dExists <- PR.doesDirectoryExist dataDirOsPath
+
+  if dExists
+    then go . NE.toList $ fileNames.unSearchFiles
+    else do
+      $(Logger.logDebug) $ mkDirNotExistMsg dataDir
+      pure empty
+  where
+    dataDirOsPath = pathToOsPath dataDir
+
+    go :: (HasCallStack) => List FileAliases -> Eff es (f (Path Abs File))
+    go [] = pure empty
+    go (f : fs) = do
+      result <- searchFileAliases False dataDir f
+      if isNonEmpty result
+        then (result <|>) <$> go fs
+        else go fs
+
+    msg =
+      mconcat
+        [ "Searching for path(s) ",
+          showListF showtPath fileNamesList,
+          " in: ",
+          showtPath dataDir
+        ]
+
+    fileNamesList = searchFilesToList fileNames
+
+mkDirNotExistMsg :: Path b Dir -> Text
+mkDirNotExistMsg d =
+  mconcat
+    [ "Directory '",
+      packText $ showPath d,
+      "' does not exist."
+    ]
+
+-- | Searches for a single file with potentially multiple aliases. Returns
+-- at most one result.
+--
+-- The search is case-insensitive.
+searchFileAliases ::
+  forall f es.
+  ( FromAlt f,
+    HasCallStack,
+    Logger :> es,
+    PathReader :> es
+  ) =>
+  -- | If True, checks dataDir for existence. If False, skips the check.
+  Bool ->
+  Path Abs Dir ->
+  FileAliases ->
+  Eff es (f (Path Abs File))
+searchFileAliases checkExists dataDir aliases = do
+  if checkExists
+    then do
+      -- NOTE: [Data dir existence]
+      --
+      -- Check dir existence first, since otherwise none of this matters.
+      dExists <- PR.doesDirectoryExist dataDirOsPath
+
+      if dExists
+        then runSearch
+        else do
+          $(Logger.logDebug) $ mkDirNotExistMsg dataDir
+          pure empty
+    else runSearch
+  where
+    runSearch = go . NE.toList $ aliases.unAliases
+    dataDirOsPath = pathToOsPath dataDir
+
+    go :: (HasCallStack) => List (Path Rel File) -> Eff es (f (Path Abs File))
+    go [] = pure empty
+    go (f : fs) = do
+      let path = dataDir <</>> f
+      exists <- PR.doesFileExist (pathToOsPath path)
+      if exists
+        -- 1. File exists, return single result
+        then pure $ pure path
+        else do
+          -- 2. File does not exist, try case insensitive search.
+          caseInsensResult <- searchCaseInsens f
+          if isNonEmpty caseInsensResult
+            -- 2.1. Some case-insensitive match, return.
+            then pure caseInsensResult
+            -- 2.2. No matches, try remaining aliases.
+            else go fs
+
+    searchCaseInsens :: (HasCallStack) => Path Rel File -> Eff es (f (Path Abs File))
+    searchCaseInsens f = do
+      let p = pathToOsPath f
+          pLower = toLower p
+
+      -- NOTE: This will _fail_ if the data directory does not exist. Hence
+      -- we should check existence first. See NOTE: [Data dir existence].
+      allFiles <- PR.listDirectory dataDirOsPath
+
+      case F.find ((==) pLower . toLower) allFiles of
+        Just osPath -> do
+          relFile <- Path.parseRelFile osPath
+          let absFile = dataDir <</>> relFile
+              warn =
+                mconcat
+                  [ "Did not find exact match for '",
+                    packText $ showPath f,
+                    "' but found '",
+                    packText $ showPath absFile,
+                    "', using it."
+                  ]
+          $(Logger.logWarn) warn
+          pure $ pure absFile
+        Nothing -> pure empty
+
+    toLower :: OsPath -> OsPath
+    toLower =
+      encodeLenient
+        . unpackText
+        . T.toCaseFold
+        . packText
+        . decodeLenient
+
+-- | Represents multiple files for which we search. Unlike 'FileAliases',
+-- 'SearchFiles' represents _different_ files (not mere alias differences),
+-- hence a 'SearchFiles' search can return multiple results.
+newtype SearchFiles = MkSearchFiles
+  { unSearchFiles :: NonEmpty FileAliases
+  }
+
+-- | Represents a single file for which we want to search. Holds multiple
+-- aliases for the case where the file can have multiple names.
+-- For instance, both chart-requests.json and chart-requests.jsonc are valid
+-- expected names for the chart-requests file, so we search for both, even
+-- though we want at most one.
+newtype FileAliases = MkFileAliases
+  { unAliases :: NonEmpty (Path Rel File)
+  }
+
+searchFilesToList :: SearchFiles -> List (Path Rel File)
+searchFilesToList =
+  (>>= NE.toList)
+    . NE.toList
+    . fmap (.unAliases)
+    . (.unSearchFiles)

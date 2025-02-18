@@ -59,15 +59,10 @@ import Pacer.Command.Chart.Params
     ChartParamsFinal,
     RunsType (RunsDefault, RunsGarmin),
   )
-import Pacer.Config.Env.Types (CachedPaths)
-import Pacer.Config.Env.Types qualified as Types
+import Pacer.Configuration.Env.Types (CachedPaths)
+import Pacer.Configuration.Env.Types qualified as Types
 import Pacer.Data.Distance.Units (DistanceUnit)
-import Pacer.Data.Result (Result (Err, Ok))
-import Pacer.Exception
-  ( GarminE (GarminUnitRequired),
-    NpmE (MkNpmE),
-    TomlE (MkTomlE),
-  )
+import Pacer.Exception (GarminE (GarminUnitRequired), NpmE (MkNpmE))
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import Pacer.Web qualified as Web
@@ -75,7 +70,6 @@ import Pacer.Web.Paths qualified as WPaths
 import System.IO (FilePath)
 import System.IO.Error qualified as Error
 import System.OsPath qualified as OsPath
-import TOML (DecodeTOML, decode)
 
 -- | Handles chart command.
 handle ::
@@ -314,11 +308,13 @@ createChartSeq ::
   Eff es (Seq Chart)
 createChartSeq chartPaths = addNamespace "createChartSeq" $ do
   chartRequests <-
-    readDecodeToml @(ChartRequests Double) (pathToOsPath chartRequestsPath)
+    Utils.readDecodeJson
+      @(ChartRequests Double)
+      chartRequestsPath
 
   runsNE <- for runPaths $ \rp -> do
     let mDistUnit = preview (#garminSettings %? #distanceUnit % _Just) chartRequests
-    readRuns mDistUnit (pathToOsPath rp)
+    readRuns mDistUnit rp
 
   let combineRuns acc rs = acc >>= Run.unionSomeRuns rs
 
@@ -332,7 +328,7 @@ createChartSeq chartPaths = addNamespace "createChartSeq" $ do
     case mRunLabelsPath of
       Nothing -> pure allRuns
       Just runLabelsPath -> do
-        MkRunLabels runLabels <- readDecodeToml (pathToOsPath runLabelsPath)
+        MkRunLabels runLabels <- Utils.readDecodeJson runLabelsPath
 
         let runLabelsList = MP.toList runLabels
 
@@ -353,24 +349,16 @@ createChartSeq chartPaths = addNamespace "createChartSeq" $ do
     (chartRequestsPath, mRunLabelsPath, runPaths) = chartPaths
 
     -- DistanceUnit should be set if this is a garmin (csv) file.
-    -- If it is a toml file, it is ignored.
-    readRuns :: Maybe DistanceUnit -> OsPath -> Eff es (SomeRuns Double)
-    readRuns mInputDistUnit runsOsPath =
-      Garmin.getRunsType runsOsPath >>= \case
-        RunsDefault -> readDecodeToml runsOsPath
+    -- If it is a custom runs (json) file, it is ignored.
+    readRuns :: Maybe DistanceUnit -> Path Abs File -> Eff es (SomeRuns Double)
+    readRuns mInputDistUnit runsPath =
+      Garmin.getRunsType runsPath >>= \case
+        RunsDefault -> Utils.readDecodeJson runsPath
         RunsGarmin -> do
           inputDistUnit <- case mInputDistUnit of
             Nothing -> throwM GarminUnitRequired
             Just du -> pure du
-          Garmin.readRunsCsv inputDistUnit runsOsPath
-
-    readDecodeToml ::
-      forall a. (DecodeTOML a, HasCallStack) => OsPath -> Eff es a
-    readDecodeToml path = do
-      contents <- readFileUtf8ThrowM path
-      case decode contents of
-        Right t -> pure t
-        Left err -> throwM $ MkTomlE path err
+          Garmin.readRunsCsv inputDistUnit runsPath
 
 type ChartPaths =
   Tuple3

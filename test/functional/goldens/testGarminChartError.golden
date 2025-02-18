@@ -1,1 +1,1 @@
-The 'garmin.unit' settings is required in chart-requests.toml when used with a garmin runs file.
+The 'garmin.unit' setting is required in chart-requests json when used with a garmin runs file.

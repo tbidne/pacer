@@ -21,12 +21,10 @@ module Pacer.Command.Chart.Params
   )
 where
 
-import Data.Foldable qualified as F
 import Data.Functor.Identity (Identity (Identity))
-import Data.Text qualified as T
+import Data.List.NonEmpty qualified as NE
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
-import FileSystem.OsPath (decodeLenient, encodeLenient)
 import FileSystem.Path qualified as Path
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
@@ -34,33 +32,34 @@ import Pacer.Class.FromAlt
   ( FromAlt (Alt1, toAlt1),
     isNonEmpty,
   )
-import Pacer.Config.Env.Types (CachedPaths, getCachedXdgConfigPath)
-import Pacer.Config.Env.Types qualified as Types
-import Pacer.Config.Phase
-  ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
+import Pacer.Configuration.Config
+  ( ChartConfig (dataDir),
+    Config (chartConfig),
+    ConfigWithPath (config, dirPath),
   )
-import Pacer.Config.Toml
-  ( ChartConfig (buildDir, dataDir),
-    Toml (chartConfig),
-    TomlWithPath (dirPath, toml),
+import Pacer.Configuration.Env.Types (CachedPaths, getCachedXdgConfigPath)
+import Pacer.Configuration.Env.Types qualified as Types
+import Pacer.Configuration.Phase
+  ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
   )
 import Pacer.Exception
   ( ChartFileMissingE
       ( MkChartFileMissingE,
         cliDataDir,
+        configDataDir,
         expectedFiles,
-        tomlDataDir,
         xdgDir
       ),
     FileNotFoundE (MkFileNotFoundE),
   )
 import Pacer.Prelude
+import Pacer.Utils (FileAliases (MkFileAliases), SearchFiles (MkSearchFiles))
 import Pacer.Utils qualified as Utils
 import System.OsPath qualified as OsPath
 
 -- | The type of runs file.
 data RunsType
-  = -- | Default runs type, runs.toml.
+  = -- | Default runs type, runs.json.
     RunsDefault
   | -- | Garmin runs type, activities.csv.
     RunsGarmin
@@ -68,7 +67,7 @@ data RunsType
 
 instance Display RunsType where
   displayBuilder = \case
-    RunsDefault -> "default (toml)"
+    RunsDefault -> "default (json)"
     RunsGarmin -> "garmin (csv)"
 
 type BuildDirF :: ConfigPhase -> Type
@@ -114,9 +113,9 @@ data ChartParams p = MkChartParams
     buildDir :: BuildDirF p,
     -- | If true, copies clean install of web dir and installs node deps.
     cleanInstall :: Bool,
-    -- | Optional path to chart-requests.toml.
+    -- | Optional path to chart-requests.json.
     chartRequestsPath :: PathF p File,
-    -- | Optional path to directory with runs file and chart-requests.toml.
+    -- | Optional path to directory with runs file and chart-requests.json.
     dataDir :: PathF p Dir,
     -- | If true, stops the build after generating the intermediate json
     -- file.
@@ -158,11 +157,11 @@ evolvePhase ::
     State CachedPaths :> es
   ) =>
   ChartParamsArgs ->
-  Maybe TomlWithPath ->
+  Maybe ConfigWithPath ->
   Eff es ChartParamsFinal
-evolvePhase @es params mTomlWithPath = do
+evolvePhase @es params mConfigWithPath = do
   (chartRequestsPath, runLabelsPath, runPaths) <-
-    getChartInputs params mTomlWithPath
+    getChartInputs params mConfigWithPath
 
   assertExists chartRequestsPath
   for_ runPaths assertExists
@@ -174,11 +173,11 @@ evolvePhase @es params mTomlWithPath = do
         -- --build-dir exists, parse absolute or resolve relative to cwd
         cwdPath <- Types.getCachedCurrentDirectory
         customBuildDir cwdPath d
-      Nothing -> case mTomlWithPath of
+      Nothing -> case mConfigWithPath of
         Just t ->
-          case t.toml.chartConfig >>= (.buildDir) of
-            -- toml.build-dir exists, parse absolute or resolve relative to
-            -- toml path.
+          case preview (#config % #chartConfig %? #buildDir % _Just) t of
+            -- config.build-dir exists, parse absolute or resolve relative to
+            -- config path.
             Just d -> customBuildDir t.dirPath d
             -- otherwise use default, cwd/build
             Nothing -> defaultBuildDir
@@ -226,28 +225,26 @@ getChartInputs ::
     State CachedPaths :> es
   ) =>
   ChartParamsArgs ->
-  Maybe TomlWithPath ->
+  Maybe ConfigWithPath ->
   Eff es ChartInputs
-getChartInputs params mTomlWithPath = do
+getChartInputs params mConfigWithPath = do
   Identity chartRequestsPath <-
     resolveRequiredChartInput
       @Maybe
       params
-      mTomlWithPath
+      mConfigWithPath
       "chart-requests"
-      [chartRequestsName]
+      chartRequestsSearch
       params.chartRequestsPath
       (#chartConfig %? #chartRequestsPath)
-
-  let runsFileNames = [runsTomlName, runsGarminName]
 
   runPaths <-
     resolveRequiredChartInput
       @[]
       params
-      mTomlWithPath
+      mConfigWithPath
       "runs"
-      runsFileNames
+      runsSearch
       params.runPaths
       (#chartConfig %? #runPaths)
 
@@ -255,9 +252,9 @@ getChartInputs params mTomlWithPath = do
     resolveChartInput
       @Maybe
       params
-      mTomlWithPath
+      mConfigWithPath
       "run-labels"
-      [runLabelsName]
+      runLabelsSearch
       params.runLabelsPath
       (#chartConfig %? #runLabelsPath)
 
@@ -276,33 +273,38 @@ resolveRequiredChartInput ::
     Traversable f
   ) =>
   ChartParamsArgs ->
-  Maybe TomlWithPath ->
+  Maybe ConfigWithPath ->
   -- Text description
   Text ->
   -- Expected file_name(s) e.g. runs file
-  List (Path Rel File) ->
+  SearchFiles ->
   -- Maybe file.
   f OsPath ->
-  -- Toml selector.
-  AffineTraversal' Toml (f OsPath) ->
+  -- Config selector.
+  AffineTraversal' Config (f OsPath) ->
   -- Returned path.
   Eff es (Alt1 f (Path Abs File))
-resolveRequiredChartInput params mTomlWithPath desc fileNames mInputOsPath = do
+resolveRequiredChartInput params mConfigWithPath desc fileNames mInputOsPath = do
   resolveChartInput' >=> throwIfMissing'
   where
     resolveChartInput' =
-      resolveChartInput params mTomlWithPath desc fileNames mInputOsPath
-    throwIfMissing' = throwIfMissing params mTomlWithPath fileNames
+      resolveChartInput params mConfigWithPath desc fileNames mInputOsPath
+    throwIfMissing' = throwIfMissing params mConfigWithPath fileNames
 
--- | Uses CLI, (possible) Toml, and XDG to resolve a chart input path. Note
+-- | Uses CLI, (possible) Config, and XDG to resolve a chart input path. Note
 -- that this does _NOT_ guarantee that the path actually exists. This merely
--- reduces the entire configuration into a single path to be used. For
+-- reduces the entire configuration into the path(s) to be used. For
 -- instance, if the user supplies a path on the CLI config, resolveChartInput
 -- will return that path (without checking existence) as the CLI has the
 -- highest priority.
 --
--- Returns 'Nothing' if no explicit paths were given and we do not find any
--- "expected" paths as a fallback.
+-- The 'FromAlt' / 'Traversable' instances allow us to be polymorphic over
+-- multiplicity. For instance, we want at most one file for chart-requests,
+-- so f is specialized to 'Maybe'. On the other hand, runs allows multiple
+-- files (e.g. runs.json and activities.csv), so f is 'List'.
+--
+-- Returns 'empty' (per 'Alternative') if no explicit paths were given and
+-- we do not find any "expected" paths as a fallback.
 resolveChartInput ::
   forall f es.
   ( FromAlt f,
@@ -314,32 +316,32 @@ resolveChartInput ::
     Traversable f
   ) =>
   ChartParamsArgs ->
-  Maybe TomlWithPath ->
+  Maybe ConfigWithPath ->
   -- Text description
   Text ->
-  -- Expected file_name(s) e.g. runs file
-  List (Path Rel File) ->
+  -- Expected file_name(s) e.g. runs file(s)
+  SearchFiles ->
   -- Maybe file.
   f OsPath ->
-  -- Toml selector.
-  AffineTraversal' Toml (f OsPath) ->
+  -- Config selector.
+  AffineTraversal' Config (f OsPath) ->
   -- Path, if we were given one or found an expected one.
   Eff es (f (Path Abs File))
-resolveChartInput params mTomlWithPath desc fileNames mInputOsPath tomlSel =
-  addNamespace "getMChartInput" $ addNamespace desc $ do
+resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
+  addNamespace "resolveChartInput" $ addNamespace desc $ do
     -- 1. Try Cli first.
     cliResult <- findCliPath params.dataDir fileNames mInputOsPath
     if isNonEmpty cliResult
       then pure cliResult
       else do
-        $(Logger.logDebug) "No cli path(s) found, checking toml"
-        -- 2. Try Toml next.
-        tomlResult <- findTomlPath fileNames tomlSel mTomlWithPath
-        if isNonEmpty tomlResult
-          then pure tomlResult
+        $(Logger.logDebug) "No cli path(s) found, checking config"
+        -- 2. Try Config next.
+        configResult <- findConfigPath fileNames configSel mConfigWithPath
+        if isNonEmpty configResult
+          then pure configResult
           else do
             -- 3. Finally, fall back to xdg.
-            $(Logger.logDebug) "No toml path(s) found, falling back to xdg"
+            $(Logger.logDebug) "No config path(s) found, falling back to xdg"
             (findXdgPath fileNames)
   where
 
@@ -355,7 +357,7 @@ findCliPath ::
   -- | Maybe data dir.
   Maybe OsPath ->
   -- | File names.
-  List (Path Rel File) ->
+  SearchFiles ->
   -- Maybe file.
   f OsPath ->
   Eff es (f (Path Abs File))
@@ -370,9 +372,9 @@ findCliPath mDataDir fileNames mFiles = addNamespace "findCliPath" $ do
     fallback = case mDataDir of
       Nothing -> pure empty
       Just dataDir ->
-        parseCanonicalAbsDir dataDir >>= findMatches fileNames
+        parseCanonicalAbsDir dataDir >>= Utils.searchFiles fileNames
 
-findTomlPath ::
+findConfigPath ::
   ( FromAlt f,
     HasCallStack,
     Logger :> es,
@@ -381,43 +383,43 @@ findTomlPath ::
     Traversable f
   ) =>
   -- | File names.
-  List (Path Rel File) ->
-  -- | Toml selector.
-  AffineTraversal' Toml (f OsPath) ->
-  -- | Maybe toml.
-  Maybe TomlWithPath ->
+  SearchFiles ->
+  -- | Config selector.
+  AffineTraversal' Config (f OsPath) ->
+  -- | Maybe config.
+  Maybe ConfigWithPath ->
   Eff es (f (Path Abs File))
--- 1. Toml does not exist. Nothing to do, just return empty.
-findTomlPath _ _ Nothing = pure empty
-findTomlPath fileNames tomlSel (Just tomlWithPath) = addNamespace "findTomlPath" $ do
-  case preview (#toml % tomlSel) tomlWithPath of
-    -- 2. Toml.paths field exists.
+-- 1. Config does not exist. Nothing to do, just return empty.
+findConfigPath _ _ Nothing = pure empty
+findConfigPath fileNames configSel (Just configWithPath) = addNamespace "findConfigPath" $ do
+  case preview (#config % configSel) configWithPath of
+    -- 2. Config.paths field exists.
     Just mPath ->
-      -- 2.1. Toml.paths is non-empty, use it.
+      -- 2.1. Config.paths is non-empty, use it.
       if isNonEmpty mPath
         then
           for mPath
             $ handleUnknownPath
-              tomlWithPath.dirPath
+              configWithPath.dirPath
               Path.parseAbsFile
               Path.parseRelFile
-        -- 2.2. Toml.paths exists but is empty, try toml data dir.
-        else tryTomlDataDir
-    -- 3. Toml.paths does not exist, try toml data dir.
-    Nothing -> tryTomlDataDir
+        -- 2.2. Config.paths exists but is empty, try config data dir.
+        else tryConfigDataDir
+    -- 3. Config.paths does not exist, try config data dir.
+    Nothing -> tryConfigDataDir
   where
-    tomlDataSel :: AffineTraversal' TomlWithPath OsPath
-    tomlDataSel = #toml % #chartConfig %? #dataDir % _Just
+    configDataSel :: AffineTraversal' ConfigWithPath OsPath
+    configDataSel = #config % #chartConfig %? #dataDir % _Just
 
-    tryTomlDataDir = case preview tomlDataSel tomlWithPath of
+    tryConfigDataDir = case preview configDataSel configWithPath of
       Just dataDir -> do
-        tomlDataDirPath <-
+        configDataDirPath <-
           handleUnknownPath
-            tomlWithPath.dirPath
+            configWithPath.dirPath
             Path.parseAbsDir
             Path.parseRelDir
             dataDir
-        findMatches fileNames tomlDataDirPath
+        Utils.searchFiles fileNames configDataDirPath
       Nothing -> pure empty
 
 findXdgPath ::
@@ -429,89 +431,35 @@ findXdgPath ::
     State CachedPaths :> es
   ) =>
   -- | File names.
-  List (Path Rel File) ->
+  SearchFiles ->
   Eff es (f (Path Abs File))
 findXdgPath fileNames = addNamespace "findXdgPath" $ do
   -- 3. Fallback to xdg
   xdgDir <- getCachedXdgConfigPath
-  findMatches fileNames xdgDir
+  Utils.searchFiles fileNames xdgDir
 
-findMatches ::
-  forall f es.
-  ( FromAlt f,
-    HasCallStack,
-    Logger :> es,
-    PathReader :> es
-  ) =>
-  -- | File names.
-  List (Path Rel File) ->
-  -- | Data dir to search.
-  Path Abs Dir ->
-  Eff es (f (Path Abs File))
-findMatches fileNames dataDir = do
-  $(Logger.logDebug) msg
+chartRequestsSearch :: SearchFiles
+chartRequestsSearch =
+  MkSearchFiles
+    $ NE.singleton
+    $ MkFileAliases
+    $ [relfile|chart-requests.json|]
+    :| [[relfile|chart-requests.jsonc|]]
 
-  allFiles <- PR.listDirectory dataDirOsPath
-
-  let go [] = pure empty
-      go (f : fs) = do
-        let path = dataDir <</>> f
-        exists <- PR.doesFileExist (pathToOsPath path)
-        if exists
-          then (pure path <|>) <$> go fs
-          else liftA2 (<|>) (searchCaseInsens f) (go fs)
-
-      searchCaseInsens :: Path Rel File -> Eff es (f (Path Abs File))
-      searchCaseInsens f = do
-        let p = pathToOsPath f
-            pLower = toLower p
-
-        case F.find ((==) pLower . toLower) allFiles of
-          Just osPath -> do
-            relFile <- Path.parseRelFile osPath
-            let absFile = dataDir <</>> relFile
-                warn =
-                  mconcat
-                    [ "Did not find exact match for '",
-                      packText $ Utils.showPath f,
-                      "' but found '",
-                      packText $ Utils.showPath absFile,
-                      "', using it."
-                    ]
-            $(Logger.logWarn) warn
-            pure $ pure absFile
-          Nothing -> pure empty
-
-  go fileNames
+runsSearch :: SearchFiles
+runsSearch = MkSearchFiles $ runsJsonName :| [runsGarminName]
   where
-    toLower :: OsPath -> OsPath
-    toLower =
-      encodeLenient
-        . unpackText
-        . T.toCaseFold
-        . packText
-        . decodeLenient
+    runsJsonName =
+      MkFileAliases $ [relfile|runs.json|] :| [[relfile|runs.jsonc|]]
+    runsGarminName = MkFileAliases $ NE.singleton [relfile|Activities.csv|]
 
-    dataDirOsPath = pathToOsPath dataDir
-    msg =
-      mconcat
-        [ "Searching for path(s) ",
-          Utils.showListF Utils.showtPath fileNames,
-          " in: ",
-          Utils.showtPath dataDir
-        ]
-
-runsTomlName :: Path Rel File
-runsTomlName = [relfile|runs.toml|]
-
-runsGarminName :: Path Rel File
-runsGarminName = [relfile|Activities.csv|]
-
-chartRequestsName :: Path Rel File
-chartRequestsName = [relfile|chart-requests.toml|]
-
-runLabelsName :: Path Rel File
-runLabelsName = [relfile|run-labels.toml|]
+runLabelsSearch :: SearchFiles
+runLabelsSearch =
+  MkSearchFiles
+    $ NE.singleton
+    $ MkFileAliases
+    $ [relfile|run-labels.json|]
+    :| [[relfile|run-labels.jsonc|]]
 
 -- Handles an unknown (wrt. absolute/relative) path, resolving any
 -- relative paths. Polymorphic over file/dir path.
@@ -548,21 +496,23 @@ throwIfMissing ::
     State CachedPaths :> es
   ) =>
   ChartParamsArgs ->
-  Maybe TomlWithPath ->
-  List (Path Rel File) ->
+  Maybe ConfigWithPath ->
+  SearchFiles ->
   f a ->
   Eff es (Alt1 f a)
-throwIfMissing params mTomlWithPath fileNames mVal = case toAlt1 mVal of
+throwIfMissing params mConfigWithPath fileNames mVal = case toAlt1 mVal of
   Just ps -> pure ps
   Nothing -> do
     xdgDir <- getCachedXdgConfigPath
     throwM
       $ MkChartFileMissingE
         { cliDataDir = params.dataDir,
-          expectedFiles = fileNames,
-          tomlDataDir =
-            mTomlWithPath >>= \t -> t.toml.chartConfig >>= (.dataDir),
+          expectedFiles = fileNames',
+          configDataDir =
+            mConfigWithPath >>= \t -> t.config.chartConfig >>= (.dataDir),
           xdgDir
         }
+  where
+    fileNames' = Utils.searchFilesToList fileNames
 
 makeFieldLabelsNoPrefix ''ChartParams

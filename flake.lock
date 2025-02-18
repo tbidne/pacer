@@ -77,11 +77,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1736981511,
-        "narHash": "sha256-xwxmbpPaUdfz0xoJGC/x7tXuvqGxN/e95fKkiD1czCw=",
+        "lastModified": 1740112225,
+        "narHash": "sha256-zj96yD82FvQZQ8gAiPzZU5iGCjuJlrW8gwV9pUlKX/Q=",
         "owner": "tbidne",
         "repo": "effectful-libs",
-        "rev": "63713ede9a37754dff857900cc3fb38884c6afde",
+        "rev": "9697330f9fc02b31aead5924997e54511992a796",
         "type": "github"
       },
       "original": {
@@ -147,11 +147,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1736946118,
-        "narHash": "sha256-JznH+E0C4w1su+OE2VnQjEGSRpcBu3f+afnh7L24CMg=",
+        "lastModified": 1740017995,
+        "narHash": "sha256-jh9mSKXqtFapRtOQ6A6sjPsZKAvaQccVmeIKQq07deE=",
         "owner": "tbidne",
         "repo": "fs-utils",
-        "rev": "e2273c91c411e1fe12347524065855ba8e34a481",
+        "rev": "83472bc22a938db0d3b4c02a24a52bfca0484637",
         "type": "github"
       },
       "original": {

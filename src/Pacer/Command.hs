@@ -25,10 +25,10 @@ import Pacer.Command.Derive.Args qualified as Derive
 import Pacer.Command.Derive.Params qualified as Derive
 import Pacer.Command.Scale.Args qualified as Scale
 import Pacer.Command.Scale.Params qualified as Scale
-import Pacer.Config.Env.Types (CachedPaths)
-import Pacer.Config.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
-import Pacer.Config.Toml (TomlWithPath)
-import Pacer.Config.Utils qualified as Utils
+import Pacer.Configuration.Config (ConfigWithPath)
+import Pacer.Configuration.Env.Types (CachedPaths)
+import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
+import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 
 -- | Possible commands
@@ -81,10 +81,10 @@ evolvePhase ::
     State CachedPaths :> es
   ) =>
   CommandPhaseArgs a ->
-  Maybe TomlWithPath ->
+  Maybe ConfigWithPath ->
   Eff es (CommandPhaseFinal a)
-evolvePhase cmd mToml = case cmd of
-  Chart params -> Chart <$> Chart.evolvePhase params mToml
+evolvePhase cmd mConfig = case cmd of
+  Chart params -> Chart <$> Chart.evolvePhase params mConfig
   Convert params -> Convert <$> Convert.evolvePhase params
   Derive params -> Derive <$> Derive.evolvePhase params
   Scale params -> Scale <$> Scale.evolvePhase params

@@ -100,6 +100,7 @@
               ]
               // nix-hs-utils.mkRelLibs "${inputs.effectful-libs}/lib" final [
                 "concurrent-effectful"
+                "effectful-utils"
                 "fs-effectful"
                 "ioref-effectful"
                 "logger-effectful"

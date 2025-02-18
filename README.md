@@ -51,8 +51,8 @@ build/
 
 Charts are generated from two inputs:
 
-- A `runs` file(s) (`toml` or garmin `csv`), containing a list of all runs the user may want to chart. Multiple files will be combined.
-- A `chart-requests.toml` file, that determines how to construct the chart(s). The html page will contain a chart for each request in the file.
+- A `runs` file(s) (`json` or garmin `csv`), containing a list of all runs the user may want to chart. Multiple files will be combined.
+- A `chart-requests.json` file, that determines how to construct the chart(s). The html page will contain a chart for each request in the file.
 
 > [!IMPORTANT]
 >

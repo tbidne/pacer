@@ -11,7 +11,7 @@ import Pacer.Command.Derive.Params
   ( DeriveParams (MkDeriveParams, quantity, unit),
     DeriveParamsArgs,
   )
-import Pacer.Config.Utils qualified as Utils
+import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 
 -- | Parses derive params.

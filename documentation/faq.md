@@ -22,7 +22,7 @@ The most explicit way to generate charts is to use the `--chart-requests` and `-
 
 - If `--data <dir>` was given:
   - `<dir>/<expected_filename(s)>`.
-- If toml config exists (explicit `--config` or found in `<xdg_config>` location):
+- If json config exists (explicit `--config` or found in `<xdg_config>` location):
   - `<config.path_type>`
   - `<config.data>/<expected_filename(s)>`
 - `<xdg_config>/<expected_filename(s)>` (e.g. `~/.config/pacer/expected_filename(s)`).
@@ -31,81 +31,87 @@ In particular:
 
 #### chart-requests
 
-The only "expected filename" here is `chart-requests.toml`, so this works out to be:
+The only "expected filename" here is `chart-requests.json`, so this works out to be:
 
 - If `--data <dir>` was given:
-  - `<dir>/chart-requests.toml`.
-- If toml config exists:
+  - `<dir>/chart-requests.json`.
+- If json config exists:
   - `<config.chart-requests>`.
-  - `<config.data>/chart-requests.toml`.
-- `<xdg_config>/chart-requests.toml`
+  - `<config.data>/chart-requests.json`.
+- `<xdg_config>/chart-requests.json`
 
 #### runs
 
 On the other hand, runs have two possible "expected filenames":
 
-- `runs.toml` (custom format)
+- `runs.json` (custom format)
 - `Activities.csv` (garmin)
 
 Therefore this works out to be:
 
 - If `--data <dir>` was given:
-  - `<dir>/runs.toml`.
+  - `<dir>/runs.json`.
   - `<dir>/Activities.csv`.
-- If toml config exists:
+- If json config exists:
   - `<config.runs>`.
-  - `<config.data>/runs.toml`.
+  - `<config.data>/runs.json`.
   - `<config.data>/Activities.csv`.
-- `xdg_config/runs.toml`
+- `xdg_config/runs.json`
 - `xdg_config/Activities.csv`.
 
 > [!TIP]
 >
-> If `runs.toml` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`.
+> If `runs.json` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`. Also, whenever we search for `<file>.json`, we also search for `<file>.jsonc`.
 
 ### How do I use this with Garmin?
 
-In addition to the custom `runs.toml` format, we provide integration with garmin's `Activities.csv` file that can be downloaded from the website: https://connect.garmin.com/modern/activities.
+In addition to the custom `runs.json` format, we provide integration with garmin's `Activities.csv` file that can be downloaded from the website: https://connect.garmin.com/modern/activities.
 
 There are some caveats:
 
-- The `Activities.csv` file does not specify the units; it uses whatever the setting is on your device (e.g. watch). But we need to know what the units are, so we require this to be set in the `chart-requests.toml` file:
+- The `Activities.csv` file does not specify the units; it uses whatever the setting is on your device (e.g. watch). But we need to know what the units are, so we require this to be set in the `chart-requests.json` file:
 
-    ```toml
-    [garmin]
-    unit = 'km'
+    ```json
+    {
+      "garmin": {
+        "unit": "km"
+      }
+    }
     ```
 
     Note that garmin only supports kilometers and miles.
 
-- Filtering by `labels` with garmin activities is a bit more involved. That is, with the custom `runs.toml` format, we can label a run like:
+- Filtering by `labels` with garmin activities is a bit more involved. That is, with the custom `runs.json` format, we can label a run like:
 
-    ```toml
-    # runs.toml
-    [[runs]]
-    datetime = 2024-10-25T12:00:00
-    distance = 'marathon'
-    duration = '3h20m'
-    labels = ['official', 'marathon'] # custom labels
+    ```jsonc
+    // runs.json
+    {
+      "datetime": "2024-10-25T12:00:00",
+      "distance": "marathon",
+      "duration": "3h20m",
+      "labels": ["official", "marathon"] // custom labels
+    }
     ```
 
-    Then in the `chart-requests.toml` we can filter on this label to take only runs with this label:
+    Then in the `chart-requests.json` we can filter on this label to take only runs with this label:
 
-    ```toml
-    # chart-requests.toml
-    [[charts]]
-    title = 'Marathons'
-    filters = ['label marathon']
-    y-axis = 'duration'
+    ```jsonc
+    // chart-requests.json
+    {
+      "title": "Marathons",
+      "filters": ["label marathon"],
+      "y-axis": "duration"
+    }
     ```
 
     Garmin `Activities.csv` files do not include any fields where we can add our labels, so instead we specify the labels in a separate file:
 
-    ```toml
-    # run-labels.toml
-    [[run-labels]]
-    datetime = 2024-10-25T12:00:00
-    labels = ['official', 'marathon']
+    ```jsonc
+    // run-labels.json
+    {
+      "datetime": "2024-10-25T12:00:00",
+      "labels": ["official", "marathon"]
+    }
     ```
 
     If this matches a `Date` in our `Activities.csv`:
@@ -117,7 +123,7 @@ There are some caveats:
 
     Then the label will be attached to the run, and we can later filter on it in the `chart-requests`.
 
-- We assume files that contain the name `garmin` or end with `.csv` are garmin activities files. Otherwise we assume `.toml` format.
+- We assume files that contain the name `garmin` or end with `.csv` are garmin activities files. Otherwise we assume `.json` format.
 
 ### How do chart filters work?
 
@@ -142,11 +148,16 @@ where `expr` is either an atom or another expression.
 
 For example, we can have:
 
-```toml
-[[charts]]
-title = 'Races and long runs'
-filters = ['label official_race or label marathon', 'distance >= 25 km', 'datetime > 2024']
-y-axis = 'distance'
+```jsonc
+{
+  "title": "Races and long runs",
+  "filters": [
+    "label official_race or label marathon",
+    "distance >= 25 km",
+    "datetime > 2024"
+  ],
+  "y-axis": "distance"
+}
 ```
 
 In this case, we will take all runs that satisfy **all** of the following criteria:

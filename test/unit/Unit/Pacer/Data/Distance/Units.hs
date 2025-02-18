@@ -15,7 +15,6 @@ where
 import Hedgehog.Gen qualified as G
 import Pacer.Class.Parser qualified as Parser
 import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
-import Pacer.Data.Result (Result (Ok))
 import Unit.Prelude
 
 tests :: TestTree

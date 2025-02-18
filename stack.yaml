@@ -27,9 +27,10 @@ extra-deps:
   - git: https://github.com/tbidne/bounds.git
     commit: b7ca541cfdd8564bcebe5d38456fe7abf77885b8
   - git: https://github.com/tbidne/effectful-libs.git
-    commit: 63713ede9a37754dff857900cc3fb38884c6afde
+    commit: 9697330f9fc02b31aead5924997e54511992a796
     subdirs:
       - lib/concurrent-effectful
+      - lib/effectful-utils
       - lib/fs-effectful
       - lib/ioref-effectful
       - lib/logger-effectful
@@ -41,7 +42,7 @@ extra-deps:
   - git: https://github.com/tbidne/exception-utils.git
     commit: e28b28ae3bc90a0336abf69eff28369b790f4e13
   - git: https://github.com/tbidne/fs-utils.git
-    commit: e2273c91c411e1fe12347524065855ba8e34a481
+    commit: 83472bc22a938db0d3b4c02a24a52bfca0484637
   - git: https://github.com/tbidne/relative-time.git
     commit: 6bd6c1208bcda9f5d5ecb7ff45fafb91929cdea8
   - git: https://github.com/tbidne/smart-math.git

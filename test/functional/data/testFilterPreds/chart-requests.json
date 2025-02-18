@@ -1,0 +1,34 @@
+{
+  "charts": [
+    {
+      "title": "Long runs",
+      "y-axis": "pace",
+      "filters": ["distance > 30km"]
+    },
+    {
+      "title": "Long runs 2",
+      "y-axis": "distance",
+      "filters": ["distance >= 30km"]
+    },
+    {
+      "title": "Fast runs",
+      "y-axis": "pace",
+      "filters": ["pace < 3m30s /km"]
+    },
+    {
+      "title": "Specific duration runs",
+      "y-axis": "duration",
+      "filters": ["duration > 40m", "duration < 3h"]
+    },
+    {
+      "title": "Specific duration runs using and",
+      "y-axis": "duration",
+      "filters": ["duration > 40m and duration < 3h"]
+    },
+    {
+      "title": "Runs within date range",
+      "y-axis": "distance",
+      "filters": ["(datetime >= 2024-10-17) and (datetime < 2024-10-19)"]
+    }
+  ]
+}

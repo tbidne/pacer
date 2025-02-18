@@ -1,9 +1,9 @@
 MkChartParams
   { buildDir = "/cwd/build/"
   , cleanInstall = False
-  , chartRequestsPath = "/root/config-data/chart-requests.toml"
+  , chartRequestsPath = "/root/config-data/chart-requests.json"
   , dataDir = ()
   , json = False
   , runLabelsPath = Nothing
-  , runPaths = "/root/config-data/runs.toml" :| []
+  , runPaths = "/root/config-data/runs.json" :| []
   }

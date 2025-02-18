@@ -17,8 +17,7 @@ where
 import Control.Exception (SomeException (SomeException))
 import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
 import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
-import Effectful.FileSystem.PathReader.Dynamic qualified as PR
-import Effectful.Logger.Dynamic (Logger (LoggerLog))
+import Effectful.Logger.Dynamic (LogLevel (LevelInfo), Logger (LoggerLog))
 import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.LoggerNS.Static
   ( LocStrategy (LocNone),
@@ -42,17 +41,18 @@ import Pacer.Command.Chart.Data.Run (RunDatetimeOverlapE)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
-import Pacer.Config.Args (Args (command, configPath), parserInfo)
-import Pacer.Config.Env qualified as Env
-import Pacer.Config.Env.Types
+import Pacer.Configuration.Args (Args (command, configPath), parserInfo)
+import Pacer.Configuration.Config (ConfigWithPath (MkConfigWithPath, config))
+import Pacer.Configuration.Env qualified as Env
+import Pacer.Configuration.Env.Types
   ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
-    LogEnv (logLevel),
+    LogEnv (MkLogEnv, logLevel, logNamespace),
   )
-import Pacer.Config.Toml (Toml, TomlWithPath (MkTomlWithPath, toml))
 import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
+import Pacer.Utils (FileAliases (MkFileAliases))
+import Pacer.Utils qualified as Utils
 import System.OsPath qualified as FP
-import TOML qualified
 
 runApp ::
   ( HasCallStack,
@@ -80,10 +80,10 @@ runCommand ::
     Time :> es,
     TypedProcess :> es
   ) =>
-  Config ->
+  Env ->
   Eff es ()
-runCommand (cmd, mToml, cachedPaths, logEnv) = runner $ logAndRethrow $ do
-  command <- Command.evolvePhase cmd mToml
+runCommand (cmd, mConfig, cachedPaths, logEnv) = runner $ logAndRethrow $ do
+  command <- Command.evolvePhase cmd mConfig
   case command of
     Chart params -> Chart.handle params
     Convert params -> Convert.handle params
@@ -104,74 +104,95 @@ runCommand (cmd, mToml, cachedPaths, logEnv) = runner $ logAndRethrow $ do
           throwM err
 
 withEnv ::
-  ( HasCallStack,
+  ( Concurrent :> es,
     FileReader :> es,
+    HasCallStack,
     PathReader :> es,
-    Optparse :> es
+    Optparse :> es,
+    Terminal :> es,
+    Time :> es
   ) =>
-  (Config -> Eff es a) ->
+  (Env -> Eff es a) ->
   Eff es a
-withEnv onEnv = getConfiguration >>= onEnv
+withEnv onEnv = getEnv >>= onEnv
 
-type Config =
+type Env =
   Tuple4
     -- Command to run, before evolution
     (CommandPhaseArgs Double)
-    -- Possible toml config
-    (Maybe TomlWithPath)
+    -- Possible config
+    (Maybe ConfigWithPath)
     -- Cached paths
     CachedPaths
     -- Logging env
     LogEnv
 
-getConfiguration ::
-  ( HasCallStack,
+getEnv ::
+  ( Concurrent :> es,
     FileReader :> es,
+    HasCallStack,
     PathReader :> es,
-    Optparse :> es
+    Optparse :> es,
+    Terminal :> es,
+    Time :> es
   ) =>
-  Eff es Config
-getConfiguration @es = do
+  Eff es Env
+getEnv = configRunner $ do
   args <- execParser (parserInfo @Double)
 
-  -- Get toml and xdg config, if necessary.
-  (mXdgConfig, mToml) <- do
+  -- Get Config and xdg config dir, if necessary.
+  (mXdgConfig, mConfig) <- do
     case args.configPath of
       -- No config path, try xdg
       Nothing -> do
         xdgConfig <- getXdgConfigPath
-        let path = xdgConfig <</>> [relfile|config.toml|]
 
-        exists <- PR.doesFileExist (pathToOsPath path)
-        if exists
-          then do
-            toml <- readToml path
-            let tomlPath = MkTomlWithPath xdgConfig toml
-            pure $ (Just xdgConfig, Just tomlPath)
-          else pure (Just xdgConfig, Nothing)
+        let configAliases =
+              MkFileAliases
+                $ [relfile|config.json|]
+                :| [[relfile|config.jsonc|]]
+
+        mPath <- Utils.searchFileAliases @Maybe True xdgConfig configAliases
+
+        case mPath of
+          Nothing -> pure (Just xdgConfig, Nothing)
+          Just path -> do
+            config <- Utils.readDecodeJson path
+            let configPath = MkConfigWithPath xdgConfig config
+
+            $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath path)
+
+            pure $ (Just xdgConfig, Just configPath)
       -- Config path exists, use it.
       Just configPath -> do
         absPath <- parseCanonicalAbsFile configPath
-        toml <- readToml absPath
+        config <- Utils.readDecodeJson absPath
 
-        absTomlDir <- Path.parseAbsDir $ FP.takeDirectory (pathToOsPath absPath)
+        absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (pathToOsPath absPath)
 
-        let tomlPath = MkTomlWithPath absTomlDir toml
-        pure (Nothing, Just tomlPath)
+        let configWithPath = MkConfigWithPath absConfigDir config
+        $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath absPath)
+        pure (Nothing, Just configWithPath)
 
   let cachedPaths =
         MkCachedPaths
           { currentDirectory = Nothing,
             xdgConfigPath = mXdgConfig
           }
-      logEnv = Env.mkLogEnv args (mToml <&> (.toml))
+      logEnv = Env.mkLogEnv args (mConfig <&> (.config))
 
-  pure (args.command, mToml, cachedPaths, logEnv)
+  pure (args.command, mConfig, cachedPaths, logEnv)
   where
-    readToml :: Path b t -> Eff es Toml
-    readToml path = do
-      c <- readFileUtf8ThrowM (pathToOsPath path)
-      throwLeft $ TOML.decode c
+    configRunner =
+      runReader configLogEnv
+        . runLoggerNS "config"
+        . runLogger
+
+    configLogEnv =
+      MkLogEnv
+        { logLevel = Just LevelInfo,
+          logNamespace = mempty
+        }
 
 runLogger ::
   ( HasCallStack,
@@ -211,7 +232,8 @@ displayInnerMatchKnown e =
 
 knownExceptions :: List ExceptionProxy
 knownExceptions =
-  [ MkExceptionProxy @PacerEx.ChartFileMissingE,
+  [ MkExceptionProxy @Utils.AesonPathE,
+    MkExceptionProxy @PacerEx.ChartFileMissingE,
     MkExceptionProxy @PacerEx.CommandConvertE,
     MkExceptionProxy @PacerEx.CommandDeriveE,
     MkExceptionProxy @PacerEx.CommandScaleE,
@@ -219,6 +241,5 @@ knownExceptions =
     MkExceptionProxy @PacerEx.FileNotFoundE,
     MkExceptionProxy @PacerEx.GarminE,
     MkExceptionProxy @PacerEx.NpmE,
-    MkExceptionProxy @RunDatetimeOverlapE,
-    MkExceptionProxy @PacerEx.TomlE
+    MkExceptionProxy @RunDatetimeOverlapE
   ]

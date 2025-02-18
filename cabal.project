@@ -34,9 +34,10 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/effectful-libs.git
-    tag: 63713ede9a37754dff857900cc3fb38884c6afde
+    tag: 9697330f9fc02b31aead5924997e54511992a796
     subdir:
       lib/concurrent-effectful
+      lib/effectful-utils
       lib/fs-effectful
       lib/ioref-effectful
       lib/logger-effectful
@@ -54,7 +55,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/fs-utils.git
-    tag: e2273c91c411e1fe12347524065855ba8e34a481
+    tag: 83472bc22a938db0d3b4c02a24a52bfca0484637
 
 source-repository-package
     type: git

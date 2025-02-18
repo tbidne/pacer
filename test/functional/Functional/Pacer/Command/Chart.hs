@@ -30,7 +30,8 @@ basicTests getTestDir =
       testDefaultAndGarminExamples getTestDir,
       testCaseInsensitive getTestDir,
       testGarminChartError getTestDir,
-      testBothChartOverlapError getTestDir
+      testBothChartOverlapError getTestDir,
+      testUnknownKeyFailure getTestDir
     ]
 
 testExampleChart :: IO OsPath -> TestTree
@@ -54,7 +55,7 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
         }
     buildDir p = unsafeDecode $ p </> [osp|build|]
     dataDir = unsafeDecode [osp|examples|]
-    runsPath = unsafeDecode [ospPathSep|examples/runs.toml|]
+    runsPath = unsafeDecode [ospPathSep|examples/runs.jsonc|]
 
 testSimple :: IO OsPath -> TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]
@@ -144,6 +145,11 @@ testBothChartOverlapError = testChart desc [osp|testBothChartOverlapError|]
   where
     desc = "Datetime overlap across multiple run files errors"
 
+testUnknownKeyFailure :: IO OsPath -> TestTree
+testUnknownKeyFailure = testChart desc [osp|testUnknownKeyFailure|]
+  where
+    desc = "Unknown key causes an error"
+
 pathTests :: IO OsPath -> TestTree
 pathTests getTestDir =
   testGroup
@@ -197,7 +203,7 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
     buildDir p = unsafeDecode $ p </> [osp|build|]
     chartRequestsPath =
       unsafeDecode
-        [ospPathSep|test/functional/data/testSimple/chart-requests.toml|]
+        [ospPathSep|test/functional/data/testSimple/chart-requests.json|]
 
     -- TODO:
     --
@@ -206,20 +212,20 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
     --
     -- 1. We are using the examples data directory.
     -- 2. We are providing a chart-requests path via
-    --    testSimple/chart-requests.toml
+    --    testSimple/chart-requests.json
     --
-    -- The intention is that testSimple/chart-requests.toml overrides
-    -- examples/chart-requests.toml, so we shouldn't care about runs.toml
-    -- at all. The problem is that the examples directory has both runs.toml
+    -- The intention is that testSimple/chart-requests.json overrides
+    -- examples/chart-requests.json, so we shouldn't care about runs.json
+    -- at all. The problem is that the examples directory has both runs.json
     -- _and_ Activities.csv, so both files will be used for runs, hence
     -- the chart-requests file needs to have its garmin-settings set.
-    -- But changing testSimple/chart-requests.toml would screw up that test.
+    -- But changing testSimple/chart-requests.json would screw up that test.
     --
     -- The easiest solution for now is to explicitly provide --runs with the
-    -- toml file, so that we don't get a garmin error. But really we should
+    -- json file, so that we don't get a garmin error. But really we should
     -- copy some files to a new testPathChartRequestsOverrideData
     -- directory, to eliminate the test interference.
-    runsPath = unsafeDecode [ospPathSep|examples/runs.toml|]
+    runsPath = unsafeDecode [ospPathSep|examples/runs.jsonc|]
 
     -- Arbitrarily using the examples as the data dir, since we want some
     -- non-XDG directory to be overwritten.
@@ -247,7 +253,7 @@ testPathRunsOverrideData getTestDir = testGoldenParams getTestDir params
     buildDir p = unsafeDecode $ p </> [osp|build|]
     runsPath =
       unsafeDecode
-        [ospPathSep|test/functional/data/testSimple/runs.toml|]
+        [ospPathSep|test/functional/data/testSimple/runs.json|]
     dataDir = unsafeDecode [osp|examples|]
 
 testPathChartRequestsOverrideXdg :: IO OsPath -> TestTree
@@ -270,7 +276,7 @@ testPathChartRequestsOverrideXdg getTestDir = testGoldenParams getTestDir params
     buildDir p = unsafeDecode $ p </> [osp|build|]
     chartRequestsPath =
       unsafeDecode
-        [ospPathSep|test/functional/data/testSimple/chart-requests.toml|]
+        [ospPathSep|test/functional/data/testSimple/chart-requests.json|]
 
 testPathRunsOverrideXdg :: IO OsPath -> TestTree
 testPathRunsOverrideXdg getTestDir = testGoldenParams getTestDir params
@@ -291,7 +297,7 @@ testPathRunsOverrideXdg getTestDir = testGoldenParams getTestDir params
         }
     buildDir p = unsafeDecode $ p </> [osp|build|]
     runsPath =
-      unsafeDecode [ospPathSep|test/functional/data/testSimple/runs.toml|]
+      unsafeDecode [ospPathSep|test/functional/data/testSimple/runs.json|]
 
 testPathConfig :: IO OsPath -> TestTree
 testPathConfig getTestDir = testGoldenParams getTestDir params
@@ -312,7 +318,7 @@ testPathConfig getTestDir = testGoldenParams getTestDir params
         }
 
     buildDir p = unsafeDecode $ p </> [osp|build|]
-    configPath = unsafeDecode [ospPathSep|examples/config.toml|]
+    configPath = unsafeDecode [ospPathSep|examples/config.jsonc|]
 
 -- TODO: Would be nice to have an e2e test for chart generation i.e. actually
 -- invoke node and generate a real html page.

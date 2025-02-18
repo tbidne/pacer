@@ -1,14 +1,28 @@
 module Pacer.Data.Result
   ( Result (..),
     ResultDefault,
+
+    -- * Construction
+    fromEither,
+
+    -- * Elimination
+    onResult,
+    onErr,
+    onOk,
     errorErr,
     failErr,
+    throwErr,
   )
 where
 
+import Control.Exception (Exception)
+import Control.Monad.Catch (MonadThrow (throwM))
 import Data.Bifoldable (Bifoldable (bifoldMap))
+import Data.Bifunctor (Bifunctor (bimap))
+import Data.Bitraversable (Bitraversable (bitraverse))
 import Data.String (IsString (fromString))
-import Pacer.Prelude
+import GHC.Stack (HasCallStack)
+import Prelude
 
 -- | General type for error handling, with convenient MonadFail instance.
 data Result e a
@@ -56,9 +70,28 @@ instance Bitraversable Result where
   bitraverse _ g (Ok b) = Ok <$> g b
 
 errorErr :: (HasCallStack) => ResultDefault a -> a
-errorErr (Ok x) = x
-errorErr (Err err) = error err
+errorErr = onErr error
 
 failErr :: (MonadFail m) => ResultDefault a -> m a
-failErr (Ok x) = pure x
-failErr (Err err) = fail err
+failErr = onResult fail pure
+
+throwErr ::
+  ( Exception e,
+    HasCallStack,
+    MonadThrow m
+  ) =>
+  Result e a -> m a
+throwErr = onResult throwM pure
+
+onResult :: (e -> b) -> (a -> b) -> Result e a -> b
+onResult f _ (Err err) = f err
+onResult _ g (Ok x) = g x
+
+onErr :: (e -> a) -> Result e a -> a
+onErr f = onResult f id
+
+onOk :: (a -> e) -> Result e a -> e
+onOk g = onResult id g
+
+fromEither :: Either e a -> Result e a
+fromEither = either Err Ok

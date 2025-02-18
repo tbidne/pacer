@@ -29,11 +29,7 @@ import Pacer.Command.Chart.Data.Time (Moment)
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (SomePace)
-import Pacer.Data.Result (Result (Err, Ok), ResultDefault, failErr)
 import Pacer.Prelude
-import TOML
-  ( DecodeTOML (tomlDecoder),
-  )
 import Text.Megaparsec
   ( Parsec,
     PosState (PosState),
@@ -231,8 +227,8 @@ instance (Display a) => Display (Expr a) where
 -- | Alias for a filter expression.
 type FilterExpr a = Expr (FilterType a)
 
-instance (Parser a) => DecodeTOML (Expr a) where
-  tomlDecoder = tomlDecoder >>= failErr . lexParse
+instance (Parser a) => FromJSON (Expr a) where
+  parseJSON = asnWithText "Expr" (failErr . lexParse)
 
 eval :: (a -> Bool) -> Expr a -> Bool
 eval p = runIdentity . evalA (\x -> Identity (p x))

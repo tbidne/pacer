@@ -5,7 +5,6 @@ module Pacer.Exception
     FileNotFoundE (..),
     GarminE (..),
     NpmE (..),
-    TomlE (..),
 
     -- ** Commands
     CommandConvertE (..),
@@ -20,7 +19,6 @@ import FileSystem.UTF8 (decodeUtf8Lenient)
 import GHC.TypeLits (symbolVal)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
-import TOML (TOMLError)
 
 -- | Exception for CLI scale command.
 data CommandConvertE
@@ -147,8 +145,8 @@ instance Exception FileNotFoundE where
 -- several locations, but none was found.
 data ChartFileMissingE = MkChartFileMissingE
   { cliDataDir :: Maybe OsPath,
+    configDataDir :: Maybe OsPath,
     expectedFiles :: List (Path Rel File),
-    tomlDataDir :: Maybe OsPath,
     xdgDir :: Path Abs Dir
   }
   deriving stock (Show)
@@ -167,25 +165,12 @@ instance Exception ChartFileMissingE where
           $ filter
             (not . L.null)
             [ displayDir e.cliDataDir,
-              displayDir e.tomlDataDir,
+              displayDir e.configDataDir,
               displayDir (Just $ pathToOsPath e.xdgDir)
             ]
 
       displayDir Nothing = ""
       displayDir (Just d) = "\n - " <> decodeLenient d
-
--- | Exception for toml errors that includes the path.
-data TomlE = MkTomlE OsPath TOMLError
-  deriving stock (Show)
-
-instance Exception TomlE where
-  displayException (MkTomlE p err) =
-    mconcat
-      [ "Error decoding toml file '",
-        decodeLenient p,
-        "': ",
-        displayException err
-      ]
 
 data NpmE = MkNpmE OsPath (List String) Int LazyByteString
   deriving stock (Show)
@@ -220,6 +205,6 @@ instance Exception GarminE where
     GarminOther s -> "Garmin error: " ++ s
     GarminUnitRequired ->
       mconcat
-        [ "The 'garmin.unit' settings is required in chart-requests.toml ",
+        [ "The 'garmin.unit' setting is required in chart-requests json ",
           "when used with a garmin runs file."
         ]
