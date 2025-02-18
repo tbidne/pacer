@@ -47,10 +47,6 @@ On the other hand, runs have two possible "expected filenames":
 - `runs.toml` (custom format)
 - `Activities.csv` (garmin)
 
-> [!TIP]
->
-> If `runs.toml` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`.
-
 Therefore this works out to be:
 
 - If `--data <dir>` was given:
@@ -63,7 +59,9 @@ Therefore this works out to be:
 - `xdg_config/runs.toml`
 - `xdg_config/Activities.csv`.
 
-See [here](#how-do-i-use-this-with-garmin) for more on controlling the `runs` search order.
+> [!TIP]
+>
+> If `runs.toml` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`.
 
 ### How do I use this with Garmin?
 
@@ -78,7 +76,7 @@ There are some caveats:
     unit = 'km'
     ```
 
-    Note that garmin only support kilometers and miles.
+    Note that garmin only supports kilometers and miles.
 
 - Filtering by `labels` with garmin activities is a bit more involved. That is, with the custom `runs.toml` format, we can label a run like:
 
@@ -110,7 +108,7 @@ There are some caveats:
     labels = ['official', 'marathon']
     ```
 
-    Assuming this matches the date in our `Activities.csv`:
+    If this matches a `Date` in our `Activities.csv`:
 
     ```csv
     Activity Type,Date,Favorite,Title,Distance,Calories,Time,Avg HR,Max HR,Aerobic TE,Avg Run Cadence,Max Run Cadence,Avg Pace,Best Pace,Total Ascent,Total Descent,Avg Stride Length,Avg Vertical Ratio,Avg Vertical Oscillation,Avg Ground Contact Time,Avg GAP,Normalized Power® (NP®),Training Stress Score®,Avg Power,Max Power,Steps,Decompression,Best Lap Time,Number of Laps,Moving Time,Elapsed Time,Min Elevation,Max Elevation
@@ -131,14 +129,7 @@ Chart requests allow us to filter runs based on some criteria. In general, `filt
 - `duration <op> <val>`: The run must have `duration <op> <val>` e.g. `duration < 2h`.
 - `pace <op> <val>`: The run must have `pace <op> <val>` e.g. `pace <= 4m30s /km`.
 
-`<op>` can be one of:
-
-- `<=`
-- `<`
-- `=`
-- `/=`
-- `>=`
-- `>`
+`<op>` can be one of: `<=`, `<`, `=`, `/=`, `>=`, `>`.
 
 Filters also support basic boolean logic i.e.
 
