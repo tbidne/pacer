@@ -42,26 +42,26 @@ The only "expected filename" here is `chart-requests.toml`, so this works out to
 
 #### runs
 
-On the other hand, runs have three possible "expected filenames":
+On the other hand, runs have two possible "expected filenames":
 
 - `runs.toml` (custom format)
 - `Activities.csv` (garmin)
-- `activities.csv` (garmin)
+
+> [!TIP]
+>
+> If `runs.toml` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`.
 
 Therefore this works out to be:
 
 - If `--data <dir>` was given:
   - `<dir>/runs.toml`.
   - `<dir>/Activities.csv`.
-  - `<dir>/activities.csv`.
 - If toml config exists:
   - `<config.runs>`.
   - `<config.data>/runs.toml`.
   - `<config.data>/Activities.csv`.
-  - `<config.data>/activities.csv`.
 - `xdg_config/runs.toml`
 - `xdg_config/Activities.csv`.
-- `xdg_config/activities.csv`.
 
 See [here](#how-do-i-use-this-with-garmin) for more on controlling the `runs` search order.
 
@@ -80,14 +80,46 @@ There are some caveats:
 
     Note that garmin only support kilometers and miles.
 
-- Chart request `label` filters only work with the custom `runs.toml` format, since there is no way to attach a label to a run in garmin. Using a label filter with garmin will not be an automatic error, but if you have, say, `filters = ['label my_label']` in your `chart-requests.toml`, then no garmin run will satisfy this filter, so the chart will not be generated (which _is_ an error).
+- Filtering by `labels` with garmin activities is a bit more involved. That is, with the custom `runs.toml` format, we can label a run like:
 
-- If you intend to have both `runs.toml` and `activities.csv` in the same directory, then the `--runs-type` flag can be useful. It does two things:
+    ```toml
+    # runs.toml
+    [[runs]]
+    datetime = 2024-10-25T12:00:00
+    distance = 'marathon'
+    duration = '3h20m'
+    labels = ['official', 'marathon'] # custom labels
+    ```
 
-    - Sets a priority. By default, if we find `runs.toml` and `activities.csv`, we will use `runs.toml` (see [above](#how-does-file-discovery-work)). Passing `--runs-type garmin` will instead use `activities.csv`.
+    Then in the `chart-requests.toml` we can filter on this label to take only runs with this label:
 
-    - Determines parsing. Generally, we guess how to parse a file based on the file name and/or extension. For instance, if the file has the word `activities` in it or ends in `.csv`, we guess garmin. But if for some reason your filename has an unknown name/extension, then
-    we default to `toml`. Again, `--runs-type garmin` overrides this, using the garmin parsing.
+    ```toml
+    # chart-requests.toml
+    [[charts]]
+    title = 'Marathons'
+    filters = ['label marathon']
+    y-axis = 'duration'
+    ```
+
+    Garmin `Activities.csv` files do not include any fields where we can add our labels, so instead we specify the labels in a separate file:
+
+    ```toml
+    # run-labels.toml
+    [[run-labels]]
+    datetime = 2024-10-25T12:00:00
+    labels = ['official', 'marathon']
+    ```
+
+    Assuming this matches the date in our `Activities.csv`:
+
+    ```csv
+    Activity Type,Date,Favorite,Title,Distance,Calories,Time,Avg HR,Max HR,Aerobic TE,Avg Run Cadence,Max Run Cadence,Avg Pace,Best Pace,Total Ascent,Total Descent,Avg Stride Length,Avg Vertical Ratio,Avg Vertical Oscillation,Avg Ground Contact Time,Avg GAP,Normalized Power® (NP®),Training Stress Score®,Avg Power,Max Power,Steps,Decompression,Best Lap Time,Number of Laps,Moving Time,Elapsed Time,Min Elevation,Max Elevation
+    Running,2024-10-25 12:00:00,false,"Wellington Running","3.77","220","00:18:14","151","171","3.5","155","173","4:50","3:18","45","29","1.33","7.9","10.5","263","4:45","412","0.0","406","663","2,862","No","00:03:47.9","4","00:17:48.5","00:20:38","4","48"
+    ```
+
+    Then the label will be attached to the run, and we can later filter on it in the `chart-requests`.
+
+- We assume files that contain the name `garmin` or end with `.csv` are garmin activities files. Otherwise we assume `.toml` format.
 
 ### How do chart filters work?
 

@@ -17,8 +17,11 @@ module Pacer.Command.Chart.Data.Run
     -- * SomeRuns
     SomeRunsKey (..),
     SomeRuns (..),
+    mkSomeRunsFail,
     mkSomeRuns,
+    RunDatetimeOverlapE (..),
     mapSomeRuns,
+    unionSomeRuns,
   )
 where
 
@@ -53,7 +56,7 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
-import Pacer.Data.Result (failErr)
+import Pacer.Data.Result (Result (Err, Ok), failErr)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import TOML
@@ -325,67 +328,86 @@ instance
   DecodeTOML (SomeRuns a)
   where
   tomlDecoder =
-    mkSomeRuns =<< TOML.getFieldWith (TOML.getArrayOf tomlDecoder) "runs"
+    mkSomeRunsFail =<< TOML.getFieldWith (TOML.getArrayOf tomlDecoder) "runs"
 
-mkSomeRuns :: (MonadFail m) => List (SomeRun a) -> m (SomeRuns a)
-mkSomeRuns xs = case xs of
+mkSomeRunsFail :: (MonadFail m) => List (SomeRun a) -> m (SomeRuns a)
+mkSomeRunsFail xs = case xs of
   [] -> fail "Received empty list"
-  (y@(MkSomeRun _ _) : ys) -> case eDuplicate of
-    Left ((ts1, mTitle1), (ts2, mTitle2)) ->
-      fail
-        $ unpackText
-        $ mconcat
-          [ "Found overlapping timestamps\n - ",
-            fmtTitle mTitle1,
-            ": ",
-            Time.fmtTimestamp ts1,
-            "\n - ",
-            fmtTitle mTitle2,
-            ": ",
-            Time.fmtTimestamp ts2
-          ]
-    Right mp -> pure $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
+  (y : ys) -> case mkSomeRuns (y :| ys) of
+    Err err -> fail $ displayException err
+    Ok x -> pure x
+
+data RunDatetimeOverlapE = MkRunDatetimeOverlapE
+  { r1 :: Tuple2 (Maybe Text) Timestamp,
+    r2 :: Tuple2 (Maybe Text) Timestamp
+  }
+  deriving stock (Show)
+
+instance Exception RunDatetimeOverlapE where
+  displayException (MkRunDatetimeOverlapE x1 x2) =
+    unpackText
+      $ mconcat
+        [ "Found overlapping timestamps\n - ",
+          fmtTitle mTitle1,
+          ": ",
+          Time.fmtTimestamp ts1,
+          "\n - ",
+          fmtTitle mTitle2,
+          ": ",
+          Time.fmtTimestamp ts2
+        ]
     where
-      -- The logic here is:
-      --
-      -- 1. Transform parsed List -> NonEmpty (SomeRunsKey a)
-      -- 2. If we don't receive any duplicates, transform
-      --      NonEmpty (SomeRunsKey a) -> Set (SomeRunsKey a)
-      --
-      -- Why don't we just immediately used a set, rather than the
-      -- intermediate NonEmpty?
-      --
-      -- Because Timestamp's Ord will not detect the duplicates we want.
-      -- For instance, the timestamps 2013-10-08 and 2013-10-08T12:14:30
-      -- will compare non-equal (which we need for Eq/Ord to be lawful),
-      -- but we want these to compare Eq for purposes of detecting
-      -- overlaps. Thus we cannot use Timestamp's Ord for this, hence
-      -- Set/Map etc. are out.
-      --
-      -- Instead, we iterate manually, looking for overlaps using the
-      -- bespoke 'T.overlaps' function. Unfortuanately this is O(n^2),
-      -- and it is difficult to see a way around this, as the overlap
-      -- function is inherently intransitive e.g. consider
-      --
-      --   x = 2013-10-08T12:14:30
-      --   y = 2013-10-08
-      --   z = 2013-10-08T12:14:40
-      --
-      -- For overlaps, we want x == y == z and x /= z. It is unclear how
-      -- to preserve this and achieve O(1) (or O(lg n)) lookup. Hopefully
-      -- this does not impact performance too much.
-      eDuplicate = foldr go (Right $ NonEmpty.singleton (MkSomeRunsKey y)) ys
-
-      go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
-      go _ (Left collision) = Left collision
-      go someRun@(MkSomeRun _ q) (Right someRuns) =
-        case findOverlap someRun someRuns of
-          Nothing -> Right $ (MkSomeRunsKey someRun) <| someRuns
-          Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
-            Left ((q.datetime, q.title), (collision.datetime, collision.title))
-
       fmtTitle Nothing = "<no title>"
       fmtTitle (Just t) = t
+
+      ((mTitle1, ts1), (mTitle2, ts2)) =
+        if x1 <= x2
+          then (x1, x2)
+          else (x2, x1)
+
+mkSomeRuns :: NonEmpty (SomeRun a) -> Result RunDatetimeOverlapE (SomeRuns a)
+mkSomeRuns (y@(MkSomeRun _ _) :| ys) = case eDuplicate of
+  Left ((ts1, mTitle1), (ts2, mTitle2)) ->
+    Err $ MkRunDatetimeOverlapE (mTitle1, ts1) (mTitle2, ts2)
+  Right mp -> Ok $ MkSomeRuns $ NESet.fromList (toNonEmpty mp)
+  where
+    -- The logic here is:
+    --
+    -- 1. Transform parsed List -> NonEmpty (SomeRunsKey a)
+    -- 2. If we don't receive any duplicates, transform
+    --      NonEmpty (SomeRunsKey a) -> Set (SomeRunsKey a)
+    --
+    -- Why don't we just immediately used a set, rather than the
+    -- intermediate NonEmpty?
+    --
+    -- Because Timestamp's Ord will not detect the duplicates we want.
+    -- For instance, the timestamps 2013-10-08 and 2013-10-08T12:14:30
+    -- will compare non-equal (which we need for Eq/Ord to be lawful),
+    -- but we want these to compare Eq for purposes of detecting
+    -- overlaps. Thus we cannot use Timestamp's Ord for this, hence
+    -- Set/Map etc. are out.
+    --
+    -- Instead, we iterate manually, looking for overlaps using the
+    -- bespoke 'T.overlaps' function. Unfortuanately this is O(n^2),
+    -- and it is difficult to see a way around this, as the overlap
+    -- function is inherently intransitive e.g. consider
+    --
+    --   x = 2013-10-08T12:14:30
+    --   y = 2013-10-08
+    --   z = 2013-10-08T12:14:40
+    --
+    -- For overlaps, we want x == y == z and x /= z. It is unclear how
+    -- to preserve this and achieve O(1) (or O(lg n)) lookup. Hopefully
+    -- this does not impact performance too much.
+    eDuplicate = foldr go (Right $ NonEmpty.singleton (MkSomeRunsKey y)) ys
+
+    go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
+    go _ (Left collision) = Left collision
+    go someRun@(MkSomeRun _ q) (Right someRuns) =
+      case findOverlap someRun someRuns of
+        Nothing -> Right $ (MkSomeRunsKey someRun) <| someRuns
+        Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
+          Left ((q.datetime, q.title), (collision.datetime, collision.title))
 
 type TitleAndTime = Tuple2 Timestamp (Maybe Text)
 
@@ -442,5 +464,17 @@ mapSomeRuns f (MkSomeRuns s) = MkSomeRuns $ NESet.map g s
   where
     g (MkSomeRunsKey (MkSomeRun d r)) =
       MkSomeRunsKey (MkSomeRun d (f r))
+
+unionSomeRuns ::
+  SomeRuns a ->
+  SomeRuns a ->
+  Result RunDatetimeOverlapE (SomeRuns a)
+unionSomeRuns xs ys = mkSomeRuns (toListSR xs <> toListSR ys)
+  where
+    toListSR :: SomeRuns a -> NonEmpty (SomeRun a)
+    toListSR (MkSomeRuns rs) =
+      fmap (\(MkSomeRunsKey sr) -> sr)
+        . NESet.toList
+        $ rs
 
 makeFieldLabelsNoPrefix ''Run

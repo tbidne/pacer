@@ -7,13 +7,29 @@ module Pacer.Driver
 
     -- * Logger
     runLogger,
+
+    -- * Exceptions
+    displayInnerMatchKnown,
+    knownExceptions,
   )
 where
 
+import Control.Exception (SomeException (SomeException))
+import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
+import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic (Logger (LoggerLog))
 import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.LoggerNS.Static
+  ( LocStrategy (LocNone),
+    LogFormatter
+      ( MkLogFormatter,
+        locStrategy,
+        newline,
+        threadLabel,
+        timezone
+      ),
+  )
 import Effectful.LoggerNS.Static qualified as LoggerNS
 import FileSystem.Path qualified as Path
 import Pacer.Command
@@ -22,6 +38,7 @@ import Pacer.Command
   )
 import Pacer.Command qualified as Command
 import Pacer.Command.Chart qualified as Chart
+import Pacer.Command.Chart.Data.Run (RunDatetimeOverlapE)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
@@ -32,6 +49,7 @@ import Pacer.Config.Env.Types
     LogEnv (logLevel),
   )
 import Pacer.Config.Toml (Toml, TomlWithPath (MkTomlWithPath, toml))
+import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
 import System.OsPath qualified as FP
 import TOML qualified
@@ -183,3 +201,24 @@ runLogger = interpret_ $ \case
             threadLabel = False,
             timezone = False
           }
+
+displayInnerMatchKnown :: (Exception e) => e -> String
+displayInnerMatchKnown e =
+  if Ex.Ann.Utils.matchesException knownExceptions e
+    then case toException e of
+      SomeException innerEx -> displayException innerEx
+    else displayException e
+
+knownExceptions :: List ExceptionProxy
+knownExceptions =
+  [ MkExceptionProxy @PacerEx.ChartFileMissingE,
+    MkExceptionProxy @PacerEx.CommandConvertE,
+    MkExceptionProxy @PacerEx.CommandDeriveE,
+    MkExceptionProxy @PacerEx.CommandScaleE,
+    MkExceptionProxy @PacerEx.CreateChartE,
+    MkExceptionProxy @PacerEx.FileNotFoundE,
+    MkExceptionProxy @PacerEx.GarminE,
+    MkExceptionProxy @PacerEx.NpmE,
+    MkExceptionProxy @RunDatetimeOverlapE,
+    MkExceptionProxy @PacerEx.TomlE
+  ]

@@ -3,6 +3,7 @@
 
 module Unit.Pacer.Command.Chart.Params (tests) where
 
+import Data.List qualified as L
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Effectful.FileSystem.PathReader.Dynamic
@@ -10,7 +11,8 @@ import Effectful.FileSystem.PathReader.Dynamic
       ( CanonicalizePath,
         DoesFileExist,
         GetCurrentDirectory,
-        GetXdgDirectory
+        GetXdgDirectory,
+        ListDirectory
       ),
   )
 import Effectful.Logger.Dynamic (Logger (LoggerLog))
@@ -22,12 +24,10 @@ import Pacer.Command.Chart.Params
         cleanInstall,
         dataDir,
         json,
-        runsPath,
-        runsType
+        runPaths
       ),
     ChartParamsArgs,
     ChartParamsFinal,
-    RunsType (RunsDefault, RunsGarmin),
   )
 import Pacer.Command.Chart.Params qualified as Params
 import Pacer.Config.Env.Types (CachedPaths)
@@ -35,7 +35,8 @@ import Pacer.Config.Toml
   ( Toml,
     TomlWithPath (MkTomlWithPath, dirPath, toml),
   )
-import Pacer.Exception qualified as Ex
+import Pacer.Driver (displayInnerMatchKnown)
+import System.OsPath qualified as OsPath
 import Unit.Prelude
 
 tests :: TestTree
@@ -59,9 +60,7 @@ successTests =
       testEvolvePhaseConfigRelData,
       testEvolvePhaseXdgPaths,
       testEvolvePhaseGarmin,
-      testEvolvePhaseBothToml,
-      testEvolvePhaseBothTomlRunsType,
-      testEvolvePhaseBothGarmin
+      testEvolvePhaseBoth
     ]
 
 buildDirTests :: TestTree
@@ -153,14 +152,14 @@ testEvolvePhaseCliPaths =
           #dataDir
           (Just [osp|cli-data|])
         $ set'
-          #runsPath
-          (Just [osp|cli-runs.toml|])
+          #runPaths
+          [[osp|cli-runs.toml|]]
           baseChartParams
 
     toml =
       set'
-        (#chartConfig %? #runsPath)
-        (Just [osp|config-runs.toml|])
+        (#chartConfig %? #runPaths)
+        [[osp|config-runs.toml|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -186,8 +185,8 @@ testEvolvePhaseCliData =
 
     toml =
       set'
-        (#chartConfig %? #runsPath)
-        (Just [osp|config-runs.toml|])
+        (#chartConfig %? #runPaths)
+        [[osp|config-runs.toml|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -215,8 +214,8 @@ testEvolvePhaseConfigAbsPaths =
 
     toml =
       set'
-        (#chartConfig %? #runsPath)
-        (Just $ rootOsPath </> [osp|config-runs.toml|])
+        (#chartConfig %? #runPaths)
+        [rootOsPath </> [osp|config-runs.toml|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -244,8 +243,8 @@ testEvolvePhaseConfigRelPaths =
 
     toml =
       set'
-        (#chartConfig %? #runsPath)
-        (Just [osp|rel-runs.toml|])
+        (#chartConfig %? #runPaths)
+        [[osp|rel-runs.toml|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -341,12 +340,12 @@ testEvolvePhaseGarmin =
         baseChartParams
     toml = baseToml
 
-testEvolvePhaseBothToml :: TestTree
-testEvolvePhaseBothToml =
+testEvolvePhaseBoth :: TestTree
+testEvolvePhaseBoth =
   testGoldenParamsOs
     $ MkGoldenParams
-      { testDesc = "Uses TOML when both runs types exist",
-        testName = [osp|testEvolvePhaseBothToml|],
+      { testDesc = "Uses TOML and Garmin when both runs types exist",
+        testName = [osp|testEvolvePhaseBoth|],
         runner = goldenRunner params toml
       }
   where
@@ -355,40 +354,6 @@ testEvolvePhaseBothToml =
         #dataDir
         (Just [osp|cli-both|])
         baseChartParams
-    toml = baseToml
-
-testEvolvePhaseBothTomlRunsType :: TestTree
-testEvolvePhaseBothTomlRunsType =
-  testGoldenParamsOs
-    $ MkGoldenParams
-      { testDesc = "Uses TOML when both runs types exist and runs-type default",
-        testName = [osp|testEvolvePhaseBothTomlRunsType|],
-        runner = goldenRunner params toml
-      }
-  where
-    params =
-      set' #runsType (Just RunsDefault)
-        $ set'
-          #dataDir
-          (Just [osp|cli-both|])
-          baseChartParams
-    toml = baseToml
-
-testEvolvePhaseBothGarmin :: TestTree
-testEvolvePhaseBothGarmin =
-  testGoldenParamsOs
-    $ MkGoldenParams
-      { testDesc = "Uses garmin when both runs types exist and runs-type garmin",
-        testName = [osp|testEvolvePhaseBothGarmin|],
-        runner = goldenRunner params toml
-      }
-  where
-    params =
-      set' #runsType (Just RunsGarmin)
-        $ set'
-          #dataDir
-          (Just [osp|cli-both|])
-          baseChartParams
     toml = baseToml
 
 failureTests :: TestTree
@@ -415,13 +380,13 @@ testEvolvePhaseCliPathsEx =
           #dataDir
           (Just [osp|cli-data|])
         $ set'
-          #runsPath
-          (Just [osp|bad_runs.toml|])
+          #runPaths
+          [[osp|bad_runs.toml|]]
           baseChartParams
     toml =
       set'
-        (#chartConfig %? #runsPath)
-        (Just [osp|rel-runs.toml|])
+        (#chartConfig %? #runPaths)
+        [[osp|rel-runs.toml|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -442,8 +407,8 @@ testEvolvePhaseConfigPathsEx =
     params = baseChartParams
     toml =
       set'
-        (#chartConfig %? #runsPath)
-        (Just [osp|bad-runs.toml|])
+        (#chartConfig %? #runPaths)
+        [[osp|bad-runs.toml|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -546,6 +511,18 @@ runPathReaderMock = interpret_ $ \case
             then rootOsPath </> [ospPathSep|xdg/config|] </> p
             else rootOsPath </> [ospPathSep|bad_xdg/config|] </> p
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
+  ListDirectory p
+    | dirName == [osp|cli-garmin|] ->
+        pure [[osp|activities.csv|], [osp|chart-requests.toml|]]
+    | dirName == [osp|cli-both|] ->
+        pure
+          [ [osp|activities.csv|],
+            [osp|chart-requests.toml|],
+            [osp|runs.toml|]
+          ]
+    | otherwise -> pure []
+    where
+      dirName = L.last $ OsPath.splitDirectories p
   _ -> error "runPathReaderMock: unimplemented"
 
 goldenRunner :: ChartParamsArgs -> Toml -> IO ByteString
@@ -562,7 +539,7 @@ goldenRunnerXdg xdg params toml = do
     Right x -> pShowBS x
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
-    Left ex -> encodeUtf8 $ packText $ Ex.displayInnerMatchKnown ex
+    Left ex -> encodeUtf8 $ packText $ displayInnerMatchKnown ex
 
 rootOsPath :: OsPath
 rootOsPath = pathToOsPath rootPath
@@ -576,8 +553,7 @@ baseChartParams =
       dataDir = Nothing,
       json = False,
       runLabelsPath = Nothing,
-      runsPath = Nothing,
-      runsType = Nothing
+      runPaths = []
     }
 
 baseToml :: Toml

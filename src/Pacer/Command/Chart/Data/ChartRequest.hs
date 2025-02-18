@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Command.Chart.Data.ChartRequest
   ( -- * ChartRequest
     ChartRequest (..),
@@ -135,3 +138,7 @@ instance
         { chartRequests,
           garminSettings
         }
+
+makeFieldLabelsNoPrefix ''GarminSettings
+makeFieldLabelsNoPrefix ''ChartRequest
+makeFieldLabelsNoPrefix ''ChartRequests
