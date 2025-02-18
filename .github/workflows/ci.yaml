@@ -44,7 +44,6 @@ jobs:
       - name: Build
         run: cabal build exe:pacer
 
-      # yamllint disable rule:line-length
       - name: Unit tests
         id: unit
         run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000 --size-cutoff 100000'
@@ -93,11 +92,9 @@ jobs:
       - name: Build
         run: stack build --ghc-options -Werror
 
-      # yamllint disable rule:line-length
       - name: Unit tests
         id: unit
         run: stack test pacer:test:unit --ghc-options -Werror --test-arguments '--hedgehog-tests 1000000'
-      # yamllint enable
 
       - name: Functional tests
         id: functional
@@ -137,10 +134,8 @@ jobs:
         run: nix build -L
 
       # Enter dev shell w/o npm.
-      # yamllint disable rule:line-length
       - name: Test executable
         run: nix develop --unset PATH .#ci -c bash -c ".github/scripts/nix_test.sh"
-        # yamllint enable
 
   lint:
     runs-on: "ubuntu-latest"
