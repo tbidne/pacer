@@ -1,5 +1,5 @@
 ---
-resolver: nightly-2025-02-09
+resolver: nightly-2025-02-18
 packages:
   - .
 ghc-options:

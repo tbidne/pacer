@@ -18,8 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         ghc:
-          - "9.10.1"
-          - "9.12.1"
+          - vers: "9.10.1"
+            proj_file: "--project-file cabal.ghc9101.project"
+          - vers: "9.12.1"
+            proj_file: ""
         os:
           - "macos-latest"
           - "ubuntu-latest"
@@ -31,7 +33,7 @@ jobs:
       - name: Setup haskell
         uses: haskell-actions/setup@v2
         with:
-          ghc-version: ${{ matrix.ghc }}
+          ghc-version: ${{ matrix.ghc.vers }}
 
       - name: Setup node
         uses: actions/setup-node@v4
@@ -39,18 +41,18 @@ jobs:
           node-version: 23.x
 
       - name: Configure
-        run: cabal configure --enable-tests --ghc-options -Werror
+        run: cabal configure ${{ matrix.ghc.proj_file }} --enable-tests --ghc-options -Werror
 
       - name: Build
-        run: cabal build exe:pacer
+        run: cabal build ${{ matrix.ghc.proj_file }} exe:pacer
 
       - name: Unit tests
         id: unit
-        run: cabal test pacer:unit --test-options '--hedgehog-tests 1000000 --size-cutoff 100000'
+        run: cabal test ${{ matrix.ghc.proj_file }} pacer:unit --test-options '--hedgehog-tests 1000000 --size-cutoff 100000'
 
       - name: Functional tests
         id: functional
-        run: cabal test pacer:functional --test-options '--size-cutoff 100000'
+        run: cabal test ${{ matrix.ghc.proj_file }} pacer:functional --test-options '--size-cutoff 100000'
 
       - name: Generate charts html/hs
 
@@ -61,11 +63,9 @@ jobs:
         # It may be possible to require 0 console errors, though of course that
         # could be overly restrictive.
         run: |
-          cabal run pacer -- chart --data examples
+          cabal run pacer ${{ matrix.ghc.proj_file }} -- chart --data examples
           # Let's test it overwrites successfully
-          cabal run pacer -- chart --data examples
-
-      # yamllint enable
+          cabal run pacer ${{ matrix.ghc.proj_file }} -- chart --data examples
 
   stack:
     strategy:

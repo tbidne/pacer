@@ -203,7 +203,7 @@ packages:
     git: https://github.com/tbidne/smart-math.git
 snapshots:
 - completed:
-    sha256: 6a2ad7906e1cbbd2e827d5218a5b2fb2d7a5a08366f4575ca992123ef0cd9fe1
-    size: 653401
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/2/9.yaml
-  original: nightly-2025-02-09
+    sha256: f845a23b2f5cf4b08151dea86225506ad057444422830a1b7bc282a73722c06a
+    size: 654474
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/2/18.yaml
+  original: nightly-2025-02-18
