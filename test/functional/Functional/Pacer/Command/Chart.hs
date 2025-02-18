@@ -38,19 +38,21 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs =
-            const
-              [ "chart",
-                "--data",
-                dataDir,
-                "--runs",
-                runsPath,
-                "--json"
-              ],
+        { mkArgs = \p ->
+            [ "chart",
+              "--data",
+              dataDir,
+              "--runs",
+              runsPath,
+              "--json",
+              "--build-dir",
+              buildDir p
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Generates example",
           testName = [osp|testExampleChart|]
         }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     dataDir = unsafeDecode [osp|examples|]
     runsPath = unsafeDecode [ospPathSep|examples/runs.toml|]
 
@@ -62,20 +64,21 @@ testSimpleBuildDir getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs =
-            const
-              [ "chart",
-                "--build-dir",
-                "another-build",
-                "--data",
-                dataDir,
-                "--json"
-              ],
+        { mkArgs = \p ->
+            [ "chart",
+              "--build-dir",
+              buildDir p,
+              "--data",
+              dataDir,
+              "--json"
+            ],
           outFileName = Just [ospPathSep|another-build/charts.json|],
           testDesc = "Simple with build-dir",
           testName = [osp|testSimpleBuildDir|]
         }
-    dataDir = unsafeDecode [ospPathSep|test/functional/data/testSimpleBuildDir|]
+    buildDir p = unsafeDecode $ p </> [osp|another-build|]
+    dataDir =
+      unsafeDecode [ospPathSep|test/functional/data/testSimpleBuildDir|]
 
 testFilter :: IO OsPath -> TestTree
 testFilter = testChart "Filter example" [osp|testFilter|]
@@ -111,17 +114,19 @@ testDefaultAndGarminExamples getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs =
-            const
-              [ "chart",
-                "--json",
-                "--data",
-                dataDir
-              ],
+        { mkArgs = \p ->
+            [ "chart",
+              "--json",
+              "--data",
+              dataDir,
+              "--build-dir",
+              buildDir p
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Generates example with default and garmin",
           testName = [osp|testDefaultAndGarminExamples|]
         }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     dataDir = unsafeDecode [osp|examples|]
 
 testCaseInsensitive :: IO OsPath -> TestTree
@@ -156,32 +161,40 @@ testPathXdg getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = const ["chart", "--json"],
+        { mkArgs = \p ->
+            [ "chart",
+              "--json",
+              "--build-dir",
+              buildDir p
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "No paths uses XDG config",
           testName = [osp|testPathXdg|]
         }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
 
 testPathChartRequestsOverrideData :: IO OsPath -> TestTree
 testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs =
-            const
-              [ "chart",
-                "--json",
-                "--chart-requests",
-                chartRequestsPath,
-                "--data",
-                dataDir,
-                "--runs",
-                runsPath
-              ],
+        { mkArgs = \p ->
+            [ "chart",
+              "--json",
+              "--chart-requests",
+              chartRequestsPath,
+              "--data",
+              dataDir,
+              "--runs",
+              runsPath,
+              "--build-dir",
+              buildDir p
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--chart-requests overrides --data",
           testName = [osp|testPathChartRequestsOverrideData|]
         }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     chartRequestsPath =
       unsafeDecode
         [ospPathSep|test/functional/data/testSimple/chart-requests.toml|]
@@ -217,11 +230,21 @@ testPathRunsOverrideData getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = const ["chart", "--json", "--runs", runsPath, "--data", dataDir],
+        { mkArgs = \p ->
+            [ "chart",
+              "--json",
+              "--runs",
+              runsPath,
+              "--data",
+              dataDir,
+              "--build-dir",
+              buildDir p
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--runs overrides --data",
           testName = [osp|testPathRunsOverrideData|]
         }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     runsPath =
       unsafeDecode
         [ospPathSep|test/functional/data/testSimple/runs.toml|]
@@ -232,11 +255,19 @@ testPathChartRequestsOverrideXdg getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = const ["chart", "--json", "--chart-requests", chartRequestsPath],
+        { mkArgs = \p ->
+            [ "chart",
+              "--json",
+              "--chart-requests",
+              chartRequestsPath,
+              "--build-dir",
+              buildDir p
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--chart-requests overrides XDG",
           testName = [osp|testPathChartRequestsOverrideXdg|]
         }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     chartRequestsPath =
       unsafeDecode
         [ospPathSep|test/functional/data/testSimple/chart-requests.toml|]
@@ -246,11 +277,19 @@ testPathRunsOverrideXdg getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = const ["chart", "--json", "--runs", runsPath],
+        { mkArgs = \p ->
+            [ "chart",
+              "--json",
+              "--runs",
+              runsPath,
+              "--build-dir",
+              buildDir p
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "--runs overrides XDG",
           testName = [osp|testPathRunsOverrideXdg|]
         }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     runsPath =
       unsafeDecode [ospPathSep|test/functional/data/testSimple/runs.toml|]
 
@@ -259,12 +298,20 @@ testPathConfig getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
-        { mkArgs = const ["chart", "--json", "--config", configPath],
+        { mkArgs = \p ->
+            [ "chart",
+              "--json",
+              "--build-dir",
+              buildDir p,
+              "--config",
+              configPath
+            ],
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc = "Uses explicit config",
           testName = [osp|testPathConfig|]
         }
 
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     configPath = unsafeDecode [ospPathSep|examples/config.toml|]
 
 -- TODO: Would be nice to have an e2e test for chart generation i.e. actually

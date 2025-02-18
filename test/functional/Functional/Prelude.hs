@@ -308,13 +308,14 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
 
     params =
       MkGoldenParams
-        { mkArgs =
-            const
-              [ "chart",
-                "--data",
-                dataDir,
-                "--json"
-              ],
+        { mkArgs = \p ->
+            [ "chart",
+              "--data",
+              dataDir,
+              "--json",
+              "--build-dir",
+              buildDir p
+            ],
           -- The chart tests will all write an output file charts.json
           outFileName = Just [ospPathSep|build/charts.json|],
           testDesc,
@@ -324,6 +325,7 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
     -- These are always based on the testName, since all Os's share the same
     -- CLI inputs.
     basePath = [ospPathSep|test/functional/data|]
+    buildDir p = unsafeDecode $ p </> [osp|build|]
     dataDir = unsafeDecode $ basePath </> testName
 
 testGoldenParams :: IO OsPath -> GoldenParams -> TestTree
