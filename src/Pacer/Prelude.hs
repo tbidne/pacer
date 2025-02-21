@@ -51,14 +51,7 @@ module Pacer.Prelude
     fromSingI,
 
     -- * Errors
-    -- ** Either
-    failLeft,
-    failMapLeft,
     readFail,
-    throwLeft,
-    throwMapLeft,
-    errorLeft,
-    errorMapLeft,
 
     -- ** Misc
     displayExceptiont,
@@ -428,14 +421,18 @@ import Optics.Core as X
   ( AffineTraversal',
     An_AffineTraversal,
     Is,
+    Iso,
+    Iso',
     Lens,
     Lens',
     NoIx,
     Optic',
     Prism,
     Prism',
+    iso,
     over',
     preview,
+    review,
     set',
     view,
     (%),
@@ -459,7 +456,6 @@ import Pacer.Data.Result as X
     ResultDefault,
     errorErr,
     failErr,
-    fromEither,
     throwErr,
   )
 import System.FilePath (FilePath)
@@ -477,40 +473,6 @@ infixl 4 <<$>>
 (<<&>>) = flip (<<$>>)
 
 infixl 1 <<&>>
-
-errorMapLeft :: (HasCallStack) => (a -> String) -> Either a b -> b
-errorMapLeft f = errorLeft . first f
-
-errorLeft :: (HasCallStack) => Either String a -> a
-errorLeft (Left str) = error str
-errorLeft (Right x) = x
-
-failMapLeft :: (MonadFail m) => (a -> String) -> Either a b -> m b
-failMapLeft f = failLeft . first f
-
-failLeft :: (MonadFail m) => Either String a -> m a
-failLeft (Left str) = fail str
-failLeft (Right x) = pure x
-
-throwMapLeft ::
-  ( HasCallStack,
-    Exception e,
-    MonadThrow m
-  ) =>
-  (a -> e) ->
-  Either a b ->
-  m b
-throwMapLeft f = throwLeft . first f
-
-throwLeft ::
-  ( HasCallStack,
-    Exception e,
-    MonadThrow m
-  ) =>
-  Either e a ->
-  m a
-throwLeft (Left ex) = throwM ex
-throwLeft (Right x) = pure x
 
 showt :: (Show a) => a -> Text
 showt = packText . show

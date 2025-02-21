@@ -258,6 +258,9 @@ prefix t f = Prefix (f <$ MPC.string t)
 blexeme :: Parsec Void ByteString a -> Parsec Void ByteString a
 blexeme = Lex.lexeme MPB.space
 
+-- TODO: Maybe test stripComments? Or json somehow.
+
+-- | Strips a bytestring of line (//) and block (/* */) comments.
 stripComments :: ByteString -> ResultDefault ByteString
 stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
   where

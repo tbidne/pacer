@@ -1,9 +1,8 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Data.Result
   ( Result (..),
     ResultDefault,
-
-    -- * Construction
-    fromEither,
 
     -- * Elimination
     onResult,
@@ -22,6 +21,8 @@ import Data.Bifunctor (Bifunctor (bimap))
 import Data.Bitraversable (Bitraversable (bitraverse))
 import Data.String (IsString (fromString))
 import GHC.Stack (HasCallStack)
+import Optics.Core (An_Iso, LabelOptic, iso)
+import Optics.Label (LabelOptic (labelOptic))
 import Prelude
 
 -- | General type for error handling, with convenient MonadFail instance.
@@ -29,6 +30,18 @@ data Result e a
   = Err e
   | Ok a
   deriving stock (Eq, Functor, Show)
+
+instance
+  ( k ~ An_Iso,
+    x ~ Either e a,
+    y ~ Either e a
+  ) =>
+  LabelOptic "eitherIso" k (Result e a) (Result e a) x y
+  where
+  labelOptic =
+    iso
+      (\case Ok x -> Right x; Err x -> Left x)
+      (\case Right x -> Ok x; Left x -> Err x)
 
 type ResultDefault = Result String
 
@@ -69,12 +82,15 @@ instance Bitraversable Result where
   bitraverse f _ (Err a) = Err <$> f a
   bitraverse _ g (Ok b) = Ok <$> g b
 
+-- | Eliminates 'Err' via 'error'.
 errorErr :: (HasCallStack) => ResultDefault a -> a
 errorErr = onErr error
 
+-- | Eliminates 'Err' via 'MonadFail'.
 failErr :: (MonadFail m) => ResultDefault a -> m a
 failErr = onResult fail pure
 
+-- | Eliminates 'Err' via 'MonadThrow'.
 throwErr ::
   ( Exception e,
     HasCallStack,
@@ -83,15 +99,15 @@ throwErr ::
   Result e a -> m a
 throwErr = onResult throwM pure
 
+-- | General eliminator.
 onResult :: (e -> b) -> (a -> b) -> Result e a -> b
 onResult f _ (Err err) = f err
 onResult _ g (Ok x) = g x
 
+-- | 'Err' eliminator.
 onErr :: (e -> a) -> Result e a -> a
 onErr f = onResult f id
 
+-- | 'Ok' eliminator.
 onOk :: (a -> e) -> Result e a -> e
 onOk g = onResult id g
-
-fromEither :: Either e a -> Result e a
-fromEither = either Err Ok

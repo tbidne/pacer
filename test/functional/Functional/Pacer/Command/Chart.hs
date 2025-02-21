@@ -146,7 +146,7 @@ testBothChartOverlapError = testChart desc [osp|testBothChartOverlapError|]
     desc = "Datetime overlap across multiple run files errors"
 
 testUnknownKeyFailure :: IO OsPath -> TestTree
-testUnknownKeyFailure = testChart desc [osp|testUnknownKeyFailure|]
+testUnknownKeyFailure = testChartPosix True desc [osp|testUnknownKeyFailure|]
   where
     desc = "Unknown key causes an error"
 
