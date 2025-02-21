@@ -1,0 +1,40 @@
+{
+  "charts": [
+    {
+      "title": "Runs by distance",
+      "y-axis": "distance",
+      "type": {
+        "name": "default"
+      }
+    },
+    {
+      "title": "Runs by week",
+      "y-axis": "distance",
+      "y1-axis": "pace",
+      "type": {
+        "name": "sum",
+        "period": "week"
+      }
+    },
+    {
+      "title": "Runs by month",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "month"
+      },
+      "unit": "mi"
+    },
+    {
+      "title": "Runs by year",
+      "y-axis": "duration",
+      "y1-axis": "pace",
+      "type": {
+        "name": "sum",
+        "period": "year"
+      }
+    }
+  ]
+}
+

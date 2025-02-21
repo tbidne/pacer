@@ -1,0 +1,39 @@
+{
+  "runs": [
+    {
+      "datetime": "2024-10-02",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-05",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-15",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-18",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-19",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2025-01-15",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2025-01-25",
+      "distance": "5 km",
+      "duration": "20m30s"
+    }
+  ]
+}

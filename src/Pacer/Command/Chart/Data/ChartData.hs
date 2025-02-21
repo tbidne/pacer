@@ -242,6 +242,8 @@ handleChartType @a mChartType someRuns = case mChartType of
               MkSomeRun sy
                 $ MkRun
                   { datetime = roundFn y.datetime,
+                    -- NOTE: No need to convert the distance to the requested
+                    -- distance here, as mkChartDataSets will take care of it.
                     distance = y.distance,
                     duration = y.duration,
                     labels = mempty,

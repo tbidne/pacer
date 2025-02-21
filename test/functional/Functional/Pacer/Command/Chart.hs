@@ -31,7 +31,8 @@ basicTests getTestDir =
       testCaseInsensitive getTestDir,
       testGarminChartError getTestDir,
       testBothChartOverlapError getTestDir,
-      testUnknownKeyFailure getTestDir
+      testUnknownKeyFailure getTestDir,
+      testChartSum getTestDir
     ]
 
 testExampleChart :: IO OsPath -> TestTree
@@ -149,6 +150,11 @@ testUnknownKeyFailure :: IO OsPath -> TestTree
 testUnknownKeyFailure = testChartPosix True desc [osp|testUnknownKeyFailure|]
   where
     desc = "Unknown key causes an error"
+
+testChartSum :: IO OsPath -> TestTree
+testChartSum = testChart desc [osp|testChartSum|]
+  where
+    desc = "Uses chart sum"
 
 pathTests :: IO OsPath -> TestTree
 pathTests getTestDir =
