@@ -61,9 +61,11 @@ import Pacer.Class.FromAlt (FromAlt, isNonEmpty)
 import Pacer.Class.Parser qualified as P
 import Pacer.Prelude
 
+-- | Encodes 'Maybe's to a possibly empty list.
 encodeMaybes :: (ToJSON v) => List (Tuple2 Key (Maybe v)) -> List Pair
 encodeMaybes = (>>= encodeMaybe)
 
+-- | Encodes a 'Maybe' to a possibly empty list.
 encodeMaybe :: (ToJSON v) => Tuple2 Key (Maybe v) -> List Pair
 encodeMaybe (_, Nothing) = []
 encodeMaybe (k, Just v) = [k .= v]
@@ -108,6 +110,7 @@ instance Exception AesonPathE where
         s
       ]
 
+-- | Decodes a json(c) file.
 readDecodeJson ::
   forall a es.
   ( FileReader :> es,
@@ -125,7 +128,15 @@ readDecodeJson path = do
     osPath = pathToOsPath path
     toAesonPathE (AesonException s) = MkAesonPathE osPath s
 
-failUnknownFields :: Key -> List Key -> KeyMap Asn.Value -> AsnT.Parser ()
+-- | Fails if there are any unknown fields in the object.
+failUnknownFields ::
+  -- | Key label to improve error message.
+  Key ->
+  -- | Known keys.
+  List Key ->
+  -- | Actual keys.
+  KeyMap Asn.Value ->
+  AsnT.Parser ()
 failUnknownFields name knownKeys kmap = do
   case HSet.toList unknownKeys of
     [] -> pure ()
@@ -147,10 +158,11 @@ failUnknownFields name knownKeys kmap = do
     showKeys :: List Key -> String
     showKeys = show . L.sort . fmap Key.toString
 
+-- | Decodes json(c).
 decodeJson :: (FromJSON a) => ByteString -> Result AesonException a
 decodeJson =
   first AesonException
-    <<< fromEither
+    <<< (review #eitherIso)
     . Asn.eitherDecodeStrict
     <=< P.stripComments
 

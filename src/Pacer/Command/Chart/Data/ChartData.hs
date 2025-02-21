@@ -157,7 +157,7 @@ mkChartDatas ::
   DistanceUnit ->
   SomeRuns a ->
   ChartRequests a ->
-  Either CreateChartE (Seq ChartData)
+  Result CreateChartE (Seq ChartData)
 mkChartDatas finalDistUnit runs =
   traverse (mkChartData finalDistUnit runs) . (.chartRequests)
 
@@ -183,11 +183,11 @@ mkChartData ::
   -- | Chart request.
   ChartRequest a ->
   -- | ChartData result. Nothing if no runs passed the request's filter.
-  Either CreateChartE ChartData
+  Result CreateChartE ChartData
 mkChartData finalDistUnit (MkSomeRuns (SetToSeqNE someRuns)) request =
   case finalRuns of
-    Empty -> Left $ CreateChartFilterEmpty request.title
-    r :<| rs -> Right (mkChartDataSets finalDistUnit request (r :<|| rs))
+    Empty -> Err $ CreateChartFilterEmpty request.title
+    r :<| rs -> Ok (mkChartDataSets finalDistUnit request (r :<|| rs))
   where
     filteredRuns = filterRuns someRuns request.filters
 

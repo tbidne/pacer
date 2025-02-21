@@ -52,7 +52,7 @@ mkCharts ::
   ) =>
   SomeRuns a ->
   ChartRequests a ->
-  Either CreateChartE (Seq Chart)
+  Result CreateChartE (Seq Chart)
 mkCharts runs = traverse (mkChart runs) . (.chartRequests)
 
 mkChart ::
@@ -66,7 +66,7 @@ mkChart ::
   ) =>
   SomeRuns a ->
   ChartRequest a ->
-  Either CreateChartE Chart
+  Result CreateChartE Chart
 mkChart someRuns request = toChart <$> eChartData
   where
     eChartData = ChartData.mkChartData finalDistUnit someRuns request

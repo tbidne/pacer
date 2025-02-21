@@ -391,22 +391,23 @@ findConfigPath ::
   Eff es (f (Path Abs File))
 -- 1. Config does not exist. Nothing to do, just return empty.
 findConfigPath _ _ Nothing = pure empty
-findConfigPath fileNames configSel (Just configWithPath) = addNamespace "findConfigPath" $ do
-  case preview (#config % configSel) configWithPath of
-    -- 2. Config.paths field exists.
-    Just mPath ->
-      -- 2.1. Config.paths is non-empty, use it.
-      if isNonEmpty mPath
-        then
-          for mPath
-            $ handleUnknownPath
-              configWithPath.dirPath
-              Path.parseAbsFile
-              Path.parseRelFile
-        -- 2.2. Config.paths exists but is empty, try config data dir.
-        else tryConfigDataDir
-    -- 3. Config.paths does not exist, try config data dir.
-    Nothing -> tryConfigDataDir
+findConfigPath fileNames configSel (Just configWithPath) =
+  addNamespace "findConfigPath" $ do
+    case preview (#config % configSel) configWithPath of
+      -- 2. Config.paths field exists.
+      Just mPath ->
+        -- 2.1. Config.paths is non-empty, use it.
+        if isNonEmpty mPath
+          then
+            for mPath
+              $ handleUnknownPath
+                configWithPath.dirPath
+                Path.parseAbsFile
+                Path.parseRelFile
+          -- 2.2. Config.paths exists but is empty, try config data dir.
+          else tryConfigDataDir
+      -- 3. Config.paths does not exist, try config data dir.
+      Nothing -> tryConfigDataDir
   where
     configDataSel :: AffineTraversal' ConfigWithPath OsPath
     configDataSel = #config % #chartConfig %? #dataDir % _Just

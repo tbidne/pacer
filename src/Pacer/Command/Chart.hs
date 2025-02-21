@@ -344,7 +344,7 @@ createChartSeq chartPaths = addNamespace "createChartSeq" $ do
 
         pure $ Run.mapSomeRuns updateLabels allRuns
 
-  throwLeft (Chart.mkCharts runsWithLabels chartRequests)
+  throwErr (Chart.mkCharts runsWithLabels chartRequests)
   where
     (chartRequestsPath, mRunLabelsPath, runPaths) = chartPaths
 
