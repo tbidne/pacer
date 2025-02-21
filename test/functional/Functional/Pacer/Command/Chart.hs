@@ -197,8 +197,6 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
               chartRequestsPath,
               "--data",
               dataDir,
-              "--runs",
-              runsPath,
               "--build-dir",
               buildDir p
             ],
@@ -211,31 +209,8 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
       unsafeDecode
         [ospPathSep|test/functional/data/testSimple/chart-requests.json|]
 
-    -- TODO:
-    --
-    -- We shouldn't _have_ to specify the runs file for this test, so why
-    -- do we? Due to reusing test files. The situation here is:
-    --
-    -- 1. We are using the examples data directory.
-    -- 2. We are providing a chart-requests path via
-    --    testSimple/chart-requests.json
-    --
-    -- The intention is that testSimple/chart-requests.json overrides
-    -- examples/chart-requests.json, so we shouldn't care about runs.json
-    -- at all. The problem is that the examples directory has both runs.json
-    -- _and_ Activities.csv, so both files will be used for runs, hence
-    -- the chart-requests file needs to have its garmin-settings set.
-    -- But changing testSimple/chart-requests.json would screw up that test.
-    --
-    -- The easiest solution for now is to explicitly provide --runs with the
-    -- json file, so that we don't get a garmin error. But really we should
-    -- copy some files to a new testPathChartRequestsOverrideData
-    -- directory, to eliminate the test interference.
-    runsPath = unsafeDecode [ospPathSep|examples/runs.jsonc|]
-
-    -- Arbitrarily using the examples as the data dir, since we want some
-    -- non-XDG directory to be overwritten.
-    dataDir = unsafeDecode [osp|examples|]
+    -- Want this dir overridden for chart-requests
+    dataDir = unsafeDecode [osp|test/functional/data/testPathChartRequestsOverrideData|]
 
 testPathRunsOverrideData :: IO OsPath -> TestTree
 testPathRunsOverrideData getTestDir = testGoldenParams getTestDir params
