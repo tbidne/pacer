@@ -182,10 +182,12 @@ test-suite unit
     Unit.Pacer.Data.Distance.Units
     Unit.Pacer.Data.Duration
     Unit.Pacer.Data.Pace
+    Unit.Pacer.Utils
     Unit.Prelude
     Unit.TestUtils
 
   build-depends:
+    , aeson
     , base
     , bytestring
     , containers

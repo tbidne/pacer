@@ -114,7 +114,7 @@ testPropMaxN maxLimit name desc p =
   askOption $ \(HedgehogTestLimit mLimit) ->
     case mLimit of
       -- If no CLI arg is passed, use the default limit.
-      Nothing -> testPropN 100 name desc p
+      Nothing -> testProp name desc p
       -- If a CLI arg is passed, take the min.
       Just cliLimit -> testPropN (min cliLimit maxLimit) name desc p
 

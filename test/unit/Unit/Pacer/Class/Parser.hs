@@ -3,13 +3,9 @@ module Unit.Pacer.Class.Parser (tests) where
 import Data.ByteString qualified as BS
 import Data.Char qualified as Ch
 import Data.List qualified as L
-import Data.Text qualified as T
-import Data.Text.Lazy qualified as TL
-import Data.Text.Lazy.Builder qualified as TLB
-import Hedgehog.Gen qualified as Gen
-import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as P
 import Unit.Prelude
+import Unit.TestUtils qualified as TestUtils
 
 tests :: TestTree
 tests =
@@ -43,7 +39,7 @@ testStripCommentNoneCases = testCase "Unmodified cases" $ do
 
 testStripCommentNoneProps :: TestTree
 testStripCommentNoneProps = testStripProps name desc $ do
-  bs <- forAll genNonComment
+  bs <- forAll TestUtils.genNonComment
   case P.stripComments bs of
     Err e -> do
       annotate e
@@ -69,17 +65,9 @@ testStripCommentLineCases = testCase "Line comment cases" $ do
   happyParse "some / here" "some / ///* stuff */ /*\nhere"
   unhappyParse "unterminated // /* / */ blah"
 
--- TODO: Would be nice to test aeson decode here, but obvs we need to
--- generate valid json for that!!! Write a generator for Value? Or maybe just
--- test directly.
---
--- case review #eitherIso (Asn.eitherDecodeStrict @Value r) of
---  Err asnErr -> annotate asnErr *> failure
---  Ok _ -> pure ()
-
 testStripLineCommentProps :: TestTree
 testStripLineCommentProps = testStripProps name desc $ do
-  bs <- forAll genWithLineComments
+  bs <- forAll TestUtils.genWithLineComments
   case P.stripComments bs of
     Err e -> annotate e *> failure
     Ok r -> do
@@ -110,7 +98,7 @@ testStripCommentBlockCases = testCase "Block comment cases" $ do
 
 testStripBlockCommentProps :: TestTree
 testStripBlockCommentProps = testStripProps name desc $ do
-  bs <- forAll genWithBlockComments
+  bs <- forAll TestUtils.genWithBlockComments
   case P.stripComments bs of
     Err e -> annotate e *> failure
     Ok r -> do
@@ -135,7 +123,7 @@ testStripAllCommentCases = testCase "All comment cases" $ do
 
 testStripAllCommentProps :: TestTree
 testStripAllCommentProps = testStripProps name desc $ do
-  bs <- forAll genWithAllComments
+  bs <- forAll TestUtils.genWithAllComments
   case P.stripComments bs of
     Err e -> annotate e *> failure
     Ok r -> do
@@ -170,95 +158,3 @@ unhappyParse txt = case P.stripComments txt of
   -- but testing equality directly is probably too flaky.
   Err _ -> pure ()
   Ok r -> assertFailure $ "Expected failure, received: " ++ show r
-
-genWithLineComments :: Gen ByteString
-genWithLineComments = do
-  xs <- Gen.list r genNonComment
-  cs <- Gen.list r genLineComment
-  mconcat <$> Gen.shuffle (xs ++ cs)
-  where
-    r = R.linearFrom 0 0 100
-
-genWithBlockComments :: Gen ByteString
-genWithBlockComments = do
-  xs <- Gen.list r genNonComment
-  cs <- Gen.list r genBlockComment
-  mconcat <$> Gen.shuffle (xs ++ cs)
-  where
-    r = R.linearFrom 0 0 100
-
-genWithAllComments :: Gen ByteString
-genWithAllComments = do
-  xs <- Gen.list r genNonComment
-  ls <- Gen.list r genLineComment
-  bs <- Gen.list r genBlockComment
-  mconcat <$> Gen.shuffle (xs ++ ls ++ bs)
-  where
-    r = R.linearFrom 0 0 100
-
-genNonComment :: Gen ByteString
-genNonComment = fmap encodeUtf8 genNonCommentTxt
-
-genNonCommentTxt :: Gen Text
-genNonCommentTxt =
-  removeSlashStar
-    . removeDoubleSlash
-    -- Gen.text rather than Gen.utf8 (ByteString) as it is easier to remove
-    -- unwanted substrings from Text.
-    <$> Gen.text r Gen.unicode
-  where
-    r = R.linearFrom 0 0 100
-
-genLineComment :: Gen ByteString
-genLineComment = do
-  txt <- genNonCommentTxt
-  let txt' = removeNewlines txt
-  pure $ "//" <> encodeUtf8 txt' <> "\n"
-
-genBlockComment :: Gen ByteString
-genBlockComment = do
-  txt <- genNonCommentTxt
-  let txt' = removeStarSlash txt
-  pure $ "/*" <> encodeUtf8 txt' <> "*/"
-
-removeNewlines :: Text -> Text
-removeNewlines = T.replace "\n" ""
-
-removeDoubleSlash :: Text -> Text
-removeDoubleSlash =
-  toStrictText
-    . builderToLazyText
-    . snd
-    . TL.foldl' go (False, "")
-    . fromStrictText
-  where
-    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
-    go (False, acc) '/' = (True, acc <> TLB.singleton '/')
-    go (True, acc) '/' = (True, acc)
-    go (_, acc) c = (False, acc <> TLB.singleton c)
-
-removeSlashStar :: Text -> Text
-removeSlashStar =
-  toStrictText
-    . builderToLazyText
-    . snd
-    . TL.foldl' go (False, "")
-    . fromStrictText
-  where
-    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
-    go (_, acc) '/' = (True, acc <> TLB.singleton '/')
-    go (True, acc) '*' = (True, acc)
-    go (_, acc) c = (False, acc <> TLB.singleton c)
-
-removeStarSlash :: Text -> Text
-removeStarSlash =
-  toStrictText
-    . builderToLazyText
-    . snd
-    . TL.foldl' go (False, "")
-    . fromStrictText
-  where
-    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
-    go (_, acc) '*' = (True, acc <> TLB.singleton '*')
-    go (True, acc) '/' = (True, acc)
-    go (_, acc) c = (False, acc <> TLB.singleton c)

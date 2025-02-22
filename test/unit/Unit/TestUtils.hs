@@ -13,9 +13,21 @@ module Unit.TestUtils
     genTextℕ,
     genTextℕ1,
     genAffineSpace,
+
+    -- * ByteStrings
+    genWithLineComments,
+    genWithBlockComments,
+    genWithAllComments,
+    genLineComment,
+    genBlockComment,
+    genNonComment,
+    genNonCommentTxt,
   )
 where
 
+import Data.Text qualified as T
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Builder qualified as TLB
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Text.Read qualified as TR
@@ -164,3 +176,95 @@ genTextDoubleMax maxInt = do
 
 genAffineSpace :: (IsString a) => Gen a
 genAffineSpace = G.element [" ", ""]
+
+genWithLineComments :: Gen ByteString
+genWithLineComments = do
+  xs <- G.list r genNonComment
+  cs <- G.list r genLineComment
+  mconcat <$> G.shuffle (xs ++ cs)
+  where
+    r = R.linearFrom 0 0 100
+
+genWithBlockComments :: Gen ByteString
+genWithBlockComments = do
+  xs <- G.list r genNonComment
+  cs <- G.list r genBlockComment
+  mconcat <$> G.shuffle (xs ++ cs)
+  where
+    r = R.linearFrom 0 0 100
+
+genWithAllComments :: Gen ByteString
+genWithAllComments = do
+  xs <- G.list r genNonComment
+  ls <- G.list r genLineComment
+  bs <- G.list r genBlockComment
+  mconcat <$> G.shuffle (xs ++ ls ++ bs)
+  where
+    r = R.linearFrom 0 0 100
+
+genNonComment :: Gen ByteString
+genNonComment = fmap encodeUtf8 genNonCommentTxt
+
+genNonCommentTxt :: Gen Text
+genNonCommentTxt =
+  removeSlashStar
+    . removeDoubleSlash
+    -- Gen.text rather than Gen.utf8 (ByteString) as it is easier to remove
+    -- unwanted substrings from Text.
+    <$> G.text r G.unicode
+  where
+    r = R.linearFrom 0 0 100
+
+genLineComment :: Gen ByteString
+genLineComment = do
+  txt <- genNonCommentTxt
+  let txt' = removeNewlines txt
+  pure $ "//" <> encodeUtf8 txt' <> "\n"
+
+genBlockComment :: Gen ByteString
+genBlockComment = do
+  txt <- genNonCommentTxt
+  let txt' = removeStarSlash txt
+  pure $ "/*" <> encodeUtf8 txt' <> "*/"
+
+removeNewlines :: Text -> Text
+removeNewlines = T.replace "\n" ""
+
+removeDoubleSlash :: Text -> Text
+removeDoubleSlash =
+  toStrictText
+    . builderToLazyText
+    . snd
+    . TL.foldl' go (False, "")
+    . fromStrictText
+  where
+    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
+    go (False, acc) '/' = (True, acc <> TLB.singleton '/')
+    go (True, acc) '/' = (True, acc)
+    go (_, acc) c = (False, acc <> TLB.singleton c)
+
+removeSlashStar :: Text -> Text
+removeSlashStar =
+  toStrictText
+    . builderToLazyText
+    . snd
+    . TL.foldl' go (False, "")
+    . fromStrictText
+  where
+    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
+    go (_, acc) '/' = (True, acc <> TLB.singleton '/')
+    go (True, acc) '*' = (True, acc)
+    go (_, acc) c = (False, acc <> TLB.singleton c)
+
+removeStarSlash :: Text -> Text
+removeStarSlash =
+  toStrictText
+    . builderToLazyText
+    . snd
+    . TL.foldl' go (False, "")
+    . fromStrictText
+  where
+    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
+    go (_, acc) '*' = (True, acc <> TLB.singleton '*')
+    go (True, acc) '/' = (True, acc)
+    go (_, acc) c = (False, acc <> TLB.singleton c)
