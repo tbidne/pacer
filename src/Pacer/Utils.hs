@@ -216,9 +216,7 @@ searchFiles fileNames dataDir = do
     go [] = pure empty
     go (f : fs) = do
       result <- searchFileAliases False dataDir f
-      if isNonEmpty result
-        then (result <|>) <$> go fs
-        else go fs
+      (result <|>) <$> go fs
 
     msg =
       mconcat
