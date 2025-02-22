@@ -65,8 +65,8 @@ genDouble = do
     Nothing -> error $ "Could not read double: " <> t'
 
 genDoubleMax :: Int -> Gen Double
-genDoubleMax max = do
-  t <- genTextDoubleMax max
+genDoubleMax maxInt = do
+  t <- genTextDoubleMax maxInt
 
   let t' = unpackText t
 
@@ -146,7 +146,7 @@ genTextDoublePos = do
 
 -- | Generate double text like "25.349".
 genTextDoubleMax :: Int -> Gen Text
-genTextDoubleMax max = do
+genTextDoubleMax maxInt = do
   G.choice
     [ showt <$> genInt,
       do
@@ -160,7 +160,7 @@ genTextDoubleMax max = do
             ]
     ]
   where
-    genInt = G.integral @_ @Int (R.exponentialFrom 0 0 max)
+    genInt = G.integral @_ @Int (R.exponentialFrom 0 0 maxInt)
 
 genAffineSpace :: (IsString a) => Gen a
 genAffineSpace = G.element [" ", ""]

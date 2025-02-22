@@ -168,6 +168,7 @@ test-suite unit
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:
+    Unit.Pacer.Class.Parser
     Unit.Pacer.Command.Chart
     Unit.Pacer.Command.Chart.Data.ChartRequest
     Unit.Pacer.Command.Chart.Data.Expr
@@ -186,6 +187,7 @@ test-suite unit
 
   build-depends:
     , base
+    , bytestring
     , containers
     , filepath
     , fs-effectful

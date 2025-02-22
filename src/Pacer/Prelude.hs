@@ -198,6 +198,8 @@ import Data.Monoid as X (Monoid (mconcat, mempty))
 import Data.Ord as X
   ( Ord (compare, (<), (<=), (>), (>=)),
     Ordering (EQ, GT, LT),
+    max,
+    min,
   )
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Ratio as X (Ratio, Rational, denominator, numerator)

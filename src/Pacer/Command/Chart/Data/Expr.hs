@@ -39,7 +39,6 @@ import Text.Megaparsec
   )
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
-import Prelude (Ord (max))
 
 -------------------------------------------------------------------------------
 --                                  FilterOp                                 --

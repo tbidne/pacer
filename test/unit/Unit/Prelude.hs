@@ -11,6 +11,8 @@ module Unit.Prelude
     hdiff,
     testProp,
     testProp1,
+    testPropMaxN,
+    testPropN,
 
     -- * HUnit
     (@/=?),
@@ -46,6 +48,7 @@ import Hedgehog as X
     PropertyName,
     PropertyT,
     Range,
+    TestLimit,
     annotate,
     annotateShow,
     assert,
@@ -70,7 +73,7 @@ import Pacer.Data.Pace (Pace (MkPace), PaceDistF, SomePace (MkSomePace))
 import Pacer.Prelude as X hiding (IO)
 import System.FilePath (FilePath)
 import System.IO as X (IO)
-import Test.Tasty as X (TestName, TestTree, testGroup)
+import Test.Tasty as X (TestName, TestTree, askOption, localOption, testGroup)
 import Test.Tasty.Golden as X (goldenVsFileDiff)
 import Test.Tasty.HUnit as X
   ( Assertion,
@@ -79,7 +82,7 @@ import Test.Tasty.HUnit as X
     testCase,
     (@=?),
   )
-import Test.Tasty.Hedgehog as X (testPropertyNamed)
+import Test.Tasty.Hedgehog as X (HedgehogTestLimit (HedgehogTestLimit), testPropertyNamed)
 import Text.Pretty.Simple qualified as Pretty
 
 -- | Concise alias for @testPropertyNamed . property@
@@ -89,7 +92,39 @@ testProp name desc = testPropertyNamed name desc . property
 -- | 'testProp' that only runs a single test. Used for when we'd really want
 -- HUnit's testCase, but with a better diff.
 testProp1 :: TestName -> PropertyName -> PropertyT IO () -> TestTree
-testProp1 name desc = testPropertyNamed name desc . withTests 1 . property
+testProp1 name desc = testPropN 1 name desc
+
+-- | If a limit option exists (i.e. either cli --hedgehog-tests or manually
+-- setting HedgehogTestLimit), then we take the minimum of limit and the
+-- given maxLimit. This allows the following behavior:
+--
+-- - If a low limit is given (e.g. because we want tests to be fast), use it.
+-- - If a higher limit is given, use the maxLimit, so we may end up running
+--   more tests than usual, but not so many that the test takes forever.
+--
+-- Providing no limit means we use the default (100), which is hopefully a
+-- reasonable mix of speed / robustness.
+testPropMaxN ::
+  TestLimit ->
+  TestName ->
+  PropertyName ->
+  PropertyT IO () ->
+  TestTree
+testPropMaxN maxLimit name desc p =
+  askOption $ \(HedgehogTestLimit mLimit) ->
+    case mLimit of
+      -- If no CLI arg is passed, use the default limit.
+      Nothing -> testPropN 100 name desc p
+      -- If a CLI arg is passed, take the min.
+      Just cliLimit -> testPropN (min cliLimit maxLimit) name desc p
+
+-- | 'testProp' that runs for specified N times.
+testPropN :: TestLimit -> TestName -> PropertyName -> PropertyT IO () -> TestTree
+testPropN numTests name desc =
+  -- NOTE: Have to use localOption here as it overrides withTests. That is,
+  -- hedgehog's withTests has NO effect here, so don't use it!
+  localOption (HedgehogTestLimit (Just numTests))
+    . testProp name desc
 
 annotateUnpack :: Text -> PropertyT IO ()
 annotateUnpack = annotate . unpackText

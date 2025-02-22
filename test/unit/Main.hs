@@ -1,7 +1,8 @@
 module Main (main) where
 
-import Test.Tasty (defaultMain, localOption)
+import Test.Tasty (defaultMain)
 import Test.Tasty.Golden (DeleteOutputFile (OnPass))
+import Unit.Pacer.Class.Parser qualified
 import Unit.Pacer.Command.Chart qualified
 import Unit.Pacer.Command.Chart.Data.ChartRequest qualified
 import Unit.Pacer.Command.Chart.Data.Expr qualified
@@ -22,7 +23,8 @@ main =
     $ localOption OnPass
     $ testGroup
       "Unit"
-      [ Unit.Pacer.Command.Chart.tests,
+      [ Unit.Pacer.Class.Parser.tests,
+        Unit.Pacer.Command.Chart.tests,
         Unit.Pacer.Command.Chart.Data.ChartRequest.tests,
         Unit.Pacer.Command.Chart.Data.Expr.tests,
         Unit.Pacer.Command.Chart.Data.Run.tests,

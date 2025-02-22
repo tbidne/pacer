@@ -266,7 +266,7 @@ stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
   where
     bsParser :: Parsec Void ByteString (List ByteString)
     bsParser =
-      some
+      many
         $ asum
           [ parseLineComment,
             parseBlockComment,
@@ -286,7 +286,7 @@ stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
         parseLineComment :: Parsec Void ByteString ByteString
         parseLineComment = do
           parseLineCommentStart
-          _ <- MP.takeWhile1P (Just "text") (/= newline)
+          _ <- MP.takeWhileP (Just "text") (/= newline)
           MPB.char newline
           pure ""
 
