@@ -187,7 +187,16 @@ genWithLineComments = do
 
 genWithBlockComments :: Gen ByteString
 genWithBlockComments = do
-  xs <- G.list r genNonComment
+  -- Strip out forward slashes. Why? Consider the following scenario:
+  -- xs := ["foo/", "bar"]
+  -- cs := ["/* some comment */"]
+  -- shuffled := ["foo/", "/* some comment */", "bar"]
+  -- concat := "foo//* some comment */bar"
+  --
+  -- In other words, the concat turned the block comment into a line comment!
+  -- That's bad because we didn't generate the corresponding line end, i.e.
+  -- it is invalid.
+  xs <- G.list r $ (encodeUtf8 . T.replace "/" "") <$> genNonCommentTxt
   cs <- G.list r genBlockComment
   mconcat <$> G.shuffle (xs ++ cs)
   where
