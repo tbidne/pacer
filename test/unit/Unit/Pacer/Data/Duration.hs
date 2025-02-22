@@ -17,7 +17,7 @@ import Pacer.Class.Parser qualified as Parser
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Data.Duration qualified as Duration
 import Unit.Prelude
-import Unit.Utils qualified as Utils
+import Unit.TestUtils qualified as Utils
 
 tests :: TestTree
 tests =

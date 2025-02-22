@@ -26,7 +26,7 @@ import Pacer.Data.Distance.Units
   )
 import Unit.Pacer.Data.Distance.Units qualified as Units
 import Unit.Prelude
-import Unit.Utils qualified as Utils
+import Unit.TestUtils qualified as Utils
 
 tests :: TestTree
 tests =

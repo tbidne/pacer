@@ -1,4 +1,4 @@
-module Unit.Utils
+module Unit.TestUtils
   ( -- * Numeric
     genℕ,
     genℕ1,

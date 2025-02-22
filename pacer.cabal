@@ -183,7 +183,7 @@ test-suite unit
     Unit.Pacer.Data.Duration
     Unit.Pacer.Data.Pace
     Unit.Prelude
-    Unit.Utils
+    Unit.TestUtils
 
   build-depends:
     , base
