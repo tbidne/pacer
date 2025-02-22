@@ -231,40 +231,35 @@ removeNewlines :: Text -> Text
 removeNewlines = T.replace "\n" ""
 
 removeDoubleSlash :: Text -> Text
-removeDoubleSlash =
-  toStrictText
-    . builderToLazyText
-    . snd
-    . TL.foldl' go (False, "")
-    . fromStrictText
-  where
-    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
-    go (False, acc) '/' = (True, acc <> TLB.singleton '/')
-    go (True, acc) '/' = (True, acc)
-    go (_, acc) c = (False, acc <> TLB.singleton c)
+removeDoubleSlash = removePat2 '/' '/'
 
 removeSlashStar :: Text -> Text
-removeSlashStar =
-  toStrictText
-    . builderToLazyText
-    . snd
-    . TL.foldl' go (False, "")
-    . fromStrictText
-  where
-    go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
-    go (_, acc) '/' = (True, acc <> TLB.singleton '/')
-    go (True, acc) '*' = (True, acc)
-    go (_, acc) c = (False, acc <> TLB.singleton c)
+removeSlashStar = removePat2 '/' '*'
 
 removeStarSlash :: Text -> Text
-removeStarSlash =
+removeStarSlash = removePat2 '*' '/'
+
+-- | Removes all occurrences of a two-sequence pattern. Whenever we encounter
+-- the two-sequence pattern, we take the first char, and drop the second.
+removePat2 :: Char -> Char -> Text -> Text
+removePat2 startChar endChar =
   toStrictText
     . builderToLazyText
     . snd
     . TL.foldl' go (False, "")
     . fromStrictText
   where
+    -- For instance, suppose we want to remove all "start block comments" i.e.
+    -- the sequence "/*". Then startChar is / and endChar is *.
     go :: Tuple2 Bool TextBuilder -> Char -> Tuple2 Bool TextBuilder
-    go (_, acc) '*' = (True, acc <> TLB.singleton '*')
-    go (True, acc) '/' = (True, acc)
-    go (_, acc) c = (False, acc <> TLB.singleton c)
+    go (inPat, acc) currChar
+      -- 1. If we encounter the start char (/) then we are potentially in a
+      --    pattern. This is true regardless of the preceeding characters
+      --    (e.g. duplicate /'s).
+      | currChar == startChar = (True, acc <> TLB.singleton currChar)
+      -- 2. If we encounter the end char (*) _and_ we are in a pattern, then
+      --    this is exactly what we want to strip. Skip the end char, and
+      --    continue, noting that we are still in the pattern.
+      | currChar == endChar && inPat = (True, acc)
+      -- 3. Otherwise, we are not in a pattern. Proceed normally.
+      | otherwise = (False, acc <> TLB.singleton currChar)
