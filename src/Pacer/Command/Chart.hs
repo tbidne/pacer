@@ -11,6 +11,9 @@ module Pacer.Command.Chart
     createCharts,
     createChartsJsonFile,
     createChartsJsonBS,
+
+    -- ** Misc
+    updateLabels,
   )
 where
 
@@ -19,8 +22,8 @@ import Data.Aeson.Encode.Pretty
     Indent (Spaces),
   )
 import Data.Aeson.Encode.Pretty qualified as AsnPretty
-import Data.Foldable qualified as F
 import Data.Foldable1 (Foldable1 (foldlMap1'))
+import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as MP
 import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
@@ -46,7 +49,6 @@ import Pacer.Command.Chart.Data.Run
 import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.RunLabel (RunLabels (MkRunLabels))
 import Pacer.Command.Chart.Data.Time (Timestamp)
-import Pacer.Command.Chart.Data.Time qualified as T
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( buildDir,
@@ -329,20 +331,7 @@ createChartSeq chartPaths = addNamespace "createChartSeq" $ do
       Nothing -> pure allRuns
       Just runLabelsPath -> do
         MkRunLabels runLabels <- Utils.readDecodeJson runLabelsPath
-
-        let runLabelsList = MP.toList runLabels
-
-            updateLabels :: forall d a. Run d a -> Run d a
-            -- Performance here is not ideal, see
-            -- TODO: [Timestamp overlap lookup]
-            updateLabels r = case F.find p runLabelsList of
-              Nothing -> r
-              Just (_, labels) -> over' #labels (Set.union $ NESet.toSet labels) r
-              where
-                p :: Tuple2 Timestamp (NESet Text) -> Bool
-                p (ts, _) = T.overlaps ts r.datetime
-
-        pure $ Run.mapSomeRuns updateLabels allRuns
+        pure $ updateLabels runLabels allRuns
 
   throwErr (Chart.mkCharts runsWithLabels chartRequests)
   where
@@ -365,6 +354,15 @@ type ChartPaths =
     (Path Abs File) -- chart-requests
     (Maybe (Path Abs File)) -- run-labels
     (NonEmpty (Path Abs File)) -- runs
+
+-- | Updates all runs with labels from the given map.
+updateLabels :: Map Timestamp (NESet Text) -> SomeRuns a -> SomeRuns a
+updateLabels runLabels = Run.mapSomeRuns updateRunLabels
+  where
+    updateRunLabels :: forall d a. Run d a -> Run d a
+    updateRunLabels r = case MP.lookup r.datetime runLabels of
+      Nothing -> r
+      Just labels -> over' #labels (Set.union $ NESet.toSet labels) r
 
 jsonName :: Path Rel File
 jsonName = [relfile|charts.json|]

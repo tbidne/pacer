@@ -6,7 +6,11 @@ module Unit.Pacer.Command.Chart (tests) where
 import Control.Exception (IOException)
 import Data.IORef qualified as Ref
 import Data.List qualified as L
+import Data.List.NonEmpty qualified as NE
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 import Data.Set qualified as Set
+import Data.Set.NonEmpty qualified as NESet
 import Data.Text qualified as T
 import Effectful.FileSystem.FileReader.Dynamic (FileReader (ReadBinaryFile))
 import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
@@ -39,7 +43,22 @@ import Effectful.Process.Typed.Dynamic
 import Effectful.Terminal.Dynamic (Terminal (PutStr, PutStrLn))
 import FileSystem.IO (readBinaryFileIO)
 import FileSystem.OsPath (decodeLenient)
+import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart qualified as Chart
+import Pacer.Command.Chart.Data.Run
+  ( Run
+      ( MkRun,
+        datetime,
+        distance,
+        duration,
+        labels,
+        title
+      ),
+    SomeRuns (MkSomeRuns),
+    SomeRunsKey (MkSomeRunsKey),
+  )
+import Pacer.Command.Chart.Data.Run qualified as R
+import Pacer.Command.Chart.Data.Time (Timestamp)
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
@@ -54,6 +73,9 @@ import Pacer.Command.Chart.Params
   )
 import Pacer.Command.Chart.Params qualified as ChartParams
 import Pacer.Configuration.Env.Types (CachedPaths)
+import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
+import Pacer.Data.Distance qualified as D
+import Pacer.Data.Duration (Duration (MkDuration))
 import System.Exit (ExitCode (ExitSuccess))
 import System.OsPath qualified as OsPath
 import Test.Tasty.HUnit (assertEqual)
@@ -63,7 +85,8 @@ tests :: TestTree
 tests =
   testGroup
     "Pacer.Command.Chart"
-    [ createChartTests
+    [ createChartTests,
+      updateLabelTests
     ]
 
 createChartTests :: TestTree
@@ -553,3 +576,71 @@ npmStr :: String
 npmStr = case currentOs of
   Windows -> "npm.cmd"
   _ -> "npm"
+
+updateLabelTests :: TestTree
+updateLabelTests =
+  testGroup
+    "updateLabels"
+    [ testUpdateLabels
+    ]
+
+testUpdateLabels :: TestTree
+testUpdateLabels = testCase "Updates labels from map" $ do
+  let results =
+        fmap (.unSomeRunsKey)
+          . NE.toList
+          . NESet.toList
+          $ (Chart.updateLabels labelMap runs).unSomeRuns
+
+  -- Need to compare SomeRuns NOT SomeRunsKey as the latter compares via
+  -- timestamp only.
+  expected @=? results
+  where
+    -- 1. Runs is a union
+    -- 2. Runs do _not_ use overlap logic
+    -- 3. timezone utc change?
+    runs :: SomeRuns Double
+    runs = MkSomeRuns $ unsafeNESet [x1, x2, x3, x4]
+
+    expected = [y1, y2, y3, y4]
+
+    x1 = mkSrk "Unions labels" (unsafeTs "2024-08-10T12:20:30") ["l1", "l2"]
+    x2 = mkSrk "Map labels 1" (unsafeTs "2024-08-10T14:20:30") []
+    x3 = mkSrk "No labels" (unsafeTs "2024-08-12") []
+    x4 = mkSrk "TZ match" (unsafeTs "2024-08-15T15:00:00-0800") []
+
+    y1 = mkSr "Unions labels" (unsafeTs "2024-08-10T12:20:30") ["l1", "l2", "l3"]
+    y2 = mkSr "Map labels 1" (unsafeTs "2024-08-10T14:20:30") ["l5", "l6"]
+    y3 = mkSr "No labels" (unsafeTs "2024-08-12") []
+    y4 = mkSr "TZ match" (unsafeTs "2024-08-15T15:00:00-0800") ["tz_label"]
+
+    labelMap :: Map Timestamp (NESet Text)
+    labelMap =
+      Map.fromList
+        [ (unsafeTs "2024-08-10T12:20:30", unsafeNESet ["l2", "l3"]),
+          (unsafeTs "2024-08-10T14:20:30", unsafeNESet ["l5", "l6"]),
+          -- This example overlaps with the top 2, but we want exact equality
+          -- hence it should _not_ be chosen.
+          (unsafeTs "2024-08-10", unsafeNESet ["bad_label"]),
+          -- This does not _exactly_ match the intended x4, but once we
+          -- account for the timezone it will.
+          (unsafeTs "2024-08-15T14:00:00-0900", unsafeNESet ["tz_label"])
+        ]
+
+    mkSrk title datetime = MkSomeRunsKey . mkSr title datetime
+
+    mkSr title datetime labels =
+      D.hideDistance
+        $ MkRun
+          { datetime,
+            distance = MkDistance @Kilometer (fromℤ 5),
+            duration = MkDuration (fromℤ 1200),
+            labels = Set.fromList labels,
+            title = Just title
+          }
+
+    unsafeNESet :: forall a. (Ord a) => List a -> NESet a
+    unsafeNESet = NESet.fromList . NE.fromList
+
+    unsafeTs :: Text -> Timestamp
+    unsafeTs = errorErr . P.parseAll

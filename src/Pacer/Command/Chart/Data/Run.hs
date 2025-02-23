@@ -10,12 +10,14 @@ module Pacer.Command.Chart.Data.Run
 
     -- * SomeRun
     SomeRun (..),
+    someRunIso,
 
     -- ** Functions
     deriveSomePace,
 
     -- * SomeRuns
     SomeRunsKey (..),
+    someRunsKeyIso,
     SomeRuns (..),
     mkSomeRunsFail,
     mkSomeRuns,
@@ -242,6 +244,28 @@ instance HasDistance (SomeRun a) where
   hideDistance = id
 
 -------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
+
+-- | 'Iso' between 'SomeRun' and 'Run'. Note that this converts the underlying
+-- distance to the requested unit, hence the actual value _can_ change.
+-- Thus the isomorphism must be understood in terms of the hypothetical
+-- equivalence class on distance units.
+someRunIso ::
+  forall d a.
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a,
+    SingI d
+  ) =>
+  Iso' (SomeRun a) (Run d a)
+someRunIso =
+  iso
+    (\(MkSomeRun s r) -> (withSingI s convertDistance_ r))
+    hideDistance
+
+-------------------------------------------------------------------------------
 --                                SomeRunsKey                                --
 -------------------------------------------------------------------------------
 
@@ -278,6 +302,14 @@ instance HasDistance (SomeRunsKey a) where
   distanceOf (MkSomeRunsKey sr) = distanceOf sr
 
   hideDistance = id
+
+-------------------------------------------------------------------------------
+--                                   Misc                                    --
+-------------------------------------------------------------------------------
+
+-- | 'Iso' between 'SomeRunsKey' and 'SomeRun'.
+someRunsKeyIso :: Iso' (SomeRunsKey a) (SomeRun a)
+someRunsKeyIso = iso (\(MkSomeRunsKey x) -> x) MkSomeRunsKey
 
 -------------------------------------------------------------------------------
 --                                  SomeRuns                                 --

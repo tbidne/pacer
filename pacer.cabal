@@ -196,6 +196,7 @@ test-suite unit
     , fs-utils
     , hedgehog                         >=1.0.2    && <1.6
     , logger-effectful
+    , nonempty-containers
     , pacer
     , pretty-simple                    ^>=4.1.2.0
     , tasty                            >=1.1.0.3  && <1.6
