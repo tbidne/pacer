@@ -17,9 +17,14 @@ module Pacer.Prelude
     identity,
 
     -- * ByteString
+    -- ** Lazy
     LazyByteString,
     toStrictBS,
     fromStrictBS,
+
+    -- ** Builder
+    ByteStringBuilder,
+    builderToLazyBS,
 
     -- * Text
     showt,
@@ -152,6 +157,7 @@ import Data.Bitraversable as X (Bitraversable (bitraverse))
 #endif
 import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
+import Data.ByteString.Builder qualified as BSBuilder
 import Data.ByteString.Lazy qualified as BSL
 import Data.Char as X (Char)
 import Data.Char qualified as Ch
@@ -500,6 +506,11 @@ toStrictBS = BSL.toStrict
 
 fromStrictBS :: ByteString -> LazyByteString
 fromStrictBS = BSL.fromStrict
+
+type ByteStringBuilder = BSBuilder.Builder
+
+builderToLazyBS :: ByteStringBuilder -> LazyByteString
+builderToLazyBS = BSBuilder.toLazyByteString
 
 type TextBuilder = TLB.Builder
 

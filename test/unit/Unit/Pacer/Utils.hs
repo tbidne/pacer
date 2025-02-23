@@ -3,7 +3,9 @@ module Unit.Pacer.Utils (tests) where
 import Data.Aeson (Value)
 import Data.Aeson qualified as Asn
 import Data.ByteString qualified as BS
+import Data.ByteString.Builder qualified as BSB
 import Data.ByteString.Char8 qualified as C8
+import GHC.Real (Integral (div))
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import Pacer.Utils qualified as Utils
@@ -18,7 +20,7 @@ tests =
     ]
 
 testJsoncDecode :: TestTree
-testJsoncDecode = testPropMaxN 10_000 "testJsoncDecode" "Decodes jsonc" $ do
+testJsoncDecode = testPropMaxN 100_000 "testJsoncDecode" "Decodes jsonc" $ do
   (json, jsonc) <- forAll genJsonAndJsonc
 
   case review #eitherIso (Asn.eitherDecodeStrict @Value json) of
@@ -40,10 +42,48 @@ genJsonAndJsonc :: Gen (Tuple2 ByteString ByteString)
 genJsonAndJsonc = do
   json <- genJson
   let jsonLines = C8.lines json
-  lineComments <- Gen.list (Range.linearFrom 0 0 10) TestUtils.genLineComment
-  blockComments <- Gen.list (Range.linearFrom 0 0 10) TestUtils.genBlockComment
-  jsonc <- mconcat <$> Gen.shuffle (jsonLines ++ lineComments ++ blockComments)
+      numLines = length jsonLines
+      numEachComment = numLines `div` 2
+
+  -- Generate comments. Since these comments are intercalated into the json,
+  -- we are capped by numLines / 2. No sense generating more than we need and
+  -- slowing down the program.
+  lineComments <- Gen.list (Range.linearFrom 0 0 numEachComment) TestUtils.genLineComment
+  blockComments <- Gen.list (Range.linearFrom 0 0 numEachComment) TestUtils.genBlockComment
+  allComments <- Gen.shuffle (lineComments ++ blockComments)
+
+  -- Insert comments in between the json's newlines. We previously shuffled
+  -- the json w/ the comments, but that can produce invalid json, as the order
+  -- obviously matters there.
+  --
+  -- This is morally intercalate, though we use a fold as the intercalated
+  -- value is not static (the allComments list).
+  let jsonc =
+        toStrictBS
+          . builderToLazyBS
+          . fst
+          . foldl' go ("", allComments)
+          $ jsonLines
+
   pure (json, jsonc)
+  where
+    -- For each line, we insert a comment. If the (finite) comment list is
+    -- empty, we simply insert an empty string, per unsnocBS. We briefly
+    -- attempted writing our own stream type, but that led to an infinite
+    -- loop. At least this way is simple and reasonably fast.
+    go ::
+      Tuple2 ByteStringBuilder (List ByteString) ->
+      ByteString ->
+      Tuple2 ByteStringBuilder (List ByteString)
+    go (acc, comments) bs =
+      let (c, cs) = unsnocBS comments
+          c' = BSB.byteString c
+          bs' = BSB.byteString bs
+       in (acc <> c' <> bs', cs)
+
+unsnocBS :: List ByteString -> Tuple2 ByteString (List ByteString)
+unsnocBS (x : xs) = (x, xs)
+unsnocBS [] = ("", [])
 
 genJson :: Gen ByteString
 genJson =
@@ -60,9 +100,9 @@ genJsonObject = do
   kvs <- Gen.list (Range.linearFrom 0 0 6) genJsonObjectOne
   pure
     $ mconcat
-      [ "{ ",
-        BS.intercalate "," ((\(k, v) -> k <> ": " <> v) <$> kvs),
-        " }"
+      [ "{\n",
+        BS.intercalate ",\n" ((\(k, v) -> k <> ": " <> v) <$> kvs),
+        "\n}"
       ]
   where
     genJsonObjectOne :: Gen (Tuple2 ByteString ByteString)
@@ -83,7 +123,7 @@ genJsonArray = do
   pure
     $ mconcat
       [ "[",
-        BS.intercalate "," es,
+        BS.intercalate ", " es,
         "]"
       ]
   where
