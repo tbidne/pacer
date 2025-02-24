@@ -20,6 +20,9 @@ module Pacer.Command.Chart.Data.Time
     -- ** Formatting
     fmtTimestamp,
 
+    -- ** Misc
+    strictOverlaps,
+
     -- * Month
     Month (..),
     monthToTimeMoY,
@@ -179,7 +182,7 @@ instance ToJSON Timestamp where
 
 -- | Returns true if two timestamps "overlap", essentially a relaxed version
 -- of (==), where two timestamps are considered overlapping when their
--- "least upper bound" is equal.
+-- "greatest common data" is equal.
 overlaps :: Timestamp -> Timestamp -> Bool
 overlaps (TimestampDate d1) (TimestampDate d2) = d1 == d2
 overlaps (TimestampDate d1) (TimestampTime (LocalTime d2 _)) = d1 == d2
@@ -203,6 +206,14 @@ fmtTimestamp =
     tfmt = "T%H:%M:%S"
     zfmt = "%z"
     l = Format.defaultTimeLocale
+
+-- | Returns a list of timestamps that overlap with this one. Strict in the
+-- sense that the timestamp itself is not included.
+strictOverlaps :: Timestamp -> List Timestamp
+strictOverlaps (TimestampDate _) = []
+strictOverlaps (TimestampTime (LocalTime d _)) = [TimestampDate d]
+strictOverlaps (TimestampZoned (ZonedTime l@(LocalTime d _) _)) =
+  [TimestampDate d, TimestampTime l]
 
 -------------------------------------------------------------------------------
 --                                   Month                                   --

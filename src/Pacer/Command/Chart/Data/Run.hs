@@ -19,24 +19,31 @@ module Pacer.Command.Chart.Data.Run
     SomeRunsKey (..),
     someRunsKeyIso,
     SomeRuns (..),
+
+    -- ** Construction
     mkSomeRunsFail,
     mkSomeRuns,
     RunDatetimeOverlapE (..),
+
+    -- ** Elimination
+    someRunsToNE,
+    someRunsToList,
+
+    -- ** Functions
     mapSomeRuns,
     unionSomeRuns,
   )
 where
 
-import Data.Foldable qualified as F
-import Data.List.NonEmpty ((<|))
-import Data.List.NonEmpty qualified as NonEmpty
+import Data.List.NonEmpty qualified as NE
+import Data.Map (Map)
+import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set.NonEmpty qualified as NESet
 import Data.Tuple (uncurry)
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Time (Timestamp)
-import Pacer.Command.Chart.Data.Time qualified as T
 import Pacer.Command.Chart.Data.Time qualified as Time
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Data.Distance
@@ -394,69 +401,182 @@ instance Exception RunDatetimeOverlapE where
           else (x2, x1)
 
 mkSomeRuns :: NonEmpty (SomeRun a) -> Result RunDatetimeOverlapE (SomeRuns a)
-mkSomeRuns (y@(MkSomeRun _ _) :| ys) =
+mkSomeRuns (y@(MkSomeRun _ r) :| ys) =
   bimap
     (uncurry MkRunDatetimeOverlapE)
-    (MkSomeRuns . NESet.fromList . toNonEmpty)
+    (MkSomeRuns . fst)
     eDuplicate
   where
     -- The logic here is:
     --
-    -- 1. Transform parsed List -> NonEmpty (SomeRunsKey a)
-    -- 2. If we don't receive any duplicates, transform
-    --      NonEmpty (SomeRunsKey a) -> Set (SomeRunsKey a)
+    -- 1. Transform parsed @List -> NESet (SomeRunsKey a)@
+    -- 2. Simultaneously, accumulate a @Map Timestamp OverlapData@ to check
+    --    for overlaps.
     --
-    -- Why don't we just immediately used a set, rather than the
-    -- intermediate NonEmpty?
+    -- Why don't we just use the NESet to check for overlaps?
     --
-    -- Because Timestamp's Ord will not detect the duplicates we want.
+    -- Because Timestamp's Ord will not detect the overlaps we want.
     -- For instance, the timestamps 2013-10-08 and 2013-10-08T12:14:30
     -- will compare non-equal (which we need for Eq/Ord to be lawful),
     -- but we want these to compare Eq for purposes of detecting
-    -- overlaps. Thus we cannot use Timestamp's Ord for this, hence
-    -- Set/Map etc. are out.
+    -- overlaps. Thus we cannot rely solely on Timestamp's Ord for this, hence
+    -- naive Set/Map etc. are out.
     --
-    -- Instead, we iterate manually, looking for overlaps using the
-    -- bespoke 'T.overlaps' function. Unfortuanately this is O(n^2),
-    -- and it is difficult to see a way around this, as the overlap
-    -- function is inherently intransitive e.g. consider
+    -- Instead, when given a timestamp @ts@, we @ts@ and all of it's
+    -- "overlaps" to the Map. So for 2013-10-08T12:14:30, we'd have key/vals:
     --
-    --   x = 2013-10-08T12:14:30
-    --   y = 2013-10-08
-    --   z = 2013-10-08T12:14:40
+    --     2013-10-08T12:14:30 => OverlapData1
+    --     2013-10-08 => OverlapData2
     --
-    -- For overlaps, we want x == y == z and x /= z. It is unclear how
-    -- to preserve this and achieve O(1) (or O(lg n)) lookup. Hopefully
-    -- this does not impact performance too much.
-    eDuplicate = foldr go (Ok $ NonEmpty.singleton (MkSomeRunsKey y)) ys
+    -- OverlapData1 is considered "primary", whereas OverlapData2 is
+    -- "secondary". When inserting @ts@, we verify two conditions:
+    --
+    -- See NOTE: [Timestamp Overlaps] for details.
+    eDuplicate = foldr go initVal ys
+
+    initVal =
+      Ok
+        ( NESet.singleton (MkSomeRunsKey y),
+          initOverlapData
+        )
+
+    initOverlapData :: Map Timestamp OverlapData
+    initOverlapData = runToOverlapMap r
 
     go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
-    go _ (Err collision) = Err collision
-    go someRun@(MkSomeRun _ q) (Ok someRuns) =
-      case findOverlap someRun someRuns of
-        Nothing -> Ok $ (MkSomeRunsKey someRun) <| someRuns
-        Just (MkSomeRunsKey (MkSomeRun _ collision)) ->
-          Err ((q.title, q.datetime), (collision.title, collision.datetime))
+    go _ (Err overlap) = Err overlap
+    go someRun@(MkSomeRun _ q) (Ok (acc, foundKeys)) =
+      case checkOverlap q foundKeys of
+        Ok foundKeys' ->
+          let acc' = NESet.insert (MkSomeRunsKey someRun) acc
+           in Ok (acc', foundKeys')
+        Err overlapped -> Err ((q.title, q.datetime), overlapped)
+
+-- | NOTE: [Timestamp Overlaps]
+--
+-- Timestamp data we use when checking for overlaps. First, we partition
+-- timestamps into "primary" and "secondary" categories. Primary timestamps
+-- are those that correspond to an actual Run i.e. run.datetime. Secondary
+-- timestamps are all of the potential "overlaps" for primary timestamps. For
+-- instance, given a run with timestamp
+--
+-- @
+--    ts := "2024-08-10T13:15:30-0700"
+-- @
+--
+-- Then we will have:
+--
+-- @
+--   "2024-08-10T13:15:30-0700" -- primary
+--   "2024-08-10T13:15:30"      -- secondary
+--   "2024-08-10"               -- secondary
+-- @
+--
+-- An "overlap error" is defined as having a primary timestamp duplicate some
+-- other (primary or secondary) timestamp.
+--
+-- Then when checking a new timestamp @ts@ for uniqueness, we verify:
+--
+-- 1. @ts@ does not exist in the map as a _primary_ or _secondary_ key.
+--
+--     Both of these are errors. The former means we have an ordinary duplicate,
+--     whereas the latter is an overlap.
+--
+-- 2. None of @ts@'s overlaps (hence, secondary keys) exist in the map as
+--    a primary key.
+--
+-- Notice that encountering duplicate secondary keys is fine e.g.
+--
+-- @
+--   "2024-08-10T13:15:30"
+--   "2024-08-10T12:15:30"
+-- @
+--
+-- will have the same secondary key @2024-08-10@, but that is not a conflict.
+data OverlapData
+  = -- | The value is a _primary_ key i.e. the timestamp corresponds
+    -- to an actual Run's. The only caveat here is that it might not be
+    -- "exact" equality in the case of zoned time e.g.
+    --
+    --   2024-08-10T13:15:30-0700
+    --   2024-08-10T12:15:30-0800
+    --
+    -- will compare Eq because of UTC conversions, though they are not
+    -- strictly the same data.
+    OverlapPrimary Timestamp (Maybe Text)
+  | -- | The value is a _secondary_ key i.e. the timestamp is merely an
+    -- overlap for some run's actual timestamp.
+    OverlapSecondary Timestamp (Maybe Text)
+
+-- | Verifies that the given timestamp does not overlap with any map entries.
+-- An overlap is defined as a primary timestamp equaling some other
+-- (primary or secondary) timestamp.
+checkOverlap ::
+  -- | Timestamp to insert.
+  Run d a ->
+  -- | Map.
+  Map Timestamp OverlapData ->
+  -- | Error or new map, with the timestamp (and overlaps) inserted.
+  Result TitleAndTime (Map Timestamp OverlapData)
+checkOverlap run map = case Map.lookup run.datetime map of
+  -- 1. The timestamp exists in the map, error.
+  Just (OverlapPrimary origTs mTitle) -> Err (mTitle, origTs)
+  Just (OverlapSecondary origTs mTitle) -> Err (mTitle, origTs)
+  -- 2. Timestamp does not exist in the map, check its overlaps for a
+  --    match.
+  Nothing ->
+    let overlaps = Time.strictOverlaps run.datetime
+        init = runToOverlapMap' run.datetime run.title overlaps
+     in (Map.union map) <$> foldr go (Ok init) overlaps
+  where
+    go ::
+      Timestamp ->
+      Result TitleAndTime (Map Timestamp OverlapData) ->
+      Result TitleAndTime (Map Timestamp OverlapData)
+    go t acc = case Map.lookup t map of
+      -- 2.1 The timestamp has an overlap that exists as a _primary_
+      --     key in the map, error.
+      Just (OverlapPrimary origTs mTitle) -> Err (mTitle, origTs)
+      -- 2.2 The timestamp either does not exist in the map or it only exists
+      --     as a _secondary_ key. That is fine.
+      _ -> acc
+
+-- | Creates a map based on the run. Adds the run's timestamp as a Primary
+-- entry and all potential overlaps as secondary entries.
+runToOverlapMap :: Run d a -> Map Timestamp OverlapData
+runToOverlapMap run =
+  runToOverlapMap'
+    run.datetime
+    run.title
+    (Time.strictOverlaps run.datetime)
+
+-- | Helper for 'runToOverlapMap'. This exists entirely so we do not have to
+-- calculate the overlaps twice in some places. It is intended to always
+-- be called like:
+--
+-- @
+--   runToOverlapMap' r.datetime r.title (Time.strictOverlaps r.datetime)
+-- @
+--
+-- 'runToOverlapMap' should be preferred as it is safer to use correctly.
+runToOverlapMap' ::
+  Timestamp ->
+  Maybe Text ->
+  List Timestamp ->
+  Map Timestamp OverlapData
+runToOverlapMap' ts mTitle overlaps =
+  Map.fromList
+    $ (ts, OverlapPrimary ts mTitle)
+    : fmap
+      (\t -> (t, OverlapSecondary ts mTitle))
+      overlaps
 
 type TitleAndTime = Tuple2 (Maybe Text) Timestamp
 
 type SomeRunsAcc a =
   Result
     (Tuple2 TitleAndTime TitleAndTime)
-    (NonEmpty (SomeRunsKey a))
-
--- | Look for overlaps, O(n).
-findOverlap :: SomeRun a -> NonEmpty (SomeRunsKey a) -> Maybe (SomeRunsKey a)
-findOverlap (MkSomeRun _ r1) = F.find p
-  where
-    -- TODO: [Timestamp overlap lookup]
-    --
-    -- It would be great if we found a decent way to account for overlaps that
-    -- doesn't require O(n) lookup e.g. at least O(lg n). For instance, maybe we
-    -- can store all possible "least upper bounds" for a given timestamp, and
-    -- lookup on that.
-
-    p (MkSomeRunsKey (MkSomeRun _ r2)) = T.overlaps r1.datetime r2.datetime
+    (Tuple2 (NESet (SomeRunsKey a)) (Map Timestamp OverlapData))
 
 -------------------------------------------------------------------------------
 --                                    Misc                                   --
@@ -505,5 +625,11 @@ unionSomeRuns xs ys = mkSomeRuns (toListSR xs <> toListSR ys)
       fmap (\(MkSomeRunsKey sr) -> sr)
         . NESet.toList
         $ rs
+
+someRunsToNE :: SomeRuns a -> NonEmpty (SomeRun a)
+someRunsToNE = fmap (.unSomeRunsKey) . NESet.toList . (.unSomeRuns)
+
+someRunsToList :: SomeRuns a -> List (SomeRun a)
+someRunsToList = NE.toList . someRunsToNE
 
 makeFieldLabelsNoPrefix ''Run

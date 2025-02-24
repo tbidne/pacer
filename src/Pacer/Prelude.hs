@@ -431,6 +431,7 @@ import Optics.Core as X
     Is,
     Iso,
     Iso',
+    LabelOptic (labelOptic),
     Lens,
     Lens',
     NoIx,

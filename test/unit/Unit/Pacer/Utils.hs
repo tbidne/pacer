@@ -68,7 +68,7 @@ genJsonAndJsonc = do
   pure (json, jsonc)
   where
     -- For each line, we insert a comment. If the (finite) comment list is
-    -- empty, we simply insert an empty string, per unsnocBS. We briefly
+    -- empty, we simply insert an empty string, per unconsBS. We briefly
     -- attempted writing our own stream type, but that led to an infinite
     -- loop. At least this way is simple and reasonably fast.
     go ::
@@ -76,14 +76,14 @@ genJsonAndJsonc = do
       ByteString ->
       Tuple2 ByteStringBuilder (List ByteString)
     go (acc, comments) bs =
-      let (c, cs) = unsnocBS comments
+      let (c, cs) = unconsBS comments
           c' = BSB.byteString c
           bs' = BSB.byteString bs
        in (acc <> c' <> bs', cs)
 
-unsnocBS :: List ByteString -> Tuple2 ByteString (List ByteString)
-unsnocBS (x : xs) = (x, xs)
-unsnocBS [] = ("", [])
+unconsBS :: List ByteString -> Tuple2 ByteString (List ByteString)
+unconsBS (x : xs) = (x, xs)
+unconsBS [] = ("", [])
 
 genJson :: Gen ByteString
 genJson =
