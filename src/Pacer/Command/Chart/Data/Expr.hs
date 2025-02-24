@@ -54,7 +54,8 @@ data FilterOp
   | FilterOpLt
   | FilterOpGte
   | FilterOpGt
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance Display FilterOp where
   displayBuilder = \case
@@ -93,7 +94,8 @@ data FilterType a
     FilterLabel Text
   | FilterDate FilterOp Moment
   | FilterPace FilterOp (SomePace a)
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance
   ( AMonoid a,
@@ -198,7 +200,8 @@ data Expr a
     Or (Expr a) (Expr a)
   | -- | "and (expr) (expr)"
     And (Expr a) (Expr a)
-  deriving stock (Eq, Foldable, Functor, Ord, Show, Traversable)
+  deriving stock (Eq, Foldable, Functor, Generic, Ord, Show, Traversable)
+  deriving anyclass (NFData)
 
 instance (Display a) => Display (Expr a) where
   displayBuilder = go

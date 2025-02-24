@@ -57,7 +57,9 @@ import Text.Printf (printf)
 -- | Represents a numeric distance with units.
 type Distance :: DistanceUnit -> Type -> Type
 newtype Distance d a = MkDistance {unDistance :: Positive a}
+  deriving stock (Generic)
   deriving newtype (MetricSpace)
+  deriving anyclass (NFData)
 
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
@@ -212,6 +214,9 @@ data SomeDistance a where
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
+
+instance (NFData a) => NFData (SomeDistance a) where
+  rnf (MkSomeDistance s d) = s `deepseq` d `deepseq` ()
 
 instance
   ( Fromℤ a,

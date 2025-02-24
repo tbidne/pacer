@@ -30,7 +30,8 @@ data YAxisType
   = YAxisDistance
   | YAxisDuration
   | YAxisPace
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance FromJSON YAxisType where
   parseJSON = asnWithText "YAxisType" $ \case
@@ -55,7 +56,8 @@ data ChartSumPeriod
   = ChartSumWeek
   | ChartSumMonth
   | ChartSumYear
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance FromJSON ChartSumPeriod where
   parseJSON = asnWithText "YAxisType" $ \case
@@ -67,7 +69,8 @@ instance FromJSON ChartSumPeriod where
 data ChartType
   = ChartTypeDefault
   | ChartTypeSum ChartSumPeriod
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance FromJSON ChartType where
   parseJSON = asnWithObject "ChartType" $ \v -> do
@@ -99,7 +102,8 @@ data ChartRequest a = MkChartRequest
     -- | Optional second y-axis.
     y1Axis :: Maybe YAxisType
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance
   ( Fromℚ a,
@@ -146,7 +150,8 @@ instance
 newtype GarminSettings = MkGarminSettings
   { distanceUnit :: Maybe DistanceUnit
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance FromJSON GarminSettings where
   parseJSON = asnWithObject "GarminSettings" $ \v -> do
@@ -162,7 +167,8 @@ data ChartRequests a = MkChartRequests
   { chartRequests :: Seq (ChartRequest a),
     garminSettings :: Maybe GarminSettings
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance
   ( Fromℚ a,

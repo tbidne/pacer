@@ -69,6 +69,31 @@ jobs:
           # Let's test it overwrites successfully
           cabal run pacer ${{ matrix.ghc.proj_file }} -- chart --data examples
 
+      - name: Complexity tests
+        run: cabal test bench-fit
+
+      - name: Benchmarks
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        id: bench
+        run: |
+          cabal bench ${{ matrix.ghc.proj_file }} --benchmark-options '
+            +RTS -T -RTS
+            -t100
+            --csv bench/app/${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.csv
+            --svg bench/app/${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.svg
+            --baseline bench/app/baseline_${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.csv
+            --fail-if-slower 20
+            --fail-if-faster 20'
+
+      - uses: actions/upload-artifact@v4
+        name: Bench upload
+        if: ${{ failure() && steps.bench.conclusion == 'failure' }}
+        with:
+          name: bench_artifacts_${{ matrix.os }}_${{ matrix.ghc.vers }}
+          path: |
+            bench/app/${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.csv
+            bench/app/${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.svg
+
   stack:
     strategy:
       fail-fast: false

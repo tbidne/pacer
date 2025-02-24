@@ -25,7 +25,8 @@ import Pacer.Prelude
 -- | Represents time as seconds.
 type Duration :: Type -> Type
 newtype Duration a = MkDuration {unDuration :: Positive a}
-  deriving stock (Show)
+  deriving stock (Generic, Show)
+  deriving anyclass (NFData)
 
 -------------------------------------------------------------------------------
 --                                Base Classes                               --

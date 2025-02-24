@@ -11,6 +11,8 @@ module Pacer.Command.Chart
     createCharts,
     createChartsJsonFile,
     createChartsJsonBS,
+    ChartPaths,
+    readChartInputs,
 
     -- ** Misc
     updateLabels,
@@ -308,7 +310,21 @@ createChartSeq ::
   ) =>
   ChartPaths ->
   Eff es (Seq Chart)
-createChartSeq chartPaths = addNamespace "createChartSeq" $ do
+createChartSeq chartPaths = do
+  (chartRequests, runsWithLabels) <- readChartInputs chartPaths
+  throwErr (Chart.mkCharts runsWithLabels chartRequests)
+
+-- | Given file paths to runs and chart requests, reads the inputs.
+readChartInputs ::
+  forall es.
+  ( HasCallStack,
+    FileReader :> es,
+    Logger :> es,
+    LoggerNS :> es
+  ) =>
+  ChartPaths ->
+  Eff es (Tuple2 (ChartRequests Double) (SomeRuns Double))
+readChartInputs chartPaths = addNamespace "readChartInputs" $ do
   chartRequests <-
     Utils.readDecodeJson
       @(ChartRequests Double)
@@ -333,7 +349,7 @@ createChartSeq chartPaths = addNamespace "createChartSeq" $ do
         MkRunLabels runLabels <- Utils.readDecodeJson runLabelsPath
         pure $ updateLabels runLabels allRuns
 
-  throwErr (Chart.mkCharts runsWithLabels chartRequests)
+  pure (chartRequests, runsWithLabels)
   where
     (chartRequestsPath, mRunLabelsPath, runPaths) = chartPaths
 

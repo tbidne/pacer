@@ -35,7 +35,8 @@ data DistanceUnit
   = Meter
   | Kilometer
   | Mile
-  deriving stock (Bounded, Enum, Eq, Show)
+  deriving stock (Bounded, Enum, Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 instance Display DistanceUnit where
   displayBuilder Meter = "m"
@@ -86,6 +87,11 @@ data SDistanceUnit (d :: DistanceUnit) where
   SMile :: SDistanceUnit Mile
 
 deriving stock instance Show (SDistanceUnit d)
+
+instance NFData (SDistanceUnit d) where
+  rnf SMeter = ()
+  rnf SKilometer = ()
+  rnf SMile = ()
 
 type instance Sing = SDistanceUnit
 

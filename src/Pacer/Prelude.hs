@@ -114,7 +114,7 @@ import Control.Applicative as X
     (<**>),
   )
 import Control.Category as X (Category ((.)), (<<<), (>>>))
-import Control.DeepSeq as X (NFData)
+import Control.DeepSeq as X (NFData (rnf), deepseq)
 import Control.Exception as X
   ( Exception (displayException, fromException, toException),
     SomeException,
@@ -236,7 +236,7 @@ import Data.Tuple as X (fst, snd)
 import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
-import Data.Word as X (Word16, Word32, Word8)
+import Data.Word as X (Word, Word16, Word32, Word8)
 import Effectful as X
   ( Dispatch (Dynamic),
     DispatchOf,

@@ -12,6 +12,13 @@ packages:
   original:
     hackage: env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
 - completed:
+    hackage: tasty-bench-fit-0.1.1@sha256:f9f231d793590d5a1a3b1c455004712c7468b6c6953aa129c4961e38dd8a2f9a,1810
+    pantry-tree:
+      sha256: 66ed3b49a663400b7badcf9a3b06bbfaa30313dbc45d5293bc0987de79281de6
+      size: 559
+  original:
+    hackage: tasty-bench-fit-0.1.1@sha256:f9f231d793590d5a1a3b1c455004712c7468b6c6953aa129c4961e38dd8a2f9a,1810
+- completed:
     hackage: text-display-0.0.5.2@sha256:6e6a5bf1c83dfa6c34692ed5d8ea87f1bd385984309b42c302f2156f4d82477b,2670
     pantry-tree:
       sha256: e84ac3f5fdc4d6e1c544174735beb80474cf7d7b849abfd1ae6184517a30c1c1

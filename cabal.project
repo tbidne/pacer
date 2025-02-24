@@ -72,5 +72,6 @@ test-show-details: direct
 
 allow-newer: optics-th:template-haskell
 allow-newer: path:hashable
+allow-newer: regression-simple:base
 allow-newer: time-compat:base
 allow-newer: unix-compat:time

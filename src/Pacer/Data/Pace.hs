@@ -67,6 +67,9 @@ data Pace d a where
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
 
+instance (NFData a) => NFData (Pace d a) where
+  rnf (MkPace d) = d `deepseq` ()
+
 instance HasField "unPace" (Pace d a) (Duration a) where
   getField = unPace
 
@@ -227,6 +230,9 @@ data SomePace a where
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
+
+instance (NFData a) => NFData (SomePace a) where
+  rnf (MkSomePace s p) = s `deepseq` p `deepseq` ()
 
 instance
   ( Eq a,

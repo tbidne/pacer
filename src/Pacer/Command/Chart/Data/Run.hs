@@ -80,7 +80,8 @@ data Run dist a = MkRun
     -- | Optional title.
     title :: Maybe Text
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
@@ -148,6 +149,9 @@ data SomeRun a where
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
+
+instance (NFData a) => NFData (SomeRun a) where
+  rnf (MkSomeRun s r) = s `deepseq` r `deepseq` ()
 
 instance
   ( Fromℤ a,
@@ -272,12 +276,12 @@ someRunIso =
 -- | Key for 'SomeRuns'. Eq/Ord use an equivalence class on the timestamp,
 -- used to enforce that timestamps are unique.
 newtype SomeRunsKey a = MkSomeRunsKey {unSomeRunsKey :: SomeRun a}
+  deriving stock (Generic, Show)
+  deriving anyclass (NFData)
 
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
-
-deriving stock instance (Show a) => Show (SomeRunsKey a)
 
 instance Eq (SomeRunsKey a) where
   MkSomeRunsKey (MkSomeRun _ r1) == MkSomeRunsKey (MkSomeRun _ r2) =
@@ -317,7 +321,8 @@ someRunsKeyIso = iso (\(MkSomeRunsKey x) -> x) MkSomeRunsKey
 
 -- | Holds multiple runs.
 newtype SomeRuns a = MkSomeRuns {unSomeRuns :: (NESet (SomeRunsKey a))}
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --

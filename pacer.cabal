@@ -241,3 +241,40 @@ test-suite functional
 
   hs-source-dirs: test/functional
   ghc-options:    -threaded
+
+library bench-utils
+  import:          common-lang
+  exposed-modules: Bench.Pacer.Utils
+  build-depends:
+    , base
+    , bytestring
+    , pacer
+    , time
+
+  hs-source-dirs:  bench/utils
+
+test-suite bench-fit
+  import:         common-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , bench-utils
+    , pacer
+    , tasty
+    , tasty-bench-fit  ^>=0.1
+    , tasty-hunit
+
+  hs-source-dirs: bench/fit
+
+benchmark benchmarks
+  import:         common-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , bench-utils
+    , pacer
+    , tasty-bench  >=0.3 && <0.5
+
+  hs-source-dirs: bench/app
