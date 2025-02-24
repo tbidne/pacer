@@ -46,6 +46,7 @@ where
 
 import Data.Char qualified as Ch
 import Data.Enum (Enum (fromEnum, toEnum))
+import Data.Hashable (Hashable (hashWithSalt))
 import Data.Time
   ( LocalTime (LocalTime),
     UTCTime (UTCTime),
@@ -81,6 +82,12 @@ data Timestamp
     TimestampZoned ZonedTime
   deriving stock (Generic, Show)
   deriving anyclass (NFData)
+
+instance Hashable Timestamp where
+  hashWithSalt i = \case
+    TimestampDate d -> hashWithSalt i d
+    TimestampTime t -> hashWithSalt i t
+    TimestampZoned z -> hashWithSalt i (Time.zonedTimeToUTC z)
 
 -------------------------------------------------------------------------------
 --                                Base Classes                               --

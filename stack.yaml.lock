@@ -12,6 +12,13 @@ packages:
   original:
     hackage: env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
 - completed:
+    hackage: regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319
+    pantry-tree:
+      sha256: f8db3e7edcbd7069d353c90b5f6aea0e880e9ff7c499686de20ceef0c3114374
+      size: 628
+  original:
+    hackage: regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319
+- completed:
     hackage: tasty-bench-fit-0.1.1@sha256:f9f231d793590d5a1a3b1c455004712c7468b6c6953aa129c4961e38dd8a2f9a,1810
     pantry-tree:
       sha256: 66ed3b49a663400b7badcf9a3b06bbfaa30313dbc45d5293bc0987de79281de6

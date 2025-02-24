@@ -35,9 +35,9 @@ module Pacer.Command.Chart.Data.Run
   )
 where
 
+import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as HMap
 import Data.List.NonEmpty qualified as NE
-import Data.Map (Map)
-import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set.NonEmpty qualified as NESet
 import Data.Tuple (uncurry)
@@ -440,7 +440,7 @@ mkSomeRuns (y@(MkSomeRun _ r) :| ys) =
           initOverlapData
         )
 
-    initOverlapData :: Map Timestamp OverlapData
+    initOverlapData :: HashMap Timestamp OverlapData
     initOverlapData = runToOverlapMap r
 
     go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
@@ -515,10 +515,10 @@ checkOverlap ::
   -- | Timestamp to insert.
   Run d a ->
   -- | Map.
-  Map Timestamp OverlapData ->
+  HashMap Timestamp OverlapData ->
   -- | Error or new map, with the timestamp (and overlaps) inserted.
-  Result TitleAndTime (Map Timestamp OverlapData)
-checkOverlap run map = case Map.lookup run.datetime map of
+  Result TitleAndTime (HashMap Timestamp OverlapData)
+checkOverlap run map = case HMap.lookup run.datetime map of
   -- 1. The timestamp exists in the map, error.
   Just (OverlapPrimary origTs mTitle) -> Err (mTitle, origTs)
   Just (OverlapSecondary origTs mTitle) -> Err (mTitle, origTs)
@@ -527,13 +527,13 @@ checkOverlap run map = case Map.lookup run.datetime map of
   Nothing ->
     let overlaps = Time.strictOverlaps run.datetime
         init = runToOverlapMap' run.datetime run.title overlaps
-     in (Map.union map) <$> foldr go (Ok init) overlaps
+     in (HMap.union map) <$> foldr go (Ok init) overlaps
   where
     go ::
       Timestamp ->
-      Result TitleAndTime (Map Timestamp OverlapData) ->
-      Result TitleAndTime (Map Timestamp OverlapData)
-    go t acc = case Map.lookup t map of
+      Result TitleAndTime (HashMap Timestamp OverlapData) ->
+      Result TitleAndTime (HashMap Timestamp OverlapData)
+    go t acc = case HMap.lookup t map of
       -- 2.1 The timestamp has an overlap that exists as a _primary_
       --     key in the map, error.
       Just (OverlapPrimary origTs mTitle) -> Err (mTitle, origTs)
@@ -543,7 +543,7 @@ checkOverlap run map = case Map.lookup run.datetime map of
 
 -- | Creates a map based on the run. Adds the run's timestamp as a Primary
 -- entry and all potential overlaps as secondary entries.
-runToOverlapMap :: Run d a -> Map Timestamp OverlapData
+runToOverlapMap :: Run d a -> HashMap Timestamp OverlapData
 runToOverlapMap run =
   runToOverlapMap'
     run.datetime
@@ -563,9 +563,9 @@ runToOverlapMap' ::
   Timestamp ->
   Maybe Text ->
   List Timestamp ->
-  Map Timestamp OverlapData
+  HashMap Timestamp OverlapData
 runToOverlapMap' ts mTitle overlaps =
-  Map.fromList
+  HMap.fromList
     $ (ts, OverlapPrimary ts mTitle)
     : fmap
       (\t -> (t, OverlapSecondary ts mTitle))
@@ -576,7 +576,7 @@ type TitleAndTime = Tuple2 (Maybe Text) Timestamp
 type SomeRunsAcc a =
   Result
     (Tuple2 TitleAndTime TitleAndTime)
-    (Tuple2 (NESet (SomeRunsKey a)) (Map Timestamp OverlapData))
+    (Tuple2 (NESet (SomeRunsKey a)) (HashMap Timestamp OverlapData))
 
 -------------------------------------------------------------------------------
 --                                    Misc                                   --

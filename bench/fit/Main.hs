@@ -17,13 +17,13 @@ main =
       [testComplexity]
 
 testComplexity :: TestTree
-testComplexity = testCase "Decode runs is logarithmic" $ do
+testComplexity = testCase "Decode runs is linear" $ do
   c <- measureGenDecode
   -- This is too flaky to have the assertion be an actual test, so we
   -- just run it and print the result if it's different. We keep it as
   -- a test, however, so that CI verifies it at least runs.
-  unless (Fit.isLogarithmic c) $ do
-    IO.putStrLn $ "Assumed isLogarithmic but guessed: " ++ show c
+  unless (Fit.isLinear c) $ do
+    IO.putStrLn $ "Assumed linear but guessed: " ++ show c
 
 measureGenDecode :: IO Complexity
 measureGenDecode =

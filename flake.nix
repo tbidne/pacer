@@ -89,6 +89,9 @@
                 effectful = prev.effectful_2_5_1_0;
                 megaparsec = prev.megaparsec_9_7_0;
                 path = hlib.dontCheck prev.path_0_9_6;
+                regression-simple = hlib.doJailbreak prev.regression-simple;
+                tasty-bench = prev.tasty-bench_0_4;
+                tasty-bench-fit = prev.tasty-bench-fit_0_1_1;
               }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
