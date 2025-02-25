@@ -100,7 +100,7 @@ configParser =
       [ OA.short 'c',
         OA.long "config",
         OA.metavar "PATH",
-        Utils.mkHelp "Path to optional json config."
+        Utils.mkHelp "Path to optional json config. Only affects 'chart' command."
       ]
 
 version :: Parser (a -> a)

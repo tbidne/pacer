@@ -137,42 +137,50 @@ getEnv ::
     Time :> es
   ) =>
   Eff es Env
-getEnv = configRunner $ do
+getEnv = do
   args <- execParser (parserInfo @Double)
 
   -- Get Config and xdg config dir, if necessary.
-  (mXdgConfig, mConfig) <- do
-    case args.configPath of
-      -- No config path, try xdg
-      Nothing -> do
-        xdgConfig <- getXdgConfigPath
+  (mXdgConfig, mConfig) <- case args.command of
+    -- Because the config (currently) only affects the chart command,
+    -- searching for it is pointless for other commands, hence skip it.
+    --
+    -- 1. Chart command, try to find command.
+    Chart {} -> configRunner $ do
+      case args.configPath of
+        -- 1.1. No config path, try xdg
+        Nothing -> do
+          xdgConfig <- getXdgConfigPath
 
-        let configAliases =
-              MkFileAliases
-                $ [relfile|config.json|]
-                :| [[relfile|config.jsonc|]]
+          let configAliases =
+                MkFileAliases
+                  $ [relfile|config.json|]
+                  :| [[relfile|config.jsonc|]]
 
-        mPath <- Utils.searchFileAliases @Maybe True xdgConfig configAliases
+          mPath <- Utils.searchFileAliases @Maybe True xdgConfig configAliases
 
-        case mPath of
-          Nothing -> pure (Just xdgConfig, Nothing)
-          Just path -> do
-            config <- Utils.readDecodeJson path
-            let configPath = MkConfigWithPath xdgConfig config
+          case mPath of
+            Nothing -> pure (Just xdgConfig, Nothing)
+            Just path -> do
+              config <- Utils.readDecodeJson path
+              let configPath = MkConfigWithPath xdgConfig config
 
-            $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath path)
+              $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath path)
 
-            pure $ (Just xdgConfig, Just configPath)
-      -- Config path exists, use it.
-      Just configPath -> do
-        absPath <- parseCanonicalAbsFile configPath
-        config <- Utils.readDecodeJson absPath
+              pure $ (Just xdgConfig, Just configPath)
+        -- 1.2. Config path exists, use it.
+        Just configPath -> do
+          absPath <- parseCanonicalAbsFile configPath
+          config <- Utils.readDecodeJson absPath
 
-        absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (pathToOsPath absPath)
+          absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (pathToOsPath absPath)
 
-        let configWithPath = MkConfigWithPath absConfigDir config
-        $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath absPath)
-        pure (Nothing, Just configWithPath)
+          let configWithPath = MkConfigWithPath absConfigDir config
+          $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath absPath)
+          pure (Nothing, Just configWithPath)
+
+    -- 2. Non-chart command, skip config.
+    _ -> pure (Nothing, Nothing)
 
   let cachedPaths =
         MkCachedPaths
