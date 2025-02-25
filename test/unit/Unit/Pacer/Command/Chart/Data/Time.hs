@@ -184,7 +184,7 @@ testMomentParseCases = testCase desc $ do
     isTimestamp t = case P.parse @Moment t of
       Ok (MomentTimestamp _) -> pure ()
       Ok other ->
-        assertFailure $ "Expected year/month, received: " ++ show other
+        assertFailure $ "Expected timestamp, received: " ++ show other
       Err err ->
         assertFailure $ "Unexpected parse failure: " ++ err
 
@@ -195,10 +195,10 @@ testMomentEqLaws = testPropertyNamed name desc $ property $ do
   z <- forAll genMoment
 
   -- reflexivity
-  x .=== x
+  x === x
 
   -- symmetry
-  (x .== y) === (y .== x)
+  (x == y) === (y == x)
 
   -- transitivity
   when (x == y && y == z) (x === z)
@@ -213,7 +213,7 @@ testMomentEqOpTotal :: TestTree
 testMomentEqOpTotal = testPropertyNamed name desc $ property $ do
   m1 <- forAll genMoment
   m2 <- forAll genMoment
-  evalF (.==) m1 m2
+  evalF (==) m1 m2
   where
     name = "testMomentEqOpTotal"
     desc = "Eq operator is total"
@@ -230,7 +230,7 @@ testMomentEqOpLaws = testPropertyNamed name desc $ property $ do
   (x .== y) === (y .== x)
 
   -- negation
-  (x /= y) === not (x == y)
+  (x ./= y) === not (x .== y)
   where
     name = "testMomentEqOpLaws"
     desc = "Eq operator laws"
