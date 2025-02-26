@@ -57,30 +57,24 @@ instance Monad (Result e) where
   Err x >>= _ = Err x
 
 instance Foldable (Result e) where
-  foldr _ e (Err _) = e
-  foldr f e (Ok x) = f x e
+  foldr f e = onResult (const e) (\x -> f x e)
 
 instance Traversable (Result e) where
-  sequenceA (Err x) = pure (Err x)
-  sequenceA (Ok x) = Ok <$> x
+  sequenceA = onResult (pure . Err) (fmap Ok)
 
-  traverse _ (Err x) = pure (Err x)
-  traverse f (Ok x) = Ok <$> f x
+  traverse f = onResult (pure . Err) (fmap Ok . f)
 
 instance (IsString e) => MonadFail (Result e) where
   fail = Err . fromString
 
 instance Bifunctor Result where
-  bimap f _ (Err x) = Err (f x)
-  bimap _ g (Ok x) = Ok (g x)
+  bimap f g = onResult (Err . f) (Ok . g)
 
 instance Bifoldable Result where
-  bifoldMap f _ (Err x) = f x
-  bifoldMap _ g (Ok x) = g x
+  bifoldMap f g = onResult f g
 
 instance Bitraversable Result where
-  bitraverse f _ (Err a) = Err <$> f a
-  bitraverse _ g (Ok b) = Ok <$> g b
+  bitraverse f g = onResult (fmap Err . f) (fmap Ok . g)
 
 -- | Eliminates 'Err' via 'error'.
 errorErr :: (HasCallStack) => ResultDefault a -> a
