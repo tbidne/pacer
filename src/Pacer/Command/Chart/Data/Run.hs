@@ -432,7 +432,7 @@ mkSomeRuns (y@(MkSomeRun _ r) :| ys) =
     -- "secondary". When inserting @ts@, we verify two conditions:
     --
     -- See NOTE: [Timestamp Overlaps] for details.
-    eDuplicate = foldr go initVal ys
+    eDuplicate = go initVal ys
 
     initVal =
       Ok
@@ -461,13 +461,14 @@ mkSomeRuns (y@(MkSomeRun _ r) :| ys) =
     -- improve things -- even though it is still linear -- but the benchmarks
     -- seem to get worse. So there is probably no reason to try until we can
     -- actually stream properly.
-    go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
-    go _ (Err overlap) = Err overlap
-    go someRun@(MkSomeRun _ q) (Ok (acc, foundKeys)) =
+    go :: SomeRunsAcc a -> List (SomeRun a) -> SomeRunsAcc a
+    go acc [] = acc
+    go (Err overlap) _ = Err overlap
+    go (Ok (acc, foundKeys)) (someRun@(MkSomeRun _ q) : rs) =
       case checkOverlap q foundKeys of
         Ok foundKeys' ->
           let acc' = NESet.insert (MkSomeRunsKey someRun) acc
-           in Ok (acc', foundKeys')
+           in go (Ok (acc', foundKeys')) rs
         Err overlapped -> Err ((q.title, q.datetime), overlapped)
 
 -- | NOTE: [Timestamp Overlaps]

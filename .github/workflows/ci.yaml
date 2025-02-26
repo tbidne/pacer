@@ -5,7 +5,7 @@ on: # yamllint disable-line rule:truthy rule:comments
   push:
     branches:
       - main
-      - bench3
+      - bench3-direct
 
   pull_request:
     branches:
