@@ -1,9 +1,20 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Bench.Pacer.Utils
-  ( genAndDecodeRuns,
+  ( -- * High level
+    genAndDecodeRuns,
+    genAndDecodeOverlappedRuns,
+
+    -- * Low level
     genRunsJson,
+    genOverlappedRunsJson,
     decodeRuns,
+    decodeErrorRuns,
+
+    -- * Low level
+    concatRunsJson,
+    mkRunJsonList,
+    tsStrToRunJson,
   )
 where
 
@@ -23,8 +34,9 @@ import Pacer.Command.Chart.Data.Time
       ),
   )
 import Pacer.Command.Chart.Data.Time qualified as Time
-import Pacer.Data.Result (onErr)
+import Pacer.Data.Result (onErr, onOk)
 import Pacer.Prelude hiding (Double)
+import Pacer.Utils (AesonE)
 import Pacer.Utils qualified as Utils
 import Prelude (Double)
 
@@ -32,13 +44,32 @@ import Prelude (Double)
 genAndDecodeRuns :: Word -> SomeRuns Double
 genAndDecodeRuns = decodeRuns . genRunsJson
 
+-- | 'genOverlappedRunsJson' and 'decodeErrorRuns'.
+genAndDecodeOverlappedRuns :: Word -> AesonE
+genAndDecodeOverlappedRuns = decodeErrorRuns . genOverlappedRunsJson
+
+-- | Decodes runs json w/ expected error.
+decodeErrorRuns :: ByteString -> AesonE
+decodeErrorRuns = onOk (error "") . Utils.decodeJson @(SomeRuns Double)
+
 -- | Decodes runs json.
 decodeRuns :: ByteString -> SomeRuns Double
 decodeRuns = onErr (error . displayException) . Utils.decodeJson
 
+-- | Generate runs json with immediate overlap.
+genOverlappedRunsJson :: Word -> ByteString
+genOverlappedRunsJson n =
+  concatRunsJson
+    $ tsStrToRunJson "1980-04-08"
+    : tsStrToRunJson "1980-04-08"
+    : mkRunJsonList n
+
 -- | Generate runs json sized by the parameter.
 genRunsJson :: Word -> ByteString
-genRunsJson maxAll = mkBS allRuns
+genRunsJson = concatRunsJson . mkRunJsonList
+
+mkRunJsonList :: Word -> List ByteString
+mkRunJsonList maxAll = allRuns
   where
     -- NOTE: [Avoiding overlaps]
     --
@@ -62,65 +93,68 @@ genRunsJson maxAll = mkBS allRuns
         -- zipWith3 so that we can interleave the different times, just so the
         -- sorting is non-trivial.
         $ L.zipWith3
-          (\d t z -> mkRun d : mkRun t : [mkRun z])
-          dates
-          times
-          zoneds
+          (\d t z -> [tsToRunJson d, tsToRunJson t, tsToRunJson z])
+          (dates maxEach)
+          (times maxEach)
+          (zoneds maxEach)
 
-    mkRun :: Timestamp -> ByteString
-    mkRun t =
-      -- intercalate over unlines so we don't have a trailing newline
-      BS.intercalate
-        "\n"
-        [ "    {",
-          "      \"datetime\": \"" <> encodeTimestamp t <> "\",",
-          "      \"distance\": \"marathon\",",
-          "      \"duration\": \"3h20m\"",
-          "    }"
-        ]
+tsStrToRunJson :: Text -> ByteString
+tsStrToRunJson = tsToRunJson . unsafeParse
 
-    mkBS :: List ByteString -> ByteString
-    mkBS rs =
-      C8.unlines
-        [ "{",
-          "  \"runs\": [",
-          BS.intercalate ",\n" rs,
-          "  ]",
-          "}"
-        ]
+tsToRunJson :: Timestamp -> ByteString
+tsToRunJson t =
+  -- intercalate over unlines so we don't have a trailing newline
+  BS.intercalate
+    "\n"
+    [ "    {",
+      "      \"datetime\": \"" <> encodeTimestamp t <> "\",",
+      "      \"distance\": \"marathon\",",
+      "      \"duration\": \"3h20m\"",
+      "    }"
+    ]
 
-    -- See NOTE: [Avoiding overlaps] for choosing good start dates for each
-    -- 3 types.
-    startDate :: Day
-    startDate = unsafeParse "1990-04-08"
+concatRunsJson :: List ByteString -> ByteString
+concatRunsJson rs =
+  C8.unlines
+    [ "{",
+      "  \"runs\": [",
+      BS.intercalate ",\n" rs,
+      "  ]",
+      "}"
+    ]
 
-    dates :: List Timestamp
-    dates = (TimestampDate . incDate startDate) <$> [0 .. maxEach]
+-- See NOTE: [Avoiding overlaps] for choosing good start dates for each
+-- 3 types.
+startDate :: Day
+startDate = unsafeParse "1990-04-08"
 
-    startTime :: LocalTime
-    startTime = unsafeParse "2000-04-08T12:00:00"
+dates :: Word -> List Timestamp
+dates mx = (TimestampDate . incDate startDate) <$> [0 .. mx]
 
-    times :: List Timestamp
-    times = (TimestampTime . incTime startTime) <$> [0 .. maxEach]
+startTime :: LocalTime
+startTime = unsafeParse "2000-04-08T12:00:00"
 
-    startZoned :: ZonedTime
-    startZoned = unsafeParse "2010-04-08T12:00:00-0800"
+times :: Word -> List Timestamp
+times mx = (TimestampTime . incTime startTime) <$> [0 .. mx]
 
-    zoneds :: List Timestamp
-    zoneds = (TimestampZoned . incZoned startZoned) <$> [0 .. maxEach]
+startZoned :: ZonedTime
+startZoned = unsafeParse "2010-04-08T12:00:00-0800"
 
-    encodeTimestamp :: Timestamp -> ByteString
-    encodeTimestamp = encodeUtf8 . Time.fmtTimestamp
+zoneds :: Word -> List Timestamp
+zoneds mx = (TimestampZoned . incZoned startZoned) <$> [0 .. mx]
 
-    incDate :: Day -> Word -> Day
-    incDate d i = Cal.addDays (fromIntegral @Word @Integer i) d
+encodeTimestamp :: Timestamp -> ByteString
+encodeTimestamp = encodeUtf8 . Time.fmtTimestamp
 
-    incTime :: LocalTime -> Word -> LocalTime
-    incTime (LocalTime d t) i = LocalTime (incDate d i) t
+incDate :: Day -> Word -> Day
+incDate d i = Cal.addDays (fromIntegral @Word @Integer i) d
 
-    incZoned :: ZonedTime -> Word -> ZonedTime
-    incZoned (ZonedTime (LocalTime d t) z) i =
-      ZonedTime (LocalTime (incDate d i) t) z
+incTime :: LocalTime -> Word -> LocalTime
+incTime (LocalTime d t) i = LocalTime (incDate d i) t
 
-    unsafeParse :: (Parser a) => Text -> a
-    unsafeParse = errorErr . P.parseAll
+incZoned :: ZonedTime -> Word -> ZonedTime
+incZoned (ZonedTime (LocalTime d t) z) i =
+  ZonedTime (LocalTime (incDate d i) t) z
+
+unsafeParse :: (Parser a) => Text -> a
+unsafeParse = errorErr . P.parseAll

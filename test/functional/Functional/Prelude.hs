@@ -62,7 +62,7 @@ import Hedgehog as X
   )
 import Pacer.Driver (displayInnerMatchKnown, runApp)
 import Pacer.Prelude as X hiding (IO)
-import Pacer.Utils (AesonPathE (MkAesonPathE))
+import Pacer.Utils (AesonE (MkAesonE))
 import System.Environment (withArgs)
 import System.FilePath (FilePath)
 import System.IO as X (IO)
@@ -143,14 +143,17 @@ runTestEff env m = do
     . runFileWriterMock
     . runFileReader
     $ m
-    `catch` \(MkAesonPathE p err) -> do
-      -- HACK: The 'Duplicate date error' chart test throws an AesonPathE,
+    `catch` \(MkAesonE mPath err) ->
+      -- HACK: The 'Duplicate date error' chart test throws an AesonE,
       -- which is a problem for the golden tests because it includes a
       -- non-deterministic absolute path. Thus we catch the exception and
       -- make the path relative. If this ends up being flaky, we can simply
       -- use the file name, which should be good enough.
-      p' <- makeRelativeToCurrentDirectoryIO p
-      throwM $ MkAesonPathE p' err
+      case mPath of
+        Just p -> do
+          p' <- makeRelativeToCurrentDirectoryIO p
+          throwM $ MkAesonE (Just p') err
+        Nothing -> throwM $ MkAesonE Nothing err
   where
     makeRelativeToCurrentDirectoryIO =
       liftIO
