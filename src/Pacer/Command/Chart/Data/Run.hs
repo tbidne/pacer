@@ -443,6 +443,24 @@ mkSomeRuns (y@(MkSomeRun _ r) :| ys) =
     initOverlapData :: HashMap Timestamp OverlapData
     initOverlapData = runToOverlapMap r
 
+    -- NOTE: [SomeRuns error short-circuit]
+    --
+    -- Notice anything unfortunate about this function? It is not lazy in its
+    -- right argument, despite being called with foldr! This is a shame as it
+    -- means it will not short-circuit in the event of an error. While we need
+    -- the accumulating map to actually check for errors (hence it is unclear
+    -- how to achieve short-cicuiting w/ foldr), surely we could rewrite this
+    -- to short-circuit with ordinary recursion?
+    --
+    -- Alas, there is a complication. At this point, we have already decoded
+    -- the bytestring into @List (SomeRun a)@, so we are stuck with linear
+    -- time anyway. What we'd want is a way to stream the decoding and check
+    -- for errors right from the get go.
+    --
+    -- Manual testing with both foldl' and direct recursion possibly showed
+    -- a (very) minor improvement on the larger benchmarks (10,000 runs), but
+    -- it was so modest that it is hard to distinguish from noise. For now,
+    -- we will stick with the status quo, with an eye towards real streaming.
     go :: SomeRun a -> SomeRunsAcc a -> SomeRunsAcc a
     go _ (Err overlap) = Err overlap
     go someRun@(MkSomeRun _ q) (Ok (acc, foundKeys)) =

@@ -240,7 +240,7 @@ displayInnerMatchKnown e =
 
 knownExceptions :: List ExceptionProxy
 knownExceptions =
-  [ MkExceptionProxy @Utils.AesonPathE,
+  [ MkExceptionProxy @Utils.AesonE,
     MkExceptionProxy @PacerEx.ChartFileMissingE,
     MkExceptionProxy @PacerEx.CommandConvertE,
     MkExceptionProxy @PacerEx.CommandDeriveE,

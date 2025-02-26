@@ -16,7 +16,8 @@ import Prelude (IO)
 main :: IO ()
 main =
   defaultMain
-    [ benchMkSomeRuns
+    [ benchMkSomeRuns,
+      benchMkSomeRunsError
     ]
 
 benchMkSomeRuns :: Benchmark
@@ -34,6 +35,15 @@ benchMkSomeRuns =
           runs_1_000_bs = Utils.genRunsJson 1_000,
           runs_10_000_bs = Utils.genRunsJson 10_000
         }
+
+benchMkSomeRunsError :: Benchmark
+benchMkSomeRunsError =
+  bgroup
+    "decode_runs_error"
+    [ bench "100" $ nf Utils.decodeErrorRuns (Utils.genOverlappedRunsJson 100),
+      bench "1_000" $ nf Utils.decodeErrorRuns (Utils.genOverlappedRunsJson 1_000),
+      bench "10_000" $ nf Utils.decodeErrorRuns (Utils.genOverlappedRunsJson 10_000)
+    ]
 
 data TestParams = MkTestParams
   { runs_100_bs :: ByteString,

@@ -12,7 +12,7 @@ module Pacer.Utils
     (.:?:),
     failUnknownFields,
     decodeJson,
-    AesonPathE (..),
+    AesonE (..),
     readDecodeJson,
 
     -- * Show
@@ -36,7 +36,7 @@ module Pacer.Utils
   )
 where
 
-import Data.Aeson (AesonException (AesonException), Key, (<?>))
+import Data.Aeson (Key, (<?>))
 import Data.Aeson qualified as Asn
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap (KeyMap)
@@ -98,17 +98,27 @@ seqGroupBy p = go
       where
         (ys, zs) = Seq.spanl (p x) xs
 
-data AesonPathE = MkAesonPathE OsPath String
-  deriving stock (Show)
+-- | We use this rather than aeson's AesonException for two reasons:
+--
+-- 1. AesonException does not have an NFData instance, which we require for
+--    the benchmarks.
+--
+-- 2. Optional path improves the error message.
+data AesonE = MkAesonE (Maybe OsPath) String
+  deriving stock (Generic, Show)
+  deriving anyclass (NFData)
 
-instance Exception AesonPathE where
-  displayException (MkAesonPathE p s) =
-    mconcat
-      [ "Error decoding json path '",
-        decodeLenient p,
-        "': ",
-        s
-      ]
+instance Exception AesonE where
+  displayException (MkAesonE mPath s) =
+    case mPath of
+      Just p ->
+        mconcat
+          [ "Error decoding json path '",
+            decodeLenient p,
+            "': ",
+            s
+          ]
+      Nothing -> "Error decode json: " ++ s
 
 -- | Decodes a json(c) file.
 readDecodeJson ::
@@ -126,7 +136,7 @@ readDecodeJson path = do
     $ decodeJson @a contents
   where
     osPath = pathToOsPath path
-    toAesonPathE (AesonException s) = MkAesonPathE osPath s
+    toAesonPathE (MkAesonE _ s) = MkAesonE (Just osPath) s
 
 -- | Fails if there are any unknown fields in the object.
 failUnknownFields ::
@@ -159,9 +169,9 @@ failUnknownFields name knownKeys kmap = do
     showKeys = show . L.sort . fmap Key.toString
 
 -- | Decodes json(c).
-decodeJson :: (FromJSON a) => ByteString -> Result AesonException a
+decodeJson :: (FromJSON a) => ByteString -> Result AesonE a
 decodeJson =
-  first AesonException
+  first (MkAesonE Nothing)
     <<< (review #eitherIso)
     . Asn.eitherDecodeStrict
     <=< P.stripComments
