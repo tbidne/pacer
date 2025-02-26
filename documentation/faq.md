@@ -109,7 +109,7 @@ There are some caveats:
     ```jsonc
     // run-labels.json
     {
-      "datetime": "2024-10-25T12:00:00",
+      "datetime": "2024-10-25 12:00:00",
       "labels": ["official", "marathon"]
     }
     ```

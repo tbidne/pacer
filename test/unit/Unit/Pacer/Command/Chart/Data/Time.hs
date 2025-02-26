@@ -63,14 +63,34 @@ testParseTimestampProp = testPropertyNamed name desc $ property $ do
 
 testParseTimestampCases :: TestTree
 testParseTimestampCases = testCase "Parses cases" $ do
+  assertDate "1950-01-01"
   assertTime "1950-01-01T00:00:00"
+  assertTime "1950-01-01 00:00:00"
+  assertZoned "1970-01-01T12:00:00-0800"
+  assertZoned "1970-01-01 12:00:00-0800"
+  assertZoned "1970-01-01T12:00:00 -0800"
+  assertZoned "1970-01-01 12:00:00 -0800"
   where
-    assertTime t = case P.parse @Timestamp t of
+    assertDate t = case P.parseAll @Timestamp t of
+      Err err ->
+        assertFailure $ "Failed parsing date: " ++ err
+      Ok (TimestampDate _) -> pure ()
+      Ok bad ->
+        assertFailure $ "Expected date, received: " ++ show bad
+
+    assertTime t = case P.parseAll @Timestamp t of
       Err err ->
         assertFailure $ "Failed parsing time: " ++ err
       Ok (TimestampTime _) -> pure ()
       Ok bad ->
         assertFailure $ "Expected time, received: " ++ show bad
+
+    assertZoned t = case P.parseAll @Timestamp t of
+      Err err ->
+        assertFailure $ "Failed parsing zoned: " ++ err
+      Ok (TimestampZoned _) -> pure ()
+      Ok bad ->
+        assertFailure $ "Expected zoned, received: " ++ show bad
 
 testTimestampEqLaws :: TestTree
 testTimestampEqLaws = testPropertyNamed name desc $ property $ do
@@ -417,16 +437,19 @@ genLocalTimeTxt :: Gen Text
 genLocalTimeTxt = do
   dateTxt <- genDateTxt
   timeTxt <- genTimeTxt
-  pure $ (dateTxt <> "T" <> timeTxt)
+  sep <- Gen.element ['T', ' ']
+  pure $ (dateTxt <> T.singleton sep <> timeTxt)
 
 genTzOffsetTxt :: Gen Text
 genTzOffsetTxt = do
   h <- Gen.integral @_ @Word8 (Range.linear 0 23)
   m <- Gen.integral @_ @Word8 (Range.linear 0 59)
+  s <- Gen.element ["", " "]
   d <- Gen.element ['+', '-']
   pure
     $ mconcat
-      [ T.singleton d,
+      [ s,
+        T.singleton d,
         showtPad2 h,
         showtPad2 m
       ]

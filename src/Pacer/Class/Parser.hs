@@ -42,6 +42,7 @@ import Data.ByteString qualified as BS
 import Data.Char qualified as Ch
 import Data.Set qualified as Set
 import Data.Text qualified as T
+import Data.Time.Format (ParseTime)
 import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
 import Pacer.Prelude
@@ -83,64 +84,10 @@ instance (AMonoid a, Ord a, Parser a, Show a) => Parser (Positive a) where
       Nothing -> fail $ "Parsed non-positive: " ++ show d
       Just x -> pure x
 
-instance Parser LocalTime where
-  parser = do
-    str <- unpackText <$> MP.takeWhile1P (Just "local-time") p
-    case Format.parseTimeM False Format.defaultTimeLocale fmt str of
-      Ok d -> pure d
-      Err err ->
-        fail
-          $ mconcat
-            [ "Failed parsing localtime from string '",
-              str,
-              "': ",
-              err
-            ]
-    where
-      p c =
-        Ch.isDigit c
-          || c
-          == '-'
-          || c
-          == 'T'
-          || c
-          == ':'
-
-      fmt = "%Y-%m-%dT%H:%M:%S"
-
-instance Parser ZonedTime where
-  parser = do
-    str <- unpackText <$> MP.takeWhile1P (Just "zoned-time") p
-    case Format.parseTimeM False Format.defaultTimeLocale fmt str of
-      Ok d -> pure d
-      Err err ->
-        fail
-          $ mconcat
-            [ "Failed parsing zoned time from string '",
-              str,
-              "': ",
-              err
-            ]
-    where
-      p c =
-        Ch.isDigit c
-          || c
-          == '-'
-          || c
-          == 'T'
-          || c
-          == ':'
-          || c
-          == '+'
-          || c
-          == '-'
-
-      fmt = "%Y-%m-%dT%H:%M:%S%z"
-
 instance Parser Day where
   parser = do
-    str <- unpackText <$> MP.takeWhile1P (Just "date") (\c -> Ch.isDigit c || c == '-')
-    case Format.parseTimeM False Format.defaultTimeLocale fmt str of
+    str <- unpackText <$> dateParser
+    case parseTime fmt str of
       Ok d -> pure d
       Err err ->
         fail
@@ -152,6 +99,72 @@ instance Parser Day where
             ]
     where
       fmt = "%Y-%m-%d"
+
+instance Parser LocalTime where
+  parser = do
+    dayTxt <- dateParser
+
+    _ <- dateTimeSepParser
+
+    timeTxt <- timeParser
+
+    let str = unpackText (dayTxt <> "T" <> timeTxt)
+
+    case parseTime fmt str of
+      Ok d -> pure d
+      Err err ->
+        fail
+          $ mconcat
+            [ "Failed parsing localtime from string '",
+              str,
+              "': ",
+              err
+            ]
+    where
+      fmt = "%Y-%m-%dT%H:%M:%S"
+
+instance Parser ZonedTime where
+  parser = do
+    dayTxt <- dateParser
+
+    _ <- dateTimeSepParser
+
+    timeTxt <- timeParser
+
+    _ <- MP.optional (MPC.char ' ')
+
+    zoneTxt <- zonedParser
+
+    let str = unpackText (dayTxt <> "T" <> timeTxt <> zoneTxt)
+
+    case parseTime fmt str of
+      Ok d -> pure d
+      Err err ->
+        fail
+          $ mconcat
+            [ "Failed parsing zoned time from string '",
+              str,
+              "': ",
+              err
+            ]
+    where
+      fmt = "%Y-%m-%dT%H:%M:%S%z"
+
+dateParser :: MParser Text
+dateParser = MP.takeWhile1P (Just "date") (\c -> Ch.isDigit c || c == '-')
+
+dateTimeSepParser :: MParser Char
+dateTimeSepParser = MPC.char 'T' <|> MPC.char ' '
+
+timeParser :: MParser Text
+timeParser = MP.takeWhile1P (Just "time") (\c -> Ch.isDigit c || c == ':')
+
+zonedParser :: MParser Text
+zonedParser =
+  MP.takeWhile1P (Just "tz") (\c -> Ch.isDigit c || c == '+' || c == '-')
+
+parseTime :: (ParseTime a) => String -> String -> ResultDefault a
+parseTime fmt str = Format.parseTimeM False Format.defaultTimeLocale fmt str
 
 -- | Parser combinator for digits with a 'Read' instance.
 parseDigits :: (Read n) => Parsec Void Text n

@@ -1,12 +1,12 @@
 MkRunLabels
   { unRunLabels = fromList
     [
-      ( TimestampZoned 2024-10-10 12:00:00 -0800
+      ( TimestampTime 2024-10-10 12:00:00
       , fromList
         ( "half-marathon" :| [ "official" ] )
       )
     ,
-      ( TimestampZoned 2024-10-25 12:00:00 -0800
+      ( TimestampTime 2024-10-25 12:00:00
       , fromList
         ( "marathon" :| [ "official" ] )
       )

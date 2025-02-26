@@ -173,9 +173,9 @@ instance Parser Timestamp where
 instance FromJSON Timestamp where
   parseJSON v =
     asum
-      [ fmap TimestampDate . parseJSON $ v,
+      [ fmap TimestampZoned . parseJSON $ v,
         fmap TimestampTime . parseJSON $ v,
-        fmap TimestampZoned . parseJSON $ v
+        fmap TimestampDate . parseJSON $ v
       ]
 
 instance ToJSON Timestamp where
