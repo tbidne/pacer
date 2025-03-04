@@ -325,7 +325,7 @@ searchFileAliases checkExists dataDir aliases = do
         Just osPath -> do
           relFile <- Path.parseRelFile osPath
           let absFile = dataDir <</>> relFile
-              warn =
+              msg =
                 mconcat
                   [ "Did not find exact match for '",
                     packText $ showPath f,
@@ -333,7 +333,16 @@ searchFileAliases checkExists dataDir aliases = do
                     packText $ showPath absFile,
                     "', using it."
                   ]
-          $(Logger.logWarn) warn
+          -- NOTE: As we only perform a case-insens search during file
+          -- discovery, this really shouldn't be a warning, since it's
+          -- "best-effort" anyway. For instance, if someone names their garmin
+          -- file 'activites.csv' -- cf. 'Activites'csv' -- then we should
+          -- find it without any fanfare.
+          --
+          -- The info level already logs the exact filepath being used,
+          -- so this slightly more granular message (searched vs. found)
+          -- makes more sense for debug.
+          $(Logger.logDebug) msg
           pure $ pure absFile
         Nothing -> pure empty
 

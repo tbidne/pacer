@@ -452,7 +452,8 @@ runsSearch = MkSearchFiles $ runsJsonName :| [runsGarminName]
   where
     runsJsonName =
       MkFileAliases $ [relfile|runs.json|] :| [[relfile|runs.jsonc|]]
-    runsGarminName = MkFileAliases $ NE.singleton [relfile|Activities.csv|]
+    runsGarminName =
+      MkFileAliases $ NE.singleton [relfile|Activities.csv|]
 
 runLabelsSearch :: SearchFiles
 runLabelsSearch =
