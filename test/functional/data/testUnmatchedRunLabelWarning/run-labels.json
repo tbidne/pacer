@@ -1,0 +1,35 @@
+{
+  "run-labels": [
+    {
+      "datetime": "2024-10-15",
+      "labels": [
+        "runs_label"
+      ]
+    },
+    {
+      "datetime": "2024-10-15 12:35:20",
+      "labels": [
+        "unused_1"
+      ]
+    },
+    {
+      "datetime": "2024-10-20T14:30:00",
+      "labels": [
+        "garmin_1"
+      ]
+    },
+    {
+      "datetime": "2024-10-20T14:30:00-0800",
+      "labels": [
+        "unused_2"
+      ]
+    },
+    {
+      "datetime": "2024-10-20",
+      "labels": [
+        "unused_3",
+        "unused_4"
+      ]
+    }
+  ]
+}

@@ -152,7 +152,7 @@ instance Exception ChartFileMissingE where
   displayException e =
     mconcat
       [ "Required chart file not found. Searched for paths(s) ",
-        Utils.showListF Utils.showPath e.expectedFiles,
+        Utils.showMapListInline Utils.showPath e.expectedFiles,
         " in directories:",
         dirsStr
       ]

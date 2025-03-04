@@ -1,0 +1,11 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "charts": [
+    {
+      "title": "Some chart",
+      "y-axis": "pace"
+    }
+  ]
+}

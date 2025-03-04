@@ -586,15 +586,26 @@ updateLabelTests =
 
 testUpdateLabels :: TestTree
 testUpdateLabels = testCase "Updates labels from map" $ do
-  let results =
-        fmap (.unSomeRunsKey)
-          . NE.toList
-          . NESet.toList
-          $ (Chart.updateLabels labelMap runs).unSomeRuns
+  let (runsResults, unmatchedTsResults) =
+        first
+          ( fmap (.unSomeRunsKey)
+              . NE.toList
+              . NESet.toList
+              . (.unSomeRuns)
+          )
+          $ (Chart.updateLabels labelMap runs)
 
   -- Need to compare SomeRuns NOT SomeRunsKey as the latter compares via
   -- timestamp only.
-  expected @=? results
+
+  length runsExpected @=? length runsResults
+  for_ (zip runsExpected runsResults) $ \(e, r) -> do
+    e @=? r
+
+  let unmatchedTsResultList =
+        second (NE.toList . NESet.toList) <$> Map.toList unmatchedTsResults
+
+  unmatchedTsExpected @=? unmatchedTsResultList
   where
     -- 1. Runs is a union
     -- 2. Runs do _not_ use overlap logic
@@ -602,7 +613,11 @@ testUpdateLabels = testCase "Updates labels from map" $ do
     runs :: SomeRuns Double
     runs = MkSomeRuns $ unsafeNESet [x1, x2, x3, x4]
 
-    expected = [y1, y2, y3, y4]
+    runsExpected = [y1, y2, y3, y4]
+
+    unmatchedTsExpected =
+      [ (unsafeTs "2024-08-10", ["bad_label1", "bad_label2"])
+      ]
 
     x1 = mkSrk "Unions labels" (unsafeTs "2024-08-10T12:20:30") ["l1", "l2"]
     x2 = mkSrk "Map labels 1" (unsafeTs "2024-08-10T14:20:30") []
@@ -621,7 +636,7 @@ testUpdateLabels = testCase "Updates labels from map" $ do
           (unsafeTs "2024-08-10T14:20:30", unsafeNESet ["l5", "l6"]),
           -- This example overlaps with the top 2, but we want exact equality
           -- hence it should _not_ be chosen.
-          (unsafeTs "2024-08-10", unsafeNESet ["bad_label"]),
+          (unsafeTs "2024-08-10", unsafeNESet ["bad_label1", "bad_label2"]),
           -- This does not _exactly_ match the intended x4, but once we
           -- account for the timezone it will.
           (unsafeTs "2024-08-15T14:00:00-0900", unsafeNESet ["tz_label"])

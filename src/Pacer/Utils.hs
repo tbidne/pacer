@@ -19,7 +19,10 @@ module Pacer.Utils
     showtOsPath,
     showPath,
     showtPath,
-    showListF,
+    showListInline,
+    showMapListInline,
+    showListNewlines,
+    showMapListNewlines,
 
     -- * File discovery
     SearchFiles (..),
@@ -81,13 +84,25 @@ showPath = OsPath.decodeLenient . pathToOsPath
 showtPath :: Path b t -> Text
 showtPath = showtOsPath . pathToOsPath
 
-showListF :: (IsString b, Semigroup b) => (a -> b) -> List a -> b
-showListF _ [] = "[]"
-showListF f xs@(_ : _) = "[" <> go xs
+showListInline :: (IsString a, Semigroup a) => List a -> a
+showListInline = showMapListInline identity
+
+showMapListInline :: (IsString b, Semigroup b) => (a -> b) -> List a -> b
+showMapListInline _ [] = "[]"
+showMapListInline f xs@(_ : _) = "[" <> go xs
   where
     go [] = "]"
     go [y] = f y <> "]"
     go (y : ys) = f y <> ", " <> go ys
+
+showListNewlines :: (IsString a, Semigroup a) => List a -> a
+showListNewlines = showMapListNewlines identity
+
+showMapListNewlines :: (IsString b, Semigroup b) => (a -> b) -> List a -> b
+showMapListNewlines f = go
+  where
+    go [] = ""
+    go (y : ys) = "\n  - " <> f y <> go ys
 
 seqGroupBy :: forall a. (a -> a -> Bool) -> Seq a -> Seq (NESeq a)
 seqGroupBy p = go
@@ -231,7 +246,7 @@ searchFiles fileNames dataDir = do
     msg =
       mconcat
         [ "Searching for path(s) ",
-          showListF showtPath fileNamesList,
+          showMapListInline showtPath fileNamesList,
           " in: ",
           showtPath dataDir
         ]

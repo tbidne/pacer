@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "datetime": "2024-10-15",
+      "distance": "5 km",
+      "duration": "20m30s"
+    },
+    {
+      "datetime": "2024-10-25T12:00:00-08:00",
+      "distance": "marathon",
+      "duration": "3h20m"
+    }
+  ]
+}

@@ -12,12 +12,16 @@ module Functional.Prelude
     runMultiArgs,
     runArgs,
     runException,
+    runAppArgs,
 
     -- * Golden
     GoldenParams (..),
     testGoldenParams,
     testChart,
     testChartPosix,
+
+    -- * Env
+    FuncEnv (..),
   )
 where
 
@@ -222,9 +226,11 @@ runMultiArgs mkArgs vals =
     let args = mkArgs a
     runArgs (Just idx) args e
 
+-- | Runs pacer with the arguments and compares the log output against the
+-- expected text.
 runArgs :: Maybe Word8 -> List String -> Text -> IO ()
 runArgs mIdx args expected = do
-  funcEnv <- withArgs args $ runFuncIO runApp
+  funcEnv <- runAppArgs args
   result <- Ref.readIORef funcEnv.logsRef
 
   let (idxTxt, indentTxt) = case mIdx of
@@ -253,6 +259,10 @@ runException desc expected args = testCase desc $ do
   case eResult of
     Right r -> assertFailure $ unpackText $ "Expected exception, received: " <> r
     Left ex -> expected @=? displayExceptiont ex
+
+-- | Low level runner. Does nothing except runs pacer w/ the args.
+runAppArgs :: List String -> IO FuncEnv
+runAppArgs args = withArgs args $ runFuncIO runApp
 
 -- | Parameters for golden tests.
 data GoldenParams = MkGoldenParams

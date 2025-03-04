@@ -27,6 +27,7 @@ import Data.Aeson.Encode.Pretty qualified as AsnPretty
 import Data.Foldable1 (Foldable1 (foldlMap1'))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as MP
+import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
@@ -347,11 +348,31 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
       Nothing -> pure allRuns
       Just runLabelsPath -> do
         MkRunLabels runLabels <- Utils.readDecodeJson runLabelsPath
-        pure $ updateLabels runLabels allRuns
+        let (newRuns, unusedTimestamps) = updateLabels runLabels allRuns
+
+        -- Warn if any timestamps in the labels file were not used.
+        unless (MP.null unusedTimestamps) $ do
+          let msg =
+                mconcat
+                  [ "The following timestamps with labels from '",
+                    Utils.showtPath runLabelsPath,
+                    "' were not found in runs files:",
+                    Utils.showMapListNewlines displayUnused (MP.toList unusedTimestamps)
+                  ]
+          $(Logger.logWarn) msg
+
+        pure newRuns
 
   pure (chartRequests, runsWithLabels)
   where
     (chartRequestsPath, mRunLabelsPath, runPaths) = chartPaths
+
+    displayUnused (ts, labels) =
+      mconcat
+        [ display ts,
+          ": ",
+          Utils.showMapListInline identity (toList $ NESet.toList labels)
+        ]
 
     -- DistanceUnit should be set if this is a garmin (csv) file.
     -- If it is a custom runs (json) file, it is ignored.
@@ -371,14 +392,29 @@ type ChartPaths =
     (Maybe (Path Abs File)) -- run-labels
     (NonEmpty (Path Abs File)) -- runs
 
--- | Updates all runs with labels from the given map.
-updateLabels :: Map Timestamp (NESet Text) -> SomeRuns a -> SomeRuns a
-updateLabels runLabels = Run.mapSomeRuns updateRunLabels
+-- | Updates all runs with labels from the given map @m@. Returns a (possibly
+-- empty) subset of @m@ that was 'unmatched' i.e. had no corresponding
+-- run in SomeRuns.
+updateLabels ::
+  -- | Timestamp -> labels map.
+  Map Timestamp (NESet Text) ->
+  -- | All runs.
+  SomeRuns a ->
+  -- | (New runs, unmatching timestamps).
+  Tuple2 (SomeRuns a) (Map Timestamp (NESet Text))
+updateLabels runLabels rs = (newRuns, unmatched)
   where
-    updateRunLabels :: forall d a. Run d a -> Run d a
+    (newRuns, matched) = Run.mapAccumSomeRuns updateRunLabels rs
+
+    unmatched = MP.withoutKeys runLabels matched
+
+    updateRunLabels :: forall d a. Run d a -> Tuple2 (Run d a) (Set Timestamp)
     updateRunLabels r = case MP.lookup r.datetime runLabels of
-      Nothing -> r
-      Just labels -> over' #labels (Set.union $ NESet.toSet labels) r
+      Nothing -> (r, Set.empty)
+      Just labels ->
+        ( over' #labels (Set.union $ NESet.toSet labels) r,
+          Set.singleton r.datetime
+        )
 
 jsonName :: Path Rel File
 jsonName = [relfile|charts.json|]

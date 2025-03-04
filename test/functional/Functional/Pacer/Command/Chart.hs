@@ -2,6 +2,8 @@
 
 module Functional.Pacer.Command.Chart (tests) where
 
+import Data.IORef qualified as Ref
+import Data.Text qualified as T
 import FileSystem.OsPath (unsafeDecode)
 import Functional.Prelude
 
@@ -32,7 +34,8 @@ basicTests getTestDir =
       testGarminChartError getTestDir,
       testBothChartOverlapError getTestDir,
       testUnknownKeyFailure getTestDir,
-      testChartSum getTestDir
+      testChartSum getTestDir,
+      testUnmatchedRunLabelWarning getTestDir
     ]
 
 testExampleChart :: IO OsPath -> TestTree
@@ -155,6 +158,52 @@ testChartSum :: IO OsPath -> TestTree
 testChartSum = testChart desc [osp|testChartSum|]
   where
     desc = "Uses chart sum"
+
+testUnmatchedRunLabelWarning :: IO OsPath -> TestTree
+testUnmatchedRunLabelWarning getTestDir = testCase desc $ do
+  testDir <- getTestDir
+
+  let args = mkArgs testDir
+
+  funcEnv <- runAppArgs args
+
+  logs <- Ref.readIORef funcEnv.logsRef
+
+  let mkErr e =
+        unpackText
+          $ mconcat
+            [ "Did not find expected '",
+              e,
+              "' in logs: ",
+              logs
+            ]
+
+  assertBool (mkErr expected1) (expected1 `T.isInfixOf` logs)
+  assertBool (mkErr expected2) (expected2 `T.isInfixOf` logs)
+  where
+    desc = "Logs warnings for unused run-labels"
+
+    expected1 = "The following timestamps with labels from"
+    expected2 =
+      (T.strip . T.unlines)
+        [ "were not found in runs files:",
+          "  - 2024-10-15 12:35:20: [unused_1]",
+          "  - 2024-10-20: [unused_3, unused_4]",
+          "  - 2024-10-20 14:30:00 -0800: [unused_2]"
+        ]
+
+    mkArgs p =
+      [ "chart",
+        "--json",
+        "--data",
+        dataDir,
+        "--build-dir",
+        buildDir p
+      ]
+    buildDir p = unsafeDecode $ p </> [osp|build|]
+    dataDir =
+      unsafeDecode
+        [ospPathSep|test/functional/data/testUnmatchedRunLabelWarning|]
 
 pathTests :: IO OsPath -> TestTree
 pathTests getTestDir =

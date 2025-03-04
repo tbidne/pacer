@@ -428,6 +428,7 @@ import Numeric.Data.Positive.Algebra.Internal as X
 import Optics.Core as X
   ( AffineTraversal',
     An_AffineTraversal,
+    Getter,
     Is,
     Iso,
     Iso',
@@ -443,6 +444,7 @@ import Optics.Core as X
     preview,
     review,
     set',
+    to,
     view,
     (%),
     (%?),

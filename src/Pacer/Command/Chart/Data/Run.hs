@@ -31,6 +31,7 @@ module Pacer.Command.Chart.Data.Run
 
     -- ** Functions
     mapSomeRuns,
+    mapAccumSomeRuns,
     unionSomeRuns,
   )
 where
@@ -39,6 +40,7 @@ import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
 import Data.List.NonEmpty qualified as NE
 import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
 import Data.Tuple (uncurry)
 import Pacer.Class.Parser (Parser)
@@ -624,13 +626,48 @@ applySomeRun2 f p1 p2 =
   DistU.convertToMeters p1 `f` DistU.convertToMeters p2
 
 mapSomeRuns ::
-  (forall d. Run d a -> Run d a) ->
+  (forall d. Run d a -> Run d b) ->
   SomeRuns a ->
-  SomeRuns a
+  SomeRuns b
 mapSomeRuns f (MkSomeRuns s) = MkSomeRuns $ NESet.map g s
   where
     g (MkSomeRunsKey (MkSomeRun d r)) =
       MkSomeRunsKey (MkSomeRun d (f r))
+
+mapAccumSomeRuns ::
+  forall a1 a2 b.
+  (Semigroup b) =>
+  (forall d. Run d a1 -> Tuple2 (Run d a2) b) ->
+  SomeRuns a1 ->
+  Tuple2 (SomeRuns a2) b
+mapAccumSomeRuns f (MkSomeRuns s) = (MkSomeRuns newRuns, result)
+  where
+    (newRuns, result) = Set.foldl' g init rest
+
+    g ::
+      Tuple2 (NESet (SomeRunsKey a2)) b ->
+      SomeRunsKey a1 ->
+      Tuple2 (NESet (SomeRunsKey a2)) b
+    g (rs, bs) (MkSomeRunsKey (MkSomeRun d r)) =
+      let (newRun, b) = f r
+       in ( NESet.insert (MkSomeRunsKey (MkSomeRun d newRun)) rs,
+            b <> bs
+          )
+
+    root :: SomeRunsKey a1
+    rest :: Set (SomeRunsKey a1)
+    (root, rest) = NESet.deleteFindMin s
+
+    initSet :: NESet (SomeRunsKey a2)
+    (initSet, initB) = case root of
+      MkSomeRunsKey (MkSomeRun d r) ->
+        let (run1, b1) = f r
+         in ( NESet.singleton (MkSomeRunsKey (MkSomeRun d run1)),
+              b1
+            )
+
+    init :: Tuple2 (NESet (SomeRunsKey a2)) b
+    init = (initSet, initB)
 
 unionSomeRuns ::
   SomeRuns a ->
