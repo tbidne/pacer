@@ -44,9 +44,7 @@ import Text.Megaparsec.Char qualified as MPC
 --                                  FilterOp                                 --
 -------------------------------------------------------------------------------
 
--- | Operator for filter comparisons. The text field is just so we can have
--- Eq and Show instances, though they are of arguably little value.
--- data FilterOp = MkFilterOp Text (forall a. (Ord a) => a -> a -> Bool)
+-- | Operator for filter comparisons.
 data FilterOp
   = FilterOpEq
   | FilterOpNeq
@@ -166,14 +164,7 @@ instance
         MPC.space1
         FilterLabel <$> MP.takeWhile1P (Just "string") (const True)
 
-      parseDate = do
-        MPC.string "datetime"
-        MPC.space1
-        op <- parser
-        MPC.space1
-        m <- parser
-        pure $ FilterDate op m
-
+      parseDate = parsePred "datetime" FilterDate
       parseDist = parsePred "distance" FilterDistance
       parseDuration = parsePred "duration" FilterDuration
       parsePace = parsePred "pace" FilterPace
