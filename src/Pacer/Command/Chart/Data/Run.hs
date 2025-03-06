@@ -472,6 +472,25 @@ mkSomeRuns (y@(MkSomeRun _ r) :| ys) =
            in Ok (acc', foundKeys')
         Err overlapped -> Err ((q.title, q.datetime), overlapped)
 
+-- REVIEW: Now that I think about it, this elaborate overlap detection might
+-- not be worth it. First, note that Timestamp's Eq/Ord is lawful exactly
+-- because it does not detect overlaps: Timestamps w/ less precision are
+-- always considered "lesser" than those with more.
+--
+-- The entire point of overlap detection is for preventing ambiguities when
+-- creating charts e.g. if we have runs with datetimes:
+--
+--     2024-10-08
+--     2024-10-08T12:30:00
+--
+-- How do we sort these? Well, our Eq/Ord always does just fine by arbtirarily
+-- deciding less precision means less. And if the user supplies an actual
+-- duplicate e.g. another 2024-10-08, well that is always an error.
+--
+-- So what does overlap detection buy us? Arguably not much. If we just resort
+-- to our Eq/Ord then duplicate detect is much simple, and we do not really
+-- lose much. Consider removing it.
+
 -- | NOTE: [Timestamp Overlaps]
 --
 -- Timestamp data we use when checking for overlaps. First, we partition

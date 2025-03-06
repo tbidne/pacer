@@ -271,6 +271,10 @@ prefix t f = Prefix (f <$ MPC.string t)
 blexeme :: Parsec Void ByteString a -> Parsec Void ByteString a
 blexeme = Lex.lexeme MPB.space
 
+-- REVIEW: I wrote a manual parser using just ByteString's API, and
+-- megaparsec also provides skipBlockComment and skipLineComment helper
+-- functions. It might be a good idea to benchmark all 3.
+
 -- | Strips a bytestring of line (//) and block (/* */) comments.
 stripComments :: ByteString -> ResultDefault ByteString
 stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
