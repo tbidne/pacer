@@ -14,6 +14,7 @@ import Data.List (all)
 import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
+import Pacer.Class.IOrd (IEq ((~~)), (/~), (<.), (<~), (>.), (>~))
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
     ChartRequests (chartRequests),
@@ -54,12 +55,6 @@ import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.Time
   ( Moment (MomentTimestamp),
     Timestamp,
-    (./=),
-    (.<),
-    (.<=),
-    (.==),
-    (.>),
-    (.>=),
   )
 import Pacer.Command.Chart.Data.Time qualified as Time
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
@@ -377,12 +372,12 @@ filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     opToFun FilterOpGt = (>)
 
     opToMFun :: FilterOp -> (Moment -> Moment -> Bool)
-    opToMFun FilterOpEq = (.==)
-    opToMFun FilterOpNeq = (./=)
-    opToMFun FilterOpLte = (.<=)
-    opToMFun FilterOpLt = (.<)
-    opToMFun FilterOpGte = (.>=)
-    opToMFun FilterOpGt = (.>)
+    opToMFun FilterOpEq = (~~)
+    opToMFun FilterOpNeq = (/~)
+    opToMFun FilterOpLte = (<~)
+    opToMFun FilterOpLt = (<.)
+    opToMFun FilterOpGte = (>~)
+    opToMFun FilterOpGt = (>.)
 
 i :: Int -> Int
 i = id

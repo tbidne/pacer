@@ -65,6 +65,7 @@ library
   autogen-modules: Paths_pacer
   exposed-modules:
     Pacer.Class.FromAlt
+    Pacer.Class.IOrd
     Pacer.Class.Parser
     Pacer.Class.Units
     Pacer.Command

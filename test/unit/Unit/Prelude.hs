@@ -5,8 +5,9 @@ module Unit.Prelude
   ( module X,
 
     -- * Hedgehog
-    (.===),
-    (./==),
+    (<=>),
+    (~~~),
+    (/~~),
     annotateUnpack,
     hdiff,
     testProp,
@@ -60,9 +61,9 @@ import Hedgehog as X
     (===),
   )
 import Hedgehog qualified as H
+import Pacer.Class.IOrd (IEq ((~~)), (/~))
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as Parser
-import Pacer.Command.Chart.Data.Time (Moment, (./=), (.==))
 import Pacer.Data.Distance
   ( Distance (MkDistance),
     SomeDistance (MkSomeDistance),
@@ -129,15 +130,21 @@ testPropN numTests name desc =
 annotateUnpack :: Text -> PropertyT IO ()
 annotateUnpack = annotate . unpackText
 
-(.===) :: Moment -> Moment -> PropertyT IO ()
-x .=== y = H.diff x (.==) y
+-- | Specialization of (===), for lower operator precedence.
+(<=>) :: Bool -> Bool -> PropertyT IO ()
+(<=>) = (===)
 
-infix 4 .===
+infix 1 <=>
 
-(./==) :: Moment -> Moment -> PropertyT IO ()
-x ./== y = H.diff x (./=) y
+(~~~) :: (IEq a, Show a) => a -> a -> PropertyT IO ()
+x ~~~ y = H.diff x (~~) y
 
-infix 4 ./==
+infix 4 ~~~
+
+(/~~) :: (IEq a, Show a) => a -> a -> PropertyT IO ()
+x /~~ y = H.diff x (/~) y
+
+infix 4 /~~
 
 (@/=?) :: (Eq a, Show a) => a -> a -> Assertion
 x @/=? y = assertBool msg (x /= y)

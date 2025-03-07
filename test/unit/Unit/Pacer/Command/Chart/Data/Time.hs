@@ -12,21 +12,16 @@ import Data.Time
 import Data.Time.Zones qualified as TZ
 import Data.Time.Zones.All (TZLabel)
 import Data.Time.Zones.All qualified as TZ.All
-import Hedgehog qualified as H
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
+import Pacer.Class.IOrd (IEq ((~~)), IOrd, imax, imin, (/~), (<.), (<~), (>.), (>~))
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Time
-  ( Moment (MomentMonth, MomentTimestamp, MomentYear),
+  ( Moment (MomentTimestamp, MomentYear, MomentYearMonth),
     Month,
     Timestamp (TimestampDate, TimestampTime, TimestampZoned),
     Year,
-    (./=),
-    (.<),
-    (.<=),
-    (.==),
-    (.>),
   )
 import Unit.Prelude
 
@@ -46,7 +41,8 @@ timestampTests =
       testParseTimestampCases,
       testTimestampEqLaws,
       testTimestampOrdLaws,
-      testTimestampOrdCases
+      testTimestampOrdCases,
+      testTimestampIEqLaws
     ]
 
 testParseTimestampProp :: TestTree
@@ -98,17 +94,7 @@ testTimestampEqLaws = testPropertyNamed name desc $ property $ do
   y <- forAll genTimestamp
   z <- forAll genTimestamp
 
-  -- reflexivity
-  x === x
-
-  -- symmetry
-  (x == y) === (y == x)
-
-  -- transitivity
-  when (x == y && y == z) (x === z)
-
-  -- negation
-  (x /= y) === not (x == y)
+  testEqLaws x y z
   where
     name = "testTimestampEqLaws"
     desc = "Eq laws"
@@ -119,21 +105,7 @@ testTimestampOrdLaws = testPropertyNamed name desc $ property $ do
   y <- forAll genTimestamp
   z <- forAll genTimestamp
 
-  -- comparability
-  let xLteY = x <= y
-      yLteX = y <= x
-
-  assert (xLteY || yLteX)
-
-  -- transitivity
-  let yLteZ = y <= z
-  when (xLteY && yLteZ) $ assert (x <= z)
-
-  -- reflexivity
-  assert (x <= x)
-
-  -- antisymmetry
-  when (xLteY && yLteX) $ assert (x == y)
+  testOrdLaws x y z
   where
     name = "testTimestampOrdLaws"
     desc = "Ord laws"
@@ -141,13 +113,24 @@ testTimestampOrdLaws = testPropertyNamed name desc $ property $ do
 testTimestampOrdCases :: TestTree
 testTimestampOrdCases = testProp1 "testTimestampOrdCases" desc $ do
   go
-    [ ("2099-12-31T02:00:00+0800", (<=), "2099-12-31T00:00:00+0000")
+    [ ("2099-12-31T02:00:00+0800", (<=), "2099-12-31T00:00:00+0000"),
+      ("2013-08-12T14:30:00", (>), "2013-08-12")
     ]
   where
     desc = "Ord cases"
 
     go vals = for_ (zip [1 ..] vals) $ \(i, (x, op, y)) ->
       assertDiff @Timestamp i x op y
+
+testTimestampIEqLaws :: TestTree
+testTimestampIEqLaws = testPropertyNamed name desc $ property $ do
+  x <- forAll genTimestamp
+  y <- forAll genTimestamp
+
+  testIEqLaws x y
+  where
+    name = "testTimestampIEqLaws"
+    desc = "IEq laws"
 
 momentTests :: TestTree
 momentTests =
@@ -156,12 +139,10 @@ momentTests =
     [ testParseMomentProp,
       testMomentParseCases,
       testMomentEqLaws,
-      testMomentEqOpTotal,
-      testMomentEqOpLaws,
-      testMomentEqOpCases,
-      testMomentOrdOpTotal,
-      testMomentOrdOpLaws,
-      testMomentOrdOpCases
+      testMomentIEqLaws,
+      testMomentIEqCases,
+      testMomentIOrdLaws,
+      testMomentIOrdCases
     ]
 
 testParseMomentProp :: TestTree
@@ -195,7 +176,7 @@ testMomentParseCases = testCase desc $ do
         assertFailure $ "Unexpected parse failure: " ++ err
 
     isMonth t = case P.parse @Moment t of
-      Ok (MomentMonth _ _) -> pure ()
+      Ok (MomentYearMonth _ _) -> pure ()
       Ok other ->
         assertFailure $ "Expected year/month, received: " ++ show other
       Err err ->
@@ -214,6 +195,101 @@ testMomentEqLaws = testPropertyNamed name desc $ property $ do
   y <- forAll genMoment
   z <- forAll genMoment
 
+  -- We are not doing anything interesting with Moment's Eq instance, but
+  -- since we have it we may as well test it...
+
+  testEqLaws x y z
+  where
+    name = "testMomentEqLaws"
+    desc = "Eq laws"
+
+testMomentIEqLaws :: TestTree
+testMomentIEqLaws = testPropertyNamed name desc $ property $ do
+  x <- forAll genMoment
+  y <- forAll genMoment
+
+  testIEqLaws x y
+  where
+    name = "testMomentIEqLaws"
+    desc = "IEq laws"
+
+testMomentIEqCases :: TestTree
+testMomentIEqCases = testProp1 "testMomentIEqCases" desc $ do
+  go
+    [ -- Year / Year
+      ("2023", (/~), "2022"),
+      ("2023", (~~), "2023"),
+      ("2023", (/~), "2024"),
+      -- Year / Month
+      ("2023", (/~), "2022-12"),
+      ("2023", (~~), "2023-12"),
+      ("2023", (/~), "2024-12"),
+      -- Year / Day
+      ("2023", (/~), "2022-12-08"),
+      ("2023", (~~), "2023-12-08"),
+      ("2023", (/~), "2024-12-08"),
+      -- Year / LocalTime
+      ("2023", (/~), "2022-12-08T14:13:20"),
+      ("2023", (~~), "2023-12-08T14:13:20"),
+      ("2023", (/~), "2024-12-08T14:13:20"),
+      -- Year / Zoned
+      ("2023", (/~), "2022-12-08T14:13:20+0800"),
+      ("2023", (~~), "2023-12-08T14:13:20+0800"),
+      ("2023", (/~), "2024-12-08T14:13:20+0800"),
+      -- Month / Month
+      ("2023-12", (/~), "2023-11"),
+      ("2023-12", (~~), "2023-12"),
+      ("2023-12", (/~), "2024-01"),
+      -- Month / Day
+      ("2023-12", (/~), "2023-11-08"),
+      ("2023-12", (~~), "2023-12-08"),
+      ("2023-12", (/~), "2024-01-08"),
+      -- Month / LocalTime
+      ("2023-12", (/~), "2023-11-08T14:13:20"),
+      ("2023-12", (~~), "2023-12-08T14:13:20"),
+      ("2023-12", (/~), "2024-01-08T14:13:20"),
+      -- Month / Zoned
+      ("2023-12", (/~), "2023-11-08T14:13:20+0800"),
+      ("2023-12", (~~), "2023-12-08T14:13:20+0800"),
+      ("2023-12", (/~), "2024-01-08T14:13:20+0800")
+    ]
+  where
+    desc = "IEq cases"
+
+    go vals = for_ (zip [1 ..] vals) $ \(i, (x, op, y)) ->
+      assertDiff @Moment i x op y
+
+testMomentIOrdLaws :: TestTree
+testMomentIOrdLaws = testPropertyNamed name desc $ property $ do
+  x <- forAll genMoment
+  y <- forAll genMoment
+
+  testIOrdLaws x y
+  where
+    name = "testMomentIOrdLaws"
+    desc = "IOrd laws"
+
+testMomentIOrdCases :: TestTree
+testMomentIOrdCases = testProp1 "testMomentIOrdCases" desc $ do
+  go
+    [ ("2023", (<~), "2023"),
+      ("2023", (<~), "2024"),
+      ("2023", (<.), "2024"),
+      ("2023", (<.), "2024"),
+      ("2020-06-01", (<.), "2023"),
+      ("2020-06-01", (<~), "2023"),
+      ("2023", (>.), "2020-06-01"),
+      ("2020-06-01", (\x y -> not (x >. y)), "2023"),
+      ("2013-08-12T14:30:00", (\x y -> not (x >. y)), "2013-08-12")
+    ]
+  where
+    desc = "IOrd cases"
+
+    go vals = for_ (zip [1 ..] vals) $ \(i, (x, op, y)) ->
+      assertDiff @Moment i x op y
+
+testEqLaws :: (Eq a, Show a) => a -> a -> a -> PropertyT IO ()
+testEqLaws x y z = do
   -- reflexivity
   x === x
 
@@ -225,137 +301,83 @@ testMomentEqLaws = testPropertyNamed name desc $ property $ do
 
   -- negation
   (x /= y) === not (x == y)
-  where
-    name = "testMomentEqLaws"
-    desc = "Eq laws"
 
-testMomentEqOpTotal :: TestTree
-testMomentEqOpTotal = testPropertyNamed name desc $ property $ do
-  m1 <- forAll genMoment
-  m2 <- forAll genMoment
-  evalF (==) m1 m2
-  where
-    name = "testMomentEqOpTotal"
-    desc = "Eq operator is total"
+testOrdLaws :: (Ord a) => a -> a -> a -> PropertyT IO ()
+testOrdLaws x y z = do
+  -- comparability
+  let xLteY = x <= y
+      yLteX = y <= x
 
-testMomentEqOpLaws :: TestTree
-testMomentEqOpLaws = testPropertyNamed name desc $ property $ do
-  x <- forAll genMoment
-  y <- forAll genMoment
+  assert (xLteY || yLteX)
+
+  -- transitivity
+  let yLteZ = y <= z
+  when (xLteY && yLteZ) $ assert (x <= z)
 
   -- reflexivity
-  x .=== x
+  assert (x <= x)
+
+  -- antisymmetry
+  when (xLteY && yLteX) $ assert (x == y)
+
+  -- other operators
+  (x <= y) === (not (x > y))
+  (x < y) === (x <= y && not (x == y))
+  (x >= y) === (x > y || x == y)
+  (x > y) === (x >= y && not (x == y))
+
+  -- prelude:
+  -- https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-Ord.html#t:Ord
+  (x >= y) === (y <= x)
+  (x < y) === (x <= y && x /= y)
+  (x > y) === (y < x)
+  assert $ min x y == if x <= y then x else y
+  assert $ max x y == if x >= y then x else y
+
+testIEqLaws :: (IEq a, Show a) => a -> a -> PropertyT IO ()
+testIEqLaws x y = do
+  -- reflexivity
+  x ~~~ x
 
   -- symmetry
-  (x .== y) === (y .== x)
+  (x ~~ y) === (y ~~ x)
 
   -- negation
-  (x ./= y) === not (x .== y)
-  where
-    name = "testMomentEqOpLaws"
-    desc = "Eq operator laws"
+  ((x /~ y)) === (not (x ~~ y))
 
-testMomentEqOpCases :: TestTree
-testMomentEqOpCases = testProp1 "testMomentEqOpCases" desc $ do
-  go
-    [ -- Year / Year
-      ("2023", (./=), "2022"),
-      ("2023", (.==), "2023"),
-      ("2023", (./=), "2024"),
-      -- Year / Month
-      ("2023", (./=), "2022-12"),
-      ("2023", (.==), "2023-12"),
-      ("2023", (./=), "2024-12"),
-      -- Year / Day
-      ("2023", (./=), "2022-12-08"),
-      ("2023", (.==), "2023-12-08"),
-      ("2023", (./=), "2024-12-08"),
-      -- Year / LocalTime
-      ("2023", (./=), "2022-12-08T14:13:20"),
-      ("2023", (.==), "2023-12-08T14:13:20"),
-      ("2023", (./=), "2024-12-08T14:13:20"),
-      -- Year / Zoned
-      ("2023", (./=), "2022-12-08T14:13:20+0800"),
-      ("2023", (.==), "2023-12-08T14:13:20+0800"),
-      ("2023", (./=), "2024-12-08T14:13:20+0800"),
-      -- Month / Month
-      ("2023-12", (./=), "2023-11"),
-      ("2023-12", (.==), "2023-12"),
-      ("2023-12", (./=), "2024-01"),
-      -- Month / Day
-      ("2023-12", (./=), "2023-11-08"),
-      ("2023-12", (.==), "2023-12-08"),
-      ("2023-12", (./=), "2024-01-08"),
-      -- Month / LocalTime
-      ("2023-12", (./=), "2023-11-08T14:13:20"),
-      ("2023-12", (.==), "2023-12-08T14:13:20"),
-      ("2023-12", (./=), "2024-01-08T14:13:20"),
-      -- Month / Zoned
-      ("2023-12", (./=), "2023-11-08T14:13:20+0800"),
-      ("2023-12", (.==), "2023-12-08T14:13:20+0800"),
-      ("2023-12", (./=), "2024-01-08T14:13:20+0800")
-    ]
-  where
-    desc = "Eq operator cases"
-
-    go vals = for_ (zip [1 ..] vals) $ \(i, (x, op, y)) ->
-      assertDiff @Moment i x op y
-
-testMomentOrdOpTotal :: TestTree
-testMomentOrdOpTotal = testPropertyNamed name desc $ property $ do
-  m1 <- forAll genMoment
-  m2 <- forAll genMoment
-  evalF (.<=) m1 m2
-  where
-    name = "testMomentOrdOpTotal"
-    desc = "Ord operator is total"
-
-testMomentOrdOpLaws :: TestTree
-testMomentOrdOpLaws = testPropertyNamed name desc $ property $ do
-  x <- forAll genMoment
-  y <- forAll genMoment
-
+testIOrdLaws :: (IOrd a) => a -> a -> PropertyT IO ()
+testIOrdLaws x y = do
   -- comparability
-  let xLteY = x .<= y
-      yLteX = y .<= x
+  let xLteY = x <~ y
+      yLteX = y <~ x
 
   assert (xLteY || yLteX)
 
   -- reflexivity
-  assert (x .<= x)
+  assert (x <~ x)
 
   -- antisymmetry
-  when (xLteY && yLteX) $ assert (x .== y)
-  where
-    name = "testMomentOrdOpLaws"
-    desc = "Ord operator laws"
+  when (xLteY && yLteX) $ assert (x ~~ y)
 
-testMomentOrdOpCases :: TestTree
-testMomentOrdOpCases = testProp1 "testMomentOrdOpCases" desc $ do
-  go
-    [ ("2023", (.<=), "2023"),
-      ("2023", (.<=), "2024"),
-      ("2023", (.<), "2024"),
-      ("2023", (.<), "2024"),
-      ("2020-06-01", (.<), "2023"),
-      ("2020-06-01", (.<=), "2023"),
-      ("2023", (.>), "2020-06-01"),
-      ("2020-06-01", (\x y -> not (x .> y)), "2023")
-    ]
-  where
-    desc = "Ord operator cases"
+  -- other operators
+  (x <~ y) === not (x >. y)
+  (x <~ y) === (x <. y || x ~~ y)
+  (x >~ y) === (x >. y || x ~~ y)
+  (x >. y) === (x >~ y && not (x ~~ y))
 
-    go vals = for_ (zip [1 ..] vals) $ \(i, (x, op, y)) ->
-      assertDiff @Moment i x op y
-
-evalF :: (NFData c) => (a -> b -> c) -> a -> b -> PropertyT IO ()
-evalF f x y = void $ H.evalNF (x `f` y)
+  -- prelude:
+  -- https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-Ord.html#t:Ord
+  (x >~ y) === (y <~ x)
+  (x <. y) === (x <~ y && x /~ y)
+  (x >. y) === (y <. x)
+  assert $ imin x y ~~ if x <~ y then x else y
+  assert $ imax x y ~~ if x >~ y then x else y
 
 genMoment :: Gen Moment
 genMoment =
   Gen.choice
     [ MomentYear <$> genYear,
-      MomentMonth <$> genYear <*> genMonth,
+      MomentYearMonth <$> genYear <*> genMonth,
       MomentTimestamp <$> genTimestamp
     ]
 
