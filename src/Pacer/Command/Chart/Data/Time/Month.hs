@@ -1,6 +1,11 @@
 module Pacer.Command.Chart.Data.Time.Month
-  ( Month (..),
+  ( -- * Type
+    Month (..),
+
+    -- * Construction
     mkMonth,
+
+    -- * Elimination
     monthToTimeMoY,
   )
 where
@@ -65,6 +70,7 @@ instance Display Month where
     Nov -> "11"
     Dec -> "12"
 
+-- | Eliminates a 'Month' to "Data.Time" compatible month-of-year.
 monthToTimeMoY :: Month -> Int
 monthToTimeMoY Jan = 1
 monthToTimeMoY Feb = 2
@@ -79,7 +85,8 @@ monthToTimeMoY Oct = 10
 monthToTimeMoY Nov = 11
 monthToTimeMoY Dec = 12
 
-mkMonth :: (Toℤ a) => a -> ResultDefault Month
+-- | Constructs a month.
+mkMonth :: (MonadFail m, Toℤ a) => a -> m Month
 mkMonth =
   toℤ >>> \case
     1 -> pure Jan
@@ -96,5 +103,5 @@ mkMonth =
     12 -> pure Dec
     other ->
       fail
-        $ "Expected month in 1-12: "
+        $ "Expected month in 1-12, received: "
         ++ show other

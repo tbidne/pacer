@@ -26,14 +26,14 @@ import Data.Time.Calendar qualified as Cal
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Run (SomeRuns)
-import Pacer.Command.Chart.Data.Time.Timestamp
+import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
+import Pacer.Command.Chart.Data.Time.Timestamp.Internal
   ( Timestamp
       ( TimestampDate,
         TimestampTime,
         TimestampZoned
       ),
   )
-import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Data.Result (onErr, onOk)
 import Pacer.Prelude hiding (Double)
 import Pacer.Utils (AesonE)

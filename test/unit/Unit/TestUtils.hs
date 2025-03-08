@@ -79,7 +79,7 @@ import Pacer.Class.IOrd
     (>~),
   )
 import Pacer.Command.Chart.Data.Time.Month (Month)
-import Pacer.Command.Chart.Data.Time.Timestamp
+import Pacer.Command.Chart.Data.Time.Timestamp.Internal
   ( Timestamp (TimestampDate, TimestampTime, TimestampZoned),
   )
 import Pacer.Command.Chart.Data.Time.Year (Year)

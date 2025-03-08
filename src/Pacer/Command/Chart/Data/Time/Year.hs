@@ -1,6 +1,11 @@
 module Pacer.Command.Chart.Data.Time.Year
-  ( Year (..),
+  ( -- * Type
+    Year (..),
+
+    -- * Construction
     mkYear,
+
+    -- * Elimination
     yearToTime,
   )
 where
@@ -35,17 +40,17 @@ instance Display Year where
 instance Parser Year where
   parser = do
     word <- parser
-    case Interval.mkInterval word of
-      Just y -> pure $ MkYear y
-      Nothing ->
-        fail $ "Expected a year in 1950 - 2099, received: " ++ show word
+    mkYear @_ @Word16 word
 
+-- | Eliminates 'Year' to "Data.Time" compatible 'Integer'.
 yearToTime :: Year -> Integer
 yearToTime y = toℤ y.unYear.unInterval
 
-mkYear :: (Show a, Toℤ a) => a -> ResultDefault Year
+-- | Creates a 'Year' in the expected range or fails.
+mkYear :: (MonadFail m, Show a, Toℤ a) => a -> m Year
 mkYear i = case f i of
-  Nothing -> fail $ "Unexpected year: " ++ show i
+  Nothing ->
+    fail $ "Expected a year in 1950 - 2099, received: " ++ show i
   Just x -> pure $ MkYear x
   where
     f = Interval.mkInterval . fromℤ . toℤ

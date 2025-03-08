@@ -36,19 +36,14 @@ import Pacer.Command.Chart.Data.Run
     SomeRuns,
   )
 import Pacer.Command.Chart.Data.Run qualified as Run
-import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp (TimestampTime))
-import Pacer.Command.Chart.Params
-  ( RunsType (RunsDefault, RunsGarmin),
-  )
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
+import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
+import Pacer.Command.Chart.Params (RunsType (RunsDefault, RunsGarmin))
 import Pacer.Data.Distance (Distance)
 import Pacer.Data.Distance qualified as Distance
-import Pacer.Data.Distance.Units
-  ( DistanceUnit (Kilometer, Meter, Mile),
-  )
+import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Duration (Duration)
-import Pacer.Exception
-  ( GarminE (GarminDecode, GarminMeters, GarminOther),
-  )
+import Pacer.Exception (GarminE (GarminDecode, GarminMeters, GarminOther))
 import Pacer.Prelude hiding ((.:))
 import System.OsPath qualified as OsPath
 import Text.Megaparsec qualified as MP
@@ -60,7 +55,7 @@ data GarminAct d a
   deriving stock (Eq, Show)
 
 data GarminRun d a = MkGarminRun
-  { datetime :: LocalTime,
+  { datetime :: Timestamp,
     distance :: Distance d a,
     duration :: Duration a,
     title :: Text
@@ -104,10 +99,13 @@ parseGarminRow r = do
       datetime <- parseDatetime =<< r .: "Date"
       distance <- parseX =<< r .: "Distance"
       duration <- parseDuration =<< r .: "Moving Time"
+
+      ts <- TS.fromLocalTime datetime
+
       pure
         $ GarminActRun
         $ MkGarminRun
-          { datetime,
+          { datetime = ts,
             distance,
             duration,
             title
@@ -180,7 +178,7 @@ readRunsCsv @es inputDistUnit csvPath = do
     toSomeRun @d gr =
       MkSomeRun (sing @d)
         $ MkRun
-          { datetime = TimestampTime gr.datetime,
+          { datetime = gr.datetime,
             distance = Distance.forceUnit gr.distance,
             duration = gr.duration,
             labels = Set.fromList [],

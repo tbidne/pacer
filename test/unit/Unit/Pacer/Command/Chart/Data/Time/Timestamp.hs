@@ -1,7 +1,7 @@
 module Unit.Pacer.Command.Chart.Data.Time.Timestamp (tests) where
 
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Time.Timestamp
+import Pacer.Command.Chart.Data.Time.Timestamp.Internal
   ( Timestamp (TimestampDate, TimestampTime, TimestampZoned),
   )
 import Unit.Prelude

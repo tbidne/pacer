@@ -83,6 +83,7 @@ library
     Pacer.Command.Chart.Data.Time.Moment
     Pacer.Command.Chart.Data.Time.Month
     Pacer.Command.Chart.Data.Time.Timestamp
+    Pacer.Command.Chart.Data.Time.Timestamp.Internal
     Pacer.Command.Chart.Data.Time.Year
     Pacer.Command.Chart.Params
     Pacer.Command.Convert

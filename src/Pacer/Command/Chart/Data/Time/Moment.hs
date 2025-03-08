@@ -4,17 +4,12 @@ module Pacer.Command.Chart.Data.Time.Moment
   )
 where
 
-import Data.Time
-  ( LocalTime (LocalTime),
-    ZonedTime (ZonedTime),
-  )
-import Data.Time qualified as Time
 import Pacer.Class.IOrd (IEq ((~~)), IOrd ((<~)))
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Time.Month (Month)
 import Pacer.Command.Chart.Data.Time.Timestamp
-  ( Timestamp (TimestampDate, TimestampTime, TimestampZoned),
+  ( Timestamp,
     timestampToYear,
     timestampToYearMonth,
   )
@@ -71,18 +66,18 @@ data Moment
 instance IEq Moment where
   MomentYear y1 ~~ MomentYear y2 = y1 == y2
   MomentYear y1 ~~ MomentYearMonth y2 _ = y1 == y2
-  MomentYear y1 ~~ MomentTimestamp t2 = y1 == timestampToYear t2
+  MomentYear y1 ~~ MomentTimestamp t2 = y1 == errorErr (timestampToYear t2)
   MomentYearMonth y1 _ ~~ MomentYear y2 = y1 == y2
   MomentYearMonth y1 m1 ~~ MomentYearMonth y2 m2 = y1 == y2 && m1 == m2
-  MomentYearMonth y1 m1 ~~ MomentTimestamp t2 = (y1, m1) == timestampToYearMonth t2
-  MomentTimestamp t1 ~~ MomentYear y2 = timestampToYear t1 == y2
-  MomentTimestamp t1 ~~ MomentYearMonth y2 m2 = timestampToYearMonth t1 == (y2, m2)
+  MomentYearMonth y1 m1 ~~ MomentTimestamp t2 = (y1, m1) == errorErr (timestampToYearMonth t2)
+  MomentTimestamp t1 ~~ MomentYear y2 = errorErr (timestampToYear t1) == y2
+  MomentTimestamp t1 ~~ MomentYearMonth y2 m2 = errorErr (timestampToYearMonth t1) == (y2, m2)
   MomentTimestamp t1 ~~ MomentTimestamp t2 = t1 ~~ t2
 
 instance IOrd Moment where
   MomentYear y1 <~ MomentYear y2 = y1 <= y2
   MomentYear y1 <~ MomentYearMonth y2 _ = y1 <= y2
-  MomentYear y1 <~ MomentTimestamp t2 = y1 <= timestampToYear t2
+  MomentYear y1 <~ MomentTimestamp t2 = y1 <= errorErr (timestampToYear t2)
   -- Notice that, unlike Timestamp's Ord (and what we would do if we had Ord
   -- for Moment), we use (<=) even when the LHS has _more_ precision than the
   -- RHS. Timestamp uses (<), since it is the only way to be lawful:
@@ -108,30 +103,19 @@ instance IOrd Moment where
     | y1 == y2 = m1 <= m2
     | otherwise = False
   MomentYearMonth y1 m1 <~ MomentTimestamp t2 =
-    let (y2, m2) = timestampToYearMonth t2
+    let (y2, m2) = errorErr $ timestampToYearMonth t2
      in if
           | y1 < y2 -> True
           | y1 == y2 -> m1 <= m2
           | otherwise -> False
-  MomentTimestamp t1 <~ MomentYear y2 = timestampToYear t1 <= y2
+  MomentTimestamp t1 <~ MomentYear y2 = errorErr (timestampToYear t1) <= y2
   MomentTimestamp t1 <~ MomentYearMonth y2 m2 =
-    let (y1, m1) = timestampToYearMonth t1
+    let (y1, m1) = errorErr $ timestampToYearMonth t1
      in if
           | y1 < y2 -> True
           | y1 == y2 -> m1 <= m2
           | otherwise -> False
-  MomentTimestamp t1 <~ MomentTimestamp t2 = tsLte t1 t2
-    where
-      tsLte (TimestampDate d1) (TimestampDate d2) = d1 <= d2
-      tsLte (TimestampDate d1) (TimestampTime (LocalTime d2 _)) = d1 <= d2
-      tsLte (TimestampDate d1) (TimestampZoned (ZonedTime (LocalTime d2 _) _)) = d1 <= d2
-      tsLte (TimestampTime (LocalTime d1 _)) (TimestampDate d2) = d1 <= d2
-      tsLte (TimestampTime l1) (TimestampTime l2) = l1 <= l2
-      tsLte (TimestampTime l1) (TimestampZoned (ZonedTime l2 _)) = l1 <= l2
-      tsLte (TimestampZoned (ZonedTime (LocalTime d1 _) _)) (TimestampDate d2) = d1 <= d2
-      tsLte (TimestampZoned (ZonedTime l1 _)) (TimestampTime l2) = l1 <= l2
-      tsLte (TimestampZoned z1) (TimestampZoned z2) =
-        Time.zonedTimeToUTC z1 <= Time.zonedTimeToUTC z2
+  MomentTimestamp t1 <~ MomentTimestamp t2 = t1 ~~ t2 || t1 < t2
 
 instance Display Moment where
   displayBuilder = \case
