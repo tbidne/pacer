@@ -58,7 +58,7 @@ import Pacer.Command.Chart.Data.Run
     SomeRunsKey (MkSomeRunsKey),
   )
 import Pacer.Command.Chart.Data.Run qualified as R
-import Pacer.Command.Chart.Data.Time (Timestamp)
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,

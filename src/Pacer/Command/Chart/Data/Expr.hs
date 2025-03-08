@@ -25,7 +25,7 @@ import Data.List qualified as L
 import Data.Text qualified as T
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Time (Moment)
+import Pacer.Command.Chart.Data.Time.Moment (Moment)
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (SomePace)

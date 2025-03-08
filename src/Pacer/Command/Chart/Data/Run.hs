@@ -45,8 +45,8 @@ import Data.Set.NonEmpty qualified as NESet
 import Data.Tuple (uncurry)
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Time (Timestamp)
-import Pacer.Command.Chart.Data.Time qualified as Time
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
+import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Data.Distance
   ( Distance,
@@ -387,11 +387,11 @@ instance Exception RunDatetimeOverlapE where
         [ "Found overlapping timestamps\n - ",
           fmtTitle mTitle1,
           ": ",
-          Time.fmtTimestamp ts1,
+          TS.fmtTimestamp ts1,
           "\n - ",
           fmtTitle mTitle2,
           ": ",
-          Time.fmtTimestamp ts2
+          TS.fmtTimestamp ts2
         ]
     where
       fmtTitle Nothing = "<no title>"
@@ -564,7 +564,7 @@ checkOverlap run map = case HMap.lookup run.datetime map of
   -- 2. Timestamp does not exist in the map, check its overlaps for a
   --    match.
   Nothing ->
-    let overlaps = Time.strictOverlaps run.datetime
+    let overlaps = TS.strictOverlaps run.datetime
         init = runToOverlapMap' run.datetime run.title overlaps
      in (HMap.union map) <$> foldr go (Ok init) overlaps
   where
@@ -587,14 +587,14 @@ runToOverlapMap run =
   runToOverlapMap'
     run.datetime
     run.title
-    (Time.strictOverlaps run.datetime)
+    (TS.strictOverlaps run.datetime)
 
 -- | Helper for 'runToOverlapMap'. This exists entirely so we do not have to
 -- calculate the overlaps twice in some places. It is intended to always
 -- be called like:
 --
 -- @
---   runToOverlapMap' r.datetime r.title (Time.strictOverlaps r.datetime)
+--   runToOverlapMap' r.datetime r.title (TS.strictOverlaps r.datetime)
 -- @
 --
 -- 'runToOverlapMap' should be preferred as it is safer to use correctly.

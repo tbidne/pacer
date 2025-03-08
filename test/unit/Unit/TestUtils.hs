@@ -1,5 +1,13 @@
 module Unit.TestUtils
-  ( -- * Numeric
+  ( -- * Laws
+    testEqLaws,
+    testOrdLaws,
+    testIEqLaws,
+    testIOrdLaws,
+
+    -- * Generators
+
+    -- ** Numeric
     genℕ,
     genℕ1,
     genℕMax,
@@ -14,7 +22,7 @@ module Unit.TestUtils
     genTextℕ1,
     genAffineSpace,
 
-    -- * ByteStrings
+    -- ** ByteStrings
     genWithLineComments,
     genWithBlockComments,
     genWithAllComments,
@@ -22,16 +30,146 @@ module Unit.TestUtils
     genBlockComment,
     genNonComment,
     genNonCommentTxt,
+
+    -- ** Time
+    genYear,
+    genMonth,
+    genTimestamp,
+    genZonedTime,
+    genTimeZone,
+    genLocalTime,
+    genDay,
+    genTimeOfDay,
+    genMomentTxt,
+    genTimestampTxt,
+    genLocalTimeTxt,
+    genTzOffsetTxt,
+    genTimeTxt,
+    genDateTxt,
+    genYearTxt,
+    genMonthTxt,
+    genDayTxt,
   )
 where
 
+import Data.Enum (Enum (toEnum))
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder qualified as TLB
+import Data.Time
+  ( Day (ModifiedJulianDay),
+    LocalTime (LocalTime),
+    TimeOfDay (TimeOfDay),
+    TimeZone,
+    ZonedTime (ZonedTime),
+  )
+import Data.Time.Zones qualified as TZ
+import Data.Time.Zones.All (TZLabel)
+import Data.Time.Zones.All qualified as TZ.All
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
+import Pacer.Class.IOrd
+  ( IEq ((~~)),
+    IOrd ((<~)),
+    imax,
+    imin,
+    (/~),
+    (<.),
+    (>.),
+    (>~),
+  )
+import Pacer.Command.Chart.Data.Time.Month (Month)
+import Pacer.Command.Chart.Data.Time.Timestamp
+  ( Timestamp (TimestampDate, TimestampTime, TimestampZoned),
+  )
+import Pacer.Command.Chart.Data.Time.Year (Year)
 import Text.Read qualified as TR
 import Unit.Prelude
+
+testEqLaws :: (Eq a, Show a) => a -> a -> a -> PropertyT IO ()
+testEqLaws x y z = do
+  -- reflexivity
+  x === x
+
+  -- symmetry
+  (x == y) === (y == x)
+
+  -- transitivity
+  when (x == y && y == z) (x === z)
+
+  -- negation
+  (x /= y) === not (x == y)
+
+testOrdLaws :: (Ord a) => a -> a -> a -> PropertyT IO ()
+testOrdLaws x y z = do
+  -- comparability
+  let xLteY = x <= y
+      yLteX = y <= x
+
+  assert (xLteY || yLteX)
+
+  -- transitivity
+  let yLteZ = y <= z
+  when (xLteY && yLteZ) $ assert (x <= z)
+
+  -- reflexivity
+  assert (x <= x)
+
+  -- antisymmetry
+  when (xLteY && yLteX) $ assert (x == y)
+
+  -- other operators
+  (x <= y) === (not (x > y))
+  (x < y) === (x <= y && not (x == y))
+  (x >= y) === (x > y || x == y)
+  (x > y) === (x >= y && not (x == y))
+
+  -- prelude:
+  -- https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-Ord.html#t:Ord
+  (x >= y) === (y <= x)
+  (x < y) === (x <= y && x /= y)
+  (x > y) === (y < x)
+  assert $ min x y == if x <= y then x else y
+  assert $ max x y == if x >= y then x else y
+
+testIEqLaws :: (IEq a, Show a) => a -> a -> PropertyT IO ()
+testIEqLaws x y = do
+  -- reflexivity
+  x ~~~ x
+
+  -- symmetry
+  (x ~~ y) === (y ~~ x)
+
+  -- negation
+  ((x /~ y)) === (not (x ~~ y))
+
+testIOrdLaws :: (IOrd a) => a -> a -> PropertyT IO ()
+testIOrdLaws x y = do
+  -- comparability
+  let xLteY = x <~ y
+      yLteX = y <~ x
+
+  assert (xLteY || yLteX)
+
+  -- reflexivity
+  assert (x <~ x)
+
+  -- antisymmetry
+  when (xLteY && yLteX) $ assert (x ~~ y)
+
+  -- other operators
+  (x <~ y) === not (x >. y)
+  (x <~ y) === (x <. y || x ~~ y)
+  (x >~ y) === (x >. y || x ~~ y)
+  (x >. y) === (x >~ y && not (x ~~ y))
+
+  -- prelude:
+  -- https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-Ord.html#t:Ord
+  (x >~ y) === (y <~ x)
+  (x <. y) === (x <~ y && x /~ y)
+  (x >. y) === (y <. x)
+  assert $ imin x y ~~ if x <~ y then x else y
+  assert $ imax x y ~~ if x >~ y then x else y
 
 genℕ :: Gen Natural
 genℕ = G.integral (R.exponentialFrom 0 0 1_000_000)
@@ -218,7 +356,7 @@ genNonCommentTxt :: Gen Text
 genNonCommentTxt =
   removeSlashStar
     . removeDoubleSlash
-    -- Gen.text rather than Gen.utf8 (ByteString) as it is easier to remove
+    -- G.text rather than G.utf8 (ByteString) as it is easier to remove
     -- unwanted substrings from Text.
     <$> G.text r G.unicode
   where
@@ -272,3 +410,151 @@ removePat2 startChar endChar =
       | currChar == endChar && inPat = (True, acc)
       -- 3. Otherwise, we are not in a pattern. Proceed normally.
       | otherwise = (False, acc <> TLB.singleton currChar)
+
+genYear :: Gen Year
+genYear = G.enumBounded
+
+genMonth :: Gen Month
+genMonth = G.enumBounded
+
+genMomentTxt :: Gen Text
+genMomentTxt = do
+  G.choice
+    [ genYearTxt,
+      genYearMonth,
+      genTimestampTxt
+    ]
+  where
+    genYearMonth =
+      (\y m -> y <> "-" <> m) <$> genYearTxt <*> genMonthTxt
+
+genTimestamp :: Gen Timestamp
+genTimestamp =
+  G.choice
+    [ TimestampDate <$> genDay,
+      TimestampTime <$> genLocalTime,
+      TimestampZoned <$> genZonedTime
+    ]
+
+genZonedTime :: Gen ZonedTime
+genZonedTime = do
+  lt <- genLocalTime
+  tz <- genTimeZone
+  pure $ ZonedTime lt tz
+
+genTimeZone :: Gen TimeZone
+genTimeZone =
+  (\l -> TZ.timeZoneForPOSIX (TZ.All.tzByLabel l) 0)
+    <$> tzLabels
+  where
+    tzLabels :: Gen TZLabel
+    tzLabels = G.enumBounded
+
+genLocalTime :: Gen LocalTime
+genLocalTime = do
+  d <- genDay
+  tod <- genTimeOfDay
+  pure $ LocalTime d tod
+
+genDay :: Gen Day
+genDay =
+  G.element
+    [ ModifiedJulianDay 33282, -- 1950-01-01
+      ModifiedJulianDay 88068 -- 2099-12-31
+    ]
+
+genTimeOfDay :: Gen TimeOfDay
+genTimeOfDay = do
+  h <- G.integral (R.linear 0 23)
+  m <- G.integral (R.linear 0 59)
+  s <- G.integral (R.linear 0 60) -- 60 == leap second
+  -- REVIEW: Is toEnum legit here?
+  pure $ TimeOfDay h m (toEnum s)
+
+genTimestampTxt :: Gen Text
+genTimestampTxt = do
+  G.choice
+    [ genDateTxt,
+      genLocalTimeTxt,
+      genZonedTxt
+    ]
+
+genZonedTxt :: Gen Text
+genZonedTxt = do
+  lt <- genLocalTimeTxt
+  tz <- genTzOffsetTxt
+  pure $ lt <> tz
+
+genLocalTimeTxt :: Gen Text
+genLocalTimeTxt = do
+  dateTxt <- genDateTxt
+  timeTxt <- genTimeTxt
+  sep <- G.element ['T', ' ']
+  pure $ (dateTxt <> T.singleton sep <> timeTxt)
+
+genTzOffsetTxt :: Gen Text
+genTzOffsetTxt = do
+  h <- G.integral @_ @Word8 (R.linear 0 23)
+  m <- G.integral @_ @Word8 (R.linear 0 59)
+  s <- G.element ["", " "]
+  d <- G.element ['+', '-']
+  pure
+    $ mconcat
+      [ s,
+        T.singleton d,
+        showtPad2 h,
+        showtPad2 m
+      ]
+
+genTimeTxt :: Gen Text
+genTimeTxt = do
+  h <- G.integral @_ @Word8 (R.linear 0 23)
+  m <- G.integral @_ @Word8 (R.linear 0 59)
+  s <- G.integral @_ @Word8 (R.linear 0 59)
+  pure $ T.intercalate ":" (showtPad2 <$> [h, m, s])
+
+genDateTxt :: Gen Text
+genDateTxt = do
+  y <- genYearTxt
+  m <- genMonthTxt
+  d <- genDayTxt m
+  pure $ T.intercalate "-" [y, m, d]
+
+genYearTxt :: Gen Text
+genYearTxt = do
+  y <- G.integral @_ @Word16 (R.linear 1950 2099)
+  pure $ showt y
+
+genMonthTxt :: Gen Text
+genMonthTxt = do
+  y <- G.integral @_ @Word8 (R.linear 1 12)
+  pure $ showtPad2 y
+
+genDayTxt :: Text -> Gen Text
+genDayTxt monthTxt = do
+  let maxN = maxDay monthTxt
+  y <- G.integral @_ @Word8 (R.linear 1 maxN)
+  pure $ showtPad2 y
+  where
+    maxDay "01" = 31
+    maxDay "02" = 28
+    maxDay "03" = 31
+    maxDay "04" = 30
+    maxDay "05" = 31
+    maxDay "06" = 30
+    maxDay "07" = 31
+    maxDay "08" = 31
+    maxDay "09" = 30
+    maxDay "10" = 31
+    maxDay "11" = 30
+    maxDay "12" = 31
+    maxDay d = error $ "Unexpected day: " ++ unpackText d
+
+showtPad2 :: (Show a) => a -> Text
+showtPad2 = pad2 . showt
+
+pad2 :: Text -> Text
+pad2 t =
+  if T.length t == 1
+    then T.singleton '0' <> t
+    else t

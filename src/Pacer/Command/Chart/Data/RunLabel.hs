@@ -9,7 +9,7 @@ where
 
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as MP
-import Pacer.Command.Chart.Data.Time (Timestamp)
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 

@@ -7,7 +7,7 @@ import FileSystem.IO (readBinaryFileIO)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Run (Run (MkRun), SomeRun, SomeRuns)
 import Pacer.Command.Chart.Data.Run qualified as R
-import Pacer.Command.Chart.Data.Time (Timestamp)
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
 import Pacer.Data.Distance qualified as D
 import Pacer.Data.Duration (Duration (MkDuration))

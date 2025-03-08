@@ -80,7 +80,10 @@ library
     Pacer.Command.Chart.Data.Garmin
     Pacer.Command.Chart.Data.Run
     Pacer.Command.Chart.Data.RunLabel
-    Pacer.Command.Chart.Data.Time
+    Pacer.Command.Chart.Data.Time.Moment
+    Pacer.Command.Chart.Data.Time.Month
+    Pacer.Command.Chart.Data.Time.Timestamp
+    Pacer.Command.Chart.Data.Time.Year
     Pacer.Command.Chart.Params
     Pacer.Command.Convert
     Pacer.Command.Convert.Args
@@ -177,7 +180,8 @@ test-suite unit
     Unit.Pacer.Command.Chart.Data.Garmin
     Unit.Pacer.Command.Chart.Data.Run
     Unit.Pacer.Command.Chart.Data.RunLabel
-    Unit.Pacer.Command.Chart.Data.Time
+    Unit.Pacer.Command.Chart.Data.Time.Moment
+    Unit.Pacer.Command.Chart.Data.Time.Timestamp
     Unit.Pacer.Command.Chart.Params
     Unit.Pacer.Command.Derive
     Unit.Pacer.Data.Distance

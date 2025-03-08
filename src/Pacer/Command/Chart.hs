@@ -51,7 +51,7 @@ import Pacer.Command.Chart.Data.Run
   )
 import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.RunLabel (RunLabels (MkRunLabels))
-import Pacer.Command.Chart.Data.Time (Timestamp)
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( buildDir,

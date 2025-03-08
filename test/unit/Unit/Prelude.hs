@@ -8,6 +8,7 @@ module Unit.Prelude
     (<=>),
     (~~~),
     (/~~),
+    assertDiff,
     annotateUnpack,
     hdiff,
     testProp,
@@ -129,6 +130,19 @@ testPropN numTests name desc =
 
 annotateUnpack :: Text -> PropertyT IO ()
 annotateUnpack = annotate . unpackText
+
+assertDiff ::
+  ( Parser a,
+    Show a
+  ) =>
+  Word8 ->
+  Text ->
+  (a -> a -> Bool) ->
+  Text ->
+  PropertyT IO ()
+assertDiff @a i x op y = do
+  annotateShow i
+  hdiff (parseOrDie @a x) op (parseOrDie y)
 
 -- | Specialization of (===), for lower operator precedence.
 (<=>) :: Bool -> Bool -> PropertyT IO ()

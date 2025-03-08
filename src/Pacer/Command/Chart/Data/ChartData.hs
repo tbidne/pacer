@@ -52,11 +52,9 @@ import Pacer.Command.Chart.Data.Run
     SomeRunsKey,
   )
 import Pacer.Command.Chart.Data.Run qualified as Run
-import Pacer.Command.Chart.Data.Time
-  ( Moment (MomentTimestamp),
-    Timestamp,
-  )
-import Pacer.Command.Chart.Data.Time qualified as Time
+import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
+import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
 import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
@@ -204,9 +202,9 @@ handleChartType @a mChartType someRuns = case mChartType of
         roundFn :: Timestamp -> Timestamp
 
         (compPeriod, roundFn) = case period of
-          ChartSumWeek -> (Time.sameWeek, Time.roundTimestampWeek)
-          ChartSumMonth -> (Time.sameMonth, Time.roundTimestampMonth)
-          ChartSumYear -> (Time.sameYear, Time.roundTimestampYear)
+          ChartSumWeek -> (TS.sameWeek, TS.roundTimestampWeek)
+          ChartSumMonth -> (TS.sameMonth, TS.roundTimestampMonth)
+          ChartSumYear -> (TS.sameYear, TS.roundTimestampYear)
 
         periodSum :: Seq (SomeRun a)
         periodSum = fmap sumRuns . groupByPeriod $ someRuns

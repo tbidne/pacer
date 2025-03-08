@@ -36,7 +36,7 @@ import Pacer.Command.Chart.Data.Run
     SomeRuns,
   )
 import Pacer.Command.Chart.Data.Run qualified as Run
-import Pacer.Command.Chart.Data.Time (Timestamp (TimestampTime))
+import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp (TimestampTime))
 import Pacer.Command.Chart.Params
   ( RunsType (RunsDefault, RunsGarmin),
   )

@@ -26,14 +26,14 @@ import Data.Time.Calendar qualified as Cal
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Run (SomeRuns)
-import Pacer.Command.Chart.Data.Time
+import Pacer.Command.Chart.Data.Time.Timestamp
   ( Timestamp
       ( TimestampDate,
         TimestampTime,
         TimestampZoned
       ),
   )
-import Pacer.Command.Chart.Data.Time qualified as Time
+import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Data.Result (onErr, onOk)
 import Pacer.Prelude hiding (Double)
 import Pacer.Utils (AesonE)
@@ -144,7 +144,7 @@ zoneds :: Word -> List Timestamp
 zoneds mx = (TimestampZoned . incZoned startZoned) <$> [0 .. mx]
 
 encodeTimestamp :: Timestamp -> ByteString
-encodeTimestamp = encodeUtf8 . Time.fmtTimestamp
+encodeTimestamp = encodeUtf8 . TS.fmtTimestamp
 
 incDate :: Day -> Word -> Day
 incDate d i = Cal.addDays (fromIntegral @Word @Integer i) d
