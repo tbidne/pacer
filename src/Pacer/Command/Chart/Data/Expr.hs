@@ -395,14 +395,10 @@ lexParse ::
   (Parser a) =>
   Text ->
   ResultDefault (Expr a)
-lexParse txt =
-  case P.parseAllWith exprLexer txt of
-    Err err -> fail $ fmtErr Nothing Nothing err
-    Ok ts -> case P.parseWith exprParser ts of
-      Err err2 -> fail $ fmtErr (Just ts) Nothing err2
-      Ok expr -> case traverse P.parseAll expr of
-        Err err3 -> fail $ fmtErr (Just ts) (Just expr) err3
-        Ok x -> pure x
+lexParse txt = do
+  ts <- first (fmtErr Nothing Nothing) $ P.parseAllWith exprLexer txt
+  expr <- first (fmtErr (Just ts) Nothing) $ P.parseWith exprParser ts
+  first (fmtErr (Just ts) (Just expr)) $ traverse P.parseAll expr
   where
     fmtErr :: Maybe (List ExprToken) -> Maybe (Expr Text) -> String -> String
     fmtErr mTokens mExprText err =
