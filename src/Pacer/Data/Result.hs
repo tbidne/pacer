@@ -48,13 +48,13 @@ type ResultDefault = Result String
 instance Applicative (Result e) where
   pure = Ok
 
-  Ok f <*> Ok x = Ok (f x)
   Err x <*> _ = Err x
   _ <*> Err x = Err x
+  Ok f <*> Ok x = Ok (f x)
 
 instance Monad (Result e) where
-  Ok x >>= f = f x
   Err x >>= _ = Err x
+  Ok x >>= f = f x
 
 instance Foldable (Result e) where
   foldr f e = onResult (const e) (\x -> f x e)
