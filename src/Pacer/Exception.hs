@@ -163,7 +163,7 @@ instance Exception ChartFileMissingE where
             (not . L.null)
             [ displayDir e.cliDataDir,
               displayDir e.configDataDir,
-              displayDir (Just $ pathToOsPath e.xdgDir)
+              displayDir (Just $ toOsPath e.xdgDir)
             ]
 
       displayDir Nothing = ""

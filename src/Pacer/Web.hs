@@ -29,7 +29,7 @@ ensureWebDirExists ::
   Bool ->
   Eff es ()
 ensureWebDirExists webPath cleanInstall = addNamespace "ensureWebDirExists" $ do
-  let webOsPath = pathToOsPath webPath
+  let webOsPath = toOsPath webPath
 
   exists <- webDirExists webPath
 
@@ -43,7 +43,7 @@ ensureWebDirExists webPath cleanInstall = addNamespace "ensureWebDirExists" $ do
 -- | Determines if the web dir exists.
 webDirExists :: (HasCallStack, PathReader :> es) => Path Abs Dir -> Eff es Bool
 webDirExists webPath = do
-  let webOsPath = pathToOsPath webPath
+  let webOsPath = toOsPath webPath
   dstExists <- PR.doesDirectoryExist webOsPath
 
   if not dstExists
@@ -53,7 +53,7 @@ webDirExists webPath = do
       exists <-
         for
           WPaths.webInternalFiles
-          (PR.doesFileExist . pathToOsPath . (webPath <</>>))
+          (PR.doesFileExist . toOsPath . (webPath <</>>))
       pure $ and exists
 
 -- | Writes the web directory.
@@ -65,12 +65,12 @@ writeWebDir ::
   Path Abs Dir ->
   Eff es ()
 writeWebDir webPath = do
-  let webOsPath = pathToOsPath webPath
+  let webOsPath = toOsPath webPath
 
   PW.createDirectoryIfMissing True webOsPath
   for_
     WPaths.webInternalDirs
-    (PW.createDirectoryIfMissing True . pathToOsPath . (webPath <</>>))
+    (PW.createDirectoryIfMissing True . toOsPath . (webPath <</>>))
 
   for_ $$WPaths.readWebDirTH $ \(p, c) -> do
-    writeBinaryFile (pathToOsPath $ webPath <</>> p) c
+    writeBinaryFile (toOsPath $ webPath <</>> p) c

@@ -122,7 +122,7 @@ library
     , base                             >=4.20.0.0 && <4.22
     , bytestring                       >=0.10.12  && <0.13
     , cassava                          ^>=0.5.3.2
-    , containers                       >=0.6.3.1  && <0.8
+    , containers                       >=0.6.3.1  && <0.9
     , deepseq                          >=1.4.6.0  && <1.6
     , effectful                        ^>=2.5.0.0
     , effectful-utils                  ^>=0.1
@@ -150,7 +150,7 @@ library
     , template-haskell                 >=2.21     && <2.24
     , terminal-effectful               ^>=0.1
     , text                             >=1.2.3.2  && <2.2
-    , text-display                     >=0.0.3.0  && <1.1
+    , text-display                     ^>=1.0.0.0
     , time                             >=1.9.3    && <1.15
     , time-effectful                   ^>=0.1
     , typed-process-dynamic-effectful  ^>=0.1

@@ -86,7 +86,7 @@ testEvolvePhaseCliBuildDirAbs =
     params =
       set'
         #buildDir
-        (Just (pathToOsPath absBuildDir))
+        (Just (toOsPath absBuildDir))
         baseChartParams
     config = baseConfig
 
@@ -119,7 +119,7 @@ testEvolvePhaseConfigBuildDirAbs =
     config =
       set'
         (#chartConfig %? #buildDir)
-        (Just (pathToOsPath absBuildDir))
+        (Just (toOsPath absBuildDir))
         baseConfig
 
 testEvolvePhaseConfigBuildDirRel :: TestTree
@@ -523,7 +523,7 @@ runPathReaderMock = interpret_ $ \case
   DoesFileExist p -> do
     knownFiles <- asks @MockEnv (.knownFiles)
     pure $ p `Set.member` knownFiles
-  GetCurrentDirectory -> pure (pathToOsPath cwdPath)
+  GetCurrentDirectory -> pure (toOsPath cwdPath)
   GetXdgDirectory d p ->
     case d of
       XdgConfig -> do
@@ -564,7 +564,7 @@ goldenRunnerXdg xdg params config = do
     Left ex -> encodeUtf8 $ packText $ displayInnerMatchKnown ex
 
 rootOsPath :: OsPath
-rootOsPath = pathToOsPath rootPath
+rootOsPath = toOsPath rootPath
 
 baseChartParams :: ChartParamsArgs
 baseChartParams =

@@ -161,7 +161,7 @@ readRunsCsv @es inputDistUnit csvPath = do
     Err err -> throwM $ GarminOther err
     Ok someRuns -> pure someRuns
   where
-    csvOsPath = pathToOsPath csvPath
+    csvOsPath = toOsPath csvPath
     bsToTxt = decodeUtf8Lenient . toStrictBS
 
     bsToRuns ::
@@ -243,7 +243,7 @@ getRunsType runsPath = do
         $(Logger.logWarn) msg
         pure RunsDefault
   where
-    runsOsPath = pathToOsPath runsPath
+    runsOsPath = toOsPath runsPath
     runsBaseName = OsPath.takeBaseName runsOsPath
     runsBaseNameTxt = T.toCaseFold $ packText $ decodeLenient runsBaseName
     runsExt = OsPath.takeExtension runsOsPath

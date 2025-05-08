@@ -330,9 +330,9 @@ import FileSystem.Path as X
     Rel,
     absdirPathSep,
     absfilePathSep,
-    pathToOsPath,
     reldirPathSep,
     relfilePathSep,
+    toOsPath,
     (<</>>),
   )
 import FileSystem.Path qualified as Path
@@ -417,9 +417,9 @@ import Numeric.Convert.Real as X
     toℝ,
     ℝ,
   )
-import Numeric.Data.Fraction.Algebra as X (Fraction)
-import Numeric.Data.Positive.Algebra as X (mkPositive, unsafePositive, (+!))
-import Numeric.Data.Positive.Algebra.Internal as X
+import Numeric.Data.Fraction as X (Fraction)
+import Numeric.Data.Positive as X (mkPositive, unsafePositive, (+!))
+import Numeric.Data.Positive.Internal as X
   ( Positive
       ( MkPositive,
         UnsafePositive

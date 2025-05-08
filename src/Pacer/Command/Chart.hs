@@ -107,7 +107,7 @@ createCharts ::
   Eff es ()
 createCharts params = addNamespace "createCharts" $ do
   cwdPath <- Types.getCachedCurrentDirectory
-  let cwdOsPath = pathToOsPath cwdPath
+  let cwdOsPath = toOsPath cwdPath
 
   $(Logger.logInfo)
     $ "Using build-dir: "
@@ -155,7 +155,7 @@ createCharts params = addNamespace "createCharts" $ do
       let webDataDir = webDir <</>> WPaths.dataDir
 
       -- 3. Create json file at expected location
-      PW.createDirectoryIfMissing True (pathToOsPath webDataDir)
+      PW.createDirectoryIfMissing True (toOsPath webDataDir)
       let jsonPath = webDataDir <</>> jsonName
 
       createChartsJsonFile
@@ -163,7 +163,7 @@ createCharts params = addNamespace "createCharts" $ do
         chartPaths
         jsonPath
 
-      let setCurrDir = PW.setCurrentDirectory . pathToOsPath
+      let setCurrDir = PW.setCurrentDirectory . toOsPath
           restorePrevDir = const (PW.setCurrentDirectory cwdOsPath)
           -- set cwd to webDir, return webDir.
           cwdWeb = setCurrDir webDir $> webDir
@@ -172,7 +172,7 @@ createCharts params = addNamespace "createCharts" $ do
       -- dir after we are done.
       bracket cwdWeb restorePrevDir $ \newCurrDir -> do
         let nodeModulesPath = newCurrDir <</>> nodeModulesDir
-            nodeModulesOsPath = pathToOsPath nodeModulesPath
+            nodeModulesOsPath = toOsPath nodeModulesPath
 
         nodeModulesExists <- PR.doesDirectoryExist nodeModulesOsPath
 
@@ -198,7 +198,7 @@ createCharts params = addNamespace "createCharts" $ do
 
       -- 6. Copy the build products to current directory
       let destDir = cwdPath <</>> [reldir|build|]
-          destDirOsPath = pathToOsPath destDir
+          destDirOsPath = toOsPath destDir
           webDistDir = webDir <</>> WPaths.distDir
 
       -- first remove directory if it already exists
@@ -214,7 +214,7 @@ createCharts params = addNamespace "createCharts" $ do
       -- it seems reasonable.
       PW.copyDirectoryRecursiveConfig
         copyConfig
-        (pathToOsPath webDistDir)
+        (toOsPath webDistDir)
         cwdOsPath
 
       $(Logger.logInfo)
@@ -226,7 +226,7 @@ createCharts params = addNamespace "createCharts" $ do
   where
     chartPaths =
       (params.chartRequestsPath, params.runLabelsPath, params.runPaths)
-    buildDirOsPath = pathToOsPath params.buildDir
+    buildDirOsPath = toOsPath params.buildDir
     copyConfig =
       MkCopyDirConfig
         { overwrite = OverwriteNone,
@@ -278,7 +278,7 @@ createChartsJsonFile logInfoLvl chartPaths outJson =
       then $(Logger.logInfo) msg
       else $(Logger.logDebug) msg
   where
-    outJsonOsPath = pathToOsPath outJson
+    outJsonOsPath = toOsPath outJson
 
 -- | Given file paths to runs and chart requests, returns a lazy
 -- json-encoded bytestring of a chart array.

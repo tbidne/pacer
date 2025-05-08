@@ -487,7 +487,7 @@ handleUnknownPath parentDir absParser relParser otherPath =
 
 assertExists :: (HasCallStack, PathReader :> es) => Path b t -> Eff es ()
 assertExists p = do
-  let p' = pathToOsPath p
+  let p' = toOsPath p
   exists <- PR.doesFileExist p'
   unless exists $ throwM (MkFileNotFoundE p')
 

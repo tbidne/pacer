@@ -79,10 +79,10 @@ showtOsPath :: OsPath -> Text
 showtOsPath = packText . OsPath.decodeLenient
 
 showPath :: Path b t -> String
-showPath = OsPath.decodeLenient . pathToOsPath
+showPath = OsPath.decodeLenient . toOsPath
 
 showtPath :: Path b t -> Text
-showtPath = showtOsPath . pathToOsPath
+showtPath = showtOsPath . toOsPath
 
 showListInline :: (IsString a, Semigroup a) => List a -> a
 showListInline = showMapListInline identity
@@ -150,7 +150,7 @@ readDecodeJson path = do
     $ first toAesonPathE
     $ decodeJson @a contents
   where
-    osPath = pathToOsPath path
+    osPath = toOsPath path
     toAesonPathE (MkAesonE _ s) = MkAesonE (Just osPath) s
 
 -- | Fails if there are any unknown fields in the object.
@@ -235,7 +235,7 @@ searchFiles fileNames dataDir = do
       $(Logger.logDebug) $ mkDirNotExistMsg dataDir
       pure empty
   where
-    dataDirOsPath = pathToOsPath dataDir
+    dataDirOsPath = toOsPath dataDir
 
     go :: (HasCallStack) => List FileAliases -> Eff es (f (Path Abs File))
     go [] = pure empty
@@ -293,13 +293,13 @@ searchFileAliases checkExists dataDir aliases = do
     else runSearch
   where
     runSearch = go . NE.toList $ aliases.unAliases
-    dataDirOsPath = pathToOsPath dataDir
+    dataDirOsPath = toOsPath dataDir
 
     go :: (HasCallStack) => List (Path Rel File) -> Eff es (f (Path Abs File))
     go [] = pure empty
     go (f : fs) = do
       let path = dataDir <</>> f
-      exists <- PR.doesFileExist (pathToOsPath path)
+      exists <- PR.doesFileExist (toOsPath path)
       if exists
         -- 1. File exists, return single result
         then pure $ pure path
@@ -314,7 +314,7 @@ searchFileAliases checkExists dataDir aliases = do
 
     searchCaseInsens :: (HasCallStack) => Path Rel File -> Eff es (f (Path Abs File))
     searchCaseInsens f = do
-      let p = pathToOsPath f
+      let p = toOsPath f
           pLower = toLower p
 
       -- NOTE: This will _fail_ if the data directory does not exist. Hence

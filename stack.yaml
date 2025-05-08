@@ -23,13 +23,13 @@ extra-deps:
   - env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
   - regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319
   - tasty-bench-fit-0.1.1@sha256:f9f231d793590d5a1a3b1c455004712c7468b6c6953aa129c4961e38dd8a2f9a,1810
-  - text-display-0.0.5.2@sha256:6e6a5bf1c83dfa6c34692ed5d8ea87f1bd385984309b42c302f2156f4d82477b,2670
+  - text-display-1.0.0.0@sha256:17d5a404f51ce40ba22327bdc6688fd239f66d0aa056b8d5cb83974d1dc706e5,2772
   - git: https://github.com/tbidne/algebra-simple.git
     commit: 37ec7127fbd0f591d4539e4bf72a0badd7569181
   - git: https://github.com/tbidne/bounds.git
     commit: b7ca541cfdd8564bcebe5d38456fe7abf77885b8
   - git: https://github.com/tbidne/effectful-libs.git
-    commit: 9697330f9fc02b31aead5924997e54511992a796
+    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
     subdirs:
       - lib/concurrent-effectful
       - lib/effectful-utils
@@ -44,11 +44,11 @@ extra-deps:
   - git: https://github.com/tbidne/exception-utils.git
     commit: e28b28ae3bc90a0336abf69eff28369b790f4e13
   - git: https://github.com/tbidne/fs-utils.git
-    commit: 83472bc22a938db0d3b4c02a24a52bfca0484637
+    commit: 2389f7dbe5b94f65bd22088f4e5a5f6644caaade
   - git: https://github.com/tbidne/relative-time.git
-    commit: 6bd6c1208bcda9f5d5ecb7ff45fafb91929cdea8
+    commit: b6ea05272e3031cede2cbc7e8b7898ef93d6a2a6
   - git: https://github.com/tbidne/smart-math.git
-    commit: a39c02ec6a5a9c4b551baffafd75f26be74dd457
+    commit: acc3d79b82830397979f4be7b45266f5fc056cfb
 allow-newer: true
 allow-newer-deps:
   - path

@@ -173,7 +173,7 @@ getEnv = do
           absPath <- parseCanonicalAbsFile configPath
           config <- Utils.readDecodeJson absPath
 
-          absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (pathToOsPath absPath)
+          absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (toOsPath absPath)
 
           let configWithPath = MkConfigWithPath absConfigDir config
           $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath absPath)

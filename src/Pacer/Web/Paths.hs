@@ -25,7 +25,7 @@ import Pacer.Web.Utils qualified as WUtils
 -- | Reads the web directory at compile-time.
 readWebDirTH :: Code Q (List (Tuple2 (Path Rel File) ByteString))
 readWebDirTH = WUtils.liftIOToTH $ for webInternalFiles $ \fileName -> do
-  c <- readBinaryFileIO (pathToOsPath $ webDir <</>> fileName)
+  c <- readBinaryFileIO (toOsPath $ webDir <</>> fileName)
   pure (fileName, c)
 
 -- | List of all paths used in frontend build.

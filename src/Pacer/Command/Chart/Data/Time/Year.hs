@@ -11,11 +11,11 @@ module Pacer.Command.Chart.Data.Time.Year
 where
 
 import Data.Enum (Enum (fromEnum, toEnum))
-import Numeric.Data.Interval.Algebra
+import Numeric.Data.Interval
   ( Interval,
     IntervalBound (Closed),
   )
-import Numeric.Data.Interval.Algebra qualified as Interval
+import Numeric.Data.Interval qualified as Interval
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Prelude
 
