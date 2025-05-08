@@ -38,7 +38,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 23.x
+          node-version: 22.x
 
       - name: Configure
         run: cabal configure ${{ matrix.ghc.proj_file }} --enable-tests --ghc-options -Werror
@@ -70,7 +70,8 @@ jobs:
           cabal run pacer ${{ matrix.ghc.proj_file }} -- chart --data examples
 
       - name: Complexity tests
-        run: cabal test bench-fit
+        shell: bash
+        run: RUN_BENCH_FIT=1 cabal test bench-fit
 
       - name: Benchmarks
         if: ${{ matrix.os == 'ubuntu-latest' }}

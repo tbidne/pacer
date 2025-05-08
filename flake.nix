@@ -125,7 +125,7 @@
             inherit pkgs;
             mkDrv = false;
           };
-          node = pkgs.nodejs_24;
+          node = pkgs.nodejs_22;
 
           mkPkg =
             returnShellEnv:
