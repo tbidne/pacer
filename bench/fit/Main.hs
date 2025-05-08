@@ -2,6 +2,10 @@ module Main (main) where
 
 import Bench.Pacer.Utils qualified as Utils
 import Pacer.Prelude hiding (IO)
+import System.Environment.Guard
+  ( ExpectEnv (ExpectEnvSet),
+    guardOrElse',
+  )
 import System.IO qualified as IO
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.Bench.Fit (Complexity)
@@ -11,12 +15,19 @@ import Prelude (IO)
 
 main :: IO ()
 main =
-  defaultMain
-    $ testGroup
-      "Complexity tests"
-      [ testRunsDecodeComplexity,
-        testRunsDecodeOverlappedComplexity
-      ]
+  guardOrElse' "RUN_BENCH_FIT" ExpectEnvSet runTests dontRun
+  where
+    runTests =
+      defaultMain
+        $ testGroup
+          "Complexity tests"
+          [ testRunsDecodeComplexity,
+            testRunsDecodeOverlappedComplexity
+          ]
+
+    dontRun =
+      IO.putStrLn
+        "*** Complexity tests disabled. Enabled with RUN_BENCH_FIT=1 ***"
 
 testRunsDecodeComplexity :: TestTree
 testRunsDecodeComplexity = testCase "Decode runs is linear" $ do

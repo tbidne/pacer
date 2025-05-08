@@ -270,6 +270,7 @@ test-suite bench-fit
   build-depends:
     , base
     , bench-utils
+    , env-guard
     , pacer
     , tasty
     , tasty-bench-fit  ^>=0.1
