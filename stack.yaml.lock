@@ -12,6 +12,13 @@ packages:
   original:
     hackage: env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
 - completed:
+    hackage: gitrev-typed-0.1@sha256:905b696dec9c52486290cfef2d3156420de83f5b21bfb0821a37822f40ee1568,3783
+    pantry-tree:
+      sha256: d9aa23d85f9b5230458e035e52d1dbc676f762468c4a38e7be93dcac18b4029e
+      size: 1663
+  original:
+    hackage: gitrev-typed-0.1@sha256:905b696dec9c52486290cfef2d3156420de83f5b21bfb0821a37822f40ee1568,3783
+- completed:
     hackage: regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319
     pantry-tree:
       sha256: f8db3e7edcbd7069d353c90b5f6aea0e880e9ff7c499686de20ceef0c3114374

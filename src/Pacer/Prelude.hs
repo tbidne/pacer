@@ -322,6 +322,7 @@ import Effectful.Time.Dynamic as X (Time, runTime)
 import FileSystem.IO as X (appendBinaryFileIO, throwPathIOError)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import FileSystem.OsPath qualified as OsPath
+import FileSystem.OsString as X (OsString, osstr)
 import FileSystem.Path as X
   ( Abs,
     Dir,

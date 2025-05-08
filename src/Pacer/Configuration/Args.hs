@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Pacer.Configuration.Args
   ( Args (..),
     parserInfo,
@@ -6,7 +8,8 @@ where
 
 import Data.List qualified as L
 import Data.String (IsString (fromString))
-import Data.Version (Version (versionBranch))
+import Data.Version (showVersion)
+import FileSystem.OsString qualified as OsString
 import Options.Applicative
   ( Parser,
     ParserInfo
@@ -26,12 +29,14 @@ import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Pacer.Class.Parser qualified as P
 import Pacer.Command qualified as Command
+import Pacer.Configuration.Args.TH qualified as TH
 import Pacer.Configuration.Logging (LogLevelParam)
 import Pacer.Configuration.Logging qualified as Logging
 import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs))
 import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 import Paths_pacer qualified as Paths
+import System.Info qualified as Info
 
 -- | CLI args.
 data Args a = MkArgs
@@ -66,7 +71,7 @@ parserInfo =
     }
   where
     header = Just "Pacer: A tool for runners."
-    footerTxt = Just $ fromString versNum
+    footerTxt = Just $ fromString versShort
     desc =
       Chunk.paragraph
         $ mconcat
@@ -104,7 +109,42 @@ configParser =
       ]
 
 version :: Parser (a -> a)
-version = OA.infoOption versNum (OA.long "version" <> OA.short 'v' <> OA.hidden)
+version = OA.infoOption versLong (OA.long "version" <> OA.short 'v' <> OA.hidden)
 
-versNum :: String
-versNum = "Version: " <> L.intercalate "." (show <$> versionBranch Paths.version)
+versShort :: String
+versShort =
+  mconcat
+    [ "Version: ",
+      showVersion Paths.version,
+      " (",
+      OsString.decodeLenient versionInfo.gitShortHash,
+      ")"
+    ]
+
+versLong :: String
+versLong =
+  L.intercalate
+    "\n"
+    [ "Pacer: " <> showVersion Paths.version,
+      " - Git revision: " <> OsString.decodeLenient versionInfo.gitHash,
+      " - Commit date:  " <> OsString.decodeLenient versionInfo.gitCommitDate,
+      " - GHC version:  " <> versionInfo.ghc
+    ]
+
+data VersionInfo = MkVersionInfo
+  { gitCommitDate :: OsString,
+    ghc :: String,
+    gitHash :: OsString,
+    gitShortHash :: OsString
+  }
+
+versionInfo :: VersionInfo
+versionInfo =
+  MkVersionInfo
+    { gitCommitDate = d,
+      ghc = showVersion Info.compilerVersion,
+      gitHash = h,
+      gitShortHash = sh
+    }
+  where
+    (d, h, sh) = $$TH.gitData

@@ -88,6 +88,14 @@
                 megaparsec = prev.megaparsec_9_7_0;
                 path = hlib.dontCheck prev.path_0_9_6;
                 regression-simple = hlib.doJailbreak prev.regression-simple;
+
+                gitrev-typed = (
+                  final.callHackageDirect {
+                    pkg = "gitrev-typed";
+                    ver = "0.1";
+                    sha256 = "sha256-s7LEekR7NLe3CNhD/8uChnh50eGfaArrrtc5hoCtJ1A=";
+                  } { }
+                );
               }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
@@ -129,6 +137,10 @@
               modifier =
                 drv:
                 drv.overrideAttrs (oldAttrs: {
+                  PACER_HASH = "${self.rev or self.dirtyRev}";
+                  PACER_MODIFIED = "${builtins.toString self.lastModified}";
+                  PACER_SHORT_HASH = "${self.shortRev or self.dirtyShortRev}";
+
                   # We have makeWrapper so wrapProgram is available in
                   # postFixup. Git is needed to run the tests (git diff).
                   nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ [
