@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoScopedTypeVariables #-}
+
 module Pacer.Command.Chart.Data.ChartData
   ( ChartData (..),
     ChartY (..),
@@ -14,6 +17,8 @@ import Data.List (all)
 import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
+import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
+import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.IOrd (IEq ((~~)), (/~), (<.), (<~), (>.), (>~))
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
@@ -55,6 +60,7 @@ import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
+import Pacer.Configuration.Env.Types (LogEnv (logLevel))
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
 import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
@@ -139,20 +145,25 @@ type AccY1 = NESeq (Tuple3 Timestamp Double Double)
 
 -- | Turns a sequence of runs and chart requests into charts.
 mkChartDatas ::
-  ( Fromℤ a,
+  ( Display a,
+    Fromℤ a,
+    Logger :> es,
     MetricSpace a,
     Ord a,
+    Reader LogEnv :> es,
     Semifield a,
     Show a,
-    Toℝ a
+    Toℚ a
   ) =>
   -- | Final distance unit to use.
   DistanceUnit ->
   SomeRuns a ->
   ChartRequests a ->
-  Result CreateChartE (Seq ChartData)
+  Eff es (Result CreateChartE (Seq ChartData))
 mkChartDatas finalDistUnit runs =
-  traverse (mkChartData finalDistUnit runs) . (.chartRequests)
+  fmap sequenceA
+    . traverse (mkChartData finalDistUnit runs)
+    . (.chartRequests)
 
 -- NOTE: HLint incorrectly thinks some brackets are unnecessary.
 -- See NOTE: [Brackets with OverloadedRecordDot].
@@ -161,10 +172,13 @@ mkChartDatas finalDistUnit runs =
 
 -- | Turns a sequence of runs and a chart request into a chart.
 mkChartData ::
-  forall a.
-  ( Fromℤ a,
+  forall es a.
+  ( Display a,
+    Fromℤ a,
     MetricSpace a,
+    Logger :> es,
     Ord a,
+    Reader LogEnv :> es,
     Semifield a,
     Show a,
     Toℝ a
@@ -176,26 +190,36 @@ mkChartData ::
   -- | Chart request.
   ChartRequest a ->
   -- | ChartData result. Nothing if no runs passed the request's filter.
-  Result CreateChartE ChartData
-mkChartData finalDistUnit (MkSomeRuns (SetToSeqNE someRuns)) request =
-  case finalRuns of
+  Eff es (Result CreateChartE ChartData)
+mkChartData finalDistUnit (MkSomeRuns (SetToSeqNE someRuns)) request = do
+  finalRuns <- handleChartType request.chartType filteredRuns
+  pure $ case finalRuns of
     Empty -> Err $ CreateChartFilterEmpty request.title
     r :<| rs -> Ok (mkChartDataSets finalDistUnit request (r :<|| rs))
   where
     filteredRuns = filterRuns someRuns request.filters
 
-    finalRuns = handleChartType request.chartType filteredRuns
-
 handleChartType ::
-  (Fromℤ a, Ord a, Semifield a, Show a) =>
-  Maybe ChartType -> Seq (SomeRun a) -> Seq (SomeRun a)
-handleChartType @a mChartType someRuns = case mChartType of
-  Nothing -> someRuns
-  Just ChartTypeDefault -> someRuns
+  forall es a.
+  ( Display a,
+    Fromℤ a,
+    Logger :> es,
+    Ord a,
+    Reader LogEnv :> es,
+    Semifield a,
+    Show a,
+    Toℝ a
+  ) =>
+  Maybe ChartType ->
+  Seq (SomeRun a) ->
+  Eff es (Seq (SomeRun a))
+handleChartType @es @a mChartType someRuns = case mChartType of
+  Nothing -> pure someRuns
+  Just ChartTypeDefault -> pure someRuns
   Just (ChartTypeSum period) -> sumPeriod period
   where
     -- groupBy on Mapping to period
-    sumPeriod :: ChartSumPeriod -> Seq (SomeRun a)
+    sumPeriod :: ChartSumPeriod -> Eff es (Seq (SomeRun a))
     sumPeriod period = periodSum
       where
         compPeriod :: Timestamp -> Timestamp -> Bool
@@ -206,8 +230,11 @@ handleChartType @a mChartType someRuns = case mChartType of
           ChartSumMonth -> (TS.sameMonth, TS.roundTimestampMonth)
           ChartSumYear -> (TS.sameYear, TS.roundTimestampYear)
 
-        periodSum :: Seq (SomeRun a)
-        periodSum = fmap sumRuns . groupByPeriod $ someRuns
+        periodSum :: Eff es (Seq (SomeRun a))
+        periodSum =
+          (fmap . fmap) sumRuns
+            . groupByPeriod
+            $ someRuns
 
         sumRuns :: NESeq (SomeRun a) -> SomeRun a
         sumRuns (MkSomeRun sy y :<|| ys) = foldl1' go (init :<|| ys)
@@ -245,9 +272,20 @@ handleChartType @a mChartType someRuns = case mChartType of
 
         groupByPeriod ::
           Seq (SomeRun a) ->
-          Seq (NESeq (SomeRun a))
-        groupByPeriod =
-          U.seqGroupBy (\r1 r2 -> compPeriod (toDatetime r1) (toDatetime r2))
+          Eff es (Seq (NESeq (SomeRun a)))
+        groupByPeriod ys = do
+          let xs = U.seqGroupBy (\r1 r2 -> compPeriod (toDatetime r1) (toDatetime r2)) ys
+
+          -- Let's only do this if the level is Debug, for performance reasons.
+          mLogLevel <- asks @LogEnv (.logLevel)
+          case mLogLevel of
+            Just LevelDebug -> do
+              let json = toStrictBS $ U.encodePretty xs
+              jsonTxt <- decodeUtf8ThrowM json
+              $(Logger.logDebug) jsonTxt
+            _ -> pure ()
+
+          pure xs
 
     toDatetime :: SomeRun a -> Timestamp
     toDatetime (MkSomeRun _ rs) = rs.datetime
@@ -264,7 +302,7 @@ mkChartDataSets ::
   ChartRequest a ->
   NESeq (SomeRun a) ->
   ChartData
-mkChartDataSets finalDistUnit request runs@(MkSomeRun sd _ :<|| _) =
+mkChartDataSets @a finalDistUnit request runs@(MkSomeRun sd _ :<|| _) =
   case request.y1Axis of
     Nothing ->
       let vals = withSingI sd $ foldMap1 toAccY runs
@@ -320,7 +358,7 @@ filterRuns ::
   NESeq (SomeRunsKey a) ->
   List (FilterExpr a) ->
   Seq (SomeRun a)
-filterRuns rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
+filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
   where
     filterRun :: SomeRunsKey a -> Bool
     filterRun r = all (eval (applyFilter r)) filters

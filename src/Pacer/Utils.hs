@@ -7,6 +7,7 @@ module Pacer.Utils
     -- ** Encoding
     encodeMaybe,
     encodeMaybes,
+    encodePretty,
 
     -- ** Decoding
     (.:?:),
@@ -41,6 +42,11 @@ where
 
 import Data.Aeson (Key, (<?>))
 import Data.Aeson qualified as Asn
+import Data.Aeson.Encode.Pretty
+  ( Config (confIndent, confTrailingNewline),
+    Indent (Spaces),
+  )
+import Data.Aeson.Encode.Pretty qualified as AsnPretty
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KM
@@ -376,3 +382,12 @@ searchFilesToList =
     . NE.toList
     . fmap (.unAliases)
     . (.unSearchFiles)
+
+encodePretty :: (ToJSON a) => a -> LazyByteString
+encodePretty = AsnPretty.encodePretty' cfg
+  where
+    cfg =
+      AsnPretty.defConfig
+        { confIndent = Spaces 2,
+          confTrailingNewline = True
+        }

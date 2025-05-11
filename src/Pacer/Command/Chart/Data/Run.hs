@@ -36,12 +36,14 @@ module Pacer.Command.Chart.Data.Run
   )
 where
 
+import Data.Aeson qualified as Asn
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
 import Data.List.NonEmpty qualified as NE
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
+import Data.Time.Relative qualified as RelTime
 import Data.Tuple (uncurry)
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
@@ -65,7 +67,7 @@ import Pacer.Data.Distance.Units
     SDistanceUnit (SKilometer, SMeter, SMile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
-import Pacer.Data.Duration (Duration)
+import Pacer.Data.Duration (Duration (unDuration))
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
 import Pacer.Prelude
 import Pacer.Utils ((.:?:))
@@ -187,6 +189,36 @@ instance (Show a) => Show (SomeRun a) where
 --                               Serialization                               --
 -------------------------------------------------------------------------------
 
+-- NOTE: The ToJSON test here is used entirely for logging. Consequently,
+-- we do not have to care _too_ much about display e.g. the duration is
+-- display as a "time string" (e.g. "5m30s") rather than our normal display,
+-- (5'30"). This is a round trip, though if we ever want to display it, we
+-- should change it.
+
+instance
+  ( Display a,
+    Fromℤ a,
+    MSemigroup a,
+    Toℝ a
+  ) =>
+  ToJSON (SomeRun a)
+  where
+  toJSON (MkSomeRun sz r) =
+    Asn.object
+      $ [ "datetime" .= r.datetime,
+          "distance" .= withSingI sz display r.distance,
+          "duration" .= durationTimeString,
+          "labels" .= r.labels
+        ]
+      ++ Utils.encodeMaybe ("title", r.title)
+    where
+      durationTimeString =
+        RelTime.toString
+          . RelTime.fromSeconds
+          . floor
+          . toℝ
+          $ r.duration.unDuration.unPositive
+
 instance
   ( Fromℚ a,
     Ord a,
@@ -200,10 +232,10 @@ instance
     datetime <- v .: "datetime"
 
     someDistanceTxt <- v .: "distance"
-    someDistance <- (failErr . P.parse $ someDistanceTxt)
+    someDistance <- failErr . P.parseAll $ someDistanceTxt
 
     durationTxt <- v .: "duration"
-    duration <- (failErr . P.parse $ durationTxt)
+    duration <- failErr . P.parseAll $ durationTxt
 
     labels <- v .:?: "labels"
     title <- v .:? "title"

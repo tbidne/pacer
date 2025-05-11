@@ -1,0 +1,12 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "charts": [
+    {
+      "title": "Normal charts",
+      "y-axis": "distance"
+    }
+  ]
+}
+

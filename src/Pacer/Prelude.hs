@@ -85,6 +85,7 @@ module Pacer.Prelude
     -- * Dev / Debug
     todo,
     traceFile,
+    traceFileBS,
     traceFileA,
     traceFileLine,
     traceFileLineA,
@@ -528,9 +529,13 @@ todo = raise# (errorCallWithCallStackException "Prelude.todo: not yet implemente
 
 -- | Traces to a file.
 traceFile :: FilePath -> Text -> a -> a
-traceFile path txt x = writeFn `seq` x
+traceFile path = traceFileBS path . UTF8.encodeUtf8
+
+-- | Traces to a file.
+traceFileBS :: FilePath -> ByteString -> a -> a
+traceFileBS path bs x = writeFn `seq` x
   where
-    io = appendBinaryFileIO (OsPath.unsafeEncode path) (UTF8.encodeUtf8 txt)
+    io = appendBinaryFileIO (OsPath.unsafeEncode path) bs
     writeFn = unsafePerformIO io
 
 -- | Traces to a file in an Applicative.

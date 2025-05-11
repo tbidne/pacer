@@ -85,7 +85,7 @@ instance (Show a, SingI d) => Show (Distance d a) where
     where
       d = fromSingI @_ @d
 
-instance (Display a, SingI d, Toℚ a) => Display (Distance d a) where
+instance (Display a, SingI d, Toℝ a) => Display (Distance d a) where
   displayBuilder (MkDistance x) =
     mconcat
       [ x',
@@ -95,7 +95,7 @@ instance (Display a, SingI d, Toℚ a) => Display (Distance d a) where
     where
       d = fromSingI @_ @d
 
-      xDouble = realToFrac @_ @Double $ toQ x
+      xDouble = toℝ x
       x' = case d of
         Meter -> displayBuilder $ round @Double @Int xDouble
         Kilometer -> displayBuilder @String $ printf "%.2f" xDouble
@@ -255,7 +255,7 @@ instance (Show a) => Show (SomeDistance a) where
           . withSingI u showsPrec 11 x
       )
 
-instance (Display a, Toℚ a) => Display (SomeDistance a) where
+instance (Display a, Toℝ a) => Display (SomeDistance a) where
   displayBuilder (MkSomeDistance u x) = withSingI u displayBuilder x
 
 -------------------------------------------------------------------------------

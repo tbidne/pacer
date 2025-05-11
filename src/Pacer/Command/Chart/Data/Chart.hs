@@ -17,6 +17,7 @@ import Pacer.Command.Chart.Data.ChartRequest
     ChartRequests (chartRequests),
   )
 import Pacer.Command.Chart.Data.Run (SomeRuns)
+import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
 import Pacer.Prelude
@@ -42,32 +43,38 @@ instance ToJSON Chart where
 
 -- | Given runs and chart requests, generates a series of charts, or the
 mkCharts ::
-  forall a.
-  ( Fromℤ a,
+  forall es a.
+  ( Display a,
+    Fromℤ a,
+    Logger :> es,
     MetricSpace a,
     Ord a,
+    Reader LogEnv :> es,
     Semifield a,
     Show a,
     Toℝ a
   ) =>
   SomeRuns a ->
   ChartRequests a ->
-  Result CreateChartE (Seq Chart)
-mkCharts runs = traverse (mkChart runs) . (.chartRequests)
+  Eff es (Result CreateChartE (Seq Chart))
+mkCharts runs = fmap sequenceA . traverse (mkChart runs) . (.chartRequests)
 
 mkChart ::
-  forall a.
-  ( Fromℤ a,
+  forall es a.
+  ( Display a,
+    Fromℤ a,
+    Logger :> es,
     MetricSpace a,
     Ord a,
+    Reader LogEnv :> es,
     Semifield a,
     Show a,
     Toℝ a
   ) =>
   SomeRuns a ->
   ChartRequest a ->
-  Result CreateChartE Chart
-mkChart someRuns request = toChart <$> eChartData
+  Eff es (Result CreateChartE Chart)
+mkChart someRuns request = fmap toChart <$> eChartData
   where
     eChartData = ChartData.mkChartData finalDistUnit someRuns request
     chartExtra = ChartExtra.mkChartExtra request

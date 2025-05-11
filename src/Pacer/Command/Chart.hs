@@ -15,15 +15,11 @@ module Pacer.Command.Chart
     readChartInputs,
 
     -- ** Misc
+    createChartSeq,
     updateLabels,
   )
 where
 
-import Data.Aeson.Encode.Pretty
-  ( Config (confIndent, confTrailingNewline),
-    Indent (Spaces),
-  )
-import Data.Aeson.Encode.Pretty qualified as AsnPretty
 import Data.Foldable1 (Foldable1 (foldlMap1'))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as MP
@@ -64,7 +60,7 @@ import Pacer.Command.Chart.Params
     ChartParamsFinal,
     RunsType (RunsDefault, RunsGarmin),
   )
-import Pacer.Configuration.Env.Types (CachedPaths)
+import Pacer.Configuration.Env.Types (CachedPaths, LogEnv)
 import Pacer.Configuration.Env.Types qualified as Types
 import Pacer.Data.Distance.Units (DistanceUnit)
 import Pacer.Exception (GarminE (GarminUnitRequired), NpmE (MkNpmE))
@@ -85,6 +81,7 @@ handle ::
     LoggerNS :> es,
     PathReader :> es,
     PathWriter :> es,
+    Reader LogEnv :> es,
     State CachedPaths :> es,
     TypedProcess :> es
   ) =>
@@ -100,6 +97,7 @@ createCharts ::
     LoggerNS :> es,
     PathReader :> es,
     PathWriter :> es,
+    Reader LogEnv :> es,
     State CachedPaths :> es,
     TypedProcess :> es
   ) =>
@@ -256,7 +254,8 @@ createChartsJsonFile ::
     FileWriter :> es,
     Logger :> es,
     LoggerNS :> es,
-    PathWriter :> es
+    PathWriter :> es,
+    Reader LogEnv :> es
   ) =>
   -- | Level to log the success message at.
   Bool ->
@@ -287,18 +286,12 @@ createChartsJsonBS ::
   ( HasCallStack,
     FileReader :> es,
     Logger :> es,
-    LoggerNS :> es
+    LoggerNS :> es,
+    Reader LogEnv :> es
   ) =>
   ChartPaths ->
   Eff es LazyByteString
-createChartsJsonBS params =
-  AsnPretty.encodePretty' cfg <$> createChartSeq params
-  where
-    cfg =
-      AsnPretty.defConfig
-        { confIndent = Spaces 2,
-          confTrailingNewline = True
-        }
+createChartsJsonBS params = Utils.encodePretty <$> createChartSeq params
 
 -- | Given file paths to runs and chart requests, generates a sequence of
 -- charts.
@@ -307,13 +300,14 @@ createChartSeq ::
   ( HasCallStack,
     FileReader :> es,
     Logger :> es,
-    LoggerNS :> es
+    LoggerNS :> es,
+    Reader LogEnv :> es
   ) =>
   ChartPaths ->
   Eff es (Seq Chart)
 createChartSeq chartPaths = do
   (chartRequests, runsWithLabels) <- readChartInputs chartPaths
-  throwErr (Chart.mkCharts runsWithLabels chartRequests)
+  throwErr =<< Chart.mkCharts runsWithLabels chartRequests
 
 -- | Given file paths to runs and chart requests, reads the inputs.
 readChartInputs ::

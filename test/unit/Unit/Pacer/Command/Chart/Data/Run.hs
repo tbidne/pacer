@@ -2,23 +2,30 @@
 
 module Unit.Pacer.Command.Chart.Data.Run (tests) where
 
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import FileSystem.IO (readBinaryFileIO)
+import Hedgehog.Gen qualified as G
+import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Run (Run (MkRun), SomeRun, SomeRuns)
+import Pacer.Command.Chart.Data.Run (Run (MkRun), SomeRun (MkSomeRun), SomeRuns)
 import Pacer.Command.Chart.Data.Run qualified as R
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
-import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
+import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Distance qualified as D
+import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Utils qualified as Utils
+import Unit.Pacer.Data.Distance.Units qualified as Dist
 import Unit.Prelude
+import Unit.TestUtils qualified as UT
 
 tests :: TestTree
 tests =
   testGroup
     "Pacer.Command.Chart.Data.Run"
     [ testParseExampleRunsJson,
+      testParseSomeRunRoundtrip,
       mkTests
     ]
 
@@ -36,6 +43,22 @@ testParseExampleRunsJson = testGoldenParams params
               Err err -> throwM err
         }
     path = [ospPathSep|examples/runs.jsonc|]
+
+testParseSomeRunRoundtrip :: TestTree
+testParseSomeRunRoundtrip = testPropertyNamed name desc $ property $ do
+  sr <- forAll genSomeRun
+
+  let encoded = Utils.encodePretty sr
+  annotateShow encoded
+
+  decoded <- case Utils.decodeJson (toStrictBS encoded) of
+    Ok r -> pure r
+    Err r -> annotate (displayException r) *> failure
+
+  sr === decoded
+  where
+    name = "testParseSomeRunRoundtrip"
+    desc = "fromJSON . toJSON is a round trip"
 
 mkTests :: TestTree
 mkTests =
@@ -277,3 +300,31 @@ mkSr title ts =
   where
     unsafeTs :: Text -> Timestamp
     unsafeTs = errorErr . P.parseAll
+
+genSomeRun :: Gen (SomeRun Double)
+genSomeRun = do
+  distUnit <- Dist.genDistanceUnit
+  case distUnit of
+    Meter -> MkSomeRun SMeter <$> genRun
+    Kilometer -> MkSomeRun SKilometer <$> genRun
+    Mile -> MkSomeRun SMile <$> genRun
+
+genRun :: Gen (Run d Double)
+genRun = do
+  datetime <- UT.genTimestamp
+  distance <- MkDistance <$> UT.genDoublePos
+  -- 120 seconds, so that rounding down to 0 (e.g. 1 second) doesn't break
+  -- positive check.
+  duration <- MkDuration <$> UT.genDoubleMinPos 120
+  labels <-
+    Set.fromList <$> G.list (R.linearFrom 0 0 5) UT.genText
+  title <- G.maybe UT.genText
+
+  pure
+    $ MkRun
+      { datetime,
+        distance,
+        duration,
+        labels,
+        title
+      }

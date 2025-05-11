@@ -1,0 +1,16 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "charts": [
+    {
+      "title": "Charts by month",
+      "type": {
+        "name": "sum",
+        "period": "month"
+      },
+      "y-axis": "distance"
+    }
+  ]
+}
+

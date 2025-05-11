@@ -43,8 +43,11 @@ import Effectful.Process.Typed.Dynamic
 import Effectful.Terminal.Dynamic (Terminal (PutStr, PutStrLn))
 import FileSystem.IO (readBinaryFileIO)
 import FileSystem.OsPath (decodeLenient)
+import FileSystem.Path qualified as Path
 import Pacer.Class.Parser qualified as P
+import Pacer.Command.Chart (ChartPaths)
 import Pacer.Command.Chart qualified as Chart
+import Pacer.Command.Chart.Data.Chart (Chart (chartData))
 import Pacer.Command.Chart.Data.Run
   ( Run
       ( MkRun,
@@ -72,10 +75,18 @@ import Pacer.Command.Chart.Params
     ChartParamsArgs,
   )
 import Pacer.Command.Chart.Params qualified as ChartParams
-import Pacer.Configuration.Env.Types (CachedPaths)
+import Pacer.Configuration.Env.Types
+  ( CachedPaths,
+    LogEnv
+      ( MkLogEnv,
+        logLevel,
+        logNamespace
+      ),
+  )
 import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
 import Pacer.Data.Distance qualified as D
 import Pacer.Data.Duration (Duration (MkDuration))
+import Pacer.Utils qualified as U
 import System.Exit (ExitCode (ExitSuccess))
 import System.OsPath qualified as OsPath
 import Test.Tasty.HUnit (assertEqual)
@@ -86,9 +97,11 @@ tests =
   testGroup
     "Pacer.Command.Chart"
     [ createChartTests,
+      createChartSeqTests,
       updateLabelTests
     ]
 
+-- | This tests effectful logic, not so much the chart output.
 createChartTests :: TestTree
 createChartTests =
   testGroup
@@ -479,6 +492,7 @@ type TestEffects =
     LoggerNS,
     IORefE,
     Reader ChartEnv,
+    Reader LogEnv,
     State CachedPaths,
     IOE
   ]
@@ -487,6 +501,7 @@ runTestEff :: ChartEnv -> Eff TestEffects a -> IO a
 runTestEff env m =
   runEff
     . evalState env.coreEnv.cachedPaths
+    . runReader logEnv
     . runReader env
     . runIORef
     . runLoggerNS mempty
@@ -498,6 +513,12 @@ runTestEff env m =
     . runFileWriterMock
     . runFileReaderMock
     $ m
+  where
+    logEnv =
+      MkLogEnv
+        { logLevel = Nothing,
+          logNamespace = mempty
+        }
 
 runMockChartIO ::
   CoreEnv ->
@@ -576,6 +597,76 @@ npmStr :: String
 npmStr = case currentOs of
   Windows -> "npm.cmd"
   _ -> "npm"
+
+createChartSeqTests :: TestTree
+createChartSeqTests =
+  testGroup
+    "createChartSeq"
+    [ testCreateChartNormal,
+      testCreateChartSumWeek,
+      testCreateChartSumMonth
+    ]
+
+testCreateChartNormal :: TestTree
+testCreateChartNormal =
+  testCreateChartSeqHelper
+    "Creates a chart"
+    [osp|testCreateChartNormal|]
+    [ospPathSep|createChartNormal_rc.json|]
+
+testCreateChartSumWeek :: TestTree
+testCreateChartSumWeek =
+  testCreateChartSeqHelper
+    "Creates a chart that sums by week"
+    [osp|testCreateChartSumWeek|]
+    [ospPathSep|createChartSumWeek_rc.json|]
+
+testCreateChartSumMonth :: TestTree
+testCreateChartSumMonth =
+  testCreateChartSeqHelper
+    "Creates a chart that sums by month"
+    [osp|testCreateChartSumMonth|]
+    [ospPathSep|createChartSumMonth_rc.json|]
+
+testCreateChartSeqHelper :: TestName -> OsPath -> OsPath -> TestTree
+testCreateChartSeqHelper testDesc testName crPath = testGoldenParams params
+  where
+    params =
+      MkGoldenParams
+        { testDesc,
+          testName,
+          runner = do
+            paths <- mkPaths
+            result <- fmap (.chartData) <$> runCreateChartSeqEff paths
+            pure $ toStrictBS $ U.encodePretty result
+        }
+
+    mkPaths = runEff $ runPathReader $ do
+      cwd <- getCurrentDirectory
+      chartRequests <- Path.parseRelFile $ dataDir </> crPath
+      activities <- Path.parseRelFile $ dataDir </> [ospPathSep|Activities.csv|]
+      pure
+        $ ( cwd <</>> chartRequests,
+            Nothing,
+            (cwd <</>> activities) :| []
+          )
+
+    dataDir = [ospPathSep|test/unit/data|]
+
+runCreateChartSeqEff :: ChartPaths -> IO (Seq Chart)
+runCreateChartSeqEff paths =
+  runEff
+    . runReader logEnv
+    . runLoggerNS mempty
+    . runLoggerMock
+    . runFileReader
+    $ Chart.createChartSeq paths
+  where
+    logEnv =
+      MkLogEnv
+        { logLevel = Nothing,
+          logNamespace = mempty
+        }
 
 updateLabelTests :: TestTree
 updateLabelTests =

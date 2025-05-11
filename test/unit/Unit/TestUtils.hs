@@ -7,6 +7,9 @@ module Unit.TestUtils
 
     -- * Generators
 
+    -- * Text
+    genText,
+
     -- ** Numeric
     genℕ,
     genℕ1,
@@ -14,7 +17,9 @@ module Unit.TestUtils
     genDoubleNN,
     genDouble,
     genDoublePos,
+    genDoubleMinPos,
     genDoubleMax,
+    genDoubleMin,
     genTextDouble,
     genTextDoublePos,
     genTextDoublePrecision,
@@ -204,6 +209,16 @@ genDoublePos = do
     Just x -> pure $ unsafePositive x
     Nothing -> error $ "Could not read double: " <> t'
 
+genDoubleMinPos :: Int -> Gen PDouble
+genDoubleMinPos minInt = do
+  t <- genTextDoubleMin minInt
+
+  let t' = unpackText t
+
+  case TR.readMaybe t' of
+    Just x -> pure $ unsafePositive x
+    Nothing -> error $ "Could not read double: " <> t'
+
 genDouble :: Gen Double
 genDouble = do
   t <- genTextDoublePos
@@ -217,6 +232,16 @@ genDouble = do
 genDoubleMax :: Int -> Gen Double
 genDoubleMax maxInt = do
   t <- genTextDoubleMax maxInt
+
+  let t' = unpackText t
+
+  case TR.readMaybe t' of
+    Just x -> pure x
+    Nothing -> error $ "Could not read double: " <> t'
+
+genDoubleMin :: Int -> Gen Double
+genDoubleMin minInt = do
+  t <- genTextDoubleMin minInt
 
   let t' = unpackText t
 
@@ -311,6 +336,24 @@ genTextDoubleMax maxInt = do
     ]
   where
     genInt = G.integral @_ @Int (R.exponentialFrom 0 0 maxInt)
+
+-- | Generate double text like "25.349".
+genTextDoubleMin :: Int -> Gen Text
+genTextDoubleMin minInt = do
+  G.choice
+    [ showt <$> genInt,
+      do
+        n <- genInt
+        d <- genInt
+        pure
+          $ mconcat
+            [ showt n,
+              ".",
+              showt d
+            ]
+    ]
+  where
+    genInt = G.integral @_ @Int (R.exponentialFrom minInt minInt 99)
 
 genAffineSpace :: (IsString a) => Gen a
 genAffineSpace = G.element [" ", ""]
@@ -558,3 +601,6 @@ pad2 t =
   if T.length t == 1
     then T.singleton '0' <> t
     else t
+
+genText :: Gen Text
+genText = G.text (R.linearFrom 0 0 20) G.unicode
