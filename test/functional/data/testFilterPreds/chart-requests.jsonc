@@ -18,7 +18,8 @@
     {
       "title": "Specific duration runs",
       "y-axis": "duration",
-      "filters": ["duration > 40m", "duration < 3h"]
+      // testing that whitespace is not required for operators
+      "filters": ["duration>40m", "duration < 3h"]
     },
     {
       "title": "Specific duration runs using and",

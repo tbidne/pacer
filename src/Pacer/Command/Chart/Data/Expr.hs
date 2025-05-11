@@ -67,17 +67,12 @@ instance Display FilterOp where
 instance Parser FilterOp where
   parser =
     asum
-      -- NOTE: These use megaparsec's variants rather than ours defined in
-      -- Pacer.Class.Parser which parse all trailing whitespace too.
-      -- We currently need this since it is used in (FilterType a)'s Parser
-      -- instance, and we require space1 there. It would be nice to figure
-      -- out a more consistent implementation here.
-      [ MPC.string "<=" $> FilterOpLte,
-        MPC.char '<' $> FilterOpLt,
-        MPC.char '=' $> FilterOpEq,
-        MPC.string "/=" $> FilterOpNeq,
-        MPC.string ">=" $> FilterOpGte,
-        MPC.char '>' $> FilterOpGt
+      [ P.string "<=" $> FilterOpLte,
+        P.char '<' $> FilterOpLt,
+        P.char '=' $> FilterOpEq,
+        P.string "/=" $> FilterOpNeq,
+        P.string ">=" $> FilterOpGte,
+        P.char '>' $> FilterOpGt
       ]
 
 -------------------------------------------------------------------------------
@@ -171,9 +166,9 @@ instance
 
       parsePred s cons = do
         MPC.string s
-        MPC.space1
+        MPC.space
         op <- parser
-        MPC.space1
+        MPC.space
         d <- parser
         pure $ cons op d
 
