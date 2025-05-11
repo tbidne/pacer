@@ -115,7 +115,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     where
       baseName = [ospPathSep|test/functional/data/xdg|]
   ListDirectory p -> PRS.listDirectory p
-  other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runPathReaderMock: unimplemented: " ++ showEffectCons other
 
 type TestEffects =
   [ FileReader,
@@ -203,7 +203,7 @@ runFileWriterMock = interpret_ $ \case
     modifyIORef' outFilesMapRef (Map.insert path' bs)
     where
       path' = takeParentAndName path
-  other -> error $ "runFileWriterMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runFileWriterMock: unimplemented: " ++ showEffectCons other
 
 runTerminalMock ::
   ( IORefE :> es,
@@ -218,7 +218,7 @@ runTerminalMock = interpret_ $ \case
   PutStrLn s -> do
     logsRef <- asks @FuncEnv (.logsRef)
     modifyIORef' logsRef (<> packText s)
-  other -> error $ "runTerminalMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runTerminalMock: unimplemented: " ++ showEffectCons other
 
 runMultiArgs :: (a -> List String) -> List (Word8, (a, Text)) -> IO ()
 runMultiArgs mkArgs vals =

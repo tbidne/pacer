@@ -124,7 +124,7 @@ testOrdLaws x y z = do
   when (xLteY && yLteX) $ assert (x == y)
 
   -- other operators
-  (x <= y) === (not (x > y))
+  (x <= y) === not (x > y)
   (x < y) === (x <= y && not (x == y))
   (x >= y) === (x > y || x == y)
   (x > y) === (x >= y && not (x == y))
@@ -146,7 +146,7 @@ testIEqLaws x y = do
   (x ~~ y) === (y ~~ x)
 
   -- negation
-  ((x /~ y)) === (not (x ~~ y))
+  (x /~ y) === not (x ~~ y)
 
 testIOrdLaws :: (IOrd a) => a -> a -> PropertyT IO ()
 testIOrdLaws x y = do
@@ -377,7 +377,7 @@ genWithBlockComments = do
   -- In other words, the concat turned the block comment into a line comment!
   -- That's bad because we didn't generate the corresponding line end, i.e.
   -- it is invalid.
-  xs <- G.list r $ (encodeUtf8 . T.replace "/" "") <$> genNonCommentTxt
+  xs <- G.list r $ encodeUtf8 . T.replace "/" "" <$> genNonCommentTxt
   cs <- G.list r genBlockComment
   mconcat <$> G.shuffle (xs ++ cs)
   where
@@ -533,7 +533,7 @@ genLocalTimeTxt = do
   dateTxt <- genDateTxt
   timeTxt <- genTimeTxt
   sep <- G.element ['T', ' ']
-  pure $ (dateTxt <> T.singleton sep <> timeTxt)
+  pure (dateTxt <> T.singleton sep <> timeTxt)
 
 genTzOffsetTxt :: Gen Text
 genTzOffsetTxt = do

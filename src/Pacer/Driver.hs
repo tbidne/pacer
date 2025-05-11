@@ -165,9 +165,9 @@ getEnv = do
               config <- Utils.readDecodeJson path
               let configPath = MkConfigWithPath xdgConfig config
 
-              $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath path)
+              $(Logger.logInfo) $ "Using config: " <> Utils.showtPath path
 
-              pure $ (Just xdgConfig, Just configPath)
+              pure (Just xdgConfig, Just configPath)
         -- 1.2. Config path exists, use it.
         Just configPath -> do
           absPath <- parseCanonicalAbsFile configPath
@@ -176,7 +176,7 @@ getEnv = do
           absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (toOsPath absPath)
 
           let configWithPath = MkConfigWithPath absConfigDir config
-          $(Logger.logInfo) $ "Using config: " <> (Utils.showtPath absPath)
+          $(Logger.logInfo) $ "Using config: " <> Utils.showtPath absPath
           pure (Nothing, Just configWithPath)
 
     -- 2. Non-chart command, skip config.

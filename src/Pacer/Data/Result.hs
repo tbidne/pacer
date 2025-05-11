@@ -71,7 +71,7 @@ instance Bifunctor Result where
   bimap f g = onResult (Err . f) (Ok . g)
 
 instance Bifoldable Result where
-  bifoldMap f g = onResult f g
+  bifoldMap = onResult
 
 instance Bitraversable Result where
   bitraverse f g = onResult (fmap Err . f) (fmap Ok . g)
@@ -104,4 +104,4 @@ onErr f = onResult f id
 
 -- | 'Ok' eliminator.
 onOk :: (a -> e) -> Result e a -> e
-onOk g = onResult id g
+onOk = onResult id

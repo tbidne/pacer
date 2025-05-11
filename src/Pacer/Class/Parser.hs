@@ -164,7 +164,7 @@ zonedParser =
   MP.takeWhile1P (Just "tz") (\c -> Ch.isDigit c || c == '+' || c == '-')
 
 parseTime :: (ParseTime a) => String -> String -> ResultDefault a
-parseTime fmt str = Format.parseTimeM False Format.defaultTimeLocale fmt str
+parseTime = Format.parseTimeM False Format.defaultTimeLocale
 
 -- | Parser combinator for digits with a 'Read' instance.
 parseDigits :: (Read n) => Parsec Void Text n

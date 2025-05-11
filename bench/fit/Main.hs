@@ -50,12 +50,12 @@ measureGenDecode :: IO Complexity
 measureGenDecode =
   Fit.fit
     $ Fit.mkFitConfig
-      (Utils.genAndDecodeRuns)
+      Utils.genAndDecodeRuns
       (10, 10_000)
 
 measureGenDecodeOverlapped :: IO Complexity
 measureGenDecodeOverlapped =
   Fit.fit
     $ Fit.mkFitConfig
-      (Utils.genAndDecodeOverlappedRuns)
+      Utils.genAndDecodeOverlappedRuns
       (10, 10_000)

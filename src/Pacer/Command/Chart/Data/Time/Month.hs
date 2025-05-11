@@ -38,7 +38,7 @@ data Month
 
 instance Parser Month where
   parser = do
-    txt <- MP.takeWhile1P (Just "01-12") (\c -> Ch.isDigit c)
+    txt <- MP.takeWhile1P (Just "01-12") Ch.isDigit
     case txt of
       "01" -> pure Jan
       "02" -> pure Feb

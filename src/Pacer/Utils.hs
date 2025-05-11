@@ -172,12 +172,12 @@ failUnknownFields name knownKeys kmap = do
   case HSet.toList unknownKeys of
     [] -> pure ()
     unknownKeyList@(_ : _) ->
-      ( fail
-          $ mconcat
+      fail
+        ( mconcat
             [ "Encountered unknown keys: ",
               showKeys unknownKeyList
             ]
-      )
+        )
         <?> Key name
   where
     actualKeyMap = KM.toHashMap kmap
@@ -193,7 +193,7 @@ failUnknownFields name knownKeys kmap = do
 decodeJson :: (FromJSON a) => ByteString -> Result AesonE a
 decodeJson =
   first (MkAesonE Nothing)
-    <<< (review #eitherIso)
+    <<< review #eitherIso
     . Asn.eitherDecodeStrict
     <=< P.stripComments
 
@@ -378,10 +378,11 @@ newtype FileAliases = MkFileAliases
 
 searchFilesToList :: SearchFiles -> List (Path Rel File)
 searchFilesToList =
-  (>>= NE.toList)
-    . NE.toList
-    . fmap (.unAliases)
-    . (.unSearchFiles)
+  NE.toList
+    <=< ( NE.toList
+            . fmap (.unAliases)
+            . (.unSearchFiles)
+        )
 
 encodePretty :: (ToJSON a) => a -> LazyByteString
 encodePretty = AsnPretty.encodePretty' cfg

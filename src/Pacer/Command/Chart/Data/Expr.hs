@@ -224,7 +224,7 @@ instance (Parser a) => FromJSON (Expr a) where
   parseJSON = asnWithText "Expr" (failErr . lexParse)
 
 eval :: (a -> Bool) -> Expr a -> Bool
-eval p = runIdentity . evalA (\x -> Identity (p x))
+eval p = runIdentity . evalA (Identity . p)
 
 evalA :: (Applicative f) => (a -> f Bool) -> Expr a -> f Bool
 evalA p = go
@@ -294,7 +294,7 @@ instance TraversableStream (List ExprToken) where
       (_, post) = L.splitAt (o - pst.pstateOffset) pst.pstateInput
 
 instance VisualStream (List ExprToken) where
-  showTokens _ = L.intercalate " " . toList . fmap showTok
+  showTokens _ = L.unwords . toList . fmap showTok
     where
       showTok =
         unpackText
@@ -312,7 +312,7 @@ instance VisualStream (List ExprToken) where
   -- here.
   tokensLength _ =
     length
-      . L.intercalate " "
+      . L.unwords
       . toList
       . fmap (unpackText . display)
 

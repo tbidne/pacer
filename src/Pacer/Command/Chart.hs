@@ -109,17 +109,17 @@ createCharts params = addNamespace "createCharts" $ do
 
   $(Logger.logInfo)
     $ "Using build-dir: "
-    <> (Utils.showtPath params.buildDir)
+    <> Utils.showtPath params.buildDir
   $(Logger.logInfo)
     $ "Using chart-requests: "
-    <> (Utils.showtPath params.chartRequestsPath)
+    <> Utils.showtPath params.chartRequestsPath
   for params.runPaths $ \r ->
-    $(Logger.logInfo) $ "Using runs: " <> (Utils.showtPath r)
+    $(Logger.logInfo) $ "Using runs: " <> Utils.showtPath r
 
   case params.runLabelsPath of
     Nothing -> $(Logger.logDebug) "No run-labels given"
     Just p ->
-      $(Logger.logInfo) $ "Using run-labels: " <> (Utils.showtPath p)
+      $(Logger.logInfo) $ "Using run-labels: " <> Utils.showtPath p
 
   if params.json
     then do

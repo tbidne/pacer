@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Bench.Pacer.Utils
   ( -- * High level
     genAndDecodeRuns,
@@ -129,19 +127,19 @@ startDate :: Day
 startDate = unsafeParse "1990-04-08"
 
 dates :: Word -> List Timestamp
-dates mx = (TimestampDate . incDate startDate) <$> [0 .. mx]
+dates mx = TimestampDate . incDate startDate <$> [0 .. mx]
 
 startTime :: LocalTime
 startTime = unsafeParse "2000-04-08T12:00:00"
 
 times :: Word -> List Timestamp
-times mx = (TimestampTime . incTime startTime) <$> [0 .. mx]
+times mx = TimestampTime . incTime startTime <$> [0 .. mx]
 
 startZoned :: ZonedTime
 startZoned = unsafeParse "2010-04-08T12:00:00-0800"
 
 zoneds :: Word -> List Timestamp
-zoneds mx = (TimestampZoned . incZoned startZoned) <$> [0 .. mx]
+zoneds mx = TimestampZoned . incZoned startZoned <$> [0 .. mx]
 
 encodeTimestamp :: Timestamp -> ByteString
 encodeTimestamp = encodeUtf8 . TS.fmtTimestamp

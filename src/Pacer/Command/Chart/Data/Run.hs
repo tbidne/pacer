@@ -307,7 +307,7 @@ someRunIso ::
   Iso' (SomeRun a) (Run d a)
 someRunIso =
   iso
-    (\(MkSomeRun s r) -> (withSingI s convertDistance_ r))
+    (\(MkSomeRun s r) -> withSingI s convertDistance_ r)
     hideDistance
 
 -------------------------------------------------------------------------------
@@ -361,7 +361,7 @@ someRunsKeyIso = iso (\(MkSomeRunsKey x) -> x) MkSomeRunsKey
 -------------------------------------------------------------------------------
 
 -- | Holds multiple runs.
-newtype SomeRuns a = MkSomeRuns {unSomeRuns :: (NESet (SomeRunsKey a))}
+newtype SomeRuns a = MkSomeRuns {unSomeRuns :: NESet (SomeRunsKey a)}
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
@@ -598,7 +598,7 @@ checkOverlap run map = case HMap.lookup run.datetime map of
   Nothing ->
     let overlaps = TS.strictOverlaps run.datetime
         init = runToOverlapMap' run.datetime run.title overlaps
-     in (HMap.union map) <$> foldr go (Ok init) overlaps
+     in HMap.union map <$> foldr go (Ok init) overlaps
   where
     go ::
       Timestamp ->
@@ -639,7 +639,7 @@ runToOverlapMap' ts mTitle overlaps =
   HMap.fromList
     $ (ts, OverlapPrimary ts mTitle)
     : fmap
-      (\t -> (t, OverlapSecondary ts mTitle))
+      (,OverlapSecondary ts mTitle)
       overlaps
 
 type TitleAndTime = Tuple2 (Maybe Text) Timestamp

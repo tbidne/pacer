@@ -545,7 +545,7 @@ runPathReaderMock = interpret_ $ \case
     | otherwise -> pure []
     where
       dirName = L.last $ OsPath.splitDirectories p
-  other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runPathReaderMock: unimplemented: " ++ showEffectCons other
 
 goldenRunner :: ChartParamsArgs -> Config -> IO ByteString
 goldenRunner = goldenRunnerXdg True

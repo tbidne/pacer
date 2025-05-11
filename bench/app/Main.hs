@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Main (main) where
 
 import Bench.Pacer.Utils qualified as Utils
