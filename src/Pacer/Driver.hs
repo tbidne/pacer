@@ -41,13 +41,14 @@ import Pacer.Command.Chart.Data.Run (RunDatetimeOverlapE)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
-import Pacer.Configuration.Args (Args (command, configPath), parserInfo)
+import Pacer.Configuration.Args (Args (command, configPath, logLevel), parserInfo)
 import Pacer.Configuration.Config (ConfigWithPath (MkConfigWithPath, config))
 import Pacer.Configuration.Env qualified as Env
 import Pacer.Configuration.Env.Types
   ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
     LogEnv (MkLogEnv, logLevel, logNamespace),
   )
+import Pacer.Configuration.Logging (LogLevelParam (LogNone, LogSome))
 import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
 import Pacer.Utils (FileAliases (MkFileAliases))
@@ -140,13 +141,28 @@ getEnv ::
 getEnv = do
   args <- execParser (parserInfo @Double)
 
+  -- Normally, we combine the Args' LogLevel with the json Config's LogLevel
+  -- to create the LogEnv used throughout the program. However, we have a
+  -- chicken-and-egg problem where the Config creation process potentially
+  -- has logging too i.e. we need to log but don't have the merged config.
+  --
+  -- Therefore, we use the Args' LogLevel for Config creation, then use the
+  -- combined version for everything else.
+  let cfgLogLvl = case args.logLevel of
+        -- 1. User specifed no logging, turn it off.
+        Just LogNone -> Nothing
+        -- 2. User did not specify; default to info.
+        Nothing -> Just LevelInfo
+        -- 3. User specified something; use it.
+        Just (LogSome lvl) -> Just lvl
+
   -- Get Config and xdg config dir, if necessary.
   (mXdgConfig, mConfig) <- case args.command of
     -- Because the config (currently) only affects the chart command,
     -- searching for it is pointless for other commands, hence skip it.
     --
     -- 1. Chart command, try to find command.
-    Chart {} -> configRunner $ do
+    Chart {} -> configRunner cfgLogLvl $ do
       case args.configPath of
         -- 1.1. No config path, try xdg
         Nothing -> do
@@ -191,14 +207,14 @@ getEnv = do
 
   pure (args.command, mConfig, cachedPaths, logEnv)
   where
-    configRunner =
-      runReader configLogEnv
+    configRunner cfgLogLvl =
+      runReader (configLogEnv cfgLogLvl)
         . runLoggerNS "config"
         . runLogger
 
-    configLogEnv =
+    configLogEnv logLevel =
       MkLogEnv
-        { logLevel = Just LevelInfo,
+        { logLevel,
           logNamespace = mempty
         }
 
