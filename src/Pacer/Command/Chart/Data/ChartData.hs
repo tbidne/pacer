@@ -17,6 +17,8 @@ import Data.List (all)
 import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.IOrd (IEq ((~~)), (/~), (<.), (<~), (>.), (>~))
@@ -33,6 +35,10 @@ import Pacer.Command.Chart.Data.ChartRequest
   )
 import Pacer.Command.Chart.Data.Expr
   ( FilterExpr,
+    FilterLabelOp
+      ( FilterLabelOpEq,
+        FilterLabelOpNeq
+      ),
     FilterOp
       ( FilterOpEq,
         FilterOpGt,
@@ -364,14 +370,14 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     filterRun r = all (eval (applyFilter r)) filters
 
     applyFilter :: SomeRunsKey a -> FilterType a -> Bool
-    applyFilter srk (FilterLabel lbl) = applyLabel srk.unSomeRunsKey lbl
+    applyFilter srk (FilterLabel op lbl) = applyLabel srk.unSomeRunsKey op lbl
     applyFilter srk (FilterDate op m) = applyDate srk.unSomeRunsKey op m
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeRunsKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeRunsKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeRunsKey op p
 
-    applyLabel :: SomeRun a -> Text -> Bool
-    applyLabel (MkSomeRun _ r) lbl = lbl `elem` r.labels
+    applyLabel :: SomeRun a -> FilterLabelOp -> Text -> Bool
+    applyLabel (MkSomeRun _ r) op lbl = (labelOpToFun op) lbl r.labels
 
     applyDate :: SomeRun a -> FilterOp -> Moment -> Bool
     applyDate (MkSomeRun _ r) op m = (opToMFun op) runMoment m
@@ -414,6 +420,10 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     opToMFun FilterOpLt = (<.)
     opToMFun FilterOpGte = (>~)
     opToMFun FilterOpGt = (>.)
+
+    labelOpToFun :: forall b. (Ord b) => FilterLabelOp -> (b -> Set b -> Bool)
+    labelOpToFun FilterLabelOpEq = Set.member
+    labelOpToFun FilterLabelOpNeq = Set.notMember
 
 i :: Int -> Int
 i = id

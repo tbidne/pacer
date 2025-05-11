@@ -129,11 +129,13 @@ There are some caveats:
 
 Chart requests allow us to filter runs based on some criteria. In general, `filters` contains a list of filters, where a run must satisfy all filters to be included. We have the following filter "atoms":
 
-- `label <lbl>`: The run must have the label `lbl` (case-sensitive).
+- `label <label_op> <lbl>`: The run must satisfy the `labels` condition (case-sensitive).
 - `datetime <op> <val>`: The run's `datetime` field must satisfy the condition e.g. `datetime > 2019`.
 - `distance <op> <val>`: The run must have `distance <op> <val>` e.g. `distance > 5 km`.
 - `duration <op> <val>`: The run must have `duration <op> <val>` e.g. `duration < 2h`.
 - `pace <op> <val>`: The run must have `pace <op> <val>` e.g. `pace <= 4m30s /km`.
+
+`<label_op>` can be one of: `=`, `/=`.
 
 `<op>` can be one of: `<=`, `<`, `=`, `/=`, `>=`, `>`.
 
@@ -152,7 +154,8 @@ For example, we can have:
 {
   "title": "Races and long runs",
   "filters": [
-    "label official_race or label marathon",
+    "label = official_race or label = marathon",
+    "label /= casual",
     "distance >= 25 km",
     "datetime > 2024"
   ],
@@ -163,6 +166,7 @@ For example, we can have:
 In this case, we will take all runs that satisfy **all** of the following criteria:
 
 - Has label `official_race` and/or `marathon`.
+- Does _not_ have label `casual`.
 - Has `distance >= 25 km`.
 - Has `datetime > 2024` (i.e. 2025 onwards).
 

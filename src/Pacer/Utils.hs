@@ -139,7 +139,7 @@ instance Exception AesonE where
             "': ",
             s
           ]
-      Nothing -> "Error decode json: " ++ s
+      Nothing -> "Error decoding json: " ++ s
 
 -- | Decodes a json(c) file.
 readDecodeJson ::

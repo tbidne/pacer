@@ -12,6 +12,7 @@ module Pacer.Command.Chart.Data.Expr
     -- * Filtering
     FilterType (..),
     FilterOp (..),
+    FilterLabelOp (..),
 
     -- * Misc
     lexParse,
@@ -75,6 +76,25 @@ instance Parser FilterOp where
         P.char '>' $> FilterOpGt
       ]
 
+-- | Operator for filter labels.
+data FilterLabelOp
+  = FilterLabelOpEq
+  | FilterLabelOpNeq
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
+
+instance Display FilterLabelOp where
+  displayBuilder = \case
+    FilterLabelOpEq -> "="
+    FilterLabelOpNeq -> "/="
+
+instance Parser FilterLabelOp where
+  parser =
+    asum
+      [ P.char '=' $> FilterLabelOpEq,
+        P.string "/=" $> FilterLabelOpNeq
+      ]
+
 -------------------------------------------------------------------------------
 --                                 FilterType                                --
 -------------------------------------------------------------------------------
@@ -84,7 +104,7 @@ data FilterType a
   = FilterDistance FilterOp (SomeDistance a)
   | FilterDuration FilterOp (Duration a)
   | -- | Filters by label equality.
-    FilterLabel Text
+    FilterLabel FilterLabelOp Text
   | FilterDate FilterOp Moment
   | FilterPace FilterOp (SomePace a)
   deriving stock (Eq, Generic, Show)
@@ -116,9 +136,11 @@ instance
           " ",
           displayBuilder d
         ]
-    FilterLabel t ->
+    FilterLabel op t ->
       mconcat
         [ "label ",
+          displayBuilder op,
+          " ",
           displayBuilder t
         ]
     FilterDate op m ->
@@ -156,8 +178,11 @@ instance
     where
       parseLabel = do
         void $ MPC.string "label"
-        MPC.space1
-        FilterLabel <$> MP.takeWhile1P (Just "string") (const True)
+        MPC.space
+        op <- parser
+        MPC.space
+        lbl <- MP.takeWhile1P (Just "string") (const True)
+        pure $ FilterLabel op lbl
 
       parseDate = parsePred "datetime" FilterDate
       parseDist = parsePred "distance" FilterDistance
@@ -348,11 +373,12 @@ term = parens <|> parseAtom
       -- Because our lexer breaks up whitespace, we may end up with
       -- several TokenString tokens between keywords e.g.
       --
-      --     "label foo and distance >= 5 km"
+      --     "label = foo and distance >= 5 km"
       --
       -- will be lexed as
       --
       --     [ TokenString "label",
+      --       TokenString "=",
       --       TokenString "foo",
       --       TokenExprAnd,
       --       TokenString "distance",
@@ -362,7 +388,7 @@ term = parens <|> parseAtom
       --     ]
       --
       -- Our second stage of parsing requires these "broken" strings to be
-      -- intact, i.e. we want "label foo" and "distance >= 5 km".
+      -- intact, i.e. we want "label = foo" and "distance >= 5 km".
       -- Hence when parsing an atom we take all consecutive TokenStrings and
       -- concat them back together, separating by a single whitespace.
       ts <-

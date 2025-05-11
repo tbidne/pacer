@@ -8,22 +8,22 @@
       "title": "Chart 2",
       "y-axis": "duration",
       "y1-axis": "distance",
-      "filters": ["label label1"]
+      "filters": ["label = label1"]
     },
     {
       "title": "Chart 3",
       "y-axis": "pace",
-      "filters": ["label label1", "label label2 or label label3"]
+      "filters": ["label = label1", "label = label2 or label = label3"]
     },
     {
       "title": "Chart 4",
       "y-axis": "pace",
-      "filters": ["label label2", "label label4"]
+      "filters": ["label = label2", "label = label4"]
     },
     {
       "title": "Chart 5",
       "y-axis": "pace",
-      "filters": ["(label label3) xor (label label4)"]
+      "filters": ["(label = label3) xor (label = label4)"]
     }
   ]
 }

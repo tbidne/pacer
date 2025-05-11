@@ -44,7 +44,7 @@ atomTests =
           MkGoldenParams
             { testDesc = "Label",
               testName = [osp|testParseExprAtomLabel|],
-              runner = pure $ parseExpr "label some label"
+              runner = pure $ parseExpr "label /= some label"
             },
           MkGoldenParams
             { testDesc = "Pace",
@@ -76,17 +76,17 @@ exprTests =
     <$> [ MkGoldenParams
             { testDesc = "Expr1",
               testName = [osp|testParseExpr1|],
-              runner = pure $ parseExpr "label foo and pace <= 4m24s /km"
+              runner = pure $ parseExpr "label = foo and pace <= 4m24s /km"
             },
           MkGoldenParams
             { testDesc = "Expr2",
               testName = [osp|testParseExpr2|],
-              runner = pure $ parseExpr "distance = 20 km or label foo bar and pace <= 4m24s /km"
+              runner = pure $ parseExpr "distance = 20 km or label = foo bar and pace <= 4m24s /km"
             },
           MkGoldenParams
             { testDesc = "Expr3",
               testName = [osp|testParseExpr3|],
-              runner = pure $ parseExpr "(distance = 20 km or label foo bar) and pace <= 4m24s /km)"
+              runner = pure $ parseExpr "(distance = 20 km or label=foo bar) and pace <= 4m24s /km)"
             },
           MkGoldenParams
             { testDesc = "Expr Failure 1",

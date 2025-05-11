@@ -4,7 +4,7 @@
       "title": "Chart 1",
       "y-axis": "duration",
       "y1-axis": "distance",
-      "filters": ["label foo and or distance > 4 or date < 2024"]
+      "filters": ["label = foo and or distance > 4 or date < 2024"]
     }
   ]
 }

@@ -18,7 +18,7 @@
     {
       "title": "Marathons",
       "filters": [
-        "label marathon",
+        "label = marathon",
         "datetime >= 2024"
       ],
       "y-axis": "duration",
@@ -27,15 +27,15 @@
     {
       "title": "Official non-marathons",
       "filters": [
-        "label official",
-        "not label marathon"
+        "label = official",
+        "not label = marathon"
       ],
       "y-axis": "pace"
     },
     {
       "title": "Marathons and half-marathons",
       "filters": [
-        "label half-marathon or label marathon"
+        "label = half-marathon or label = marathon"
       ],
       "y-axis": "pace"
     },

@@ -23,7 +23,7 @@ MkChartRequests
       , description = Nothing
       , filters =
         [ Atom
-          ( FilterLabel "marathon" )
+          ( FilterLabel FilterLabelOpEq "marathon" )
         , Atom
           ( FilterDate FilterOpGte
             ( MomentYear
@@ -46,11 +46,9 @@ MkChartRequests
       , description = Nothing
       , filters =
         [ Atom
-          ( FilterLabel "official" )
-        , Not
-          ( Atom
-            ( FilterLabel "marathon" )
-          )
+          ( FilterLabel FilterLabelOpEq "official" )
+        , Atom
+          ( FilterLabel FilterLabelOpNeq "marathon" )
         ]
       , title = "Official non-marathons"
       , unit = Nothing
@@ -63,10 +61,10 @@ MkChartRequests
       , filters =
         [ Or
           ( Atom
-            ( FilterLabel "half-marathon" )
+            ( FilterLabel FilterLabelOpEq "half-marathon" )
           )
           ( Atom
-            ( FilterLabel "marathon" )
+            ( FilterLabel FilterLabelOpEq "marathon" )
           )
         ]
       , title = "Marathons and half-marathons"

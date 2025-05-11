@@ -1,6 +1,6 @@
-Error decoding json path 'test/functional/data/testFilterParseExprError/chart-requests.json': Error in $.charts[0].filters[0]: Text: 'label foo and or distance > 4 or date < 2024'
+Error decoding json path 'test/functional/data/testFilterParseExprError/chart-requests.json': Error in $.charts[0].filters[0]: Text: 'label = foo and or distance > 4 or date < 2024'
 
-Tokens: [label,foo,and,or,distance,>,4,or,date,<,2024]
+Tokens: [label,=,foo,and,or,distance,>,4,or,date,<,2024]
 
 Error: Pacer.Class.Parser.parseWith:1:1:
   |
