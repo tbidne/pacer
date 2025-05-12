@@ -454,6 +454,7 @@ import Optics.Core as X
     _Just,
     _Nothing,
   )
+import Optics.Core.Extras as X (is)
 import Optics.TH as X
   ( makeFieldLabelsNoPrefix,
     makePrisms,

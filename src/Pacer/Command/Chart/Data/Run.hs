@@ -11,6 +11,7 @@ module Pacer.Command.Chart.Data.Run
     -- * SomeRun
     SomeRun (..),
     someRunIso,
+    someRunApplyRun,
 
     -- ** Functions
     deriveSomePace,
@@ -291,6 +292,10 @@ instance HasDistance (SomeRun a) where
 -------------------------------------------------------------------------------
 --                                    Misc                                   --
 -------------------------------------------------------------------------------
+
+-- | Applies the function to the underlying run.
+someRunApplyRun :: (forall d. Run d a -> b) -> SomeRun a -> b
+someRunApplyRun f (MkSomeRun _ r) = f r
 
 -- | 'Iso' between 'SomeRun' and 'Run'. Note that this converts the underlying
 -- distance to the requested unit, hence the actual value _can_ change.
