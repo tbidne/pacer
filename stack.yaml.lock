@@ -214,15 +214,15 @@ packages:
     commit: 2389f7dbe5b94f65bd22088f4e5a5f6644caaade
     git: https://github.com/tbidne/fs-utils.git
 - completed:
-    commit: b6ea05272e3031cede2cbc7e8b7898ef93d6a2a6
+    commit: b8d4703fe4d60a0cb1904cb3a0946f89a1324c7b
     git: https://github.com/tbidne/relative-time.git
     name: relative-time
     pantry-tree:
-      sha256: 2eeebf8cd8c2c4dae6c83c7f8cdc608745011c7644c597588196df1c19508165
+      sha256: d9bd7b294dfd36427f506d37205a748da61729fb8dd799eb14b92b9bb28eefad
       size: 783
     version: '0.1'
   original:
-    commit: b6ea05272e3031cede2cbc7e8b7898ef93d6a2a6
+    commit: b8d4703fe4d60a0cb1904cb3a0946f89a1324c7b
     git: https://github.com/tbidne/relative-time.git
 - completed:
     commit: acc3d79b82830397979f4be7b45266f5fc056cfb

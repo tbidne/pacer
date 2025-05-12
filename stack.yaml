@@ -47,7 +47,7 @@ extra-deps:
   - git: https://github.com/tbidne/fs-utils.git
     commit: 2389f7dbe5b94f65bd22088f4e5a5f6644caaade
   - git: https://github.com/tbidne/relative-time.git
-    commit: b6ea05272e3031cede2cbc7e8b7898ef93d6a2a6
+    commit: b8d4703fe4d60a0cb1904cb3a0946f89a1324c7b
   - git: https://github.com/tbidne/smart-math.git
     commit: acc3d79b82830397979f4be7b45266f5fc056cfb
 allow-newer: true
