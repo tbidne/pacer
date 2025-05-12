@@ -34,6 +34,7 @@ module Pacer.Utils
 
     -- * Seq
     seqGroupBy,
+    neSeqGroupBy,
 
     -- * Misc
     PaceMetersErrMsg,
@@ -58,6 +59,7 @@ import Data.HashSet qualified as HSet
 import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as T
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
@@ -118,6 +120,18 @@ seqGroupBy p = go
     go (x :<| xs) = (x :<|| ys) :<| go zs
       where
         (ys, zs) = Seq.spanl (p x) xs
+
+neSeqGroupBy :: forall a. (a -> a -> Bool) -> NESeq a -> NESeq (NESeq a)
+neSeqGroupBy p = go
+  where
+    go :: NESeq a -> NESeq (NESeq a)
+    go (x :<|| xs) = fstGrp :<|| rest
+      where
+        (ys, zs) = Seq.spanl (p x) xs
+        fstGrp = x :<|| ys
+        rest = case zs of
+          Seq.Empty -> Seq.Empty
+          (w :<| ws) -> NESeq.toSeq (go (w :<|| ws))
 
 -- | We use this rather than aeson's AesonException for two reasons:
 --

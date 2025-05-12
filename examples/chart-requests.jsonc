@@ -60,7 +60,7 @@
     {
       "title": "Runs by week",
       /* The 'sum' type sums all runs for a certain time period. Valid periods
-       * are 'year', 'month', and 'week'.
+       * are 'year', 'month', 'week', and 'N days' (e.g. '50 days').
       */
       "type": {
         "name": "sum",

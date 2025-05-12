@@ -25,7 +25,7 @@ import Pacer.Class.IOrd (IEq ((~~)), (/~), (<.), (<~), (>.), (>~))
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
     ChartRequests (chartRequests),
-    ChartSumPeriod (ChartSumMonth, ChartSumWeek, ChartSumYear),
+    ChartSumPeriod (ChartSumDays, ChartSumMonth, ChartSumWeek, ChartSumYear),
     ChartType (ChartTypeDefault, ChartTypeSum),
     YAxisType
       ( YAxisDistance,
@@ -198,10 +198,11 @@ mkChartData ::
   -- | ChartData result. Nothing if no runs passed the request's filter.
   Eff es (Result CreateChartE ChartData)
 mkChartData finalDistUnit (MkSomeRuns (SetToSeqNE someRuns)) request = do
-  finalRuns <- handleChartType request.chartType filteredRuns
-  pure $ case finalRuns of
-    Empty -> Err $ CreateChartFilterEmpty request.title
-    r :<| rs -> Ok (mkChartDataSets finalDistUnit request (r :<|| rs))
+  case filteredRuns of
+    Empty -> pure $ Err $ CreateChartFilterEmpty request.title
+    r :<| rs -> do
+      runs <- handleChartType request.chartType (r :<|| rs)
+      pure $ Ok $ mkChartDataSets finalDistUnit request runs
   where
     filteredRuns = filterRuns someRuns request.filters
 
@@ -217,84 +218,104 @@ handleChartType ::
     Toℝ a
   ) =>
   Maybe ChartType ->
-  Seq (SomeRun a) ->
-  Eff es (Seq (SomeRun a))
-handleChartType @es @a mChartType someRuns = case mChartType of
-  Nothing -> pure someRuns
-  Just ChartTypeDefault -> pure someRuns
-  Just (ChartTypeSum period) -> sumPeriod period
-  where
-    -- groupBy on Mapping to period
-    sumPeriod :: ChartSumPeriod -> Eff es (Seq (SomeRun a))
-    sumPeriod period = periodSum
-      where
-        compPeriod :: Timestamp -> Timestamp -> Bool
-        roundFn :: Timestamp -> Timestamp
+  NESeq (SomeRun a) ->
+  Eff es (NESeq (SomeRun a))
+handleChartType
+  @es
+  @a
+  mChartType
+  someRuns@(MkSomeRun _ firstRun :<|| _) = case mChartType of
+    Nothing -> pure someRuns
+    Just ChartTypeDefault -> pure someRuns
+    Just (ChartTypeSum period) -> sumPeriod period
+    where
+      -- groupBy on Mapping to period
+      sumPeriod :: ChartSumPeriod -> Eff es (NESeq (SomeRun a))
+      sumPeriod period = periodSum
+        where
+          compPeriod :: Timestamp -> Timestamp -> Bool
+          roundFn :: Timestamp -> Timestamp
 
-        (compPeriod, roundFn) = case period of
-          ChartSumWeek -> (TS.sameWeek, TS.roundTimestampWeek)
-          ChartSumMonth -> (TS.sameMonth, TS.roundTimestampMonth)
-          ChartSumYear -> (TS.sameYear, TS.roundTimestampYear)
+          -- The idea here is:
+          --
+          -- 1. We group the runs via the compPeriod function i.e. determine
+          --    if they belong in the same time interval.
+          --
+          -- 2. Round the first element in the group down to the interval
+          --    start (e.g. calendary week, arbitrary start day), then sum
+          --    up everything in that group as one event.
+          (compPeriod, roundFn) = case period of
+            ChartSumWeek -> (TS.sameWeek, TS.roundTimestampWeek)
+            ChartSumMonth -> (TS.sameMonth, TS.roundTimestampMonth)
+            ChartSumYear -> (TS.sameYear, TS.roundTimestampYear)
+            ChartSumDays days ->
+              let startDay = TS.timestampToDay firstRun.datetime
+               in (TS.sameInterval startDay days, TS.roundInterval startDay days)
 
-        periodSum :: Eff es (Seq (SomeRun a))
-        periodSum =
-          (fmap . fmap) sumRuns
-            . groupByPeriod
-            $ someRuns
+          periodSum :: Eff es (NESeq (SomeRun a))
+          periodSum =
+            (fmap . fmap) sumRuns
+              . groupByPeriod
+              $ someRuns
 
-        sumRuns :: NESeq (SomeRun a) -> SomeRun a
-        sumRuns (MkSomeRun sy y :<|| ys) = foldl1' go (init :<|| ys)
-          where
-            go :: SomeRun a -> SomeRun a -> SomeRun a
-            go (MkSomeRun sacc acc) (MkSomeRun sr r) =
-              MkSomeRun sacc
-                $ MkRun
-                  { datetime = acc.datetime,
-                    distance = newDist,
-                    duration = acc.duration .+. r.duration,
-                    labels = acc.labels,
-                    title = acc.title
-                  }
-              where
-                newDist =
-                  withSingI sacc
-                    $ withSingI sr
-                    $ Dist.liftDistLeft2
-                      (.+.)
-                      acc.distance
-                      r.distance
+          sumRuns :: NESeq (SomeRun a) -> SomeRun a
+          sumRuns (MkSomeRun sy y :<|| ys) = foldl1' go (init :<|| ys)
+            where
+              go :: SomeRun a -> SomeRun a -> SomeRun a
+              go (MkSomeRun sacc acc) (MkSomeRun sr r) =
+                MkSomeRun sacc
+                  $ MkRun
+                    { -- Only need to add distance and time, since everything
+                      -- else is set in the initial value (init).
+                      datetime = acc.datetime,
+                      distance = newDist,
+                      duration = acc.duration .+. r.duration,
+                      labels = acc.labels,
+                      title = acc.title
+                    }
+                where
+                  newDist =
+                    withSingI sacc
+                      $ withSingI sr
+                      $ Dist.liftDistLeft2
+                        (.+.)
+                        acc.distance
+                        r.distance
 
-            init =
-              MkSomeRun sy
-                $ MkRun
-                  { datetime = roundFn y.datetime,
-                    -- NOTE: No need to convert the distance to the requested
-                    -- distance here, as mkChartDataSets will take care of it.
-                    distance = y.distance,
-                    duration = y.duration,
-                    labels = mempty,
-                    title = Nothing
-                  }
+              init =
+                MkSomeRun sy
+                  $ MkRun
+                    { datetime = roundFn y.datetime,
+                      -- NOTE: No need to convert the distance to the requested
+                      -- distance here, as mkChartDataSets will take care of it.
+                      distance = y.distance,
+                      duration = y.duration,
+                      labels = mempty,
+                      title = Nothing
+                    }
 
-        groupByPeriod ::
-          Seq (SomeRun a) ->
-          Eff es (Seq (NESeq (SomeRun a)))
-        groupByPeriod ys = do
-          let xs = U.seqGroupBy (\r1 r2 -> compPeriod (toDatetime r1) (toDatetime r2)) ys
+          groupByPeriod ::
+            NESeq (SomeRun a) ->
+            Eff es (NESeq (NESeq (SomeRun a)))
+          groupByPeriod ys = do
+            let xs =
+                  U.neSeqGroupBy
+                    (\r1 r2 -> compPeriod (toDatetime r1) (toDatetime r2))
+                    ys
 
-          -- Let's only do this if the level is Debug, for performance reasons.
-          mLogLevel <- asks @LogEnv (.logLevel)
-          case mLogLevel of
-            Just LevelDebug -> do
-              let json = toStrictBS $ U.encodePretty xs
-              jsonTxt <- decodeUtf8ThrowM json
-              $(Logger.logDebug) jsonTxt
-            _ -> pure ()
+            -- Let's only do this if the level is Debug, for performance reasons.
+            mLogLevel <- asks @LogEnv (.logLevel)
+            case mLogLevel of
+              Just LevelDebug -> do
+                let json = toStrictBS $ U.encodePretty xs
+                jsonTxt <- decodeUtf8ThrowM json
+                $(Logger.logDebug) jsonTxt
+              _ -> pure ()
 
-          pure xs
+            pure xs
 
-    toDatetime :: SomeRun a -> Timestamp
-    toDatetime (MkSomeRun _ rs) = rs.datetime
+      toDatetime :: SomeRun a -> Timestamp
+      toDatetime (MkSomeRun _ rs) = rs.datetime
 
 mkChartDataSets ::
   forall a.

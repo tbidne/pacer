@@ -14,11 +14,13 @@ module Pacer.Command.Chart.Data.Time.Timestamp
     sameYear,
     sameMonth,
     sameWeek,
+    sameInterval,
 
     -- * Rounding
     roundTimestampYear,
     roundTimestampMonth,
     roundTimestampWeek,
+    roundInterval,
 
     -- * Formatting
     fmtTimestamp,
@@ -29,6 +31,7 @@ module Pacer.Command.Chart.Data.Time.Timestamp
 where
 
 import Data.Time (LocalTime (LocalTime), ZonedTime (ZonedTime))
+import Data.Time.Calendar (Day (ModifiedJulianDay))
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.WeekDate qualified as Week
 import Data.Time.Format qualified as Format
@@ -65,7 +68,7 @@ strictOverlaps (TimestampZoned (ZonedTime l@(LocalTime d _) _)) =
   [TimestampDate d, TimestampTime l]
 
 -------------------------------------------------------------------------------
---                                    Misc                                   --
+--                                  Rounding                                 --
 -------------------------------------------------------------------------------
 
 roundTimestampYear :: Timestamp -> Timestamp
@@ -100,8 +103,18 @@ roundTimestampWeek ts = TimestampDate newDay
         woy
         Week.Monday
 
-timestampToYearMonth :: (MonadFail m) => Timestamp -> m (Tuple2 Year Month)
-timestampToYearMonth = Internal.dayToYearMonth . Internal.timestampToDay
+-- | Rounds the timestamp down to the start of its interval. That is,
+-- finds the interval containing the given timestamp, and returns the
+-- interval's start day.
+roundInterval :: Day -> Word16 -> Timestamp -> Timestamp
+roundInterval totalStart period =
+  TimestampDate
+    . (.start)
+    . findInterval totalStart period
+
+-------------------------------------------------------------------------------
+--                              Group functions                              --
+-------------------------------------------------------------------------------
 
 sameYear :: (HasCallStack) => Timestamp -> Timestamp -> Bool
 sameYear ts1 ts2 = y1 == y2
@@ -122,3 +135,63 @@ sameWeek ts1 ts2 = y1 == y2 && w1 == w2
     (y2, w2, _) = timestampToYearMonthWeek ts2
 
     timestampToYearMonthWeek = Week.toWeekDate . Internal.timestampToDay
+
+-- | Determines if two timestamps belong to the same interval @vi@ where
+-- @vi@ is an element in @d, d + p, d + 2p, ...@. In other words, each
+-- timestamp will belong in some interval @d + pk@. sameInterval determines
+-- if they are the same.
+sameInterval ::
+  -- | Start day d
+  Day ->
+  -- | Interval period (i.e. number of days) p
+  Word16 ->
+  -- | ts1
+  Timestamp ->
+  -- | ts2
+  Timestamp ->
+  Bool
+sameInterval totalStart period ts1 ts2 =
+  findInterval totalStart period ts1
+    == findInterval totalStart period ts2
+
+-------------------------------------------------------------------------------
+--                                    Misc                                   --
+-------------------------------------------------------------------------------
+
+-- Start day for an interval. Naturally this should be associated with an
+-- end date (either on the data or derived from a period), but because
+-- this type is internal and we do need actually need the end date for
+-- anything, we do not have it.
+--
+-- If we ever _do_ need the end date, either add @end :: Date@ or maybe add
+-- the period in the type i.e. @Interval (p :: Nat)@.
+newtype Interval = MkInterval {start :: Day}
+  deriving stock (Eq, Show)
+
+-- | For @findInterval d1 p d2, d1 <= d2@, returns interval @[s, e]@ s.t.
+--
+-- * @s = d1 * pk@
+--
+-- * @e = d1 * p(k + 1)@
+--
+-- * @s <= d2 <= e@
+findInterval :: Day -> Word16 -> Timestamp -> Interval
+findInterval totalStart period ts = MkInterval {start}
+  where
+    -- d1
+    dayℤ = totalStart.toModifiedJulianDay
+
+    -- d2
+    tsDayℤ = (Internal.timestampToDay ts).toModifiedJulianDay
+
+    -- p
+    periodℤ = fromIntegral @Word16 @Integer period
+
+    -- k = (d2 - d1) / p i.e. largest k s.t. d1 + kp <= d2.
+    k = (tsDayℤ - dayℤ) .%. periodℤ
+
+    -- s = d1 + pk
+    start = ModifiedJulianDay $ dayℤ + (periodℤ * k)
+
+timestampToYearMonth :: (MonadFail m) => Timestamp -> m (Tuple2 Year Month)
+timestampToYearMonth = Internal.dayToYearMonth . Internal.timestampToDay

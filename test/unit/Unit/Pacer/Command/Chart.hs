@@ -604,7 +604,9 @@ createChartSeqTests =
     "createChartSeq"
     [ testCreateChartNormal,
       testCreateChartSumWeek,
-      testCreateChartSumMonth
+      testCreateChartSumMonth,
+      testCreateChartSumDays11,
+      testCreateChartSumDays50
     ]
 
 testCreateChartNormal :: TestTree
@@ -627,6 +629,20 @@ testCreateChartSumMonth =
     "Creates a chart that sums by month"
     [osp|testCreateChartSumMonth|]
     [ospPathSep|createChartSumMonth_rc.json|]
+
+testCreateChartSumDays11 :: TestTree
+testCreateChartSumDays11 =
+  testCreateChartSeqHelper
+    "Creates a chart that sums by 11 days"
+    [osp|testCreateChartSumDays11|]
+    [ospPathSep|createChartSumDays11_rc.json|]
+
+testCreateChartSumDays50 :: TestTree
+testCreateChartSumDays50 =
+  testCreateChartSeqHelper
+    "Creates a chart that sums by 50 days"
+    [osp|testCreateChartSumDays50|]
+    [ospPathSep|createChartSumDays50_rc.json|]
 
 testCreateChartSeqHelper :: TestName -> OsPath -> OsPath -> TestTree
 testCreateChartSeqHelper testDesc testName crPath = testGoldenParams params

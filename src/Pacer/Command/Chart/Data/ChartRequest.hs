@@ -18,12 +18,14 @@ module Pacer.Command.Chart.Data.ChartRequest
   )
 where
 
-import Pacer.Class.Parser (Parser)
+import Pacer.Class.Parser (Parser (parser))
+import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Data.Distance (DistanceUnit)
 import Pacer.Prelude
 import Pacer.Utils ((.:?:))
 import Pacer.Utils qualified as Utils
+import Text.Megaparsec.Char qualified as MPC
 
 -- | Possibly y-axes.
 data YAxisType
@@ -53,18 +55,37 @@ instance ToJSON YAxisType where
   toJSON YAxisPace = "pace"
 
 data ChartSumPeriod
-  = ChartSumWeek
-  | ChartSumMonth
-  | ChartSumYear
+  = -- | Arbitrary number of days.
+    ChartSumDays Word16
+  | -- | Calendar week.
+    ChartSumWeek
+  | -- | Calendar month.
+    ChartSumMonth
+  | -- | Calendar year.
+    ChartSumYear
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
+instance Parser ChartSumPeriod where
+  parser =
+    asum
+      [ parseDays,
+        parseWeek,
+        parseMonth,
+        parseYear
+      ]
+    where
+      parseDays = do
+        numDays <- parser
+        MPC.space
+        MPC.string "days"
+        pure $ ChartSumDays numDays
+      parseWeek = ChartSumWeek <$ MPC.string "week"
+      parseMonth = ChartSumMonth <$ MPC.string "month"
+      parseYear = ChartSumYear <$ MPC.string "year"
+
 instance FromJSON ChartSumPeriod where
-  parseJSON = asnWithText "YAxisType" $ \case
-    "week" -> pure ChartSumWeek
-    "month" -> pure ChartSumMonth
-    "year" -> pure ChartSumYear
-    other -> fail $ unpackText $ "Unrecognized sum period: " <> other
+  parseJSON = asnWithText "ChartSumPeriod" (failErr . P.parseAll)
 
 data ChartType
   = ChartTypeDefault

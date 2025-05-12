@@ -1,0 +1,16 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "charts": [
+    {
+      "title": "Charts by 11 days",
+      "type": {
+        "name": "sum",
+        "period": "11 days"
+      },
+      "y-axis": "distance"
+    }
+  ]
+}
+
