@@ -172,7 +172,8 @@ readRunsCsv @es inputDistUnit csvPath = do
     bsToRuns d bs =
       case Csv.decodeByName @(GarminAct d Double) (fromStrictBS bs) of
         Left err -> throwM $ GarminDecode err
-        Right (_, rs) -> foldGarmin [] rs
+        -- idx starts at 1 because of the header
+        Right (_, rs) -> snd <$> foldGarmin (2, []) rs
 
     toSomeRun :: (SingI d) => GarminRun d Double -> SomeRun Double
     toSomeRun @d gr =
@@ -188,33 +189,49 @@ readRunsCsv @es inputDistUnit csvPath = do
     foldGarmin ::
       forall d.
       (SingI d) =>
-      List (SomeRun Double) ->
+      GarminAcc ->
       Records (GarminAct d Double) ->
-      Eff es (List (SomeRun Double))
-    foldGarmin acc = \case
+      Eff es GarminAcc
+    foldGarmin (!idx, runsList) = \case
       (Nil Nothing leftover) -> do
         unless (BSL.null leftover)
           $ $(Logger.logWarn)
-          $ "Csv bytes leftover: "
+          $ "Csv bytes leftover on line "
+          <> showt idx
+          <> ": "
           <> (bsToTxt $ leftover)
 
-        pure acc
+        pure (idx + 1, runsList)
       (Nil (Just err) leftover) -> do
-        $(Logger.logError) $ "Csv parse error: " <> packText err
+        $(Logger.logError)
+          $ "Csv parse error on line "
+          <> showt idx
+          <> ": "
+          <> packText err
 
         unless (BSL.null leftover)
           $ $(Logger.logWarn)
-          $ "Csv bytes leftover: "
+          $ "Csv bytes leftover on line "
+          <> showt idx
+          <> ": "
           <> (bsToTxt $ leftover)
 
-        pure acc
+        pure (idx + 1, runsList)
       Cons (Left err) rs -> do
-        $(Logger.logError) $ "Csv parse error: " <> packText err
+        $(Logger.logError)
+          $ "Csv parse error on line "
+          <> showt idx
+          <> ": "
+          <> packText err
 
-        foldGarmin acc rs
+        foldGarmin (idx + 1, runsList) rs
       Cons (Right r) rs -> case r of
-        GarminActOther -> foldGarmin acc rs
-        GarminActRun gr -> foldGarmin (toSomeRun @d gr : acc) rs
+        GarminActOther -> foldGarmin (idx + 1, runsList) rs
+        GarminActRun gr ->
+          foldGarmin (idx + 1, toSomeRun @d gr : runsList) rs
+
+-- Index and parsed runs
+type GarminAcc = Tuple2 Natural (List (SomeRun Double))
 
 -- heuristics to decide if we should decode csv or json.
 getRunsType ::
