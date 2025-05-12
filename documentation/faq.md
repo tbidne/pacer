@@ -99,7 +99,7 @@ There are some caveats:
     // chart-requests.json
     {
       "title": "Marathons",
-      "filters": ["label marathon"],
+      "filters": ["label = marathon"],
       "y-axis": "duration"
     }
     ```
