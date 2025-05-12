@@ -21,6 +21,7 @@
   - [Convert](#convert)
   - [Derive](#derive)
   - [Scale](#scale)
+- [Installation](#installation)
 - [Building](#building)
   - [Cabal](#cabal)
   - [Stack](#stack)
@@ -148,6 +149,10 @@ $ pacer scale --pace '4m15s' -k 1.1 -u mi
 Scaling pace with --unit requires that the original units are given e.g. --pace '4m15s /km'.
 ```
 
+# Installation
+
+The [releases](https://github.com/tbidne/pacer/releases) page has binaries built for several platforms. If there are no binaries for your platform, it is possible to [build pacer](#building) yourself.
+
 # Building
 
 If you have never built a haskell program before, [Cabal](#cabal) is probably the best choice.
@@ -157,9 +162,7 @@ If you have never built a haskell program before, [Cabal](#cabal) is probably th
 ### Prerequisites
 
 * [`cabal 2.4+`](https://www.haskell.org/cabal/download.html)
-* One of:
-  * [`ghc 9.10`](https://www.haskell.org/ghc/download.html)
-  * [`ghc 9.12`](https://www.haskell.org/ghc/download.html)
+* [`ghc 9.10 - 9.12`](https://gitlab.haskell.org/ghc/ghc/-/wikis/GHC%20Status)
 
 The easiest way to install these is generally [`ghcup`](https://www.haskell.org/ghcup/).
 
@@ -169,21 +172,17 @@ The current "blessed" version is `ghc-9.10.1`.
 
 Once you have `cabal` and `ghc`, `pacer` can be built locally with `cabal build` or installed globally (e.g. `~/.local/bin/pacer`) with `cabal install`.
 
-For further reproducibility, optional freeze files can be used e.g.
+For further reproducibility, an optional freeze file can be used for the "blessed" compiler.
 
 ```sh
-cabal build --project-file cabal.ghc9101.project
+cabal build --project-file cabal.ghc<XYZ>.project
 ```
-
-> [!NOTE]
->
-> Freeze files are provided for only select compilers.
 
 ## Stack
 
 ### Prerequisites
 
-* [`stack 3.1.1+`](https://docs.haskellstack.org/en/stable/)
+* [`stack`](https://docs.haskellstack.org/en/stable/)
 
 Like `cabal` and `ghc`, `stack` can be installed with [`ghcup`](https://www.haskell.org/ghcup/).
 

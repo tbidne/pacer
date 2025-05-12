@@ -5,12 +5,19 @@ on: # yamllint disable-line rule:truthy rule:comments
   push:
     branches:
       - main
+      - release
 
   pull_request:
     branches:
       - main
 
   workflow_dispatch:
+
+env:
+  CABAL_VERS: "3.12"
+  GHC_VERS: "9.10.1"
+  CABAL_PROJ: "cabal.ghc9101.project"
+  PACER_VERS: "0.1"
 
 jobs:
   cabal:
@@ -178,9 +185,89 @@ jobs:
 
       - name: Lint
         run: nix run .#lint
-# TODO: Re-enable once hlint is working with ghc 9.10.
-#
-# Don't usually want this in CI, but we have this here to test that
-# it actually runs.
-# - name: Refactor
-#   run: nix run .#lint-refactor
+
+  release:
+    needs: [cabal, stack, nix, lint]
+    if: github.ref == 'refs/heads/release'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: "macos-13"
+            os: "macos-13"
+            script: ".github/scripts/release_osx.sh"
+            script_args: ""
+
+          - name: "macos-14"
+            os: "macos-14"
+            script: ".github/scripts/release_osx.sh"
+            script_args: ""
+
+          - name: "macos-15"
+            os: "macos-15"
+            script: ".github/scripts/release_osx.sh"
+            script_args: ""
+
+          - name: "alpine_amd64"
+            os: "ubuntu-24.04"
+            script: ".github/scripts/release_linux.sh"
+            script_args: "alpine_amd64"
+
+          - name: "alpine_arm64v8"
+            os: "ubuntu-24.04-arm"
+            script: ".github/scripts/release_linux.sh"
+            script_args: "alpine_arm64v8"
+
+          - name: "windows-2025"
+            os: "windows-2025"
+            script: ".github/scripts/release_windows.sh"
+            script_args: "2025"
+
+          - name: "windows-2019"
+            os: "windows-2019"
+            script: ".github/scripts/release_windows.sh"
+            script_args: "2019"
+
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify env vars
+        run: .github/scripts/verify_env.sh
+
+      - uses: docker/setup-docker-action@v4
+        if: ${{ matrix.platform.name == 'alpine_amd64' || matrix.platform.name == 'alpine_arm64v8' }}
+
+      # So we have sha256sum
+      - name: Install coreutils
+        if: ${{ matrix.platform.os == 'macos-13' || matrix.platform.os == 'macos-14' }}
+        run: brew install coreutils
+
+      - uses: haskell-actions/setup@v2
+        if: ${{ matrix.platform.name != 'alpine_amd64' && matrix.platform.name != 'alpine_arm64v8' }}
+        with:
+          ghc-version: ${{ env.GHC_VERS }}
+          cabal-version: ${{ env.CABAL_VERS }}
+
+      - name: Install binary
+        shell: bash
+        run: |
+          ${{ matrix.platform.script }} ${{ matrix.platform.script_args }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ matrix.platform.name }}
+          path: bin
+          retention-days: 1
+
+  merge-releases:
+    runs-on: "ubuntu-latest"
+    needs: release
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: release-artifacts
+          pattern: release-artifacts-*
+          delete-merged: true

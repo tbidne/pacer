@@ -23,6 +23,11 @@ extra-source-files:
   examples/chart.png
   LICENSE
   README.md
+  web/**/*.css
+  web/**/*.html
+  web/**/*.js
+  web/**/*.json
+  web/**/*.ts
 
 extra-doc-files:    CHANGELOG.md
 
