@@ -1,9 +1,13 @@
 module Pacer.Configuration.Logging
-  ( LogLevelParam (..),
+  ( -- * Levels
+    LogLevelParam (..),
     parser,
-
-    -- * Functions
     parseLogLevel,
+
+    -- * Verbosity
+    LogVerbosity (..),
+    verbosityParser,
+    parseLogVerbosity,
   )
 where
 
@@ -52,3 +56,45 @@ parseLogLevel = \case
 
 logLvlStr :: (IsString a) => a
 logLvlStr = "(none | debug | info | warn | error)"
+
+data LogVerbosity
+  = LogV0
+  | LogV1
+  deriving stock (Eq, Show)
+
+instance Semigroup LogVerbosity where
+  LogV1 <> _ = LogV1
+  _ <> r = r
+
+instance Monoid LogVerbosity where
+  mempty = LogV0
+
+instance FromJSON LogVerbosity where
+  parseJSON = asnWithText "LogVerbosity" parseLogVerbosity
+
+verbosityParser :: Parser LogVerbosity
+verbosityParser =
+  OA.option
+    (OA.str >>= parseLogVerbosity)
+    $ mconcat
+      [ OA.long "log-verbosity",
+        OA.metavar logVerbosityStr,
+        Utils.mkHelp "Optional log verbosity. Defaults to 0."
+      ]
+
+parseLogVerbosity :: (MonadFail m) => Text -> m LogVerbosity
+parseLogVerbosity = \case
+  "0" -> pure LogV0
+  "1" -> pure LogV1
+  other ->
+    fail
+      $ unpackText
+      $ mconcat
+        [ "Expected one of ",
+          logLvlStr,
+          ", received: ",
+          other
+        ]
+
+logVerbosityStr :: (IsString a) => a
+logVerbosityStr = "(0 | 1)"

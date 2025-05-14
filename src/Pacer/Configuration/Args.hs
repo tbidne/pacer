@@ -30,7 +30,7 @@ import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Pacer.Class.Parser qualified as P
 import Pacer.Command qualified as Command
 import Pacer.Configuration.Args.TH qualified as TH
-import Pacer.Configuration.Logging (LogLevelParam)
+import Pacer.Configuration.Logging (LogLevelParam, LogVerbosity)
 import Pacer.Configuration.Logging qualified as Logging
 import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs))
 import Pacer.Configuration.Utils qualified as Utils
@@ -45,7 +45,9 @@ data Args a = MkArgs
     -- | Optional config.
     configPath :: Maybe OsPath,
     -- | Optional logging.
-    logLevel :: Maybe LogLevelParam
+    logLevel :: Maybe LogLevelParam,
+    -- | Optional logging verbosity
+    logVerbosity :: Maybe LogVerbosity
   }
   deriving stock (Eq, Show)
 
@@ -93,6 +95,7 @@ argsParser =
     <$> Command.parser
     <*> configParser
     <*> OA.optional Logging.parser
+    <*> OA.optional Logging.verbosityParser
     <**> OA.helper
     <**> version
 

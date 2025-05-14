@@ -12,6 +12,7 @@ module Pacer.Configuration.Env.Types
 where
 
 import Effectful.Logger.Dynamic (LogLevel)
+import Pacer.Configuration.Logging (LogVerbosity)
 import Pacer.Prelude
 
 -- | Holds cached paths, for ensuring we do not make unnecessary calls
@@ -84,6 +85,7 @@ getCachedPath retrieveCache updateCache getPath = do
 -- | Logging environment.
 data LogEnv = MkLogEnv
   { logLevel :: Maybe LogLevel,
-    logNamespace :: Namespace
+    logNamespace :: Namespace,
+    logVerbosity :: LogVerbosity
   }
   deriving stock (Eq, Show)

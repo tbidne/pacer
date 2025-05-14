@@ -19,7 +19,7 @@ import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Effectful.Logger.Dynamic (_LevelDebug)
+import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.IOrd (IEq ((~~)), (/~), (<.), (<~), (>.), (>~))
 import Pacer.Command.Chart.Data.ChartRequest
@@ -66,7 +66,8 @@ import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
-import Pacer.Configuration.Env.Types (LogEnv (logLevel))
+import Pacer.Configuration.Env.Types (LogEnv (logLevel, logVerbosity))
+import Pacer.Configuration.Logging (LogVerbosity (LogV1))
 import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
 import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
@@ -302,13 +303,18 @@ handleChartType @es @a mChartType someRuns = case mChartType of
                   (\r1 r2 -> compPeriod (toDatetime r1) (toDatetime r2))
                   ys
 
-          -- Let's only do this if the level is Debug, for performance reasons.
-          mLogLevel <- asks @LogEnv (.logLevel)
-
-          when (is (_Just % _LevelDebug) mLogLevel) $ do
-            let json = toStrictBS $ U.encodePretty xs
-            jsonTxt <- decodeUtf8ThrowM json
-            $(Logger.logDebug) jsonTxt
+          -- We should only do this when the level is debug and verbosity,
+          -- since the json output can be very large. Furthermore, we
+          -- want to guard all of this logic first since we do not want to
+          -- unnecessarily decode the json to text, unless we are actually
+          -- going to use it.
+          logEnv <- ask @LogEnv
+          case (logEnv.logLevel, logEnv.logVerbosity) of
+            (Just LevelDebug, LogV1) -> do
+              let json = toStrictBS $ U.encodePretty xs
+              jsonTxt <- decodeUtf8ThrowM json
+              $(Logger.logDebug) jsonTxt
+            _ -> pure ()
 
           pure xs
 

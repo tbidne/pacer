@@ -10,7 +10,7 @@ where
 
 import Data.Aeson.Types qualified as AsnT
 import FileSystem.OsPath qualified as OsPath
-import Pacer.Configuration.Logging (LogLevelParam)
+import Pacer.Configuration.Logging (LogLevelParam, LogVerbosity)
 import Pacer.Prelude
 import Pacer.Utils ((.:?:))
 import Pacer.Utils qualified as Utils
@@ -36,26 +36,30 @@ data Config = MkConfig
   { -- | Chart config.
     chartConfig :: Maybe ChartConfig,
     -- | Optional logging.
-    logLevel :: Maybe LogLevelParam
+    logLevel :: Maybe LogLevelParam,
+    -- | Optional verbosity.
+    logVerbosity :: Maybe LogVerbosity
   }
   deriving stock (Eq, Show)
 
 instance Semigroup Config where
-  MkConfig x1 x2 <> MkConfig y1 y2 =
-    MkConfig (x1 <|> y1) (x2 <|> y2)
+  MkConfig x1 x2 x3 <> MkConfig y1 y2 y3 =
+    MkConfig (x1 <|> y1) (x2 <|> y2) (x3 <|> y3)
 
 instance Monoid Config where
-  mempty = MkConfig empty empty
+  mempty = MkConfig empty empty empty
 
 instance FromJSON Config where
   parseJSON = asnWithObject "Config" $ \v -> do
     chartConfig <- v .:? "chart"
     logLevel <- v .:? "log-level"
-    Utils.failUnknownFields "Config" ["chart", "log-level"] v
+    logVerbosity <- v .:? "log-verbosity"
+    Utils.failUnknownFields "Config" ["chart", "log-level", "log-verbosity"] v
     pure
       $ MkConfig
         { chartConfig,
-          logLevel
+          logLevel,
+          logVerbosity
         }
 
 data ChartConfig = MkChartConfig

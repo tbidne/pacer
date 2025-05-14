@@ -80,7 +80,8 @@ import Pacer.Configuration.Env.Types
     LogEnv
       ( MkLogEnv,
         logLevel,
-        logNamespace
+        logNamespace,
+        logVerbosity
       ),
   )
 import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
@@ -517,7 +518,8 @@ runTestEff env m =
     logEnv =
       MkLogEnv
         { logLevel = Nothing,
-          logNamespace = mempty
+          logNamespace = mempty,
+          logVerbosity = mempty
         }
 
 runMockChartIO ::
@@ -681,7 +683,8 @@ runCreateChartSeqEff paths =
     logEnv =
       MkLogEnv
         { logLevel = Nothing,
-          logNamespace = mempty
+          logNamespace = mempty,
+          logVerbosity = mempty
         }
 
 updateLabelTests :: TestTree

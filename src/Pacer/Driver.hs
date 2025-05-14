@@ -41,12 +41,15 @@ import Pacer.Command.Chart.Data.Run (RunDatetimeOverlapE)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
-import Pacer.Configuration.Args (Args (command, configPath, logLevel), parserInfo)
+import Pacer.Configuration.Args
+  ( Args (command, configPath, logLevel, logVerbosity),
+    parserInfo,
+  )
 import Pacer.Configuration.Config (ConfigWithPath (MkConfigWithPath, config))
 import Pacer.Configuration.Env qualified as Env
 import Pacer.Configuration.Env.Types
   ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
-    LogEnv (MkLogEnv, logLevel, logNamespace),
+    LogEnv (MkLogEnv, logLevel, logNamespace, logVerbosity),
   )
 import Pacer.Configuration.Logging (LogLevelParam (LogNone, LogSome))
 import Pacer.Exception qualified as PacerEx
@@ -156,13 +159,15 @@ getEnv = do
         -- 3. User specified something; use it.
         Just (LogSome lvl) -> Just lvl
 
+      cfgLogVerbosity = fromMaybe mempty args.logVerbosity
+
   -- Get Config and xdg config dir, if necessary.
   (mXdgConfig, mConfig) <- case args.command of
     -- Because the config (currently) only affects the chart command,
     -- searching for it is pointless for other commands, hence skip it.
     --
     -- 1. Chart command, try to find command.
-    Chart {} -> configRunner cfgLogLvl $ do
+    Chart {} -> configRunner cfgLogLvl cfgLogVerbosity $ do
       case args.configPath of
         -- 1.1. No config path, try xdg
         Nothing -> do
@@ -207,15 +212,16 @@ getEnv = do
 
   pure (args.command, mConfig, cachedPaths, logEnv)
   where
-    configRunner cfgLogLvl =
-      runReader (configLogEnv cfgLogLvl)
+    configRunner cfgLogLvl logVerbosity =
+      runReader (configLogEnv cfgLogLvl logVerbosity)
         . runLoggerNS "config"
         . runLogger
 
-    configLogEnv logLevel =
+    configLogEnv logLevel logVerbosity =
       MkLogEnv
         { logLevel,
-          logNamespace = mempty
+          logNamespace = mempty,
+          logVerbosity
         }
 
 runLogger ::
