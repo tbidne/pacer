@@ -71,7 +71,7 @@ instance ToJSON ChartOptions where
                 .= Asn.object
                   [ "align" .= t "center",
                     "color" .= textColor,
-                    "display" .= True,
+                    "display" .= False,
                     fontOpts 24,
                     "text" .= c.title
                   ],

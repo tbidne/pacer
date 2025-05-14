@@ -100,12 +100,17 @@ function addChartSelectorOnClick(selector: HTMLSelectElement): void {
     // Previously we retrieved these with
     // getElementById(`chart-div-${prevIdx}`). But using a map instead
     // feels slightly nicer.
-    const prevChartDiv = chart_divs.get(prevIdx);
+    const prevElem = chart_divs.get(prevIdx);
+    const prevChartDiv = prevElem[1];
     prevChartDiv.hidden = true;
 
-    const chartDiv = chart_divs.get(newIdx);
-    chartDiv.hidden = false;
+    const newElem = chart_divs.get(newIdx);
+    const newTitle = newElem[0];
+    const newDiv = newElem[1];
+    newDiv.hidden = false;
     prevIdx = newIdx;
+
+    selector.setAttribute('title', newTitle);
   }
   selector.addEventListener("click", onSelect);
 }
@@ -120,8 +125,11 @@ const charts_typed = charts as PChart[];
 /**
  * Map from index to chart div. We use this to change the chart visibility,
  * when a new option is selected.
+ *
+ * The first element is the div's chart's title, so we can set the select
+ * option's hover.
  */
-const chart_divs: Map<number, HTMLDivElement> = new Map([]);
+const chart_divs: Map<number, [string, HTMLDivElement]> = new Map([]);
 
 function main() {
   const chartContainer = getChartContainer();
@@ -131,13 +139,14 @@ function main() {
     const chart = charts_typed[i];
 
     // TODO: Should make this more robust.
-    addChartSelectorOption(chartSelector, i, chart.options.plugins.title.text);
+    let title = chart.options.plugins.title.text;
+    addChartSelectorOption(chartSelector, i, title);
     const result = mkChartDiv(chartContainer, i);
     const chartDiv = result[0];
     const elemId = result[1];
     handle_extra(chartDiv, i, chart.extra);
 
-    chart_divs.set(i, chartDiv);
+    chart_divs.set(i, [title, chartDiv]);
 
     // The original value is modified, so the new assignment is mostly
     // unnecessary. The only reason we do so is the cast to the final type
@@ -155,10 +164,6 @@ function main() {
   }
 
   if (charts_typed.length > 0) {
-    //document.createEvent();
-    //const evt = new Event('click');
-    //chartSelector.dispatchEvent(evt);
-
     addChartSelectorOnClick(chartSelector);
   }
 }

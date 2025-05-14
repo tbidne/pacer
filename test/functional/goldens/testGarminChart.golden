@@ -45,7 +45,7 @@ build/charts.json
         "title": {
           "align": "center",
           "color": "#c3c3c3",
-          "display": true,
+          "display": false,
           "font": {
             "size": 24
           },
@@ -163,7 +163,7 @@ build/charts.json
         "title": {
           "align": "center",
           "color": "#c3c3c3",
-          "display": true,
+          "display": false,
           "font": {
             "size": 24
           },
@@ -278,7 +278,7 @@ build/charts.json
         "title": {
           "align": "center",
           "color": "#c3c3c3",
-          "display": true,
+          "display": false,
           "font": {
             "size": 24
           },
@@ -383,7 +383,7 @@ build/charts.json
         "title": {
           "align": "center",
           "color": "#c3c3c3",
-          "display": true,
+          "display": false,
           "font": {
             "size": 24
           },
@@ -473,7 +473,7 @@ build/charts.json
         "title": {
           "align": "center",
           "color": "#c3c3c3",
-          "display": true,
+          "display": false,
           "font": {
             "size": 24
           },
@@ -574,7 +574,7 @@ build/charts.json
         "title": {
           "align": "center",
           "color": "#c3c3c3",
-          "display": true,
+          "display": false,
           "font": {
             "size": 24
           },

@@ -47,7 +47,19 @@ export function addChartSelectorOption(
   if (idx == 0) {
     selectOpt.append("selected");
   }
-  selectOpt.innerHTML = title;
+
+  // This is for hover.
+  selectOpt.setAttribute ('title', title);
+
+  // This is the actual text, potentially truncated.
+  let displayTitle = title;
+  const maxTitleLen = 32;
+  if (title.length > maxTitleLen) {
+    const tmp = title.substring(0, maxTitleLen - 3);
+    displayTitle = tmp + '...';
+  }
+
+  selectOpt.innerHTML = displayTitle;
   selector.appendChild(selectOpt);
 }
 
