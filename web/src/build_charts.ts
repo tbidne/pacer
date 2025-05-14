@@ -110,7 +110,7 @@ function addChartSelectorOnClick(selector: HTMLSelectElement): void {
     newDiv.hidden = false;
     prevIdx = newIdx;
 
-    selector.setAttribute('title', newTitle);
+    selector.setAttribute("title", newTitle);
   }
   selector.addEventListener("click", onSelect);
 }

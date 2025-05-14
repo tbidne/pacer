@@ -49,14 +49,14 @@ export function addChartSelectorOption(
   }
 
   // This is for hover.
-  selectOpt.setAttribute ('title', title);
+  selectOpt.setAttribute("title", title);
 
   // This is the actual text, potentially truncated.
   let displayTitle = title;
   const maxTitleLen = 32;
   if (title.length > maxTitleLen) {
     const tmp = title.substring(0, maxTitleLen - 3);
-    displayTitle = tmp + '...';
+    displayTitle = tmp + "...";
   }
 
   selectOpt.innerHTML = displayTitle;
