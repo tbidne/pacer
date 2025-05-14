@@ -17,6 +17,20 @@ h2 {
   text-align: left;
 }
 
+h4 {
+  /* see NOTE: [Text Color] */
+  color: #c3c3c3;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+  text-align: left;
+}
+
+.chart-selector {
+  left: 40%;
+  position: absolute;
+  text-align: center;
+  width: 20vw
+}
+
 .chart-container {
   height: 75vh;
   margin: auto;
@@ -24,10 +38,17 @@ h2 {
   width: 75vw;
 }
 
-.chart-element {
-  height: 431px;
-  margin-top: 25px;
-  width: 2880px;
+.chart-div {
+  /* We need this on the inner div, otherwise we run into the "resizing bug",
+   * where the chart continuously shrinks or grows until it resets. Apparently
+   * this "works", with the chart directly in this div. I haven't tested
+   * whether we can include anything else in the div with it, but possibly
+   * not.
+   *
+   * See https://github.com/chartjs/Chart.js/issues/5805
+  */
+  height: 75vh;
+  width: 75vw;
 }
 
 p {
@@ -35,4 +56,15 @@ p {
   color: #c3c3c3;
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: left;
+}
+
+.description-title {
+  left: 5%;
+  position: relative;
+  text-align: left;
+}
+
+.description {
+  left: 5%;
+  position: relative;
 }

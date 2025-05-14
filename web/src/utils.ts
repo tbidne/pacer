@@ -1,17 +1,54 @@
 import { ChartOptions, Tick } from "chart.js/auto";
 
 /**
- * Appends a new canvas element with the given id.
+ * Appends a new chart div using the given index to make a unique id.
+ *
+ * @param container The outer container.
+ * @param idx The index, for creating unique ids.
+ * @returns The new chart-div and inner canvase id.
  */
-export function appendCanvasId(id: number): string {
-  const container = document.getElementById("chart-container-id");
-  const element = document.createElement("canvas");
-  const canvasId = `canvas-${id}`;
-  element.setAttribute("id", canvasId);
-  element.setAttribute("class", "chart-element");
+export function mkChartDiv(
+  container: HTMLDivElement,
+  idx: number,
+): [HTMLDivElement, string] {
+  // create canvas element
+  const canvas = document.createElement("canvas");
+  const canvasId = `canvas-${idx}`;
+  canvas.setAttribute("id", canvasId);
 
-  container.appendChild(element);
-  return canvasId;
+  // create div
+  const chartDiv = document.createElement("div");
+  const chartDivId = `chart-div-${idx}`;
+  chartDiv.setAttribute("id", chartDivId);
+  chartDiv.setAttribute("class", "chart-div");
+  if (idx != 0) {
+    chartDiv.hidden = true;
+  }
+  chartDiv.appendChild(canvas);
+
+  container.appendChild(chartDiv);
+  return [chartDiv, canvasId];
+}
+
+/**
+ * Adds a new chart selector option.
+ *
+ * @param selector The selector.
+ * @param idx The new option index, for use in lookups.
+ * @param title The displayed title (i.e. chart title).
+ */
+export function addChartSelectorOption(
+  selector: HTMLSelectElement,
+  idx: number,
+  title: string,
+): void {
+  const selectOpt = document.createElement("option");
+  selectOpt.setAttribute("value", `${idx}`);
+  if (idx == 0) {
+    selectOpt.append("selected");
+  }
+  selectOpt.innerHTML = title;
+  selector.appendChild(selectOpt);
 }
 
 export function pad2(n: number): string {

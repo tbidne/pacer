@@ -1,7 +1,12 @@
 import { Chart, ChartOptions } from "chart.js/auto";
 import * as charts from "../data/charts.json";
 import { PChart, PChartExtra, PChartOpts, PYAxisElem, PYOptT } from "./types";
-import { appendCanvasId, format_opts_seconds, format_seconds } from "./utils";
+import {
+  mkChartDiv,
+  addChartSelectorOption,
+  format_opts_seconds,
+  format_seconds,
+} from "./utils";
 
 function get_ytime_prefix(s: string): "duration" | "pace" | null {
   if (s == "time") return "duration";
@@ -55,24 +60,54 @@ function js_to_chartjs_opts(
   return opts;
 }
 
-function handle_extra(id: number, extra: PChartExtra): void {
-  const desc = extra.description;
-  if (desc != null) {
-    const container = document.getElementById("chart-container-id");
-
-    const title = document.createElement("h2");
-    const titleId = `desc-title-${id}`;
+function handle_extra(
+  chartDiv: HTMLDivElement,
+  id: number,
+  extra: PChartExtra,
+): void {
+  const descTxt: string = extra.description;
+  if (descTxt != null) {
+    const title = document.createElement("h4");
+    const titleId = `description-title-${id}`;
     title.setAttribute("id", titleId);
+    title.setAttribute("class", "description-title");
     title.innerHTML = "Description";
 
-    const element = document.createElement("p");
-    const descId = `desc-${id}`;
-    element.setAttribute("id", descId);
-    element.innerHTML = desc;
+    const description = document.createElement("p");
+    const descId = `description-${id}`;
+    description.setAttribute("id", descId);
+    description.setAttribute("class", "description");
+    description.innerHTML = descTxt;
 
-    container.appendChild(title);
-    container.appendChild(element);
+    chartDiv.appendChild(title);
+    chartDiv.appendChild(description);
   }
+}
+
+function getChartSelector(): HTMLSelectElement {
+  return <HTMLSelectElement>document.getElementById("chart-selector");
+}
+
+function getChartContainer(): HTMLDivElement {
+  return <HTMLDivElement>document.getElementById("chart-container-id");
+}
+
+function addChartSelectorOnClick(selector: HTMLSelectElement): void {
+  let prevIdx: number = 0;
+  function onSelect(): void {
+    const newIdx = +selector.value;
+
+    // Previously we retrieved these with
+    // getElementById(`chart-div-${prevIdx}`). But using a map instead
+    // feels slightly nicer.
+    const prevChartDiv = chart_divs.get(prevIdx);
+    prevChartDiv.hidden = true;
+
+    const chartDiv = chart_divs.get(newIdx);
+    chartDiv.hidden = false;
+    prevIdx = newIdx;
+  }
+  selector.addEventListener("click", onSelect);
 }
 
 /**
@@ -82,13 +117,27 @@ function handle_extra(id: number, extra: PChartExtra): void {
  */
 const charts_typed = charts as PChart[];
 
+/**
+ * Map from index to chart div. We use this to change the chart visibility,
+ * when a new option is selected.
+ */
+const chart_divs: Map<number, HTMLDivElement> = new Map([]);
+
 function main() {
+  const chartContainer = getChartContainer();
+  const chartSelector = getChartSelector();
+
   for (var i = 0; i < charts_typed.length; i++) {
     const chart = charts_typed[i];
 
-    const elemId = appendCanvasId(i);
-    // TODO: Should make this more robus.
-    handle_extra(i, chart.extra);
+    // TODO: Should make this more robust.
+    addChartSelectorOption(chartSelector, i, chart.options.plugins.title.text);
+    const result = mkChartDiv(chartContainer, i);
+    const chartDiv = result[0];
+    const elemId = result[1];
+    handle_extra(chartDiv, i, chart.extra);
+
+    chart_divs.set(i, chartDiv);
 
     // The original value is modified, so the new assignment is mostly
     // unnecessary. The only reason we do so is the cast to the final type
@@ -103,6 +152,14 @@ function main() {
       },
       options: opts,
     });
+  }
+
+  if (charts_typed.length > 0) {
+    //document.createEvent();
+    //const evt = new Event('click');
+    //chartSelector.dispatchEvent(evt);
+
+    addChartSelectorOnClick(chartSelector);
   }
 }
 
