@@ -21,7 +21,9 @@ module Pacer.Utils
     showPath,
     showtPath,
     showListInline,
+    showSetInline,
     showMapListInline,
+    showMapSetInline,
     showListNewlines,
     showMapListNewlines,
 
@@ -60,6 +62,7 @@ import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
+import Data.Set (Set)
 import Data.Text qualified as T
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
@@ -95,12 +98,21 @@ showtPath = showtOsPath . toOsPath
 showListInline :: (IsString a, Semigroup a) => List a -> a
 showListInline = showMapListInline identity
 
+showSetInline :: (IsString a, Semigroup a) => Set a -> a
+showSetInline = showMapSetInline identity
+
 showMapListInline :: (IsString b, Semigroup b) => (a -> b) -> List a -> b
-showMapListInline _ [] = "[]"
-showMapListInline f xs@(_ : _) = "[" <> go xs
+showMapListInline = showMapListInlineSyms "[" "]"
+
+showMapSetInline :: (IsString b, Semigroup b) => (a -> b) -> Set a -> b
+showMapSetInline f = showMapListInlineSyms "{" "}" f . toList
+
+showMapListInlineSyms :: (IsString b, Semigroup b) => b -> b -> (a -> b) -> List a -> b
+showMapListInlineSyms l r _ [] = l <> r
+showMapListInlineSyms l r f xs@(_ : _) = l <> go xs
   where
-    go [] = "]"
-    go [y] = f y <> "]"
+    go [] = r
+    go [y] = f y <> r
     go (y : ys) = f y <> ", " <> go ys
 
 showListNewlines :: (IsString a, Semigroup a) => List a -> a

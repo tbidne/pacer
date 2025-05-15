@@ -1,0 +1,13 @@
+Text: 'labels /= lbl'
+
+Tokens: [labels,/=,lbl]
+
+Expr Text: labels /= lbl
+
+Error: Pacer.Class.Parser.parseWith:1:11:
+  |
+1 | labels /= lbl
+  |           ^
+unexpected 'l'
+expecting '{' or white space
+

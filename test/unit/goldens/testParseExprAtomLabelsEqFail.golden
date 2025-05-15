@@ -1,0 +1,13 @@
+Text: 'labels = some label'
+
+Tokens: [labels,=,some,label]
+
+Expr Text: labels = some label
+
+Error: Pacer.Class.Parser.parseWith:1:10:
+  |
+1 | labels = some label
+  |          ^
+unexpected 's'
+expecting '{' or white space
+

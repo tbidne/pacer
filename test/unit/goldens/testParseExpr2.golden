@@ -1,1 +1,1 @@
-(distance = 20.00 km) or ((label = foo bar) and (pace <= 4'24" /km))
+(distance = 20.00 km) or ((labels ∋ foo bar) and (pace <= 4'24" /km))

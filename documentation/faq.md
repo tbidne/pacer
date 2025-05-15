@@ -4,15 +4,114 @@
 
 ### Table of Contents
 
-
+- [General](#general)
+  - [How are units specified?](#how-are-units-specified)
 - [Charts](#charts)
   - [How does file discovery work?](#how-does-file-discovery-work)
   - [How do I use this with Garmin](#how-do-i-use-this-with-garmin)
   - [How do chart filters work?](#how-do-chart-filters-work)
 - [Running](#running)
   - [What is NPM, and why do I need it?](#what-is-npm-and-why-do-i-need-it)
-- [Misc](#misc)
-  - [What units are available?](#what-units-are-available)
+
+## General
+
+### How are units specified?
+
+Pacer defines several quantities that require the user to specify the units. We have:
+
+- **distance:** `meters`, `kilometers`, and `miles`. Short versions can also be specified: `m`, `km`, and `mi`. There are also several built-in values:
+
+  - `marathon`
+  - `half-marathon` or `hmarathon`
+
+  Note that these do not take in a unit. The unit will be based on the context, and if it is ambiguous, defaults to `kilometers`.
+
+- **duration:** "time strings" like `1h2m3s` for `1 hour, 2 minutes, and 3 seconds`. Each component is optional e.g. `1h3s` or `2m`.
+
+- **pace:** `<duration> /<distance>` e.g. `5m30s /km`. Note that `meters` are not allowed with paces; only `kilometers` or `miles`. In cases where the context is clear, the trailing unit is not required. Also note that because paces are always given in terms of `1 km` or `1 mi`, the full versions are *singular*, not plural e.g. `4m /kilometer`.
+
+Parsing is designed to be moderately flexible, so numeric values can optionally be separated from the units by whitespace (quotes are then required) e.g. `'4 km'` or `4km`.
+
+#### Examples
+
+```
+--distance 5m
+--distance '42 km'
+--distance '42km'
+--distance marathon
+--distance '10 miles'
+--distance '10 mi'
+
+--duration 1h2m3s
+--duration 4m30s
+--duration 300s
+
+--pace '4m20s /km'
+--pace 5m/mi
+
+# Pace unit can be omitted when it can be inferred from context e.g. no need
+# to specify 'km' twice here:
+#
+$ pacer derive --distance 42km --pace 5m
+3h 30'00"
+
+# The pace unit is also not required when it is irrelevant e.g. when
+# scaling:
+#
+$ pacer scale --pace 5m -k 0.9
+4'30"
+```
+
+#### Grammar
+
+A pseudo [formal grammar](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form) for our units is:
+
+```
+; Distance is a number and unit.
+distance : numeric distance-unit
+
+distance-unit
+  : meters
+  | kilometers
+  | miles
+
+meters
+  : 'm'
+  | 'meters'
+
+kilometers
+  : 'km'
+  | 'kilometers'
+
+miles
+  : 'mi'
+  | 'miles'
+
+; Duration is some combination of components, where at least one is required.
+; A plain integer without any trailing unit is interpreted as seconds.
+duration
+  : days    [hours]   [minutes] [seconds]
+  | hours   [minutes] [seconds]
+  | minutes [seconds]
+  | seconds
+  | digits
+
+days    : digits 'd'
+hours   : digits 'h'
+minutes : digits 'm'
+seconds : digits 's'
+
+; Pace is a number followed by the unit.
+pace
+  : numeric '/km'
+  | numeric '/kilometer'
+  | numeric '/mi'
+  | numeric '/mile'
+
+numeric
+  : digits
+  | digits '.' digits
+```
 
 ## Charts
 
@@ -127,35 +226,14 @@ There are some caveats:
 
 ### How do chart filters work?
 
-Chart requests allow us to filter runs based on some criteria. In general, `filters` contains a list of filters, where a run must satisfy all filters to be included. We have the following filter "atoms":
-
-- `label <label_op> <lbl>`: The run must satisfy the `labels` condition (case-sensitive).
-- `datetime <op> <val>`: The run's `datetime` field must satisfy the condition e.g. `datetime > 2019`.
-- `distance <op> <val>`: The run must have `distance <op> <val>` e.g. `distance > 5 km`.
-- `duration <op> <val>`: The run must have `duration <op> <val>` e.g. `duration < 2h`.
-- `pace <op> <val>`: The run must have `pace <op> <val>` e.g. `pace <= 4m30s /km`.
-
-`<label_op>` can be one of: `=`, `/=`.
-
-`<op>` can be one of: `<=`, `<`, `=`, `/=`, `>=`, `>`.
-
-Filters also support basic boolean logic i.e.
-
-- `not expr`: `expr` must be false.
-- `expr1 or expr2`: `expr1` and/or `expr2` must be true.
-- `expr1 and expr2`: `expr1` and `expr2` must be true.
-- `expr1 xor expr2`: Exactly one of `expr1` and `expr2` must be true.
-
-where `expr` is either an atom or another expression.
-
-For example, we can have:
+Chart requests allow us to filter runs based on some criteria. In general, `filters` contains a list of filters, where a run must satisfy all filters to be included. For example:
 
 ```jsonc
+// chart-requests.json
 {
   "title": "Races and long runs",
   "filters": [
-    "label = official_race or label = marathon",
-    "label /= casual",
+    "label = official_race",
     "distance >= 25 km",
     "datetime > 2024"
   ],
@@ -165,14 +243,221 @@ For example, we can have:
 
 In this case, we will take all runs that satisfy **all** of the following criteria:
 
-- Has label `official_race` and/or `marathon`.
-- Does _not_ have label `casual`.
+- Has label `official_race`.
 - Has `distance >= 25 km`.
 - Has `datetime > 2024` (i.e. 2025 onwards).
 
-> [!TIP]
+For instance, of the following, only `Race 1` will be selected.
+
+```jsonc
+// runs.json
+{
+  "runs": [
+    {
+      "datetime": "2025-03-20T14:30:00",
+      "distance": "20 miles",
+      "duration": "2h40m54s",
+      "labels": [
+        "official_race",
+        "another label"
+      ],
+      "title": "Race 1"
+    },
+    {
+      "datetime": "2025-03-20T14:30:00",
+      "distance": "20 miles",
+      "duration": "2h40m54s",
+      "title": "Race 2"
+    },
+    {
+      "datetime": "2025-03-20T14:30:00",
+      "distance": "20 miles",
+      "duration": "2h40m54s",
+      "labels": [
+        "another label"
+      ],
+      "title": "Race 3"
+    }
+  ]
+}
+```
+
+#### Advanced filters
+
+We also provide more sophisticated ways to write filters e.g. set operations and boolean logic. For example, we can write:
+
+```jsonc
+{
+  "title": "Some title",
+  "filters": [
+    "label = official_race or label = marathon",
+    "labels ∌ casual",
+    "labels ⊇ {evening, night}",
+    "distance >= 25 km or distance < 5 km",
+    "datetime > 2024",
+    "not (pace < 5m /km)"
+  ],
+  "y-axis": "distance"
+}
+```
+
+In this case, we will take all activities that satisfy **all** of the following criteria:
+
+- Has label `official_race` and/or `marathon`.
+- Does _not_ have label `casual`.
+- Has labels `evening` and `night`.
+- Has `distance >= 25 km` and/or `distance < 5 km`.
+- Has `datetime > 2024` (i.e. 2025 onwards).
+- Does _not_ have `pace < 5m /km`.
+
+The grammar is below.
+
+##### Atoms
+
+```
+; Atoms are the base values.
+atom
+  : 'datetime' op             datetime
+  | 'distance' op             distance
+  | 'duration' op             duration
+  | 'pace'     op             pace
+  | 'label'    op_eqs         label
+  | 'labels'   labels_op_one  label
+  | 'labels'   labels_op_many label_set
+
+; E.g. 2024, 2024-08, 2024-08-15, 2024-08-15 14:20:00, 2024-08-15 14:20:00+0800
+datetime
+  : year
+  | year '-' month
+  | year '-' month '-' day
+  | year '-' month '-' day time_sep hours ':' minutes ':' seconds
+  | year '-' month '-' day time_sep hours ':' minutes ':' seconds tz_offset
+
+time_sep
+  : ' '
+  | 'T'
+
+tz_offset
+  : '-' digits
+  | '+' digits
+
+; op is general binary operators i.e. equalities and inequalities.
+op
+  : op_eqs
+  | op_gte
+  | op_gt
+  | op_lte
+  | op_lt
+
+op_eqs
+  : '='
+  | '/='
+
+op_gte : '>='
+op_gt  : '>'
+
+op_lte : '<='
+op_lt  : '<'
+
+; Operators for set membership e.g. 'A ∋ x' means "Set A has member x".
+; 'A ∌ x' means "Set A does not have member x".
+labels_op_one
+  : '∋'
+  | '∌'
+
+; Operators for set comparisons.
+labels_op_many
+  : op_eqs
+  | labels_op_many_gte
+  | labels_op_many_gt
+  | labels_op_many_lte
+  | labels_op_many_lt
+
+; 'A >= B' and 'A ⊇ B' both mean A is a superset of B i.e. all of B is
+; contained within A.
+labels_op_many_gte
+  : op_gte
+  | '⊇'
+
+; 'A > B' and 'A ⊋ B' both mean A is a _proper_ superset of B i.e. all of B is
+; contained within A and B _does not equal_ A.
+labels_op_many_gt
+  : op_gt
+  | '⊋'
+
+; 'A <= B' and 'A ⊆ B' both mean A is a subset of B i.e. all of A is
+; contained within B.
+labels_op_many_lte
+  : op_lte
+  | '⊆'
+
+; 'A < B' and 'A ⊊ B' both mean A is a _proper_ subset of B i.e. all of A is
+; contained within B and A _does not equal_ B.
+labels_op_many_lt
+  : op_lt
+  | '⊊'
+
+label : string
+
+; A label_set is either the empty set "{}" or a set with elements e.g.
+; {a, b, c}
+label_set
+  : '{}'
+  | '{' labels '}'
+
+labels
+  : label
+  | label ',' labels
+```
+
+##### Expressions
+
+Basic boolean expressions are also supported:
+
+```
+; An expression is either an atom or a boolean combination of expressions.
+expr
+  : atom
+  | '(' expr ')'
+  | not expr
+  | expr or expr
+  | expr and expr
+  | expr xor expr
+
+not
+  : 'not'
+  | '!'
+  | '¬'
+
+or
+  : 'or'
+  | '||'
+  | '∨'
+
+and
+  : 'and'
+  | '&&'
+  | '∧'
+
+xor
+  : 'xor'
+  | '⊕'
+```
+
+> [!NOTE]
 >
-> Technically, there is no need to have a separate `expr1 and expr2` expression, as we can encode `and` with multiple filters. Nevertheless we include the redundant functionality, as it may make some expressions simpler.
+> There is considerable redundancy here, in the sense that there are multiple ways to write the same expression even beyond operator aliases. For instance:
+>
+> ```
+> ["labels ∋ some_label"]
+>   == ["label = some_label"]
+>
+> ["labels ⊇ {evening, night}"]
+>   == ["label = evening and label = night"]
+>   == ["label = evening", "label = night"]
+> ```
+>
+> The clearest way to write an expression is a matter of taste.
 
 ## Running
 
@@ -186,53 +471,4 @@ To test installation, verify that `npm -v` works and returns some version:
 # The version does not necessarily have to be the same.
 $ npm -v
 10.9.0
-```
-
-## Misc
-
-### What units are available?
-
-Pacer defines several quantities that require the user to specify the units. In general, we have:
-
-- **distance:** `meters`, `kilometers`, and `miles`. Short versions can also be specified: `m`, `km`, and `mi`. There are also several built-in values:
-
-  - `marathon`
-  - `half-marathon` or `hmarathon`
-
-  Note that these do not take in a unit. The unit will be based on the context, and if it is ambiguous, defaults to `kilometers`.
-
-- **duration:** "time strings" like `1h2m3s` for `1 hour, 2 minutes, and 3 seconds`. Each component is optional e.g. `1h3s` or `2m`.
-
-- **pace:** `<duration> /<distance>` e.g. `5m30s /km`. Note that `meters` are not allowed with paces; only `kilometers` or `miles`. In cases where the context is clear, the trailing unit is not required. Also note that because paces are always given in terms of `1 km` or `1 mi`, the full versions are *singular*, not plural e.g. `4m /kilometer`.
-
-Parsing is designed to be moderately flexible, so numeric values can optionally be separated from the units by whitespace (quotes are then required) e.g. `'4 km'` or `4km`.
-
-#### Examples
-
-```
---distance 5m
---distance '42 km'
---distance '42km'
---distance marathon
---distance '10 miles'
---distance '10 mi'
-
---duration 1h2m3s
---duration 4m30s
---duration 300s
-
---pace '4m20s /km'
---pace 5m/mi
-
-# Pace unit can be omitted when it can be inferred from context e.g. no need
-# to specify 'km' twice here:
-#
-$ pacer derive --distance 42km --pace 5m
-3h 30'00"
-
-# The pace unit is also not required when it is irrelevant e.g. when
-# scaling:
-#
-$ pacer scale --pace 5m -k 0.9
-4'30"
 ```

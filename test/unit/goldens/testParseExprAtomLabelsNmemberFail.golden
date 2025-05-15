@@ -1,0 +1,12 @@
+Text: 'labels ∌ {a}'
+
+Tokens: [labels,∌,{a}]
+
+Expr Text: labels ∌ {a}
+
+Error: Pacer.Class.Parser.parseWith:1:13:
+  |
+1 | labels ∌ {a}
+  |             ^
+Unexpected char '{'. ∋ and ∌ require exactly one label, not set syntax.
+

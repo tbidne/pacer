@@ -12,7 +12,6 @@ module Pacer.Command.Chart.Data.Expr
     -- * Filtering
     FilterType (..),
     FilterOp (..),
-    FilterLabelOp (..),
 
     -- * Misc
     lexParse,
@@ -26,6 +25,8 @@ import Data.List qualified as L
 import Data.Text qualified as T
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Parser qualified as P
+import Pacer.Command.Chart.Data.Expr.Labels
+import Pacer.Command.Chart.Data.Expr.Labels qualified as Labels
 import Pacer.Command.Chart.Data.Time.Moment (Moment)
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Duration)
@@ -76,25 +77,6 @@ instance Parser FilterOp where
         P.char '>' $> FilterOpGt
       ]
 
--- | Operator for filter labels.
-data FilterLabelOp
-  = FilterLabelOpEq
-  | FilterLabelOpNeq
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (NFData)
-
-instance Display FilterLabelOp where
-  displayBuilder = \case
-    FilterLabelOpEq -> "="
-    FilterLabelOpNeq -> "/="
-
-instance Parser FilterLabelOp where
-  parser =
-    asum
-      [ P.char '=' $> FilterLabelOpEq,
-        P.string "/=" $> FilterLabelOpNeq
-      ]
-
 -------------------------------------------------------------------------------
 --                                 FilterType                                --
 -------------------------------------------------------------------------------
@@ -103,8 +85,10 @@ instance Parser FilterLabelOp where
 data FilterType a
   = FilterDistance FilterOp (SomeDistance a)
   | FilterDuration FilterOp (Duration a)
-  | -- | Filters by label equality.
+  | -- | Filters by presence of a single label.
     FilterLabel FilterLabelOp Text
+  | -- | Filters by presence of multiple labels.
+    FilterLabels FilterLabelSet
   | FilterDate FilterOp Moment
   | FilterPace FilterOp (SomePace a)
   deriving stock (Eq, Generic, Show)
@@ -143,6 +127,7 @@ instance
           " ",
           displayBuilder t
         ]
+    FilterLabels labelsSet -> displayBuilder labelsSet
     FilterDate op m ->
       mconcat
         [ "datetime ",
@@ -169,7 +154,8 @@ instance
   where
   parser =
     asum
-      [ parseLabel <?> "label",
+      [ FilterLabels <$> parser <?> "labels",
+        parseLabel <?> "label",
         parseDist <?> "distance",
         parseDuration <?> "duration",
         parsePace <?> "pace",
@@ -181,7 +167,7 @@ instance
         MPC.space
         op <- parser
         MPC.space
-        lbl <- MP.takeWhile1P (Just "string") (const True)
+        lbl <- Labels.parseTextNonEmpty
         pure $ FilterLabel op lbl
 
       parseDate = parsePred "datetime" FilterDate

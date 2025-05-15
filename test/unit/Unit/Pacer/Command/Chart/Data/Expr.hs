@@ -42,9 +42,94 @@ atomTests =
               runner = pure $ parseExpr "duration /= 3h20m"
             },
           MkGoldenParams
-            { testDesc = "Label",
-              testName = [osp|testParseExprAtomLabel|],
+            { testDesc = "Label eq",
+              testName = [osp|testParseExprAtomLabelEq|],
+              runner = pure $ parseExpr "label = some label"
+            },
+          MkGoldenParams
+            { testDesc = "Label neq",
+              testName = [osp|testParseExprAtomLabelNeq|],
               runner = pure $ parseExpr "label /= some label"
+            },
+          MkGoldenParams
+            { testDesc = "Labels member",
+              testName = [osp|testParseExprAtomLabelsMember|],
+              runner = pure $ parseExpr "labels ∋ some label"
+            },
+          MkGoldenParams
+            { testDesc = "Labels member fail",
+              testName = [osp|testParseExprAtomLabelsMemberFail|],
+              runner = pure $ parseExpr "labels ∋ {some label}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels nmember",
+              testName = [osp|testParseExprAtomLabelsNmember|],
+              runner = pure $ parseExpr "labels ∌ some label"
+            },
+          MkGoldenParams
+            { testDesc = "Labels nmember fail",
+              testName = [osp|testParseExprAtomLabelsNmemberFail|],
+              runner = pure $ parseExpr "labels ∌ {a}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels eq",
+              testName = [osp|testParseExprAtomLabelsEq|],
+              runner = pure $ parseExpr "labels = {}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels eq fail",
+              testName = [osp|testParseExprAtomLabelsEqFail|],
+              runner = pure $ parseExpr "labels = some label"
+            },
+          MkGoldenParams
+            { testDesc = "Labels neq",
+              testName = [osp|testParseExprAtomLabelsNeq|],
+              runner = pure $ parseExpr "labels /= {a, b, c}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels neq fail",
+              testName = [osp|testParseExprAtomLabelsNeqFail|],
+              runner = pure $ parseExpr "labels /= lbl"
+            },
+          MkGoldenParams
+            { testDesc = "Labels gt 1",
+              testName = [osp|testParseExprAtomLabelsGt1|],
+              runner = pure $ parseExpr "labels > {a, b, c}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels gt 2",
+              testName = [osp|testParseExprAtomLabelsGt2|],
+              runner = pure $ parseExpr "labels ⊋ { a, b }"
+            },
+          MkGoldenParams
+            { testDesc = "Labels gte 1",
+              testName = [osp|testParseExprAtomLabelsGte1|],
+              runner = pure $ parseExpr "labels >= {a, b, c}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels gte 2",
+              testName = [osp|testParseExprAtomLabelsGte2|],
+              runner = pure $ parseExpr "labels ⊇ { a, b }"
+            },
+          MkGoldenParams
+            { testDesc = "Labels lt 1",
+              testName = [osp|testParseExprAtomLabelsLt1|],
+              runner = pure $ parseExpr "labels < {a, b, c}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels lt 2",
+              testName = [osp|testParseExprAtomLabelsLt2|],
+              runner = pure $ parseExpr "labels ⊊ { a, b }"
+            },
+          MkGoldenParams
+            { testDesc = "Labels lte 1",
+              testName = [osp|testParseExprAtomLabelsLte1|],
+              runner = pure $ parseExpr "labels <= {a, b, c}"
+            },
+          MkGoldenParams
+            { testDesc = "Labels lte 2",
+              testName = [osp|testParseExprAtomLabelsLte2|],
+              runner = pure $ parseExpr "labels ⊆ { a, b }"
             },
           MkGoldenParams
             { testDesc = "Pace",
@@ -81,12 +166,12 @@ exprTests =
           MkGoldenParams
             { testDesc = "Expr2",
               testName = [osp|testParseExpr2|],
-              runner = pure $ parseExpr "distance = 20 km or label = foo bar and pace <= 4m24s /km"
+              runner = pure $ parseExpr "distance = 20 km or labels ∋ foo bar and pace <= 4m24s /km"
             },
           MkGoldenParams
             { testDesc = "Expr3",
               testName = [osp|testParseExpr3|],
-              runner = pure $ parseExpr "(distance = 20 km or label=foo bar) and pace <= 4m24s /km)"
+              runner = pure $ parseExpr "(distance = 20 km or labels⊇{foo bar, baz}) and pace <= 4m24s /km)"
             },
           MkGoldenParams
             { testDesc = "Expr Failure 1",

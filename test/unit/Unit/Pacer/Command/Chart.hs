@@ -4,6 +4,7 @@
 module Unit.Pacer.Command.Chart (tests) where
 
 import Control.Exception (IOException)
+import Data.Char qualified as Ch
 import Data.IORef qualified as Ref
 import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
@@ -26,6 +27,7 @@ import Effectful.FileSystem.PathReader.Dynamic
         PathIsSymbolicLink
       ),
   )
+import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.FileSystem.PathReader.Static qualified as PRS
 import Effectful.FileSystem.PathWriter.Dynamic
   ( PathWriter
@@ -90,6 +92,7 @@ import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Utils qualified as U
 import System.Exit (ExitCode (ExitSuccess))
 import System.OsPath qualified as OsPath
+import System.OsString qualified as OsString
 import Test.Tasty.HUnit (assertEqual)
 import Unit.Prelude
 
@@ -608,51 +611,62 @@ createChartSeqTests =
       testCreateChartSumWeek,
       testCreateChartSumMonth,
       testCreateChartSumDays11,
-      testCreateChartSumDays50
+      testCreateChartSumDays50,
+      testCreateChartFilterSet
     ]
 
 testCreateChartNormal :: TestTree
 testCreateChartNormal =
   testCreateChartSeqHelper
     "Creates a chart"
-    [osp|testCreateChartNormal|]
-    [ospPathSep|createChartNormal_rc.json|]
+    [osp|createChartNormal|]
 
 testCreateChartSumWeek :: TestTree
 testCreateChartSumWeek =
   testCreateChartSeqHelper
     "Creates a chart that sums by week"
-    [osp|testCreateChartSumWeek|]
-    [ospPathSep|createChartSumWeek_rc.json|]
+    [osp|createChartSumWeek|]
 
 testCreateChartSumMonth :: TestTree
 testCreateChartSumMonth =
   testCreateChartSeqHelper
     "Creates a chart that sums by month"
-    [osp|testCreateChartSumMonth|]
-    [ospPathSep|createChartSumMonth_rc.json|]
+    [osp|createChartSumMonth|]
 
 testCreateChartSumDays11 :: TestTree
 testCreateChartSumDays11 =
   testCreateChartSeqHelper
     "Creates a chart that sums by 11 days"
-    [osp|testCreateChartSumDays11|]
-    [ospPathSep|createChartSumDays11_rc.json|]
+    [osp|createChartSumDays11|]
 
 testCreateChartSumDays50 :: TestTree
 testCreateChartSumDays50 =
   testCreateChartSeqHelper
     "Creates a chart that sums by 50 days"
-    [osp|testCreateChartSumDays50|]
-    [ospPathSep|createChartSumDays50_rc.json|]
+    [osp|createChartSumDays50|]
 
-testCreateChartSeqHelper :: TestName -> OsPath -> OsPath -> TestTree
-testCreateChartSeqHelper testDesc testName crPath = testGoldenParams params
+testCreateChartFilterSet :: TestTree
+testCreateChartFilterSet =
+  testCreateChartSeqHelper
+    "Creates a chart with set filters"
+    [osp|createChartFilterSet|]
+
+testCreateChartSeqHelper :: TestName -> OsPath -> TestTree
+testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
   where
+    fullTestName = case OsString.uncons testSuffix of
+      Nothing ->
+        error "testCreateChartSeqHelper: test suffix cannot be empty"
+      Just (c, str) ->
+        [osp|test|]
+          <> OsString.cons
+            (OsString.unsafeFromChar . Ch.toUpper . OsString.toChar $ c)
+            str
+
     params =
       MkGoldenParams
         { testDesc,
-          testName,
+          testName = fullTestName,
           runner = do
             paths <- mkPaths
             result <- fmap (.chartData) <$> runCreateChartSeqEff paths
@@ -661,11 +675,22 @@ testCreateChartSeqHelper testDesc testName crPath = testGoldenParams params
 
     mkPaths = runEff $ runPathReader $ do
       cwd <- getCurrentDirectory
-      chartRequests <- Path.parseRelFile $ dataDir </> crPath
+
+      let crPath = dataDir </> testSuffix <> [osp|_rc.json|]
+          labelsPath = dataDir </> testSuffix <> [osp|_labels.json|]
+
+      chartRequests <- Path.parseRelFile crPath
+
+      labelsExists <- PR.doesFileExist labelsPath
+      labels <-
+        if labelsExists
+          then Just <$> Path.parseRelFile labelsPath
+          else pure Nothing
+
       activities <- Path.parseRelFile $ dataDir </> [ospPathSep|Activities.csv|]
       pure
         $ ( cwd <</>> chartRequests,
-            Nothing,
+            (cwd <</>>) <$> labels,
             (cwd <</>> activities) :| []
           )
 

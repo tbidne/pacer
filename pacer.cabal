@@ -82,6 +82,7 @@ library
     Pacer.Command.Chart.Data.ChartOptions
     Pacer.Command.Chart.Data.ChartRequest
     Pacer.Command.Chart.Data.Expr
+    Pacer.Command.Chart.Data.Expr.Labels
     Pacer.Command.Chart.Data.Garmin
     Pacer.Command.Chart.Data.Run
     Pacer.Command.Chart.Data.RunLabel
@@ -212,6 +213,7 @@ test-suite unit
     , hedgehog                         >=1.0.2    && <1.6
     , logger-effectful
     , nonempty-containers
+    , os-string
     , pacer
     , pretty-simple                    ^>=4.1.2.0
     , tasty                            >=1.1.0.3  && <1.6

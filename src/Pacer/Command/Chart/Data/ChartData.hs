@@ -35,10 +35,6 @@ import Pacer.Command.Chart.Data.ChartRequest
   )
 import Pacer.Command.Chart.Data.Expr
   ( FilterExpr,
-    FilterLabelOp
-      ( FilterLabelOpEq,
-        FilterLabelOpNeq
-      ),
     FilterOp
       ( FilterOpEq,
         FilterOpGt,
@@ -52,9 +48,32 @@ import Pacer.Command.Chart.Data.Expr
         FilterDistance,
         FilterDuration,
         FilterLabel,
+        FilterLabels,
         FilterPace
       ),
     eval,
+  )
+import Pacer.Command.Chart.Data.Expr.Labels
+  ( FilterLabelOp
+      ( FilterLabelOpEq,
+        FilterLabelOpNeq
+      ),
+    FilterLabelSet
+      ( FilterLabelSetMany,
+        FilterLabelSetOne
+      ),
+    FilterLabelSetOpMany
+      ( FilterLabelSetOpManyEq,
+        FilterLabelSetOpManyGt,
+        FilterLabelSetOpManyGte,
+        FilterLabelSetOpManyLt,
+        FilterLabelSetOpManyLte,
+        FilterLabelSetOpManyNeq
+      ),
+    FilterLabelSetOpOne
+      ( FilterLabelSetOpOneMember,
+        FilterLabelSetOpOneNmember
+      ),
   )
 import Pacer.Command.Chart.Data.Run
   ( Run (MkRun, datetime, distance, duration),
@@ -396,13 +415,19 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     applyFilter :: SomeRunsKey a -> FilterType a -> Bool
     applyFilter srk (FilterLabel op lbl) = applyLabel srk.unSomeRunsKey op lbl
+    applyFilter srk (FilterLabels lblSet) = applyLabels srk.unSomeRunsKey lblSet
     applyFilter srk (FilterDate op m) = applyDate srk.unSomeRunsKey op m
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeRunsKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeRunsKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeRunsKey op p
 
     applyLabel :: SomeRun a -> FilterLabelOp -> Text -> Bool
-    applyLabel (MkSomeRun _ r) op lbl = (labelOpToFun op) lbl r.labels
+    applyLabel (MkSomeRun _ r) op lbl = (labelOpToFun op) r.labels lbl
+
+    applyLabels :: SomeRun a -> FilterLabelSet -> Bool
+    applyLabels (MkSomeRun _ r) = \case
+      FilterLabelSetOne op t -> (labelSetOneOpToFun op) r.labels t
+      FilterLabelSetMany op set -> (labelSetManyOpToFun op) r.labels set
 
     applyDate :: SomeRun a -> FilterOp -> Moment -> Bool
     applyDate (MkSomeRun _ r) op m = (opToMFun op) runMoment m
@@ -446,9 +471,38 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     opToMFun FilterOpGte = (>~)
     opToMFun FilterOpGt = (>.)
 
-    labelOpToFun :: forall b. (Ord b) => FilterLabelOp -> (b -> Set b -> Bool)
-    labelOpToFun FilterLabelOpEq = Set.member
-    labelOpToFun FilterLabelOpNeq = Set.notMember
+    labelOpToFun :: forall b. (Ord b) => FilterLabelOp -> (Set b -> b -> Bool)
+    labelOpToFun FilterLabelOpEq = flip Set.member
+    labelOpToFun FilterLabelOpNeq = flip Set.notMember
+
+    labelSetOneOpToFun :: forall b. (Ord b) => FilterLabelSetOpOne -> (Set b -> b -> Bool)
+    labelSetOneOpToFun FilterLabelSetOpOneMember = flip Set.member
+    labelSetOneOpToFun FilterLabelSetOpOneNmember = flip Set.notMember
+
+    labelSetManyOpToFun :: forall b. (Ord b) => FilterLabelSetOpMany -> (Set b -> Set b -> Bool)
+    labelSetManyOpToFun FilterLabelSetOpManyEq = (==)
+    labelSetManyOpToFun FilterLabelSetOpManyNeq = (/=)
+    -- Superset rather than subset because that's how the syntax is defined,
+    -- since the activity's labels is on the LHS. E.g. to filter on some
+    -- labels being a subset (gte) of an activity's labels we write:
+    --
+    --   labels ⊇ {a, b, c}
+    --
+    -- We respect this order when applying all of labels i.e.
+    --
+    --    <op> labels {a, b, c}
+    --
+    -- Hence we need superset, not subset.
+    labelSetManyOpToFun FilterLabelSetOpManyGte = isSuperSetOf
+    labelSetManyOpToFun FilterLabelSetOpManyGt = isProperSuperSetOf
+    labelSetManyOpToFun FilterLabelSetOpManyLte = Set.isSubsetOf
+    labelSetManyOpToFun FilterLabelSetOpManyLt = Set.isProperSubsetOf
+
+isSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
+isSuperSetOf = flip Set.isSubsetOf
+
+isProperSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
+isProperSuperSetOf = flip Set.isProperSubsetOf
 
 i :: Int -> Int
 i = id

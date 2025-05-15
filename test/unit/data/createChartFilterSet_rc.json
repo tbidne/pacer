@@ -1,0 +1,29 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "charts": [
+    {
+      "title": "Official",
+      "y-axis": "distance",
+      "filters": [
+        "labels ∋ official"
+      ]
+    },
+    {
+      "title": "Official 5ks",
+      "y-axis": "distance",
+      "filters": [
+        "labels ⊇ {official, 5k}"
+      ]
+    },
+    {
+      "title": "5ks",
+      "y-axis": "distance",
+      "filters": [
+        "labels ⊇ {5k}"
+      ]
+    }
+  ]
+}
+
