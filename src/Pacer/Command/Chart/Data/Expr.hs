@@ -205,23 +205,23 @@ instance (Display a) => Display (Expr a) where
     where
       go = \case
         Atom x -> displayBuilder x
-        Not e -> "not (" <> go e <> ")"
+        Not e -> "not " <> goP e
         Or e1 e2 ->
           mconcat
-            [ "(",
-              go e1,
-              ") or (",
-              go e2,
-              ")"
+            [ goP e1,
+              " or ",
+              goP e2
             ]
         And e1 e2 ->
           mconcat
-            [ "(",
-              go e1,
-              ") and (",
-              go e2,
-              ")"
+            [ goP e1,
+              " and ",
+              goP e2
             ]
+      goP e =
+        if isAtom e
+          then go e
+          else "(" <> go e <> ")"
 
 -- | Alias for a filter expression.
 type FilterExpr a = Expr (FilterType a)
@@ -239,6 +239,10 @@ evalA p = go
     go (Not e) = not <$> go e
     go (Or e1 e2) = liftA2 (||) (go e1) (go e2)
     go (And e1 e2) = liftA2 (&&) (go e1) (go e2)
+
+isAtom :: Expr a -> Bool
+isAtom (Atom _) = True
+isAtom _ = False
 
 -------------------------------------------------------------------------------
 --                                   Lexing                                  --
