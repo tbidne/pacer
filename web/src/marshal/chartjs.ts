@@ -1,8 +1,16 @@
 import { Chart } from "chart.js/auto";
 import { PYAxis } from "./pacer";
 import { CChartOpts, CDataSets, CYAxis, CYOptT } from "./chartjs/types";
-import { YAxesT, YAxisLabel, YAxisType, mapYAxes } from "./common";
+import { YAxesT, YAxisLabel, mapYAxes } from "./common";
 import { format_opts_seconds, format_seconds } from "../utils";
+
+// TODO: At some point, it would be nice to figure out a css solution here
+// e.g. so we can have light/dark options.
+const GRAY_DARK = "#393939";
+const GRAY_LIGHT = "#c3c3c3";
+const GRAY_LIGHT_OPAC = "rgba(204, 204, 204, 0.75)";
+const POINT_RADIUS = 20;
+const AXIS_FONT_SIZE = 16;
 
 function get_ytime_prefix(s: YAxisLabel): "duration" | "pace" | null {
   if (s == "time") return "duration";
@@ -15,7 +23,7 @@ function from_pacer_yAxis(pYAxis: PYAxis): CYAxis {
     data: pYAxis.data,
     fill: false,
     label: pYAxis.type,
-    pointHoverRadius: 20,
+    pointHoverRadius: POINT_RADIUS,
     tension: 0,
     yAxisID: pYAxis.id,
   };
@@ -48,7 +56,7 @@ function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
 
   function make_ticks(yLabel: YAxisLabel) {
     const ticks: Ticks = {
-      color: "#c3c3c3",
+      color: GRAY_LIGHT,
     };
     const yTimePrefix = get_ytime_prefix(yLabel);
     if (yTimePrefix != null) {
@@ -60,14 +68,14 @@ function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
   function make_yaxis<A>(position: A, title: YAxisLabel): CYOptT<A> {
     return {
       grid: {
-        color: "#393939",
+        color: GRAY_DARK,
       },
       position: position,
       title: {
-        color: "#c3c3c3",
+        color: GRAY_LIGHT,
         display: true,
         font: {
-          size: 16,
+          size: AXIS_FONT_SIZE,
         },
         text: title,
       },
@@ -80,12 +88,14 @@ function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
     plugins: {
       legend: {
         labels: {
-          color: "#c3c3c3",
+          color: GRAY_LIGHT,
         },
       },
       title: {
         align: "center",
-        color: "#c3c3c3",
+        color: GRAY_LIGHT,
+        // Disabled because the title is in the selector. Re-enable if we
+        // ever change up the UI e.g. put the selector somewhere else.
         display: false,
         font: {
           size: 24,
@@ -93,12 +103,12 @@ function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
         text: title,
       },
       tooltip: {
-        backgroundColor: "rgba(204, 204, 204, 0.75)",
+        backgroundColor: GRAY_LIGHT_OPAC,
         bodyColor: "black",
         titleColor: "black",
       },
     },
-    pointHitRadius: 20,
+    pointHitRadius: POINT_RADIUS,
     responsive: true,
     scales: {
       x: {
@@ -109,16 +119,16 @@ function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
           unit: "day",
         },
         grid: {
-          color: "#393939",
+          color: GRAY_DARK,
         },
         ticks: {
-          color: "#c3c3c3",
+          color: GRAY_LIGHT,
         },
         title: {
-          color: "#c3c3c3",
+          color: GRAY_LIGHT,
           display: true,
           font: {
-            size: 16,
+            size: AXIS_FONT_SIZE,
           },
           text: "datetime",
         },

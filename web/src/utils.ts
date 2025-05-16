@@ -72,7 +72,7 @@ export function format_seconds(value: number): string {
   const n = Number(value);
 
   const d = Math.floor(n / 86_400);
-  const h = Math.floor(n % 86_400 / 3_600);
+  const h = Math.floor((n % 86_400) / 3_600);
   const m = Math.floor((n % 3_600) / 60);
   const s = Math.floor(n % 60);
 

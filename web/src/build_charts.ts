@@ -81,7 +81,6 @@ function main() {
   for (var i = 0; i < charts_typed.length; i++) {
     const chart = charts_typed[i];
 
-    // TODO: Should make this more robust.
     let title = chart.title;
     addChartSelectorOption(chartSelector, i, title);
     const result = mkChartDiv(chartContainer, i);
