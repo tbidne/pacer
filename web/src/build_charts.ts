@@ -1,9 +1,9 @@
 import * as charts from "../data/charts.json";
 import { POutput, PChartExtra } from "./marshal/pacer";
-import { create_chart } from "./marshal/chartjs";
+import { createChart } from "./marshal/chartjs";
 import { mkChartDiv, addChartSelectorOption } from "./utils";
 
-function handle_extra(
+function handleExtra(
   chartDiv: HTMLDivElement,
   id: number,
   extra: PChartExtra,
@@ -43,11 +43,11 @@ function addChartSelectorOnClick(selector: HTMLSelectElement): void {
     // Previously we retrieved these with
     // getElementById(`chart-div-${prevIdx}`). But using a map instead
     // feels slightly nicer.
-    const prevElem = chart_divs.get(prevIdx);
+    const prevElem = chartDivs.get(prevIdx);
     const prevChartDiv = prevElem[1];
     prevChartDiv.hidden = true;
 
-    const newElem = chart_divs.get(newIdx);
+    const newElem = chartDivs.get(newIdx);
     const newTitle = newElem[0];
     const newDiv = newElem[1];
     newDiv.hidden = false;
@@ -59,11 +59,11 @@ function addChartSelectorOnClick(selector: HTMLSelectElement): void {
 }
 
 /**
- * We widen charts to charts_typed since if charts.json does not have any
+ * We widen charts to chartsTyped since if charts.json does not have any
  * charts with a y1 axis, ts will infer the y1 prop does not exist,
  * hence the y1 access will fail.
  */
-const charts_typed = charts as POutput;
+const chartsTyped = charts as POutput;
 
 /**
  * Map from index to chart div. We use this to change the chart visibility,
@@ -72,28 +72,28 @@ const charts_typed = charts as POutput;
  * The first element is the div's chart's title, so we can set the select
  * option's hover.
  */
-const chart_divs: Map<number, [string, HTMLDivElement]> = new Map([]);
+const chartDivs: Map<number, [string, HTMLDivElement]> = new Map([]);
 
 function main() {
   const chartContainer = getChartContainer();
   const chartSelector = getChartSelector();
 
-  for (var i = 0; i < charts_typed.length; i++) {
-    const chart = charts_typed[i];
+  for (var i = 0; i < chartsTyped.length; i++) {
+    const chart = chartsTyped[i];
 
     let title = chart.title;
     addChartSelectorOption(chartSelector, i, title);
     const result = mkChartDiv(chartContainer, i);
     const chartDiv = result[0];
     const elemId = result[1];
-    handle_extra(chartDiv, i, chart.extra);
+    handleExtra(chartDiv, i, chart.extra);
 
-    chart_divs.set(i, [title, chartDiv]);
+    chartDivs.set(i, [title, chartDiv]);
 
-    create_chart(title, elemId, chart.datasets.xAxis, chart.datasets.yAxes);
+    createChart(title, elemId, chart.datasets.xAxis, chart.datasets.yAxes);
   }
 
-  if (charts_typed.length > 0) {
+  if (chartsTyped.length > 0) {
     addChartSelectorOnClick(chartSelector);
   }
 }

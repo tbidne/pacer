@@ -3,11 +3,9 @@ import { YAxisId, YAxisLabel } from "../common";
 
 /**
  * This is very similar to chart.js's ChartOptions. Why do we have a distinct
- * type? The json the backend returns isn't __quite__ the same as the Chart
- * that chart.json uses. For example
- *
- * - The json does not have a callback field, as we cannot currently serialize
- *   js functions, hence we do it here.
+ * type? For one, creating our own types makes it easy to see exactly what
+ * data we want to end up setting vs. whatever else ChartOptions may have
+ * on it that we do not care about. There are other differences too:
  *
  * - The secondary y1 axis causes type inference problems without explicit
  *   typing.
@@ -54,6 +52,9 @@ type CChartOpts = {
   };
 };
 
+/**
+ * Chart.js Y-axis.
+ */
 type CYAxis = {
   data: number[];
   fill: boolean;
@@ -68,24 +69,36 @@ type CYAxis = {
   yAxisID: YAxisId;
 };
 
+/**
+ * The type for Y-axis data on the actual Chart.js chart.
+ */
 type CDataSets = CYAxis[];
 
 type CYOpt = CYOptT<"left">;
 
 type CY1Opt = CYOptT<"right">;
 
+type CTicks = {
+  color: string;
+  callback?: (value: string, index: number, labels: any) => string;
+};
+
+/**
+ * Chart options related to a Y axis.
+ */
 type CYOptT<A> = {
   grid: {
     color: string;
   };
   position: A;
   title: CTitle<YAxisLabel>;
-  ticks?: {
-    callback?: (value: string, index: number, labels: any) => string;
-    color?: string;
-  };
+  ticks?: CTicks;
 };
 
+/**
+ * Chart title. The parameter allows for constraining the strings in some
+ * scenarios e.g. labels.
+ */
 type CTitle<A> = {
   align?: "start" | "center" | "end";
   color: string;
@@ -96,4 +109,4 @@ type CTitle<A> = {
   text: A;
 };
 
-export { CChartOpts, CDataSets, CYAxis, CYOptT };
+export { CChartOpts, CDataSets, CYAxis, CYOptT, CTicks };

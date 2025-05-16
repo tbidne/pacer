@@ -1,8 +1,8 @@
 import { Chart } from "chart.js/auto";
 import { PYAxis } from "./pacer";
-import { CChartOpts, CDataSets, CYAxis, CYOptT } from "./chartjs/types";
+import { CChartOpts, CDataSets, CTicks, CYAxis, CYOptT } from "./chartjs/types";
 import { YAxesT, YAxisLabel, mapYAxes } from "./common";
-import { format_opts_seconds, format_seconds } from "../utils";
+import { formatOptsSeconds, formatSeconds } from "../utils";
 
 // TODO: At some point, it would be nice to figure out a css solution here
 // e.g. so we can have light/dark options.
@@ -12,13 +12,13 @@ const GRAY_LIGHT_OPAC = "rgba(204, 204, 204, 0.75)";
 const POINT_RADIUS = 20;
 const AXIS_FONT_SIZE = 16;
 
-function get_ytime_prefix(s: YAxisLabel): "duration" | "pace" | null {
+function getYTimePrefix(s: YAxisLabel): "duration" | "pace" | null {
   if (s == "time") return "duration";
   else if (s.startsWith("pace")) return "pace";
   else return null;
 }
 
-function from_pacer_yAxis(pYAxis: PYAxis): CYAxis {
+function makeYAxis(pYAxis: PYAxis): CYAxis {
   const cYAxis: CYAxis = {
     data: pYAxis.data,
     fill: false,
@@ -28,7 +28,7 @@ function from_pacer_yAxis(pYAxis: PYAxis): CYAxis {
     yAxisID: pYAxis.id,
   };
 
-  const yTimePrefix = get_ytime_prefix(pYAxis.label);
+  const yTimePrefix = getYTimePrefix(pYAxis.label);
   if (yTimePrefix != null) {
     cYAxis.tooltip = {
       callbacks: {
@@ -37,35 +37,30 @@ function from_pacer_yAxis(pYAxis: PYAxis): CYAxis {
         // number. Instead we use raw, which seems to work, though the
         // safety is dubious.
         label: (item) =>
-          `${yTimePrefix}: ${format_seconds(Number(item.raw as string))}`,
+          `${yTimePrefix}: ${formatSeconds(Number(item.raw as string))}`,
       },
     };
   }
   return cYAxis;
 }
 
-function from_pacer_yAxes(yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
-  return mapYAxes(from_pacer_yAxis, yAxes);
+function makeYAxes(yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
+  return mapYAxes(makeYAxis, yAxes);
 }
 
-function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
-  type Ticks = {
-    color: string;
-    callback?: (value: string, index: number, labels: any) => string;
-  };
-
-  function make_ticks(yLabel: YAxisLabel) {
-    const ticks: Ticks = {
+function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
+  function makeTicks(yLabel: YAxisLabel): CTicks {
+    const ticks: CTicks = {
       color: GRAY_LIGHT,
     };
-    const yTimePrefix = get_ytime_prefix(yLabel);
+    const yTimePrefix = getYTimePrefix(yLabel);
     if (yTimePrefix != null) {
-      ticks.callback = format_opts_seconds;
+      ticks.callback = formatOptsSeconds;
     }
     return ticks;
   }
 
-  function make_yaxis<A>(position: A, title: YAxisLabel): CYOptT<A> {
+  function makeYAxis<A>(position: A, title: YAxisLabel): CYOptT<A> {
     return {
       grid: {
         color: GRAY_DARK,
@@ -79,7 +74,7 @@ function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
         },
         text: title,
       },
-      ticks: make_ticks(title),
+      ticks: makeTicks(title),
     };
   }
 
@@ -134,39 +129,46 @@ function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
         },
         type: "timeseries",
       },
-      y: make_yaxis("left", yAxes.y.label),
+      y: makeYAxis("left", yAxes.y.label),
     },
   };
 
   const y1 = yAxes.y1;
   if (y1 != null) {
-    copts.scales.y1 = make_yaxis("right", y1.label);
+    copts.scales.y1 = makeYAxis("right", y1.label);
   }
   return copts;
 }
 
-function create_chart(
+/**
+ * Creates a chart.
+ * @param title The title of the chart.
+ * @param elem_id The html id for the chart e.g. canvas-1.
+ * @param xAxis X-axis data.
+ * @param yAxes Y-axes data.
+ */
+function createChart(
   title: string,
-  elem_id: string,
+  elemId: string,
   xAxis: string[],
   yAxes: YAxesT<PYAxis>,
 ): void {
-  const chart_opts = from_pacer_opts(title, yAxes);
-  const cYAxes = from_pacer_yAxes(yAxes);
+  const chartOpts = makeChartOpts(title, yAxes);
+  const cYAxes = makeYAxes(yAxes);
 
   const datasets: CDataSets = [cYAxes.y];
   if (cYAxes.y1 != null) {
     datasets.push(cYAxes.y1);
   }
 
-  new Chart(elem_id, {
+  new Chart(elemId, {
     type: "line",
     data: {
       labels: xAxis,
       datasets: datasets,
     },
-    options: chart_opts,
+    options: chartOpts,
   });
 }
 
-export { create_chart };
+export { createChart };

@@ -68,7 +68,7 @@ export function pad2(n: number): string {
   return `${prefix}${n}`;
 }
 
-export function format_seconds(value: number): string {
+export function formatSeconds(value: number): string {
   const n = Number(value);
 
   const d = Math.floor(n / 86_400);
@@ -76,17 +76,17 @@ export function format_seconds(value: number): string {
   const m = Math.floor((n % 3_600) / 60);
   const s = Math.floor(n % 60);
 
-  const d_str = d > 0 ? `${d}d ` : "";
-  const h_str = h > 0 ? `${h}h ` : "";
-  const s_str = pad2(s);
+  const dStr = d > 0 ? `${d}d ` : "";
+  const hStr = h > 0 ? `${h}h ` : "";
+  const sStr = pad2(s);
 
-  return `${d_str}${h_str}${m}'${s_str}"`;
+  return `${dStr}${hStr}${m}'${sStr}"`;
 }
 
-export function format_opts_seconds(
+export function formatOptsSeconds(
   value: string,
   index: number,
   labels: Tick[],
 ): string {
-  return format_seconds(Number(value));
+  return formatSeconds(Number(value));
 }
