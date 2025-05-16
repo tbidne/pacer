@@ -32,9 +32,10 @@ readWebDirTH = WUtils.liftIOToTH $ for webInternalFiles $ \fileName -> do
 webInternalPaths :: Tuple2 (List (Path Rel Dir)) (List (Path Rel File))
 webInternalPaths = (webInternalDirs, webInternalFiles)
 
--- | List of all dirs used in frontend build.
+-- | List of all dirs used in frontend build. Nested dirs are only included
+-- once e.g. @a/b@ instead of @[a, a/b]@.
 webInternalDirs :: List (Path Rel Dir)
-webInternalDirs = [[reldir|src|]]
+webInternalDirs = [[reldirPathSep|src/marshal/chartjs|]]
 
 -- | List of all files used in frontend build.
 webInternalFiles :: List (Path Rel File)
@@ -45,6 +46,7 @@ webInternalFiles =
     [relfile|webpack.config.js|]
   ]
     ++ srcFiles
+    ++ marshalFiles
   where
     srcFiles =
       ([reldir|src|] <</>>)
@@ -52,8 +54,13 @@ webInternalFiles =
               [relfile|index.html|],
               [relfile|index.ts|],
               [relfile|style.css|],
-              [relfile|types.ts|],
               [relfile|utils.ts|]
+            ]
+    marshalFiles =
+      ([reldirPathSep|src/marshal|] <</>>)
+        <$> [ [relfilePathSep|chartjs/types.ts|],
+              [relfile|chartjs.ts|],
+              [relfile|pacer.ts|]
             ]
 
 -- | Web dir name.
