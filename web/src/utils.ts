@@ -71,14 +71,16 @@ export function pad2(n: number): string {
 export function format_seconds(value: number): string {
   const n = Number(value);
 
-  const h = Math.floor(n / 3600);
-  const m = Math.floor((n % 3600) / 60);
+  const d = Math.floor(n / 86_400);
+  const h = Math.floor(n % 86_400 / 3_600);
+  const m = Math.floor((n % 3_600) / 60);
   const s = Math.floor(n % 60);
 
+  const d_str = d > 0 ? `${d}d ` : "";
   const h_str = h > 0 ? `${h}h ` : "";
   const s_str = pad2(s);
 
-  return `${h_str}${m}'${s_str}"`;
+  return `${d_str}${h_str}${m}'${s_str}"`;
 }
 
 export function format_opts_seconds(
