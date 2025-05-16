@@ -60,6 +60,7 @@ webInternalFiles =
       ([reldirPathSep|src/marshal|] <</>>)
         <$> [ [relfilePathSep|chartjs/types.ts|],
               [relfile|chartjs.ts|],
+              [relfile|common.ts|],
               [relfile|pacer.ts|]
             ]
 

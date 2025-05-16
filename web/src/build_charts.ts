@@ -82,7 +82,7 @@ function main() {
     const chart = charts_typed[i];
 
     // TODO: Should make this more robust.
-    let title = chart.options.plugins.title.text;
+    let title = chart.title;
     addChartSelectorOption(chartSelector, i, title);
     const result = mkChartDiv(chartContainer, i);
     const chartDiv = result[0];
@@ -91,12 +91,7 @@ function main() {
 
     chart_divs.set(i, [title, chartDiv]);
 
-    create_chart(
-      elemId,
-      chart.options,
-      chart.datasets.xAxis,
-      chart.datasets.yAxes
-    );
+    create_chart(title, elemId, chart.datasets.xAxis, chart.datasets.yAxes);
   }
 
   if (charts_typed.length > 0) {

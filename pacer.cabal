@@ -79,7 +79,6 @@ library
     Pacer.Command.Chart.Data.Chart
     Pacer.Command.Chart.Data.ChartData
     Pacer.Command.Chart.Data.ChartExtra
-    Pacer.Command.Chart.Data.ChartOptions
     Pacer.Command.Chart.Data.ChartRequest
     Pacer.Command.Chart.Data.Expr
     Pacer.Command.Chart.Data.Expr.Labels

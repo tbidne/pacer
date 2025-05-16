@@ -56,8 +56,8 @@
       "2025-05-06T18:07:33",
       "2025-05-07T17:53:16"
     ],
-    "yAxes": [
-      {
+    "yAxes": {
+      "y": {
         "data": [
           3.77,
           6.19,
@@ -114,13 +114,11 @@
           10.45,
           6
         ],
-        "fill": false,
-        "label": "distance",
-        "pointHoverRadius": 20,
-        "tension": 0,
-        "yAxisID": "y"
+        "id": "y",
+        "label": "km",
+        "type": "distance"
       }
-    ]
+    }
   }
 ]
 

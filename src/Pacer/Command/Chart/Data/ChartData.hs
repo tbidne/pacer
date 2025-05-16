@@ -115,7 +115,9 @@ data ChartY = MkChartY
     values :: NESeq (Tuple2 Timestamp Double),
     -- | Y axis type. This is used for the label on the line itself, __not__
     -- the y-axis (that label is on ChartOptions).
-    yType :: YAxisType
+    yType :: YAxisType,
+    -- | Distance unit for y-axis, if it used.
+    yDistUnit :: DistanceUnit
   }
   deriving stock (Eq, Show)
 
@@ -123,12 +125,15 @@ instance ToJSON ChartY where
   toJSON c =
     Asn.object
       [ "xAxis" .= x,
-        "yAxes" .= [yAxis]
+        "yAxes"
+          .= Asn.object
+            [ "y" .= yAxis
+            ]
       ]
     where
       (x, y) = L.unzip $ toList c.values
 
-      yAxis = mkYJson y c.yType "y"
+      yAxis = mkYJson c.yDistUnit y c.yType "y"
 
 -- | Data for a chart with two Y axes.
 data ChartY1 = MkChartY1
@@ -137,7 +142,9 @@ data ChartY1 = MkChartY1
     -- | Type of first Y axis.
     yType :: YAxisType,
     -- | Type of second Y axis.
-    y1Type :: YAxisType
+    y1Type :: YAxisType,
+    -- | Distance unit for y-axis, if it used.
+    yDistUnit :: DistanceUnit
   }
   deriving stock (Eq, Show)
 
@@ -145,23 +152,33 @@ instance ToJSON ChartY1 where
   toJSON c =
     Asn.object
       [ "xAxis" .= x,
-        "yAxes" .= [yAxis, y1Axis]
+        "yAxes"
+          .= Asn.object
+            [ "y" .= yAxis,
+              "y1" .= y1Axis
+            ]
       ]
     where
       (x, y, y1) = L.unzip3 $ toList c.values
-      yAxis = mkYJson y c.yType "y"
-      y1Axis = mkYJson y1 c.y1Type "y1"
+      yAxis = mkYJson c.yDistUnit y c.yType "y"
+      y1Axis = mkYJson c.yDistUnit y1 c.y1Type "y1"
 
-mkYJson :: [Double] -> YAxisType -> Text -> Value
-mkYJson yVal yType yId =
+mkYJson :: DistanceUnit -> [Double] -> YAxisType -> Text -> Value
+mkYJson dunit yVal yType yId =
   Asn.object
     [ "data" .= yVal,
-      "label" .= yType,
-      "fill" .= False,
-      "pointHoverRadius" .= i 20, -- point size on hover
-      "tension" .= i 0,
-      "yAxisID" .= yId
+      "label" .= mkYLabel yType, -- m, km, mi
+      "type" .= yType, -- distance, duration, pace
+      "id" .= yId -- y, y1
     ]
+  where
+    mkYLabel :: YAxisType -> Text
+    mkYLabel = \case
+      YAxisDistance -> dstTxt
+      YAxisDuration -> "time"
+      YAxisPace -> "pace /" <> dstTxt
+      where
+        dstTxt = display dunit
 
 -- | Accumulator for chart with a single Y axis.
 type AccY = NESeq (Tuple2 Timestamp Double)
@@ -357,11 +374,11 @@ mkChartDataSets @a finalDistUnit request runs@(MkSomeRun sd _ :<|| _) =
     Nothing ->
       let vals = withSingI sd $ foldMap1 toAccY runs
           yType = request.yAxis
-       in ChartDataY (MkChartY vals yType)
+       in ChartDataY (MkChartY vals yType finalDistUnit)
     Just y1Type ->
       let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) runs
           yType = request.yAxis
-       in ChartDataY1 (MkChartY1 vals yType y1Type)
+       in ChartDataY1 (MkChartY1 vals yType y1Type finalDistUnit)
   where
     toAccY :: SomeRun a -> AccY
     toAccY sr@(MkSomeRun _ r) = NESeq.singleton (r.datetime, toY sr)
@@ -503,6 +520,3 @@ isSuperSetOf = flip Set.isSubsetOf
 
 isProperSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
 isProperSuperSetOf = flip Set.isProperSubsetOf
-
-i :: Int -> Int
-i = id

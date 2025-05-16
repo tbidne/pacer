@@ -10,10 +10,8 @@ import Pacer.Command.Chart.Data.ChartData (ChartData)
 import Pacer.Command.Chart.Data.ChartData qualified as ChartData
 import Pacer.Command.Chart.Data.ChartExtra (ChartExtra)
 import Pacer.Command.Chart.Data.ChartExtra qualified as ChartExtra
-import Pacer.Command.Chart.Data.ChartOptions (ChartOptions)
-import Pacer.Command.Chart.Data.ChartOptions qualified as ChartOptions
 import Pacer.Command.Chart.Data.ChartRequest
-  ( ChartRequest (unit),
+  ( ChartRequest (title, unit),
     ChartRequests (chartRequests),
   )
 import Pacer.Command.Chart.Data.Run (SomeRuns)
@@ -28,8 +26,8 @@ data Chart = MkChart
     chartData :: ChartData,
     -- | Chart extra.
     chartExtra :: ChartExtra,
-    -- | Chart options.
-    chartOptions :: ChartOptions
+    -- | Chart title.
+    title :: Text
   }
   deriving stock (Eq, Show)
 
@@ -38,7 +36,7 @@ instance ToJSON Chart where
     Asn.object
       [ "datasets" .= c.chartData,
         "extra" .= c.chartExtra,
-        "options" .= c.chartOptions
+        "title" .= c.title
       ]
 
 -- | Given runs and chart requests, generates a series of charts, or the
@@ -78,13 +76,12 @@ mkChart someRuns request = fmap toChart <$> eChartData
   where
     eChartData = ChartData.mkChartData finalDistUnit someRuns request
     chartExtra = ChartExtra.mkChartExtra request
-    chartOptions = ChartOptions.mkChartOptions finalDistUnit request
 
     toChart chartData =
       MkChart
         { chartData,
           chartExtra,
-          chartOptions
+          title = request.title
         }
 
     finalDistUnit :: DistanceUnit

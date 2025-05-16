@@ -1,28 +1,26 @@
 import { Chart } from "chart.js/auto";
-import { PChartOpts, PYAxis, } from "./pacer";
-import { CChartOpts, CYAxis, CYOptT } from "./chartjs/types";
-import {
-  format_opts_seconds,
-  format_seconds,
-} from "../utils";
+import { PYAxis } from "./pacer";
+import { CChartOpts, CDataSets, CYAxis, CYOptT } from "./chartjs/types";
+import { YAxesT, YAxisLabel, YAxisType, mapYAxes } from "./common";
+import { format_opts_seconds, format_seconds } from "../utils";
 
-function get_ytime_prefix(s: string): "duration" | "pace" | null {
+function get_ytime_prefix(s: YAxisLabel): "duration" | "pace" | null {
   if (s == "time") return "duration";
   else if (s.startsWith("pace")) return "pace";
   else return null;
 }
 
-function from_pacer_yAxis(y_title: string, axis_id: "y" | "y1", pYAxis: PYAxis): CYAxis {
+function from_pacer_yAxis(pYAxis: PYAxis): CYAxis {
   const cYAxis: CYAxis = {
     data: pYAxis.data,
     fill: false,
-    label: pYAxis.label,
+    label: pYAxis.type,
     pointHoverRadius: 20,
     tension: 0,
-    yAxisID: axis_id
+    yAxisID: pYAxis.id,
   };
 
-  const yTimePrefix = get_ytime_prefix(y_title);
+  const yTimePrefix = get_ytime_prefix(pYAxis.label);
   if (yTimePrefix != null) {
     cYAxis.tooltip = {
       callbacks: {
@@ -38,148 +36,124 @@ function from_pacer_yAxis(y_title: string, axis_id: "y" | "y1", pYAxis: PYAxis):
   return cYAxis;
 }
 
-function from_pacer_yAxes(opts: PChartOpts, yAxes: PYAxis[]): CYAxis[] {
-  // from_pacer_yAxis requires a string title and the PYAxis. Unfortunately,
-  // the title does not exist on the PYAxis; it is on the chart options.
-  // When we move the title to the PYAxis we will be able to use this simpler
-  // function.
-  //
-  //return yAxes.map (from_pacer_yAxis);
-
-  const cAxes = [];
-
-  if (yAxes.length < 1) {
-    throw new Error("No y-axis elements, impossible!");
-  }
-
-  const y = opts.scales.y;
-  const cYAxis = from_pacer_yAxis(y.title.text, "y", yAxes[0]);
-  cAxes.push(cYAxis);
-
-  const y1 = opts.scales.y1;
-  if (y1 != null) {
-    if (yAxes.length < 2) {
-      throw new Error(
-        "y1 exists on the options but not in the datasets, impossible!",
-      );
-    }
-    const y1Axis = yAxes[1];
-    const cY1Axis = from_pacer_yAxis(y1.title.text, "y1", y1Axis);
-    cAxes.push(cY1Axis);
-  }
-
-  return cAxes;
+function from_pacer_yAxes(yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
+  return mapYAxes(from_pacer_yAxis, yAxes);
 }
 
-function from_pacer_opts(pacer_opts: PChartOpts): CChartOpts {
+function from_pacer_opts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
   type Ticks = {
     color: string;
     callback?: (value: string, index: number, labels: any) => string;
   };
 
-  function make_ticks(yType: string) {
+  function make_ticks(yLabel: YAxisLabel) {
     const ticks: Ticks = {
-      color: "#c3c3c3"
+      color: "#c3c3c3",
     };
-    const yTimePrefix = get_ytime_prefix(yType);
+    const yTimePrefix = get_ytime_prefix(yLabel);
     if (yTimePrefix != null) {
       ticks.callback = format_opts_seconds;
     }
     return ticks;
   }
 
-  function make_yaxis<A>(position: A, title: string): CYOptT<A> {
+  function make_yaxis<A>(position: A, title: YAxisLabel): CYOptT<A> {
     return {
       grid: {
-        color: "#393939"
+        color: "#393939",
       },
       position: position,
       title: {
         color: "#c3c3c3",
         display: true,
         font: {
-          size: 16
+          size: 16,
         },
-        text: title
+        text: title,
       },
-      ticks: make_ticks(title)
-
-    }
+      ticks: make_ticks(title),
+    };
   }
 
   const copts: CChartOpts = {
-    maintainAspectRatio: pacer_opts.maintainAspectRatio,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         labels: {
-          color: "#c3c3c3"
-        }
+          color: "#c3c3c3",
+        },
       },
       title: {
         align: "center",
         color: "#c3c3c3",
         display: false,
         font: {
-          size: 24
+          size: 24,
         },
-        text: pacer_opts.plugins.title.text
+        text: title,
       },
       tooltip: {
         backgroundColor: "rgba(204, 204, 204, 0.75)",
         bodyColor: "black",
-        titleColor: "black"
-      }
+        titleColor: "black",
+      },
     },
-    pointHitRadius: pacer_opts.pointHitRadius,
-    responsive: pacer_opts.responsive,
+    pointHitRadius: 20,
+    responsive: true,
     scales: {
       x: {
         time: {
           displayFormats: {
-            day: "dd MMM yy"
+            day: "dd MMM yy",
           },
           unit: "day",
         },
         grid: {
-          color: "#393939"
+          color: "#393939",
         },
         ticks: {
-          color: "#c3c3c3"
+          color: "#c3c3c3",
         },
         title: {
           color: "#c3c3c3",
           display: true,
           font: {
-            "size": 16
+            size: 16,
           },
-          text: "datetime"
+          text: "datetime",
         },
-        type: "timeseries"
+        type: "timeseries",
       },
-      y: make_yaxis("left", pacer_opts.scales.y.title.text)
-    }
+      y: make_yaxis("left", yAxes.y.label),
+    },
   };
 
-  const y1 = pacer_opts.scales.y1;
+  const y1 = yAxes.y1;
   if (y1 != null) {
-    copts.scales.y1 = make_yaxis("right", y1.title.text);
+    copts.scales.y1 = make_yaxis("right", y1.label);
   }
   return copts;
 }
 
 function create_chart(
+  title: string,
   elem_id: string,
-  pacer_opts: PChartOpts,
-  xAxis: string[], yAxes: PYAxis[]): void {
+  xAxis: string[],
+  yAxes: YAxesT<PYAxis>,
+): void {
+  const chart_opts = from_pacer_opts(title, yAxes);
+  const cYAxes = from_pacer_yAxes(yAxes);
 
-  const chart_opts = from_pacer_opts(pacer_opts)
-  const cYAxes = from_pacer_yAxes(pacer_opts, yAxes);
+  const datasets: CDataSets = [cYAxes.y];
+  if (cYAxes.y1 != null) {
+    datasets.push(cYAxes.y1);
+  }
 
   new Chart(elem_id, {
     type: "line",
     data: {
       labels: xAxis,
-      datasets: cYAxes,
+      datasets: datasets,
     },
     options: chart_opts,
   });

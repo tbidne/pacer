@@ -194,7 +194,7 @@ testPathNodeModExists = testCase "node_modules exists" $ do
 testPathNodeModExistsClean :: TestTree
 testPathNodeModExistsClean = testCase "With --clean" $ do
   refsEnv <- runCreateCharts coreEnv params
-  assertEnvRefs refsEnv [11, 1, 1, 2, 1, 1]
+  assertEnvRefs refsEnv [14, 1, 1, 2, 1, 1]
   where
     params =
       MkChartParams
@@ -378,8 +378,11 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
           [ [osp|build_charts.ts|],
             [osp|chart-requests.json|],
             [osp|chart-requests.jsonc|],
+            [osp|chartjs.ts|],
+            [osp|common.ts|],
             [osp|index.html|],
             [osp|index.ts|],
+            [osp|pacer.ts|],
             [osp|package.json|],
             [osp|package-lock.json|],
             [osp|runs.json|],

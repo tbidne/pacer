@@ -7,89 +7,20 @@ build/charts.json
         "2024-08-15",
         "2024-10-15"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             42.195,
             42.195
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 1"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 1"
   },
   {
     "datasets": {
@@ -98,90 +29,21 @@ build/charts.json
         "2024-08-15",
         "2024-10-15"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             42.195,
             42.195,
             42.195
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 2"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 2"
   },
   {
     "datasets": {
@@ -190,178 +52,40 @@ build/charts.json
         "2021-07-01",
         "2023-10-15"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             42.195,
             42.195,
             42.195
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 3"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 3"
   },
   {
     "datasets": {
       "xAxis": [
         "2024-10-15"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             42.195
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 4"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 4"
   }
 ]
 

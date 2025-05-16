@@ -6,88 +6,19 @@ build/charts.json
       "xAxis": [
         "2024-10-19"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             280
           ],
-          "fill": false,
-          "label": "pace",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Long runs"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "pace /km"
-          }
+          "id": "y",
+          "label": "pace /km",
+          "type": "pace"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Long runs"
   },
   {
     "datasets": {
@@ -95,89 +26,20 @@ build/charts.json
         "2024-10-18",
         "2024-10-19"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             30,
             45
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Long runs 2"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Long runs 2"
   },
   {
     "datasets": {
@@ -185,89 +47,20 @@ build/charts.json
         "2024-10-15",
         "2024-10-16"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             198,
             183.75
           ],
-          "fill": false,
-          "label": "pace",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Fast runs"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "pace /km"
-          }
+          "id": "y",
+          "label": "pace /km",
+          "type": "pace"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Fast runs"
   },
   {
     "datasets": {
@@ -275,89 +68,20 @@ build/charts.json
         "2024-10-17",
         "2024-10-18"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             2520,
             9000
           ],
-          "fill": false,
-          "label": "duration",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Specific duration runs"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "time"
-          }
+          "id": "y",
+          "label": "time",
+          "type": "duration"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Specific duration runs"
   },
   {
     "datasets": {
@@ -365,89 +89,20 @@ build/charts.json
         "2024-10-17",
         "2024-10-18"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             2520,
             9000
           ],
-          "fill": false,
-          "label": "duration",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Specific duration runs using and"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "time"
-          }
+          "id": "y",
+          "label": "time",
+          "type": "duration"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Specific duration runs using and"
   },
   {
     "datasets": {
@@ -455,89 +110,20 @@ build/charts.json
         "2024-10-17",
         "2024-10-18"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             10,
             30
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Runs within date range"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Runs within date range"
   }
 ]
 

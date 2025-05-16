@@ -1,4 +1,5 @@
 import { TooltipItem } from "chart.js/auto";
+import { YAxisId, YAxisLabel } from "../common";
 
 /**
  * This is very similar to chart.js's ChartOptions. Why do we have a distinct
@@ -19,15 +20,15 @@ type CChartOpts = {
   plugins: {
     legend: {
       labels: {
-        color: string
-      }
+        color: string;
+      };
     };
-    title: CTitle;
+    title: CTitle<string>;
     tooltip: {
       backgroundColor: string;
       bodyColor: string;
       titleColor: string;
-    }
+    };
   };
   pointHitRadius: number;
   responsive: boolean;
@@ -45,7 +46,7 @@ type CChartOpts = {
         };
         unit: "day";
       };
-      title: CTitle;
+      title: CTitle<"datetime">;
       type: "timeseries";
     };
     y: CYOpt;
@@ -64,8 +65,10 @@ type CYAxis = {
       label: (item: TooltipItem<"line">) => string;
     };
   };
-  yAxisID: "y" | "y1";
+  yAxisID: YAxisId;
 };
+
+type CDataSets = CYAxis[];
 
 type CYOpt = CYOptT<"left">;
 
@@ -74,23 +77,23 @@ type CY1Opt = CYOptT<"right">;
 type CYOptT<A> = {
   grid: {
     color: string;
-  }
+  };
   position: A;
-  title: CTitle;
+  title: CTitle<YAxisLabel>;
   ticks?: {
     callback?: (value: string, index: number, labels: any) => string;
     color?: string;
   };
 };
 
-type CTitle = {
-  align?: 'start' | 'center' | 'end';
+type CTitle<A> = {
+  align?: "start" | "center" | "end";
   color: string;
   display: boolean;
   font: {
     size: number;
   };
-  text: string;
-}
+  text: A;
+};
 
-export { CChartOpts, CYAxis, CYOptT };
+export { CChartOpts, CDataSets, CYAxis, CYOptT };

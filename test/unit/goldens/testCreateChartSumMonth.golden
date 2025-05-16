@@ -7,8 +7,8 @@
       "2025-04-01",
       "2025-05-01"
     ],
-    "yAxes": [
-      {
+    "yAxes": {
+      "y": {
         "data": [
           97.72,
           127.50999999999999,
@@ -16,13 +16,11 @@
           142.13,
           25.74
         ],
-        "fill": false,
-        "label": "distance",
-        "pointHoverRadius": 20,
-        "tension": 0,
-        "yAxisID": "y"
+        "id": "y",
+        "label": "km",
+        "type": "distance"
       }
-    ]
+    }
   }
 ]
 

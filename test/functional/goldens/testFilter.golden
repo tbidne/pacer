@@ -10,8 +10,8 @@ build/charts.json
         "2024-10-26T12:00:00-08:00",
         "2024-10-27T12:00:00-08:00"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             5,
             32.18,
@@ -19,83 +19,14 @@ build/charts.json
             10,
             10
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 1"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 1"
   },
   {
     "datasets": {
@@ -103,381 +34,86 @@ build/charts.json
         "2024-10-20T14:30:00",
         "2024-10-25T12:00:00-08:00"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             9654,
             12000
           ],
-          "fill": false,
-          "label": "duration",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
+          "id": "y",
+          "label": "time",
+          "type": "duration"
         },
-        {
+        "y1": {
           "data": [
             32.18,
             42.195
           ],
-          "fill": false,
-          "label": "distance",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y1"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 2"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "time"
-          }
-        },
-        "y1": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "right",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "km"
-          }
+          "id": "y1",
+          "label": "km",
+          "type": "distance"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 2"
   },
   {
     "datasets": {
       "xAxis": [
         "2024-10-25T12:00:00-08:00"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             284.3938855314611
           ],
-          "fill": false,
-          "label": "pace",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 3"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "pace /km"
-          }
+          "id": "y",
+          "label": "pace /km",
+          "type": "pace"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 3"
   },
   {
     "datasets": {
       "xAxis": [
         "2024-10-26T12:00:00-08:00"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             360
           ],
-          "fill": false,
-          "label": "pace",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 4"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "pace /km"
-          }
+          "id": "y",
+          "label": "pace /km",
+          "type": "pace"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 4"
   },
   {
     "datasets": {
       "xAxis": [
         "2024-10-26T12:00:00-08:00"
       ],
-      "yAxes": [
-        {
+      "yAxes": {
+        "y": {
           "data": [
             360
           ],
-          "fill": false,
-          "label": "pace",
-          "pointHoverRadius": 20,
-          "tension": 0,
-          "yAxisID": "y"
-        }
-      ]
-    },
-    "extra": {},
-    "options": {
-      "maintainAspectRatio": false,
-      "plugins": {
-        "legend": {
-          "labels": {
-            "color": "#c3c3c3"
-          }
-        },
-        "title": {
-          "align": "center",
-          "color": "#c3c3c3",
-          "display": false,
-          "font": {
-            "size": 24
-          },
-          "text": "Chart 5"
-        },
-        "tooltip": {
-          "backgroundColor": "rgba(204, 204, 204, 0.75)",
-          "bodyColor": "black",
-          "titleColor": "black"
-        }
-      },
-      "pointHitRadius": 20,
-      "responsive": true,
-      "scales": {
-        "x": {
-          "grid": {
-            "color": "#393939"
-          },
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "time": {
-            "displayFormats": {
-              "day": "dd MMM yy"
-            },
-            "unit": "day"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "datetime"
-          },
-          "type": "timeseries"
-        },
-        "y": {
-          "grid": {
-            "color": "#393939"
-          },
-          "position": "left",
-          "ticks": {
-            "color": "#c3c3c3"
-          },
-          "title": {
-            "color": "#c3c3c3",
-            "display": true,
-            "font": {
-              "size": 16
-            },
-            "text": "pace /km"
-          }
+          "id": "y",
+          "label": "pace /km",
+          "type": "pace"
         }
       }
-    }
+    },
+    "extra": {},
+    "title": "Chart 5"
   }
 ]
 
