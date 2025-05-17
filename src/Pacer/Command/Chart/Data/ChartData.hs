@@ -40,9 +40,9 @@ import Pacer.Command.Chart.Data.ChartRequest
         YAxisPace
       ),
   )
-import Pacer.Command.Chart.Data.Expr
-  ( FilterExpr,
-    FilterOp
+import Pacer.Command.Chart.Data.Expr (FilterExpr, eval)
+import Pacer.Command.Chart.Data.Expr.Filter
+  ( FilterOp
       ( FilterOpEq,
         FilterOpGt,
         FilterOpGte,
@@ -58,7 +58,6 @@ import Pacer.Command.Chart.Data.Expr
         FilterLabels,
         FilterPace
       ),
-    eval,
   )
 import Pacer.Command.Chart.Data.Expr.Labels
   ( FilterLabelOp

@@ -83,6 +83,7 @@ library
     Pacer.Command.Chart.Data.ChartExtra
     Pacer.Command.Chart.Data.ChartRequest
     Pacer.Command.Chart.Data.Expr
+    Pacer.Command.Chart.Data.Expr.Filter
     Pacer.Command.Chart.Data.Expr.Labels
     Pacer.Command.Chart.Data.Garmin
     Pacer.Command.Chart.Data.Time.Moment
