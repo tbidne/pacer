@@ -81,7 +81,13 @@ import Pacer.Utils qualified as Utils
 -- | Type for activities.
 type Activity :: DistanceUnit -> Type -> Type
 data Activity dist a = MkActivity
-  { -- | The start time of the activity.
+  { -- | The type of the activity. This is only used in filtering, hence it
+    -- is arguably redundant due to the existence of 'labels'. Its only
+    -- justification is for interfacing with garmin (which has exactly one
+    -- type), and though we could just parse that into labels, it is probably
+    -- simpler to separate them.
+    atype :: Maybe Text,
+    -- | The start time of the activity.
     datetime :: Timestamp,
     -- | The activity's total distance.
     distance :: Distance dist a,
@@ -116,7 +122,8 @@ instance
 
   convertDistance_ r =
     MkActivity
-      { datetime = r.datetime,
+      { atype = r.atype,
+        datetime = r.datetime,
         distance = convertDistance_ r.distance,
         duration = r.duration,
         labels = r.labels,
@@ -211,7 +218,7 @@ instance
           "duration" .= durationTimeString,
           "labels" .= r.labels
         ]
-      ++ Utils.encodeMaybe ("title", r.title)
+      ++ Utils.encodeMaybes [("title", r.title), ("type", r.atype)]
     where
       durationTimeString =
         RelTime.toString
@@ -241,13 +248,16 @@ instance
     labels <- v .:?: "labels"
     title <- v .:? "title"
 
+    atype <- v .:? "type"
+
     Utils.failUnknownFields
       "SomeActivity"
       [ "datetime",
         "distance",
         "duration",
         "labels",
-        "title"
+        "title",
+        "type"
       ]
       v
 
@@ -255,7 +265,8 @@ instance
       MkSomeDistance s distance ->
         MkSomeActivity s
           $ MkActivity
-            { datetime,
+            { atype,
+              datetime,
               distance,
               duration,
               labels,

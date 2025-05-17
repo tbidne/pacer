@@ -785,7 +785,8 @@ testUpdateLabels = testCase "Updates labels from map" $ do
     mkSr title datetime labels =
       D.hideDistance
         $ MkActivity
-          { datetime,
+          { atype = Nothing,
+            datetime,
             distance = MkDistance @Kilometer (fromℤ 5),
             duration = MkDuration (fromℤ 1200),
             labels = Set.fromList labels,

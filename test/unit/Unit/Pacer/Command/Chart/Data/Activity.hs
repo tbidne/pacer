@@ -298,7 +298,8 @@ mkSr :: Text -> Text -> SomeActivity Double
 mkSr title ts =
   D.hideDistance
     $ MkActivity
-      { datetime = unsafeTs ts,
+      { atype = Nothing,
+        datetime = unsafeTs ts,
         distance = MkDistance @Kilometer (fromℤ 5),
         duration = MkDuration (fromℤ 1200),
         labels = mempty,
@@ -327,9 +328,12 @@ genActivity = do
     Set.fromList <$> G.list (R.linearFrom 0 0 5) UT.genText
   title <- G.maybe UT.genText
 
+  atype <- G.maybe UT.genText
+
   pure
     $ MkActivity
-      { datetime,
+      { atype,
+        datetime,
         distance,
         duration,
         labels,

@@ -301,7 +301,8 @@ handleChartType @es @a mChartType someActivities = case mChartType of
             go (MkSomeActivity sacc acc) (MkSomeActivity sr r) =
               MkSomeActivity sacc
                 $ MkActivity
-                  { -- Only need to add distance and time, since everything
+                  { atype = acc.atype,
+                    -- Only need to add distance and time, since everything
                     -- else is set in the initial value (init).
                     datetime = acc.datetime,
                     distance = newDist,
@@ -321,7 +322,11 @@ handleChartType @es @a mChartType someActivities = case mChartType of
             init =
               MkSomeActivity sy
                 $ MkActivity
-                  { datetime = roundFn y.datetime,
+                  { -- REVIEW: Should this be Nothing? Or something else e.g.
+                    -- first element, "Sum", or maybe logic to see if all
+                    -- all elements have the same type?
+                    atype = Nothing,
+                    datetime = roundFn y.datetime,
                     -- NOTE: No need to convert the distance to the requested
                     -- distance here, as mkChartDataSets will take care of it.
                     distance = y.distance,

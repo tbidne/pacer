@@ -3,7 +3,11 @@
     {
       "datetime": "2024-10-15",
       "distance": "5 km",
-      "duration": "20m30s"
+      "duration": "20m30s",
+      // Activities can optionally specify a type, for later filtering.
+      // The type can be any arbitrary text. Here it is 'Running', chosen to
+      // match garmin.
+      "type": "Running"
     },
     {
       "datetime": "2024-10-20T14:30:00",
