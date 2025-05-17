@@ -20,12 +20,12 @@ import Effectful.Logger.Dynamic (Logger (LoggerLog))
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
+        activityPaths,
         buildDir,
         chartRequestsPath,
         cleanInstall,
         dataDir,
-        json,
-        runPaths
+        json
       ),
     ChartParamsArgs,
     ChartParamsFinal,
@@ -153,14 +153,14 @@ testEvolvePhaseCliPaths =
           #dataDir
           (Just [osp|cli-data|])
         $ set'
-          #runPaths
-          [[osp|cli-runs.json|]]
+          #activityPaths
+          [[osp|cli-activities.json|]]
           baseChartParams
 
     config =
       set'
-        (#chartConfig %? #runPaths)
-        [[osp|config-runs.json|]]
+        (#chartConfig %? #activityPaths)
+        [[osp|config-activities.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -186,8 +186,8 @@ testEvolvePhaseCliData =
 
     config =
       set'
-        (#chartConfig %? #runPaths)
-        [[osp|config-runs.json|]]
+        (#chartConfig %? #activityPaths)
+        [[osp|config-activities.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -215,8 +215,8 @@ testEvolvePhaseConfigAbsPaths =
 
     config =
       set'
-        (#chartConfig %? #runPaths)
-        [rootOsPath </> [osp|config-runs.json|]]
+        (#chartConfig %? #activityPaths)
+        [rootOsPath </> [osp|config-activities.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -244,8 +244,8 @@ testEvolvePhaseConfigRelPaths =
 
     config =
       set'
-        (#chartConfig %? #runPaths)
-        [[osp|rel-runs.json|]]
+        (#chartConfig %? #activityPaths)
+        [[osp|rel-activities.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -345,7 +345,7 @@ testEvolvePhaseBoth :: TestTree
 testEvolvePhaseBoth =
   testGoldenParamsOs
     $ MkGoldenParams
-      { testDesc = "Uses Json and Garmin when both runs types exist",
+      { testDesc = "Uses Json and Garmin when both activities types exist",
         testName = [osp|testEvolvePhaseBoth|],
         runner = goldenRunner params config
       }
@@ -381,13 +381,13 @@ testEvolvePhaseCliPathsEx =
           #dataDir
           (Just [osp|cli-data|])
         $ set'
-          #runPaths
-          [[osp|bad_runs.json|]]
+          #activityPaths
+          [[osp|bad_activities.json|]]
           baseChartParams
     config =
       set'
-        (#chartConfig %? #runPaths)
-        [[osp|rel-runs.json|]]
+        (#chartConfig %? #activityPaths)
+        [[osp|rel-activities.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -408,8 +408,8 @@ testEvolvePhaseConfigPathsEx =
     params = baseChartParams
     config =
       set'
-        (#chartConfig %? #runPaths)
-        [[osp|bad-runs.json|]]
+        (#chartConfig %? #activityPaths)
+        [[osp|bad-activities.json|]]
         $ set'
           (#chartConfig %? #dataDir)
           (Just [osp|config-data|])
@@ -477,22 +477,22 @@ runEvolvePhase xdg params mConfig = do
             Set.fromList
               $ (rootOsPath </>)
               <$> [ [ospPathSep|cli-cr.json|],
-                    [ospPathSep|cli-runs.json|],
+                    [ospPathSep|cli-activities.json|],
                     [ospPathSep|cli-data/chart-requests.json|],
-                    [ospPathSep|cli-data/runs.json|],
+                    [ospPathSep|cli-data/activities.json|],
                     [ospPathSep|cli-garmin/activities.csv|],
                     [ospPathSep|cli-garmin/chart-requests.json|],
-                    [ospPathSep|cli-both/runs.json|],
+                    [ospPathSep|cli-both/activities.json|],
                     [ospPathSep|cli-both/activities.csv|],
                     [ospPathSep|cli-both/chart-requests.json|],
                     [ospPathSep|config-cr.json|],
-                    [ospPathSep|config-runs.json|],
+                    [ospPathSep|config-activities.json|],
                     [ospPathSep|config-data/chart-requests.json|],
-                    [ospPathSep|config-data/runs.json|],
+                    [ospPathSep|config-data/activities.json|],
                     [ospPathSep|config-data/rel-cr.json|],
-                    [ospPathSep|config-data/rel-runs.json|],
+                    [ospPathSep|config-data/rel-activities.json|],
                     [ospPathSep|xdg/config/pacer/chart-requests.json|],
-                    [ospPathSep|xdg/config/pacer/runs.json|]
+                    [ospPathSep|xdg/config/pacer/activities.json|]
                   ],
           xdg
         }
@@ -540,7 +540,7 @@ runPathReaderMock = interpret_ $ \case
         pure
           [ [osp|activities.csv|],
             [osp|chart-requests.json|],
-            [osp|runs.json|]
+            [osp|activities.json|]
           ]
     | otherwise -> pure []
     where
@@ -574,8 +574,8 @@ baseChartParams =
       chartRequestsPath = Nothing,
       dataDir = Nothing,
       json = False,
-      runLabelsPath = Nothing,
-      runPaths = []
+      activityLabelsPath = Nothing,
+      activityPaths = []
     }
 
 baseConfig :: Config

@@ -37,28 +37,28 @@ import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.Process.Typed.Dynamic qualified as TP
 import FileSystem.OsPath (decodeLenient, decodeThrowM)
 import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
+import Pacer.Command.Chart.Data.Activity
+  ( Activity,
+    SomeActivities,
+  )
+import Pacer.Command.Chart.Data.Activity qualified as Activity
+import Pacer.Command.Chart.Data.ActivityLabel (ActivityLabels (MkActivityLabels))
 import Pacer.Command.Chart.Data.Chart (Chart)
 import Pacer.Command.Chart.Data.Chart qualified as Chart
 import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
-import Pacer.Command.Chart.Data.Run
-  ( Run,
-    SomeRuns,
-  )
-import Pacer.Command.Chart.Data.Run qualified as Run
-import Pacer.Command.Chart.Data.RunLabel (RunLabels (MkRunLabels))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
-  ( ChartParams
-      ( buildDir,
+  ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
+    ChartParams
+      ( activityLabelsPath,
+        activityPaths,
+        buildDir,
         chartRequestsPath,
         cleanInstall,
-        json,
-        runLabelsPath,
-        runPaths
+        json
       ),
     ChartParamsFinal,
-    RunsType (RunsDefault, RunsGarmin),
   )
 import Pacer.Configuration.Env.Types (CachedPaths, LogEnv)
 import Pacer.Configuration.Env.Types qualified as Types
@@ -113,13 +113,13 @@ createCharts params = addNamespace "createCharts" $ do
   $(Logger.logInfo)
     $ "Using chart-requests: "
     <> Utils.showtPath params.chartRequestsPath
-  for params.runPaths $ \r ->
-    $(Logger.logInfo) $ "Using runs: " <> Utils.showtPath r
+  for params.activityPaths $ \r ->
+    $(Logger.logInfo) $ "Using activities: " <> Utils.showtPath r
 
-  case params.runLabelsPath of
-    Nothing -> $(Logger.logDebug) "No run-labels given"
+  case params.activityLabelsPath of
+    Nothing -> $(Logger.logDebug) "No activity-labels given"
     Just p ->
-      $(Logger.logInfo) $ "Using run-labels: " <> Utils.showtPath p
+      $(Logger.logInfo) $ "Using activity-labels: " <> Utils.showtPath p
 
   if params.json
     then do
@@ -223,7 +223,7 @@ createCharts params = addNamespace "createCharts" $ do
           ]
   where
     chartPaths =
-      (params.chartRequestsPath, params.runLabelsPath, params.runPaths)
+      (params.chartRequestsPath, params.activityLabelsPath, params.activityPaths)
     buildDirOsPath = toOsPath params.buildDir
     copyConfig =
       MkCopyDirConfig
@@ -279,7 +279,7 @@ createChartsJsonFile logInfoLvl chartPaths outJson =
   where
     outJsonOsPath = toOsPath outJson
 
--- | Given file paths to runs and chart requests, returns a lazy
+-- | Given file paths to activities and chart requests, returns a lazy
 -- json-encoded bytestring of a chart array.
 createChartsJsonBS ::
   forall es.
@@ -293,7 +293,7 @@ createChartsJsonBS ::
   Eff es LazyByteString
 createChartsJsonBS params = Utils.encodePretty <$> createChartSeq params
 
--- | Given file paths to runs and chart requests, generates a sequence of
+-- | Given file paths to activities and chart requests, generates a sequence of
 -- charts.
 createChartSeq ::
   forall es.
@@ -306,10 +306,10 @@ createChartSeq ::
   ChartPaths ->
   Eff es (Seq Chart)
 createChartSeq chartPaths = do
-  (chartRequests, runsWithLabels) <- readChartInputs chartPaths
-  throwErr =<< Chart.mkCharts runsWithLabels chartRequests
+  (chartRequests, activitiesWithLabels) <- readChartInputs chartPaths
+  throwErr =<< Chart.mkCharts activitiesWithLabels chartRequests
 
--- | Given file paths to runs and chart requests, reads the inputs.
+-- | Given file paths to activities and chart requests, reads the inputs.
 readChartInputs ::
   forall es.
   ( HasCallStack,
@@ -318,48 +318,52 @@ readChartInputs ::
     LoggerNS :> es
   ) =>
   ChartPaths ->
-  Eff es (Tuple2 (ChartRequests Double) (SomeRuns Double))
+  Eff es (Tuple2 (ChartRequests Double) (SomeActivities Double))
 readChartInputs chartPaths = addNamespace "readChartInputs" $ do
   chartRequests <-
     Utils.readDecodeJson
       @(ChartRequests Double)
       chartRequestsPath
 
-  runsNE <- for runPaths $ \rp -> do
-    let mDistUnit = preview (#garminSettings %? #distanceUnit % _Just) chartRequests
-    readRuns mDistUnit rp
+  activitiesNE <- for activitiesPaths $ \rp -> do
+    let mDistUnit =
+          preview (#garminSettings %? #distanceUnit % _Just) chartRequests
+    readActivities mDistUnit rp
 
-  let combineRuns acc rs = acc >>= Run.unionSomeRuns rs
+  let combineActivities acc rs = acc >>= Activity.unionSomeActivities rs
 
-  allRuns <-
-    case foldlMap1' Ok combineRuns runsNE of
+  allActivities <-
+    case foldlMap1' Ok combineActivities activitiesNE of
       Err err -> throwM err
       Ok xs -> pure xs
 
-  -- If a labels file exists, use it to update the runs.
-  runsWithLabels <-
-    case mRunLabelsPath of
-      Nothing -> pure allRuns
-      Just runLabelsPath -> do
-        MkRunLabels runLabels <- Utils.readDecodeJson runLabelsPath
-        let (newRuns, unusedTimestamps) = updateLabels runLabels allRuns
+  -- If a labels file exists, use it to update the activities.
+  activitiesWithLabels <-
+    case mActivityLabelsPath of
+      Nothing -> pure allActivities
+      Just activityLabelsPath -> do
+        MkActivityLabels activityLabels <- Utils.readDecodeJson activityLabelsPath
+        let (newActivities, unusedTimestamps) =
+              updateLabels activityLabels allActivities
 
         -- Warn if any timestamps in the labels file were not used.
         unless (MP.null unusedTimestamps) $ do
           let msg =
                 mconcat
                   [ "The following timestamps with labels from '",
-                    Utils.showtPath runLabelsPath,
-                    "' were not found in runs files:",
-                    Utils.showMapListNewlines displayUnused (MP.toList unusedTimestamps)
+                    Utils.showtPath activityLabelsPath,
+                    "' were not found in activities files:",
+                    Utils.showMapListNewlines
+                      displayUnused
+                      (MP.toList unusedTimestamps)
                   ]
           $(Logger.logWarn) msg
 
-        pure newRuns
+        pure newActivities
 
-  pure (chartRequests, runsWithLabels)
+  pure (chartRequests, activitiesWithLabels)
   where
-    (chartRequestsPath, mRunLabelsPath, runPaths) = chartPaths
+    (chartRequestsPath, mActivityLabelsPath, activitiesPaths) = chartPaths
 
     displayUnused (ts, labels) =
       mconcat
@@ -369,41 +373,48 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
         ]
 
     -- DistanceUnit should be set if this is a garmin (csv) file.
-    -- If it is a custom runs (json) file, it is ignored.
-    readRuns :: Maybe DistanceUnit -> Path Abs File -> Eff es (SomeRuns Double)
-    readRuns mInputDistUnit runsPath =
-      Garmin.getRunsType runsPath >>= \case
-        RunsDefault -> Utils.readDecodeJson runsPath
-        RunsGarmin -> do
+    -- If it is a custom activities (json) file, it is ignored.
+    readActivities ::
+      Maybe DistanceUnit ->
+      Path Abs File ->
+      Eff es (SomeActivities Double)
+    readActivities mInputDistUnit activitiesPath =
+      Garmin.getActivitiesType activitiesPath >>= \case
+        ActivitiesDefault -> Utils.readDecodeJson activitiesPath
+        ActivitiesGarmin -> do
           inputDistUnit <- case mInputDistUnit of
             Nothing -> throwM GarminUnitRequired
             Just du -> pure du
-          Garmin.readRunsCsv inputDistUnit runsPath
+          Garmin.readActivitiesCsv inputDistUnit activitiesPath
 
 type ChartPaths =
   Tuple3
     (Path Abs File) -- chart-requests
-    (Maybe (Path Abs File)) -- run-labels
-    (NonEmpty (Path Abs File)) -- runs
+    (Maybe (Path Abs File)) -- activity-labels
+    (NonEmpty (Path Abs File)) -- activities
 
--- | Updates all runs with labels from the given map @m@. Returns a (possibly
+-- | Updates all activities with labels from the given map @m@. Returns a (possibly
 -- empty) subset of @m@ that was 'unmatched' i.e. had no corresponding
--- run in SomeRuns.
+-- activity in SomeActivities.
 updateLabels ::
   -- | Timestamp -> labels map.
   Map Timestamp (NESet Text) ->
-  -- | All runs.
-  SomeRuns a ->
-  -- | (New runs, unmatching timestamps).
-  Tuple2 (SomeRuns a) (Map Timestamp (NESet Text))
-updateLabels runLabels rs = (newRuns, unmatched)
+  -- | All activities.
+  SomeActivities a ->
+  -- | (New activities, unmatching timestamps).
+  Tuple2 (SomeActivities a) (Map Timestamp (NESet Text))
+updateLabels activityLabels rs = (newActivities, unmatched)
   where
-    (newRuns, matched) = Run.mapAccumSomeRuns updateRunLabels rs
+    (newActivities, matched) =
+      Activity.mapAccumSomeActivities updateActivityLabels rs
 
-    unmatched = MP.withoutKeys runLabels matched
+    unmatched = MP.withoutKeys activityLabels matched
 
-    updateRunLabels :: forall d a. Run d a -> Tuple2 (Run d a) (Set Timestamp)
-    updateRunLabels r = case MP.lookup r.datetime runLabels of
+    updateActivityLabels ::
+      forall d a.
+      Activity d a ->
+      Tuple2 (Activity d a) (Set Timestamp)
+    updateActivityLabels r = case MP.lookup r.datetime activityLabels of
       Nothing -> (r, Set.empty)
       Just labels ->
         ( over' #labels (Set.union $ NESet.toSet labels) r,

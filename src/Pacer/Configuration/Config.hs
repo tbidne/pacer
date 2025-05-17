@@ -63,16 +63,17 @@ instance FromJSON Config where
         }
 
 data ChartConfig = MkChartConfig
-  { -- | Build dir.
+  { -- | Optional path to activity-labels.json.
+    activityLabelsPath :: Maybe OsPath,
+    -- | Optional path to activities file.
+    activityPaths :: List OsPath,
+    -- | Build dir.
     buildDir :: Maybe OsPath,
-    -- | Optional path to directory with runs file and chart-requests.json.
+    -- | Optional path to directory with activities file(s) and
+    -- chart-requests.json.
     dataDir :: Maybe OsPath,
     -- | Optional path to chart-requests.json.
-    chartRequestsPath :: Maybe OsPath,
-    -- | Optional path to run-labels.json.
-    runLabelsPath :: Maybe OsPath,
-    -- | Optional path to runs file.
-    runPaths :: List OsPath
+    chartRequestsPath :: Maybe OsPath
   }
   deriving stock (Eq, Show)
 
@@ -80,38 +81,38 @@ instance Semigroup ChartConfig where
   MkChartConfig x1 x2 x3 x4 x5 <> MkChartConfig y1 y2 y3 y4 y5 =
     MkChartConfig
       (x1 <|> y1)
-      (x2 <|> y2)
+      (x2 ++ y2)
       (x3 <|> y3)
       (x4 <|> y4)
-      (x5 ++ y5)
+      (x5 <|> y5)
 
 instance Monoid ChartConfig where
-  mempty = MkChartConfig Nothing Nothing Nothing Nothing []
+  mempty = MkChartConfig Nothing [] Nothing Nothing Nothing
 
 instance FromJSON ChartConfig where
   parseJSON = asnWithObject "ChartConfig" $ \v -> do
+    activityLabelsPath <- parseOsPath $ v .:? "activity-labels"
+    activityPaths <- parseOsPath $ v .:?: "activities"
     buildDir <- parseOsPath $ v .:? "build-dir"
     dataDir <- parseOsPath $ v .:? "data"
     chartRequestsPath <- parseOsPath $ v .:? "chart-requests"
-    runLabelsPath <- parseOsPath $ v .:? "run-labels"
-    runPaths <- parseOsPath $ v .:?: "runs"
 
     Utils.failUnknownFields
       "ChartConfig"
       [ "build-dir",
         "chart-requests",
         "data",
-        "run-labels",
-        "runs"
+        "activity-labels",
+        "activities"
       ]
       v
     pure
       $ MkChartConfig
-        { buildDir,
+        { activityLabelsPath,
+          activityPaths,
+          buildDir,
           dataDir,
-          chartRequestsPath,
-          runLabelsPath,
-          runPaths
+          chartRequestsPath
         }
     where
       parseOsPath ::

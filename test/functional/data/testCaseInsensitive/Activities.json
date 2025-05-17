@@ -1,5 +1,5 @@
 {
-  "runs": [
+  "activities": [
     {
       "datetime": "2024-10-15",
       "distance": "5 km",
@@ -18,8 +18,8 @@
       "distance": "marathon",
       "duration": "3h20m",
       "labels": [
-        "marathon",
-        "official"
+        "official",
+        "marathon"
       ],
       "title": "Some Marathon"
     },
@@ -28,8 +28,8 @@
       "distance": "marathon",
       "duration": "315m",
       "labels": [
-        "marathon",
-        "official"
+        "official",
+        "marathon"
       ],
       "title": "Another marathon"
     },
@@ -38,8 +38,8 @@
       "distance": "half-marathon",
       "duration": "1h20m",
       "labels": [
-        "half-marathon",
-        "official"
+        "official",
+        "half-marathon"
       ],
       "title": "Some half marathon"
     }

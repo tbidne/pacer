@@ -1,8 +1,8 @@
 {
   "log-level": "none",
   "chart": {
+    "activities": ["./activities.json"],
     "chart-requests": "./chart-requests.json",
-    "data": "./",
-    "runs": ["./runs.json"]
+    "data": "./"
   }
 }

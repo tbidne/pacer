@@ -34,7 +34,7 @@ import Text.Megaparsec qualified as MP
 --                                 Timestamp                                 --
 -------------------------------------------------------------------------------
 
--- | Timestamp for runs.
+-- | Timestamp for activities.
 data Timestamp
   = -- | A date like 2010-03-06
     TimestampDate Day

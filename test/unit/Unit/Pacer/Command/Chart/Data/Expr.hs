@@ -2,8 +2,8 @@
 
 module Unit.Pacer.Command.Chart.Data.Expr (tests) where
 
-import Pacer.Command.Chart.Data.Expr (FilterType)
 import Pacer.Command.Chart.Data.Expr qualified as Expr
+import Pacer.Command.Chart.Data.Expr.Filter (FilterType)
 import Unit.Prelude
 
 tests :: TestTree

@@ -6,6 +6,7 @@ module Pacer.Command.Chart.Data.Chart
 where
 
 import Data.Aeson qualified as Asn
+import Pacer.Command.Chart.Data.Activity (SomeActivities)
 import Pacer.Command.Chart.Data.ChartData (ChartData)
 import Pacer.Command.Chart.Data.ChartData qualified as ChartData
 import Pacer.Command.Chart.Data.ChartExtra (ChartExtra)
@@ -14,7 +15,6 @@ import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (title, unit),
     ChartRequests (chartRequests),
   )
-import Pacer.Command.Chart.Data.Run (SomeRuns)
 import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
@@ -39,7 +39,7 @@ instance ToJSON Chart where
         "title" .= c.title
       ]
 
--- | Given runs and chart requests, generates a series of charts, or the
+-- | Given activities and chart requests, generates a series of charts, or the
 mkCharts ::
   forall es a.
   ( Display a,
@@ -52,10 +52,10 @@ mkCharts ::
     Show a,
     Toℝ a
   ) =>
-  SomeRuns a ->
+  SomeActivities a ->
   ChartRequests a ->
   Eff es (Result CreateChartE (Seq Chart))
-mkCharts runs = fmap sequenceA . traverse (mkChart runs) . (.chartRequests)
+mkCharts activities = fmap sequenceA . traverse (mkChart activities) . (.chartRequests)
 
 mkChart ::
   forall es a.
@@ -69,12 +69,12 @@ mkChart ::
     Show a,
     Toℝ a
   ) =>
-  SomeRuns a ->
+  SomeActivities a ->
   ChartRequest a ->
   Eff es (Result CreateChartE Chart)
-mkChart someRuns request = fmap toChart <$> eChartData
+mkChart someActivities request = fmap toChart <$> eChartData
   where
-    eChartData = ChartData.mkChartData finalDistUnit someRuns request
+    eChartData = ChartData.mkChartData finalDistUnit someActivities request
     chartExtra = ChartExtra.mkChartExtra request
 
     toChart chartData =
@@ -85,4 +85,4 @@ mkChart someRuns request = fmap toChart <$> eChartData
         }
 
     finalDistUnit :: DistanceUnit
-    finalDistUnit = fromMaybe (distanceUnitOf someRuns) request.unit
+    finalDistUnit = fromMaybe (distanceUnitOf someActivities) request.unit

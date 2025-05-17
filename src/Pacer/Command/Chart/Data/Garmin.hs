@@ -4,13 +4,12 @@
 module Pacer.Command.Chart.Data.Garmin
   ( -- * Types
     GarminAct (..),
-    GarminRun (..),
 
     -- * Functions
-    readRunsCsv,
+    readActivitiesCsv,
 
     -- * Misc
-    getRunsType,
+    getActivitiesType,
   )
 where
 
@@ -23,6 +22,7 @@ import Data.Csv
   )
 import Data.Csv.Streaming (Records (Cons, Nil))
 import Data.Csv.Streaming qualified as Csv
+import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
@@ -30,15 +30,17 @@ import Effectful.Logger.Dynamic qualified as Logger
 import FileSystem.OsPath (decodeLenient)
 import FileSystem.UTF8 (decodeUtf8Lenient)
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Run
-  ( Run (MkRun),
-    SomeRun (MkSomeRun),
-    SomeRuns,
+import Pacer.Command.Chart.Data.Activity
+  ( Activity (MkActivity),
+    SomeActivities,
+    SomeActivity (MkSomeActivity),
   )
-import Pacer.Command.Chart.Data.Run qualified as Run
+import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
-import Pacer.Command.Chart.Params (RunsType (RunsDefault, RunsGarmin))
+import Pacer.Command.Chart.Params
+  ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
+  )
 import Pacer.Data.Distance (Distance)
 import Pacer.Data.Distance qualified as Distance
 import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
@@ -49,16 +51,15 @@ import System.OsPath qualified as OsPath
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
-data GarminAct d a
-  = GarminActRun (GarminRun d a)
-  | GarminActOther
-  deriving stock (Eq, Show)
-
-data GarminRun d a = MkGarminRun
+data GarminAct d a = MkGarminAct
   { datetime :: Timestamp,
     distance :: Distance d a,
     duration :: Duration a,
-    title :: Text
+    title :: Text,
+    -- This could really be an NESet, but since we have to convert to
+    -- SomeRuns, which could be empty, the invariant here doesn't buy
+    -- us anything.
+    types :: Set Text
   }
   deriving stock (Eq, Show)
 
@@ -93,24 +94,21 @@ parseGarminRow ::
 parseGarminRow r = do
   actType :: Text <- r .: "Activity Type"
 
-  if actType == "Running"
-    then do
-      title <- r .: "Title"
-      datetime <- parseDatetime =<< r .: "Date"
-      distance <- parseX =<< r .: "Distance"
-      duration <- parseDuration =<< r .: "Moving Time"
+  title <- r .: "Title"
+  datetime <- parseDatetime =<< r .: "Date"
+  distance <- parseX =<< r .: "Distance"
+  duration <- parseDuration =<< r .: "Moving Time"
 
-      ts <- TS.fromLocalTime datetime
+  ts <- TS.fromLocalTime datetime
 
-      pure
-        $ GarminActRun
-        $ MkGarminRun
-          { datetime = ts,
-            distance,
-            duration,
-            title
-          }
-    else pure GarminActOther
+  pure
+    $ MkGarminAct
+      { datetime = ts,
+        distance,
+        duration,
+        title,
+        types = Set.singleton actType
+      }
   where
     parseDatetime :: String -> Parser LocalTime
     parseDatetime = Format.parseTimeM False Format.defaultTimeLocale timeFmt
@@ -140,50 +138,51 @@ parseGarminRow r = do
 
     timeFmt = "%Y-%m-%d %H:%M:%S"
 
-readRunsCsv ::
+readActivitiesCsv ::
   ( HasCallStack,
     FileReader :> es,
     Logger :> es
   ) =>
   DistanceUnit ->
   Path Abs File ->
-  Eff es (SomeRuns Double)
-readRunsCsv @es inputDistUnit csvPath = do
+  Eff es (SomeActivities Double)
+readActivitiesCsv @es inputDistUnit csvPath = do
   -- 1. Read csv into bytestring.
   bs <- readBinaryFile csvOsPath
 
-  someRunsList <- case inputDistUnit of
+  someActivitiesList <- case inputDistUnit of
     Meter -> throwM GarminMeters
-    Kilometer -> bsToRuns Kilometer bs
-    Mile -> bsToRuns Mile bs
+    Kilometer -> bsToActivities Kilometer bs
+    Mile -> bsToActivities Mile bs
 
-  case Run.mkSomeRunsFail someRunsList of
+  case Activity.mkSomeActivitiesFail someActivitiesList of
     Err err -> throwM $ GarminOther err
-    Ok someRuns -> pure someRuns
+    Ok someActivities -> pure someActivities
   where
     csvOsPath = toOsPath csvPath
     bsToTxt = decodeUtf8Lenient . toStrictBS
 
-    bsToRuns ::
+    bsToActivities ::
       forall (d :: DistanceUnit) ->
       (SingI d) =>
       ByteString ->
-      Eff es (List (SomeRun Double))
-    bsToRuns d bs =
+      Eff es (List (SomeActivity Double))
+    bsToActivities d bs =
       case Csv.decodeByName @(GarminAct d Double) (fromStrictBS bs) of
         Left err -> throwM $ GarminDecode err
         -- idx starts at 1 because of the header
         Right (_, rs) -> snd <$> foldGarmin (2, []) rs
 
-    toSomeRun :: (SingI d) => GarminRun d Double -> SomeRun Double
-    toSomeRun @d gr =
-      MkSomeRun (sing @d)
-        $ MkRun
+    toSomeActivity :: (SingI d) => GarminAct d Double -> SomeActivity Double
+    toSomeActivity @d gr =
+      MkSomeActivity (sing @d)
+        $ MkActivity
           { datetime = gr.datetime,
             distance = Distance.forceUnit gr.distance,
             duration = gr.duration,
             labels = Set.fromList [],
-            title = Just gr.title
+            title = Just gr.title,
+            types = gr.types
           }
 
     foldGarmin ::
@@ -192,7 +191,7 @@ readRunsCsv @es inputDistUnit csvPath = do
       GarminAcc ->
       Records (GarminAct d Double) ->
       Eff es GarminAcc
-    foldGarmin (!idx, runsList) = \case
+    foldGarmin (!idx, activitiesList) = \case
       (Nil Nothing leftover) -> do
         unless (BSL.null leftover)
           $ $(Logger.logWarn)
@@ -201,7 +200,7 @@ readRunsCsv @es inputDistUnit csvPath = do
           <> ": "
           <> (bsToTxt $ leftover)
 
-        pure (idx + 1, runsList)
+        pure (idx + 1, activitiesList)
       (Nil (Just err) leftover) -> do
         $(Logger.logError)
           $ "Csv parse error on line "
@@ -216,7 +215,7 @@ readRunsCsv @es inputDistUnit csvPath = do
           <> ": "
           <> (bsToTxt $ leftover)
 
-        pure (idx + 1, runsList)
+        pure (idx + 1, activitiesList)
       Cons (Left err) rs -> do
         $(Logger.logError)
           $ "Csv parse error on line "
@@ -224,43 +223,40 @@ readRunsCsv @es inputDistUnit csvPath = do
           <> ": "
           <> packText err
 
-        foldGarmin (idx + 1, runsList) rs
-      Cons (Right r) rs -> case r of
-        GarminActOther -> foldGarmin (idx + 1, runsList) rs
-        GarminActRun gr ->
-          foldGarmin (idx + 1, toSomeRun @d gr : runsList) rs
+        foldGarmin (idx + 1, activitiesList) rs
+      Cons (Right r) rs ->
+        foldGarmin (idx + 1, toSomeActivity @d r : activitiesList) rs
 
--- Index and parsed runs
-type GarminAcc = Tuple2 Natural (List (SomeRun Double))
+-- Index and parsed activities
+type GarminAcc = Tuple2 Natural (List (SomeActivity Double))
 
 -- heuristics to decide if we should decode csv or json.
-getRunsType ::
+getActivitiesType ::
   (Logger :> es) =>
-  -- | Runs path.
+  -- | Activities path.
   Path Abs File ->
-  Eff es RunsType
-getRunsType runsPath = do
+  Eff es ActivitiesType
+getActivitiesType activitiesPath = do
   if
     -- 1. Ends w/ .csv -> read garmin csv
-    | runsExt == [osp|.csv|] -> pure RunsGarmin
+    | activitiesExt == [osp|.csv|] -> pure ActivitiesGarmin
     -- 2. Ends w/ .json -> read custom json
-    | runsExt == [osp|.json|] -> pure RunsDefault
-    | runsExt == [osp|.jsonc|] -> pure RunsDefault
-    -- 3. Name contains the strings 'garmin' or 'activities', assume csv
-    | "garmin" `T.isInfixOf` runsBaseNameTxt -> pure RunsGarmin
-    | "activities" `T.isInfixOf` runsBaseNameTxt -> pure RunsGarmin
+    | activitiesExt == [osp|.json|] -> pure ActivitiesDefault
+    | activitiesExt == [osp|.jsonc|] -> pure ActivitiesDefault
+    -- 3. Name contains the strings 'garmin', assume csv
+    | "garmin" `T.isInfixOf` activitiesBaseNameTxt -> pure ActivitiesGarmin
     -- 4. Otherwise default to json
     | otherwise -> do
         let msg =
               mconcat
                 [ "Unknown file type: '",
-                  packText $ decodeLenient runsOsPath,
+                  packText $ decodeLenient activitiesOsPath,
                   "'. Guessing custom json format."
                 ]
         $(Logger.logWarn) msg
-        pure RunsDefault
+        pure ActivitiesDefault
   where
-    runsOsPath = toOsPath runsPath
-    runsBaseName = OsPath.takeBaseName runsOsPath
-    runsBaseNameTxt = T.toCaseFold $ packText $ decodeLenient runsBaseName
-    runsExt = OsPath.takeExtension runsOsPath
+    activitiesOsPath = toOsPath activitiesPath
+    activitiesBaseName = OsPath.takeBaseName activitiesOsPath
+    activitiesBaseNameTxt = T.toCaseFold $ packText $ decodeLenient activitiesBaseName
+    activitiesExt = OsPath.takeExtension activitiesOsPath

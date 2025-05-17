@@ -76,15 +76,16 @@ library
     Pacer.Command
     Pacer.Command.Chart
     Pacer.Command.Chart.Args
+    Pacer.Command.Chart.Data.Activity
+    Pacer.Command.Chart.Data.ActivityLabel
     Pacer.Command.Chart.Data.Chart
     Pacer.Command.Chart.Data.ChartData
     Pacer.Command.Chart.Data.ChartExtra
     Pacer.Command.Chart.Data.ChartRequest
     Pacer.Command.Chart.Data.Expr
-    Pacer.Command.Chart.Data.Expr.Labels
+    Pacer.Command.Chart.Data.Expr.Filter
+    Pacer.Command.Chart.Data.Expr.Set
     Pacer.Command.Chart.Data.Garmin
-    Pacer.Command.Chart.Data.Run
-    Pacer.Command.Chart.Data.RunLabel
     Pacer.Command.Chart.Data.Time.Moment
     Pacer.Command.Chart.Data.Time.Month
     Pacer.Command.Chart.Data.Time.Timestamp
@@ -184,11 +185,11 @@ test-suite unit
   other-modules:
     Unit.Pacer.Class.Parser
     Unit.Pacer.Command.Chart
+    Unit.Pacer.Command.Chart.Data.Activity
+    Unit.Pacer.Command.Chart.Data.ActivityLabel
     Unit.Pacer.Command.Chart.Data.ChartRequest
     Unit.Pacer.Command.Chart.Data.Expr
     Unit.Pacer.Command.Chart.Data.Garmin
-    Unit.Pacer.Command.Chart.Data.Run
-    Unit.Pacer.Command.Chart.Data.RunLabel
     Unit.Pacer.Command.Chart.Data.Time.Moment
     Unit.Pacer.Command.Chart.Data.Time.Timestamp
     Unit.Pacer.Command.Chart.Params

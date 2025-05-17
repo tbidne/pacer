@@ -1,5 +1,5 @@
 {
-  "run-labels": [
+  "activity-labels": [
     {
       "datetime": "2024-10-25 12:00:00",
       "labels": ["official", "marathon"]

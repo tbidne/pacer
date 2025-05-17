@@ -5,9 +5,9 @@
   "chart": {
     // Path to chart-requests file. Overrides 'data' field.
     "chart-requests": "./chart-requests.jsonc",
-    // Data directory where we expect to find the chart-requests and run files.
+    // Data directory where we expect to find the chart-requests and activity files.
     "data": "./",
-    // Path to runs file(s). Overrides 'data' field.
-    "runs": ["./runs.jsonc"]
+    // Path to activities file(s). Overrides 'data' field.
+    "activities": ["./activities.jsonc"]
   }
 }
