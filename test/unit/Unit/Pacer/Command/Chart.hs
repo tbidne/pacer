@@ -789,7 +789,8 @@ testUpdateLabels = testCase "Updates labels from map" $ do
             distance = MkDistance @Kilometer (fromℤ 5),
             duration = MkDuration (fromℤ 1200),
             labels = Set.fromList labels,
-            title = Just title
+            title = Just title,
+            types = Set.empty
           }
 
     unsafeNESet :: forall a. (Ord a) => List a -> NESet a

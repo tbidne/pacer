@@ -307,7 +307,8 @@ handleChartType @es @a mChartType someActivities = case mChartType of
                     distance = newDist,
                     duration = acc.duration .+. r.duration,
                     labels = acc.labels,
-                    title = acc.title
+                    title = acc.title,
+                    types = acc.types
                   }
               where
                 newDist =
@@ -327,7 +328,11 @@ handleChartType @es @a mChartType someActivities = case mChartType of
                     distance = y.distance,
                     duration = y.duration,
                     labels = mempty,
-                    title = Nothing
+                    title = Nothing,
+                    -- REVIEW: Should this be Nothing? Or something else e.g.
+                    -- first element, "Sum", or maybe logic to see if all
+                    -- all elements have the same type?
+                    types = Set.empty
                   }
 
         groupByPeriod ::

@@ -13,6 +13,7 @@ MkSomeActivities
             , "official"
             ]
           , title = Just "Some half marathon"
+          , types = fromList []
           }
         )
       } :|
@@ -26,6 +27,7 @@ MkSomeActivities
               { unDuration = UnsafePositive 1230.0 }
             , labels = fromList []
             , title = Nothing
+            , types = fromList [ "Running" ]
             }
           )
         }
@@ -39,6 +41,7 @@ MkSomeActivities
               { unDuration = UnsafePositive 9654.0 }
             , labels = fromList [ "label1" ]
             , title = Nothing
+            , types = fromList []
             }
           )
         }
@@ -55,6 +58,7 @@ MkSomeActivities
               , "official"
               ]
             , title = Just "Some Marathon"
+            , types = fromList []
             }
           )
         }
@@ -71,6 +75,7 @@ MkSomeActivities
               , "official"
               ]
             , title = Just "Another marathon"
+            , types = fromList []
             }
           )
         }

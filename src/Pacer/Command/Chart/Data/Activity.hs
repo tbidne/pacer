@@ -90,7 +90,9 @@ data Activity dist a = MkActivity
     -- | Optional labels.
     labels :: Set Text,
     -- | Optional title.
-    title :: Maybe Text
+    title :: Maybe Text,
+    -- | The type(s) of the activity. Potentially empty.
+    types :: Set Text
   }
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
@@ -116,7 +118,8 @@ instance
 
   convertDistance_ r =
     MkActivity
-      { datetime = r.datetime,
+      { types = r.types,
+        datetime = r.datetime,
         distance = convertDistance_ r.distance,
         duration = r.duration,
         labels = r.labels,
@@ -212,6 +215,7 @@ instance
           "labels" .= r.labels
         ]
       ++ Utils.encodeMaybe ("title", r.title)
+      ++ ["types" .= r.types]
     where
       durationTimeString =
         RelTime.toString
@@ -241,13 +245,16 @@ instance
     labels <- v .:?: "labels"
     title <- v .:? "title"
 
+    types <- v .:?: "types"
+
     Utils.failUnknownFields
       "SomeActivity"
       [ "datetime",
         "distance",
         "duration",
         "labels",
-        "title"
+        "title",
+        "types"
       ]
       v
 
@@ -255,7 +262,8 @@ instance
       MkSomeDistance s distance ->
         MkSomeActivity s
           $ MkActivity
-            { datetime,
+            { types,
+              datetime,
               distance,
               duration,
               labels,

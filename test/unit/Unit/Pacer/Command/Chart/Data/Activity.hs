@@ -302,7 +302,8 @@ mkSr title ts =
         distance = MkDistance @Kilometer (fromℤ 5),
         duration = MkDuration (fromℤ 1200),
         labels = mempty,
-        title = Just title
+        title = Just title,
+        types = Set.empty
       }
   where
     unsafeTs :: Text -> Timestamp
@@ -327,11 +328,15 @@ genActivity = do
     Set.fromList <$> G.list (R.linearFrom 0 0 5) UT.genText
   title <- G.maybe UT.genText
 
+  types <-
+    Set.fromList <$> G.list (R.linearFrom 0 0 5) UT.genText
+
   pure
     $ MkActivity
       { datetime,
         distance,
         duration,
         labels,
-        title
+        title,
+        types
       }

@@ -38,7 +38,9 @@ import Pacer.Command.Chart.Data.Activity
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
-import Pacer.Command.Chart.Params (ActivitiesType (ActivitiesDefault, ActivitiesGarmin))
+import Pacer.Command.Chart.Params
+  ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
+  )
 import Pacer.Data.Distance (Distance)
 import Pacer.Data.Distance qualified as Distance
 import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
@@ -183,7 +185,9 @@ readActivitiesCsv @es inputDistUnit csvPath = do
             distance = Distance.forceUnit gr.distance,
             duration = gr.duration,
             labels = Set.fromList [],
-            title = Just gr.title
+            title = Just gr.title,
+            -- TODO: This should be what we get from garmin.
+            types = Set.singleton "Running"
           }
 
     foldGarmin ::
