@@ -9,13 +9,13 @@ import Options.Applicative qualified as OA
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
+        activityLabelsPath,
+        activityPaths,
         buildDir,
         chartRequestsPath,
         cleanInstall,
         dataDir,
-        json,
-        runLabelsPath,
-        runPaths
+        json
       ),
     ChartParamsArgs,
   )
@@ -25,13 +25,13 @@ import Pacer.Prelude
 -- | Parse chart args.
 parser :: Parser ChartParamsArgs
 parser = do
+  activityLabelsPath <- mActivityLabelsParser
+  activityPaths <- mActivitiesParser
   buildDir <- mBuildDirPath
   chartRequestsPath <- mChartRequestsParser
   cleanInstall <- cleanInstallParser
   dataDir <- dataDirParser
   json <- jsonParser
-  runLabelsPath <- mRunLabelsParser
-  runPaths <- mRunsParser
 
   pure
     $ MkChartParams
@@ -40,8 +40,8 @@ parser = do
         cleanInstall,
         dataDir,
         json,
-        runLabelsPath,
-        runPaths
+        activityLabelsPath,
+        activityPaths
       }
 
 mBuildDirPath :: Parser (Maybe OsPath)
@@ -56,17 +56,17 @@ mChartRequestsParser =
   where
     helpTxt = "Optional path to chart-requests file. Overrides --data."
 
-mRunLabelsParser :: Parser (Maybe OsPath)
-mRunLabelsParser = mOsPathParser Nothing "run-labels" "PATH" helpTxt
+mActivityLabelsParser :: Parser (Maybe OsPath)
+mActivityLabelsParser = mOsPathParser Nothing "activity-labels" "PATH" helpTxt
   where
-    helpTxt = "Optional path to run-labels file. Overrides --data."
+    helpTxt = "Optional path to activity-labels file. Overrides --data."
 
-mRunsParser :: Parser (List OsPath)
-mRunsParser = OA.many $ osPathParser Nothing "runs" "PATHs..." helpTxt
+mActivitiesParser :: Parser (List OsPath)
+mActivitiesParser = OA.many $ osPathParser Nothing "activities" "PATHs..." helpTxt
   where
     helpTxt =
       mconcat
-        [ "Optional path(s) to runs file(s). Overrides --data. We expect ",
+        [ "Optional path(s) to activities file(s). Overrides --data. We expect ",
           "either default (.json) or garmin (.csv) files."
         ]
 
@@ -76,7 +76,7 @@ dataDirParser = mOsPathParser (Just 'd') "data" "PATH" helpTxt
     helpTxt =
       mconcat
         [ "Path to data directory i.e. where we search for chart-requests ",
-          "file and runs file. If not given, defaults to the ",
+          "file and activities file. If not given, defaults to the ",
           "XDG config e.g. ~/.config/pacer/."
         ]
 

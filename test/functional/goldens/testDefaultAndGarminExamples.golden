@@ -36,9 +36,9 @@ build/charts.json
       }
     },
     "extra": {
-      "description": "This is some runs plotted by distance."
+      "description": "This is some activities plotted by distance."
     },
-    "title": "Runs by distance"
+    "title": "Activities by distance"
   },
   {
     "datasets": {
@@ -92,9 +92,9 @@ build/charts.json
       }
     },
     "extra": {
-      "description": "The same runs as before, but in miles."
+      "description": "The same activities as before, but in miles."
     },
-    "title": "Runs by distance and pace"
+    "title": "Activities by distance and pace"
   },
   {
     "datasets": {
@@ -202,7 +202,7 @@ build/charts.json
       }
     },
     "extra": {},
-    "title": "Long runs"
+    "title": "Long activities"
   },
   {
     "datasets": {

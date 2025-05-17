@@ -1,9 +1,9 @@
 MkChartParams
-  { buildDir = "C:\abs\build-dir\"
+  { activityLabelsPath = Nothing
+  , activityPaths = "C:\root\xdg\config\pacer\activities.json" :| []
+  , buildDir = "C:\abs\build-dir\"
   , cleanInstall = False
   , chartRequestsPath = "C:\root\xdg\config\pacer\chart-requests.json"
   , dataDir = ()
   , json = False
-  , runLabelsPath = Nothing
-  , runPaths = "C:\root\xdg\config\pacer\runs.json" :| []
   }

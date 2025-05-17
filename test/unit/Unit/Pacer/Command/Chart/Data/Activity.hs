@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unit.Pacer.Command.Chart.Data.Run (tests) where
+module Unit.Pacer.Command.Chart.Data.Activity (tests) where
 
 import Data.Set qualified as Set
 import Data.Text qualified as T
@@ -8,10 +8,17 @@ import FileSystem.IO (readBinaryFileIO)
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Run (Run (MkRun), SomeRun (MkSomeRun), SomeRuns)
-import Pacer.Command.Chart.Data.Run qualified as R
+import Pacer.Command.Chart.Data.Activity
+  ( Activity (MkActivity),
+    SomeActivities,
+    SomeActivity (MkSomeActivity),
+  )
+import Pacer.Command.Chart.Data.Activity qualified as R
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
-import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer, Meter, Mile))
+import Pacer.Data.Distance
+  ( Distance (MkDistance),
+    DistanceUnit (Kilometer, Meter, Mile),
+  )
 import Pacer.Data.Distance qualified as D
 import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
 import Pacer.Data.Duration (Duration (MkDuration))
@@ -23,30 +30,30 @@ import Unit.TestUtils qualified as UT
 tests :: TestTree
 tests =
   testGroup
-    "Pacer.Command.Chart.Data.Run"
-    [ testParseExampleRunsJson,
-      testParseSomeRunRoundtrip,
+    "Pacer.Command.Chart.Data.Activity"
+    [ testParseExampleActivitiesJson,
+      testParseSomeActivityRoundtrip,
       mkTests
     ]
 
-testParseExampleRunsJson :: TestTree
-testParseExampleRunsJson = testGoldenParams params
+testParseExampleActivitiesJson :: TestTree
+testParseExampleActivitiesJson = testGoldenParams params
   where
     params =
       MkGoldenParams
-        { testDesc = "Parses example runs.jsonc",
-          testName = [osp|testParseExampleRunsJson|],
+        { testDesc = "Parses example activities.jsonc",
+          testName = [osp|testParseExampleActivitiesJson|],
           runner = do
             contents <- readBinaryFileIO path
-            case Utils.decodeJson @(SomeRuns Double) contents of
+            case Utils.decodeJson @(SomeActivities Double) contents of
               Ok result -> pure $ pShowBS result
               Err err -> throwM err
         }
-    path = [ospPathSep|examples/runs.jsonc|]
+    path = [ospPathSep|examples/activities.jsonc|]
 
-testParseSomeRunRoundtrip :: TestTree
-testParseSomeRunRoundtrip = testPropertyNamed name desc $ property $ do
-  sr <- forAll genSomeRun
+testParseSomeActivityRoundtrip :: TestTree
+testParseSomeActivityRoundtrip = testPropertyNamed name desc $ property $ do
+  sr <- forAll genSomeActivity
 
   let encoded = Utils.encodePretty sr
   annotateShow encoded
@@ -57,33 +64,33 @@ testParseSomeRunRoundtrip = testPropertyNamed name desc $ property $ do
 
   sr === decoded
   where
-    name = "testParseSomeRunRoundtrip"
+    name = "testParseSomeActivityRoundtrip"
     desc = "fromJSON . toJSON is a round trip"
 
 mkTests :: TestTree
 mkTests =
   testGroup
-    "mkSomeRuns"
-    [ testMkSomeRunsSuccess,
-      testMkSomeRunsDuplicateDate,
-      testMkSomeRunsDuplicateTime,
-      testMkSomeRunsDuplicateZoned,
-      testMkSomeRunsDuplicateZonedConvert,
-      testMkSomeRunsDateTimeOverlap,
-      testMkSomeRunsTimeDateOverlap,
-      testMkSomeRunsDateZonedOverlap,
-      testMkSomeRunsZonedDateOverlap,
-      testMkSomeRunsTimeZonedOverlap,
-      testMkSomeRunsZonedTimeOverlap
+    "mkSomeActivities"
+    [ testMkSomeActivitiesSuccess,
+      testMkSomeActivitiesDuplicateDate,
+      testMkSomeActivitiesDuplicateTime,
+      testMkSomeActivitiesDuplicateZoned,
+      testMkSomeActivitiesDuplicateZonedConvert,
+      testMkSomeActivitiesDateTimeOverlap,
+      testMkSomeActivitiesTimeDateOverlap,
+      testMkSomeActivitiesDateZonedOverlap,
+      testMkSomeActivitiesZonedDateOverlap,
+      testMkSomeActivitiesTimeZonedOverlap,
+      testMkSomeActivitiesZonedTimeOverlap
     ]
 
-testMkSomeRunsSuccess :: TestTree
-testMkSomeRunsSuccess = testCase "Successfully creates SomeRuns" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesSuccess :: TestTree
+testMkSomeActivitiesSuccess = testCase "Successfully creates SomeActivities" $ do
+  case R.mkSomeActivities activities of
     Err err -> assertFailure $ displayException err
-    Ok result -> expected @=? R.someRunsToList result
+    Ok result -> expected @=? R.someActivitiesToList result
   where
-    runs = r1 :| [r2, r3, r4, r5, r6]
+    activities = r1 :| [r2, r3, r4, r5, r6]
     expected = [r5, r6, r2, r1, r3, r4]
 
     r1 = mkSr "r1" "2024-08-10"
@@ -93,14 +100,14 @@ testMkSomeRunsSuccess = testCase "Successfully creates SomeRuns" $ do
     r5 = mkSr "r5" "2024-08-07T10:20:00-0800"
     r6 = mkSr "r6" "2024-08-07T10:20:00-0900"
 
-testMkSomeRunsDuplicateDate :: TestTree
-testMkSomeRunsDuplicateDate = testCase "Fails for duplicate date" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesDuplicateDate :: TestTree
+testMkSomeActivitiesDuplicateDate = testCase "Fails for duplicate date" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r1 :| [r2]
+    activities = r1 :| [r2]
     expected =
       T.intercalate
         "\n"
@@ -112,14 +119,14 @@ testMkSomeRunsDuplicateDate = testCase "Fails for duplicate date" $ do
     r1 = mkSr "r1" "2024-08-10"
     r2 = mkSr "r2" "2024-08-10"
 
-testMkSomeRunsDuplicateTime :: TestTree
-testMkSomeRunsDuplicateTime = testCase "Fails for duplicate time" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesDuplicateTime :: TestTree
+testMkSomeActivitiesDuplicateTime = testCase "Fails for duplicate time" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r1 :| [r2]
+    activities = r1 :| [r2]
     expected =
       T.intercalate
         "\n"
@@ -131,14 +138,14 @@ testMkSomeRunsDuplicateTime = testCase "Fails for duplicate time" $ do
     r1 = mkSr "r1" "2024-08-10T12:15:30"
     r2 = mkSr "r2" "2024-08-10T12:15:30"
 
-testMkSomeRunsDuplicateZoned :: TestTree
-testMkSomeRunsDuplicateZoned = testCase "Fails for duplicate zoned time" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesDuplicateZoned :: TestTree
+testMkSomeActivitiesDuplicateZoned = testCase "Fails for duplicate zoned time" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r1 :| [r2]
+    activities = r1 :| [r2]
     expected =
       T.intercalate
         "\n"
@@ -150,15 +157,15 @@ testMkSomeRunsDuplicateZoned = testCase "Fails for duplicate zoned time" $ do
     r1 = mkSr "r1" "2024-08-10T12:15:30-0800"
     r2 = mkSr "r2" "2024-08-10T12:15:30-0800"
 
-testMkSomeRunsDuplicateZonedConvert :: TestTree
-testMkSomeRunsDuplicateZonedConvert = testCase desc $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesDuplicateZonedConvert :: TestTree
+testMkSomeActivitiesDuplicateZonedConvert = testCase desc $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
     desc = "Fails for duplicate converted zoned time"
-    runs = r1 :| [r2]
+    activities = r1 :| [r2]
     expected =
       T.intercalate
         "\n"
@@ -170,14 +177,14 @@ testMkSomeRunsDuplicateZonedConvert = testCase desc $ do
     r1 = mkSr "r1" "2024-08-10T13:15:30-0700"
     r2 = mkSr "r2" "2024-08-10T12:15:30-0800"
 
-testMkSomeRunsDateTimeOverlap :: TestTree
-testMkSomeRunsDateTimeOverlap = testCase "Fails for date time overlap" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesDateTimeOverlap :: TestTree
+testMkSomeActivitiesDateTimeOverlap = testCase "Fails for date time overlap" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r1 :| [r2]
+    activities = r1 :| [r2]
     expected =
       T.intercalate
         "\n"
@@ -189,17 +196,17 @@ testMkSomeRunsDateTimeOverlap = testCase "Fails for date time overlap" $ do
     r1 = mkSr "r1" "2024-08-10"
     r2 = mkSr "r2" "2024-08-10T12:14:00"
 
--- Same as testMkSomeRunsDateTimeOverlap but with the order swapped. We want
+-- Same as testMkSomeActivitiesDateTimeOverlap but with the order swapped. We want
 -- success/failure to be irrespective of order, so this is not
 -- necessarily trivial.
-testMkSomeRunsTimeDateOverlap :: TestTree
-testMkSomeRunsTimeDateOverlap = testCase "Fails for time date overlap" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesTimeDateOverlap :: TestTree
+testMkSomeActivitiesTimeDateOverlap = testCase "Fails for time date overlap" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r2 :| [r1]
+    activities = r2 :| [r1]
     expected =
       T.intercalate
         "\n"
@@ -211,14 +218,14 @@ testMkSomeRunsTimeDateOverlap = testCase "Fails for time date overlap" $ do
     r1 = mkSr "r1" "2024-08-10"
     r2 = mkSr "r2" "2024-08-10T12:14:00"
 
-testMkSomeRunsDateZonedOverlap :: TestTree
-testMkSomeRunsDateZonedOverlap = testCase "Fails for date zoned overlap" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesDateZonedOverlap :: TestTree
+testMkSomeActivitiesDateZonedOverlap = testCase "Fails for date zoned overlap" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r1 :| [r2]
+    activities = r1 :| [r2]
     expected =
       T.intercalate
         "\n"
@@ -230,14 +237,14 @@ testMkSomeRunsDateZonedOverlap = testCase "Fails for date zoned overlap" $ do
     r1 = mkSr "r1" "2024-08-10"
     r2 = mkSr "r2" "2024-08-10T12:14:00-0800"
 
-testMkSomeRunsZonedDateOverlap :: TestTree
-testMkSomeRunsZonedDateOverlap = testCase "Fails for zoned date overlap" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesZonedDateOverlap :: TestTree
+testMkSomeActivitiesZonedDateOverlap = testCase "Fails for zoned date overlap" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r2 :| [r1]
+    activities = r2 :| [r1]
     expected =
       T.intercalate
         "\n"
@@ -249,14 +256,14 @@ testMkSomeRunsZonedDateOverlap = testCase "Fails for zoned date overlap" $ do
     r1 = mkSr "r1" "2024-08-10"
     r2 = mkSr "r2" "2024-08-10T12:14:00-0800"
 
-testMkSomeRunsTimeZonedOverlap :: TestTree
-testMkSomeRunsTimeZonedOverlap = testCase "Fails for time zoned overlap" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesTimeZonedOverlap :: TestTree
+testMkSomeActivitiesTimeZonedOverlap = testCase "Fails for time zoned overlap" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r1 :| [r2]
+    activities = r1 :| [r2]
     expected =
       T.intercalate
         "\n"
@@ -268,14 +275,14 @@ testMkSomeRunsTimeZonedOverlap = testCase "Fails for time zoned overlap" $ do
     r1 = mkSr "r1" "2024-08-10T12:14:00"
     r2 = mkSr "r2" "2024-08-10T12:14:00-0800"
 
-testMkSomeRunsZonedTimeOverlap :: TestTree
-testMkSomeRunsZonedTimeOverlap = testCase "Fails for zoned time overlap" $ do
-  case R.mkSomeRuns runs of
+testMkSomeActivitiesZonedTimeOverlap :: TestTree
+testMkSomeActivitiesZonedTimeOverlap = testCase "Fails for zoned time overlap" $ do
+  case R.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
   where
-    runs = r2 :| [r1]
+    activities = r2 :| [r1]
     expected =
       T.intercalate
         "\n"
@@ -287,10 +294,10 @@ testMkSomeRunsZonedTimeOverlap = testCase "Fails for zoned time overlap" $ do
     r1 = mkSr "r1" "2024-08-10T12:14:00"
     r2 = mkSr "r2" "2024-08-10T12:14:00-0800"
 
-mkSr :: Text -> Text -> SomeRun Double
+mkSr :: Text -> Text -> SomeActivity Double
 mkSr title ts =
   D.hideDistance
-    $ MkRun
+    $ MkActivity
       { datetime = unsafeTs ts,
         distance = MkDistance @Kilometer (fromℤ 5),
         duration = MkDuration (fromℤ 1200),
@@ -301,16 +308,16 @@ mkSr title ts =
     unsafeTs :: Text -> Timestamp
     unsafeTs = errorErr . P.parseAll
 
-genSomeRun :: Gen (SomeRun Double)
-genSomeRun = do
+genSomeActivity :: Gen (SomeActivity Double)
+genSomeActivity = do
   distUnit <- Dist.genDistanceUnit
   case distUnit of
-    Meter -> MkSomeRun SMeter <$> genRun
-    Kilometer -> MkSomeRun SKilometer <$> genRun
-    Mile -> MkSomeRun SMile <$> genRun
+    Meter -> MkSomeActivity SMeter <$> genActivity
+    Kilometer -> MkSomeActivity SKilometer <$> genActivity
+    Mile -> MkSomeActivity SMile <$> genActivity
 
-genRun :: Gen (Run d Double)
-genRun = do
+genActivity :: Gen (Activity d Double)
+genActivity = do
   datetime <- UT.genTimestamp
   distance <- MkDistance <$> UT.genDoublePos
   -- 120 seconds, so that rounding down to 0 (e.g. 1 second) doesn't break
@@ -321,7 +328,7 @@ genRun = do
   title <- G.maybe UT.genText
 
   pure
-    $ MkRun
+    $ MkActivity
       { datetime,
         distance,
         duration,

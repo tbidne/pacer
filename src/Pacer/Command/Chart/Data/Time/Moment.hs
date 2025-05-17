@@ -18,7 +18,7 @@ import Pacer.Prelude
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
--- | Generalized 'Timestamp', for run filtering.
+-- | Generalized 'Timestamp', for activity filtering.
 data Moment
   = -- | A year like 2013.
     MomentYear Year
@@ -50,11 +50,11 @@ data Moment
 --
 -- These _do_ allow different constructors to be equal, provided they overlap.
 
--- Our general interest in Moment Ord comparisons is when filtering Runs e.g.
--- we want to filter runs w/ Run.datetime >= Moment. In particular, we need
--- to compare "low precision" moments like years w/ higher precision
--- timestamps. For example, we may want to takes runs with a timestamp >=
--- 2013.
+-- Our general interest in Moment Ord comparisons is when filtering Activities
+-- e.g. we want to filter activities w/ Activity.datetime >= Moment. In
+-- particular, we need to compare "low precision" moments like years w/ higher
+-- precision timestamps. For example, we may want to takes activities with a
+-- timestamp >= 2013.
 --
 -- To do this, we introduce the below IEq/IOrd functions that compare
 -- based on the "common data" e.g. 2013-08-10 and 2013 are compared

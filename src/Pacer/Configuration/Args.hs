@@ -81,6 +81,8 @@ parserInfo =
             "the ability to generate graphic charts based on running data."
           ]
 
+-- TODO: Update the description.
+
 argsParser ::
   forall a.
   ( Fromℚ a,

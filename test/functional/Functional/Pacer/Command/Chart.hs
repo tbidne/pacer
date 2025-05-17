@@ -35,7 +35,7 @@ basicTests getTestDir =
       testBothChartOverlapError getTestDir,
       testUnknownKeyFailure getTestDir,
       testChartSum getTestDir,
-      testUnmatchedRunLabelWarning getTestDir
+      testUnmatchedActivityLabelWarning getTestDir
     ]
 
 testExampleChart :: IO OsPath -> TestTree
@@ -47,8 +47,8 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
             [ "chart",
               "--data",
               dataDir,
-              "--runs",
-              runsPath,
+              "--activities",
+              activitiesPath,
               "--json",
               "--build-dir",
               buildDir p
@@ -59,7 +59,7 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
         }
     buildDir p = unsafeDecode $ p </> [osp|build|]
     dataDir = unsafeDecode [osp|examples|]
-    runsPath = unsafeDecode [ospPathSep|examples/runs.jsonc|]
+    activitiesPath = unsafeDecode [ospPathSep|examples/activities.jsonc|]
 
 testSimple :: IO OsPath -> TestTree
 testSimple = testChart "Simple example" [osp|testSimple|]
@@ -100,7 +100,8 @@ testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]
     desc = "Filter empty error"
 
 testFilterParseExprError :: IO OsPath -> TestTree
-testFilterParseExprError = testChartPosix True desc [osp|testFilterParseExprError|]
+testFilterParseExprError =
+  testChartPosix True desc [osp|testFilterParseExprError|]
   where
     desc = "Filter parse expr error"
 
@@ -147,7 +148,7 @@ testGarminChartError = testChart desc [osp|testGarminChartError|]
 testBothChartOverlapError :: IO OsPath -> TestTree
 testBothChartOverlapError = testChart desc [osp|testBothChartOverlapError|]
   where
-    desc = "Datetime overlap across multiple run files errors"
+    desc = "Datetime overlap across multiple activity files errors"
 
 testUnknownKeyFailure :: IO OsPath -> TestTree
 testUnknownKeyFailure = testChartPosix True desc [osp|testUnknownKeyFailure|]
@@ -159,8 +160,8 @@ testChartSum = testChart desc [osp|testChartSum|]
   where
     desc = "Uses chart sum"
 
-testUnmatchedRunLabelWarning :: IO OsPath -> TestTree
-testUnmatchedRunLabelWarning getTestDir = testCase desc $ do
+testUnmatchedActivityLabelWarning :: IO OsPath -> TestTree
+testUnmatchedActivityLabelWarning getTestDir = testCase desc $ do
   testDir <- getTestDir
 
   let args = mkArgs testDir
@@ -181,12 +182,12 @@ testUnmatchedRunLabelWarning getTestDir = testCase desc $ do
   assertBool (mkErr expected1) (expected1 `T.isInfixOf` logs)
   assertBool (mkErr expected2) (expected2 `T.isInfixOf` logs)
   where
-    desc = "Logs warnings for unused run-labels"
+    desc = "Logs warnings for unused activity-labels"
 
     expected1 = "The following timestamps with labels from"
     expected2 =
       (T.strip . T.unlines)
-        [ "were not found in runs files:",
+        [ "were not found in activities files:",
           "  - 2024-10-15 12:35:20: [unused_1]",
           "  - 2024-10-20: [unused_3, unused_4]",
           "  - 2024-10-20 14:30:00 -0800: [unused_2]"
@@ -203,7 +204,7 @@ testUnmatchedRunLabelWarning getTestDir = testCase desc $ do
     buildDir p = unsafeDecode $ p </> [osp|build|]
     dataDir =
       unsafeDecode
-        [ospPathSep|test/functional/data/testUnmatchedRunLabelWarning|]
+        [ospPathSep|test/functional/data/testUnmatchedActivityLabelWarning|]
 
 pathTests :: IO OsPath -> TestTree
 pathTests getTestDir =
@@ -211,9 +212,9 @@ pathTests getTestDir =
     "Paths"
     [ testPathXdg getTestDir,
       testPathChartRequestsOverrideData getTestDir,
-      testPathRunsOverrideData getTestDir,
+      testPathActivitiesOverrideData getTestDir,
       testPathChartRequestsOverrideXdg getTestDir,
-      testPathRunsOverrideXdg getTestDir,
+      testPathActivitiesOverrideXdg getTestDir,
       testPathConfig getTestDir
     ]
 
@@ -261,29 +262,29 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
     -- Want this dir overridden for chart-requests
     dataDir = unsafeDecode [osp|test/functional/data/testPathChartRequestsOverrideData|]
 
-testPathRunsOverrideData :: IO OsPath -> TestTree
-testPathRunsOverrideData getTestDir = testGoldenParams getTestDir params
+testPathActivitiesOverrideData :: IO OsPath -> TestTree
+testPathActivitiesOverrideData getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
         { mkArgs = \p ->
             [ "chart",
               "--json",
-              "--runs",
-              runsPath,
+              "--activities",
+              activitiesPath,
               "--data",
               dataDir,
               "--build-dir",
               buildDir p
             ],
           outFileName = Just [ospPathSep|build/charts.json|],
-          testDesc = "--runs overrides --data",
-          testName = [osp|testPathRunsOverrideData|]
+          testDesc = "--activities overrides --data",
+          testName = [osp|testPathActivitiesOverrideData|]
         }
     buildDir p = unsafeDecode $ p </> [osp|build|]
-    runsPath =
+    activitiesPath =
       unsafeDecode
-        [ospPathSep|test/functional/data/testSimple/runs.json|]
+        [ospPathSep|test/functional/data/testSimple/activities.json|]
     dataDir = unsafeDecode [osp|examples|]
 
 testPathChartRequestsOverrideXdg :: IO OsPath -> TestTree
@@ -308,26 +309,27 @@ testPathChartRequestsOverrideXdg getTestDir = testGoldenParams getTestDir params
       unsafeDecode
         [ospPathSep|test/functional/data/testSimple/chart-requests.json|]
 
-testPathRunsOverrideXdg :: IO OsPath -> TestTree
-testPathRunsOverrideXdg getTestDir = testGoldenParams getTestDir params
+testPathActivitiesOverrideXdg :: IO OsPath -> TestTree
+testPathActivitiesOverrideXdg getTestDir = testGoldenParams getTestDir params
   where
     params =
       MkGoldenParams
         { mkArgs = \p ->
             [ "chart",
               "--json",
-              "--runs",
-              runsPath,
+              "--activities",
+              activitiesPath,
               "--build-dir",
               buildDir p
             ],
           outFileName = Just [ospPathSep|build/charts.json|],
-          testDesc = "--runs overrides XDG",
-          testName = [osp|testPathRunsOverrideXdg|]
+          testDesc = "--activities overrides XDG",
+          testName = [osp|testPathActivitiesOverrideXdg|]
         }
     buildDir p = unsafeDecode $ p </> [osp|build|]
-    runsPath =
-      unsafeDecode [ospPathSep|test/functional/data/testSimple/runs.json|]
+    activitiesPath =
+      unsafeDecode
+        [ospPathSep|test/functional/data/testSimple/activities.json|]
 
 testPathConfig :: IO OsPath -> TestTree
 testPathConfig getTestDir = testGoldenParams getTestDir params

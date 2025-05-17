@@ -49,30 +49,30 @@ import FileSystem.Path qualified as Path
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart (ChartPaths)
 import Pacer.Command.Chart qualified as Chart
-import Pacer.Command.Chart.Data.Chart (Chart (chartData))
-import Pacer.Command.Chart.Data.Run
-  ( Run
-      ( MkRun,
+import Pacer.Command.Chart.Data.Activity
+  ( Activity
+      ( MkActivity,
         datetime,
         distance,
         duration,
         labels,
         title
       ),
-    SomeRuns (MkSomeRuns),
-    SomeRunsKey (MkSomeRunsKey),
+    SomeActivities (MkSomeActivities),
+    SomeActivitiesKey (MkSomeActivitiesKey),
   )
-import Pacer.Command.Chart.Data.Run qualified as R
+import Pacer.Command.Chart.Data.Activity qualified as R
+import Pacer.Command.Chart.Data.Chart (Chart (chartData))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
+        activityPaths,
         buildDir,
         chartRequestsPath,
         cleanInstall,
         dataDir,
-        json,
-        runPaths
+        json
       ),
     ChartParamsArgs,
   )
@@ -136,8 +136,8 @@ testDefault = testCase "Default" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runLabelsPath = Nothing,
-          runPaths = []
+          activityLabelsPath = Nothing,
+          activityPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -158,8 +158,8 @@ testJson = testCase "With --json" $ do
           dataDir = Nothing,
           json = True,
           chartRequestsPath = Nothing,
-          runLabelsPath = Nothing,
-          runPaths = []
+          activityLabelsPath = Nothing,
+          activityPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -181,8 +181,8 @@ testPathNodeModExists = testCase "node_modules exists" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runLabelsPath = Nothing,
-          runPaths = []
+          activityLabelsPath = Nothing,
+          activityPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -203,8 +203,8 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runLabelsPath = Nothing,
-          runPaths = []
+          activityLabelsPath = Nothing,
+          activityPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -240,8 +240,8 @@ testNoNpmFailure = testCase "No npm failure" $ do
           dataDir = Nothing,
           json = False,
           chartRequestsPath = Nothing,
-          runLabelsPath = Nothing,
-          runPaths = []
+          activityLabelsPath = Nothing,
+          activityPaths = []
         }
     coreEnv =
       MkCoreEnv
@@ -311,10 +311,10 @@ runFileReaderMock = interpret_ $ \case
         Set.fromList
           [ [osp|chart-requests.json|],
             [osp|chart-requests.jsonc|],
-            [osp|runs.json|],
-            [osp|runs.jsonc|],
-            [osp|run-labels.json|],
-            [osp|run-labels.jsonc|]
+            [osp|activities.json|],
+            [osp|activities.jsonc|],
+            [osp|activity-labels.json|],
+            [osp|activity-labels.jsonc|]
           ]
 
 runFileWriterMock ::
@@ -385,8 +385,8 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
             [osp|pacer.ts|],
             [osp|package.json|],
             [osp|package-lock.json|],
-            [osp|runs.json|],
-            [osp|runs.jsonc|],
+            [osp|activities.json|],
+            [osp|activities.jsonc|],
             [osp|style.css|],
             [osp|tsconfig.json|],
             [osp|types.ts|],
@@ -397,8 +397,8 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
         Set.fromList
           [ [osp|Activities.csv|],
             [osp|activities.csv|],
-            [osp|run-labels.json|],
-            [osp|run-labels.jsonc|]
+            [osp|activity-labels.json|],
+            [osp|activity-labels.jsonc|]
           ]
   FindExecutable p -> case p of
     [osp|npm|] ->
@@ -724,20 +724,20 @@ updateLabelTests =
 
 testUpdateLabels :: TestTree
 testUpdateLabels = testCase "Updates labels from map" $ do
-  let (runsResults, unmatchedTsResults) =
+  let (activitiesResults, unmatchedTsResults) =
         first
-          ( fmap (.unSomeRunsKey)
+          ( fmap (.unSomeActivitiesKey)
               . NE.toList
               . NESet.toList
-              . (.unSomeRuns)
+              . (.unSomeActivities)
           )
-          $ (Chart.updateLabels labelMap runs)
+          $ (Chart.updateLabels labelMap activities)
 
-  -- Need to compare SomeRuns NOT SomeRunsKey as the latter compares via
+  -- Need to compare SomeActivities NOT SomeActivitiesKey as the latter compares via
   -- timestamp only.
 
-  length runsExpected @=? length runsResults
-  for_ (zip runsExpected runsResults) $ \(e, r) -> do
+  length activitiesExpected @=? length activitiesResults
+  for_ (zip activitiesExpected activitiesResults) $ \(e, r) -> do
     e @=? r
 
   let unmatchedTsResultList =
@@ -745,13 +745,13 @@ testUpdateLabels = testCase "Updates labels from map" $ do
 
   unmatchedTsExpected @=? unmatchedTsResultList
   where
-    -- 1. Runs is a union
-    -- 2. Runs do _not_ use overlap logic
+    -- 1. Activities is a union
+    -- 2. Activities do _not_ use overlap logic
     -- 3. timezone utc change?
-    runs :: SomeRuns Double
-    runs = MkSomeRuns $ unsafeNESet [x1, x2, x3, x4]
+    activities :: SomeActivities Double
+    activities = MkSomeActivities $ unsafeNESet [x1, x2, x3, x4]
 
-    runsExpected = [y1, y2, y3, y4]
+    activitiesExpected = [y1, y2, y3, y4]
 
     unmatchedTsExpected =
       [ (unsafeTs "2024-08-10", ["bad_label1", "bad_label2"])
@@ -780,11 +780,11 @@ testUpdateLabels = testCase "Updates labels from map" $ do
           (unsafeTs "2024-08-15T14:00:00-0900", unsafeNESet ["tz_label"])
         ]
 
-    mkSrk title datetime = MkSomeRunsKey . mkSr title datetime
+    mkSrk title datetime = MkSomeActivitiesKey . mkSr title datetime
 
     mkSr title datetime labels =
       D.hideDistance
-        $ MkRun
+        $ MkActivity
           { datetime,
             distance = MkDistance @Kilometer (fromℤ 5),
             duration = MkDuration (fromℤ 1200),

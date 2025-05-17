@@ -1,18 +1,18 @@
 module Bench.Pacer.Utils
   ( -- * High level
-    genAndDecodeRuns,
-    genAndDecodeOverlappedRuns,
+    genAndDecodeActivities,
+    genAndDecodeOverlappedActivities,
 
     -- * Low level
-    genRunsJson,
-    genOverlappedRunsJson,
-    decodeRuns,
-    decodeErrorRuns,
+    genActivitiesJson,
+    genOverlappedActivitiesJson,
+    decodeActivities,
+    decodeErrorActivities,
 
     -- * Low level
-    concatRunsJson,
-    mkRunJsonList,
-    tsStrToRunJson,
+    concatActivitiesJson,
+    mkActivityJsonList,
+    tsStrToActivityJson,
   )
 where
 
@@ -23,7 +23,7 @@ import Data.Time (LocalTime (LocalTime), ZonedTime (ZonedTime))
 import Data.Time.Calendar qualified as Cal
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Run (SomeRuns)
+import Pacer.Command.Chart.Data.Activity (SomeActivities)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Command.Chart.Data.Time.Timestamp.Internal
   ( Timestamp
@@ -38,69 +38,69 @@ import Pacer.Utils (AesonE)
 import Pacer.Utils qualified as Utils
 import Prelude (Double)
 
--- | 'genRunsJson' and 'decodeRuns'.
-genAndDecodeRuns :: Word -> SomeRuns Double
-genAndDecodeRuns = decodeRuns . genRunsJson
+-- | 'genActivitiesJson' and 'decodeActivities'.
+genAndDecodeActivities :: Word -> SomeActivities Double
+genAndDecodeActivities = decodeActivities . genActivitiesJson
 
--- | 'genOverlappedRunsJson' and 'decodeErrorRuns'.
-genAndDecodeOverlappedRuns :: Word -> AesonE
-genAndDecodeOverlappedRuns = decodeErrorRuns . genOverlappedRunsJson
+-- | 'genOverlappedActivitiesJson' and 'decodeErrorActivities'.
+genAndDecodeOverlappedActivities :: Word -> AesonE
+genAndDecodeOverlappedActivities = decodeErrorActivities . genOverlappedActivitiesJson
 
--- | Decodes runs json w/ expected error.
-decodeErrorRuns :: ByteString -> AesonE
-decodeErrorRuns = onOk (error "") . Utils.decodeJson @(SomeRuns Double)
+-- | Decodes activities json w/ expected error.
+decodeErrorActivities :: ByteString -> AesonE
+decodeErrorActivities = onOk (error "") . Utils.decodeJson @(SomeActivities Double)
 
--- | Decodes runs json.
-decodeRuns :: ByteString -> SomeRuns Double
-decodeRuns = onErr (error . displayException) . Utils.decodeJson
+-- | Decodes activities json.
+decodeActivities :: ByteString -> SomeActivities Double
+decodeActivities = onErr (error . displayException) . Utils.decodeJson
 
--- | Generate runs json with immediate overlap.
-genOverlappedRunsJson :: Word -> ByteString
-genOverlappedRunsJson n =
-  concatRunsJson
-    $ tsStrToRunJson "1980-04-08"
-    : tsStrToRunJson "1980-04-08"
-    : mkRunJsonList n
+-- | Generate activities json with immediate overlap.
+genOverlappedActivitiesJson :: Word -> ByteString
+genOverlappedActivitiesJson n =
+  concatActivitiesJson
+    $ tsStrToActivityJson "1980-04-08"
+    : tsStrToActivityJson "1980-04-08"
+    : mkActivityJsonList n
 
--- | Generate runs json sized by the parameter.
-genRunsJson :: Word -> ByteString
-genRunsJson = concatRunsJson . mkRunJsonList
+-- | Generate activities json sized by the parameter.
+genActivitiesJson :: Word -> ByteString
+genActivitiesJson = concatActivitiesJson . mkActivityJsonList
 
-mkRunJsonList :: Word -> List ByteString
-mkRunJsonList maxAll = allRuns
+mkActivityJsonList :: Word -> List ByteString
+mkActivityJsonList maxAll = allActivities
   where
     -- NOTE: [Avoiding overlaps]
     --
-    -- Our runs creation is fairly simple. For each of Date, Time, Zoned
-    -- types, given a start date, create a sequence of runs by where each
-    -- run is the previous run + 1 day.
+    -- Our activities creation is fairly simple. For each of Date, Time, Zoned
+    -- types, given a start date, create a sequence of activities by where each
+    -- activity is the previous activity + 1 day.
     --
     -- Because we interlace all of Date, Time, Zoned, the easiest way to
     -- avoid overlaps is to choose a start date for each s.t. the ranges will
     -- not overlap at all.
     --
-    -- The current max runs is 10_000, so each range is 10_000 / 3 = 3,333
+    -- The current max activities is 10_000, so each range is 10_000 / 3 = 3,333
     -- days ~ 9 years.
     --
     -- Thus if we space out each start date by 10 years, we should be fine.
     maxEach = maxAll .%. 3
 
-    allRuns :: List ByteString
-    allRuns =
+    allActivities :: List ByteString
+    allActivities =
       join
         -- zipWith3 so that we can interleave the different times, just so the
         -- sorting is non-trivial.
         $ L.zipWith3
-          (\d t z -> [tsToRunJson d, tsToRunJson t, tsToRunJson z])
+          (\d t z -> [tsToActivityJson d, tsToActivityJson t, tsToActivityJson z])
           (dates maxEach)
           (times maxEach)
           (zoneds maxEach)
 
-tsStrToRunJson :: Text -> ByteString
-tsStrToRunJson = tsToRunJson . unsafeParse
+tsStrToActivityJson :: Text -> ByteString
+tsStrToActivityJson = tsToActivityJson . unsafeParse
 
-tsToRunJson :: Timestamp -> ByteString
-tsToRunJson t =
+tsToActivityJson :: Timestamp -> ByteString
+tsToActivityJson t =
   -- intercalate over unlines so we don't have a trailing newline
   BS.intercalate
     "\n"
@@ -111,11 +111,11 @@ tsToRunJson t =
       "    }"
     ]
 
-concatRunsJson :: List ByteString -> ByteString
-concatRunsJson rs =
+concatActivitiesJson :: List ByteString -> ByteString
+concatActivitiesJson rs =
   C8.unlines
     [ "{",
-      "  \"runs\": [",
+      "  \"activities\": [",
       BS.intercalate ",\n" rs,
       "  ]",
       "}"

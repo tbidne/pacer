@@ -50,11 +50,11 @@ deriving stock instance
   ( Eq a,
     Eq (Convert.ConvertParamsF p a),
     Eq (Derive.DeriveQuantityF p a),
+    Eq (Chart.ActivityPathsF p),
     Eq (Chart.BuildDirF p),
     Eq (Chart.MPathF p File),
     Eq (Chart.PathF p Dir),
     Eq (Chart.PathF p File),
-    Eq (Chart.RunPathsF p),
     Eq (Scale.ScaleQuantityF p a)
   ) =>
   Eq (Command p a)
@@ -63,11 +63,11 @@ deriving stock instance
   ( Show a,
     Show (Convert.ConvertParamsF p a),
     Show (Derive.DeriveQuantityF p a),
+    Show (Chart.ActivityPathsF p),
     Show (Chart.BuildDirF p),
     Show (Chart.MPathF p File),
     Show (Chart.PathF p Dir),
     Show (Chart.PathF p File),
-    Show (Chart.RunPathsF p),
     Show (Scale.ScaleQuantityF p a)
   ) =>
   Show (Command p a)
@@ -112,8 +112,8 @@ parser =
     chartTxt =
       Utils.mkCommandDesc
         $ mconcat
-          [ "Generates charts based on a chart-requests file and a runs ",
-            "file. Requires npm to be installed."
+          [ "Generates charts based on a chart-requests file and an ",
+            "activites file(s). Requires npm to be installed."
           ]
     convertTxt =
       Utils.mkCommandDesc

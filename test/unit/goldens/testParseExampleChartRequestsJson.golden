@@ -2,18 +2,18 @@ MkChartRequests
   { chartRequests = fromList
     [ MkChartRequest
       { chartType = Nothing
-      , description = Just "This is some runs plotted by distance."
+      , description = Just "This is some activities plotted by distance."
       , filters = []
-      , title = "Runs by distance"
+      , title = "Activities by distance"
       , unit = Nothing
       , yAxis = YAxisDistance
       , y1Axis = Nothing
       }
     , MkChartRequest
       { chartType = Nothing
-      , description = Just "The same runs as before, but in miles."
+      , description = Just "The same activities as before, but in miles."
       , filters = []
-      , title = "Runs by distance and pace"
+      , title = "Activities by distance and pace"
       , unit = Just Mile
       , yAxis = YAxisDistance
       , y1Axis = Just YAxisPace
@@ -85,7 +85,7 @@ MkChartRequests
             )
           )
         ]
-      , title = "Long runs"
+      , title = "Long activities"
       , unit = Nothing
       , yAxis = YAxisDistance
       , y1Axis = Just YAxisPace

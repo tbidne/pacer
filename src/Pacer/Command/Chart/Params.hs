@@ -8,16 +8,16 @@ module Pacer.Command.Chart.Params
     ChartParams (..),
     ChartParamsArgs,
     ChartParamsFinal,
-    RunsType (..),
+    ActivitiesType (..),
 
     -- * Functions
     evolvePhase,
 
     -- * Type families
+    ActivityPathsF,
     BuildDirF,
     MPathF,
     PathF,
-    RunPathsF,
   )
 where
 
@@ -57,18 +57,18 @@ import Pacer.Utils (FileAliases (MkFileAliases), SearchFiles (MkSearchFiles))
 import Pacer.Utils qualified as Utils
 import System.OsPath qualified as OsPath
 
--- | The type of runs file.
-data RunsType
-  = -- | Default runs type, runs.json.
-    RunsDefault
-  | -- | Garmin runs type, activities.csv.
-    RunsGarmin
+-- | The type of activities file.
+data ActivitiesType
+  = -- | Default activities type, activities.json.
+    ActivitiesDefault
+  | -- | Garmin activities type, activities.csv.
+    ActivitiesGarmin
   deriving stock (Eq, Show)
 
-instance Display RunsType where
+instance Display ActivitiesType where
   displayBuilder = \case
-    RunsDefault -> "default (json)"
-    RunsGarmin -> "garmin (csv)"
+    ActivitiesDefault -> "default (json)"
+    ActivitiesGarmin -> "garmin (csv)"
 
 type BuildDirF :: ConfigPhase -> Type
 type family BuildDirF p where
@@ -101,29 +101,29 @@ type family MPathF p t where
           :<>: TE.Text "' invalid for MPathF."
       )
 
-type RunPathsF :: ConfigPhase -> Type
-type family RunPathsF p where
-  RunPathsF ConfigPhaseArgs = List OsPath
-  RunPathsF ConfigPhaseFinal = NonEmpty (Path Abs File)
+type ActivityPathsF :: ConfigPhase -> Type
+type family ActivityPathsF p where
+  ActivityPathsF ConfigPhaseArgs = List OsPath
+  ActivityPathsF ConfigPhaseFinal = NonEmpty (Path Abs File)
 
 -- | Chart params.
 type ChartParams :: ConfigPhase -> Type
 data ChartParams p = MkChartParams
-  { -- | Build directory.
+  { -- | Optional path to activity labels file.
+    activityLabelsPath :: MPathF p File,
+    -- | Optional path to activities file.
+    activityPaths :: ActivityPathsF p,
+    -- | Build directory.
     buildDir :: BuildDirF p,
     -- | If true, copies clean install of web dir and installs node deps.
     cleanInstall :: Bool,
     -- | Optional path to chart-requests.json.
     chartRequestsPath :: PathF p File,
-    -- | Optional path to directory with runs file and chart-requests.json.
+    -- | Optional path to directory with activities file and chart-requests.json.
     dataDir :: PathF p Dir,
     -- | If true, stops the build after generating the intermediate json
     -- file.
-    json :: Bool,
-    -- | Optional path to run labels file.
-    runLabelsPath :: MPathF p File,
-    -- | Optional path to runs file.
-    runPaths :: RunPathsF p
+    json :: Bool
   }
 
 type ChartParamsArgs = ChartParams ConfigPhaseArgs
@@ -131,20 +131,20 @@ type ChartParamsArgs = ChartParams ConfigPhaseArgs
 type ChartParamsFinal = ChartParams ConfigPhaseFinal
 
 deriving stock instance
-  ( Eq (BuildDirF p),
+  ( Eq (ActivityPathsF p),
+    Eq (BuildDirF p),
     Eq (MPathF p File),
     Eq (PathF p Dir),
-    Eq (PathF p File),
-    Eq (RunPathsF p)
+    Eq (PathF p File)
   ) =>
   Eq (ChartParams p)
 
 deriving stock instance
-  ( Show (BuildDirF p),
+  ( Show (ActivityPathsF p),
+    Show (BuildDirF p),
     Show (MPathF p File),
     Show (PathF p Dir),
-    Show (PathF p File),
-    Show (RunPathsF p)
+    Show (PathF p File)
   ) =>
   Show (ChartParams p)
 
@@ -160,12 +160,12 @@ evolvePhase ::
   Maybe ConfigWithPath ->
   Eff es ChartParamsFinal
 evolvePhase @es params mConfigWithPath = do
-  (chartRequestsPath, runLabelsPath, runPaths) <-
+  (chartRequestsPath, activityLabelsPath, activityPaths) <-
     getChartInputs params mConfigWithPath
 
   assertExists chartRequestsPath
-  for_ runPaths assertExists
-  for_ runLabelsPath assertExists
+  for_ activityPaths assertExists
+  for_ activityLabelsPath assertExists
 
   buildDir <-
     case params.buildDir of
@@ -185,13 +185,13 @@ evolvePhase @es params mConfigWithPath = do
 
   pure
     $ MkChartParams
-      { buildDir,
+      { activityLabelsPath,
+        activityPaths,
+        buildDir,
         cleanInstall = params.cleanInstall,
         chartRequestsPath,
         dataDir = (),
-        json = params.json,
-        runLabelsPath,
-        runPaths
+        json = params.json
       }
   where
     defaultBuildDir :: Eff es (Path Abs Dir)
@@ -211,9 +211,9 @@ type ChartInputs =
   Tuple3
     -- chart-requests
     (Path Abs File)
-    -- run-labels
+    -- activity-labels
     (Maybe (Path Abs File))
-    -- run-paths
+    -- activity-paths
     (NonEmpty (Path Abs File))
 
 getChartInputs ::
@@ -238,27 +238,27 @@ getChartInputs params mConfigWithPath = do
       params.chartRequestsPath
       (#chartConfig %? #chartRequestsPath)
 
-  runPaths <-
+  activityPaths <-
     resolveRequiredChartInput
       @[]
       params
       mConfigWithPath
-      "runs"
-      runsSearch
-      params.runPaths
-      (#chartConfig %? #runPaths)
+      "activities"
+      activitiesSearch
+      params.activityPaths
+      (#chartConfig %? #activityPaths)
 
-  runLabelsPath <-
+  activityLabelsPath <-
     resolveChartInput
       @Maybe
       params
       mConfigWithPath
-      "run-labels"
-      runLabelsSearch
-      params.runLabelsPath
-      (#chartConfig %? #runLabelsPath)
+      "activity-labels"
+      activityLabelsSearch
+      params.activityLabelsPath
+      (#chartConfig %? #activityLabelsPath)
 
-  pure (chartRequestsPath, runLabelsPath, runPaths)
+  pure (chartRequestsPath, activityLabelsPath, activityPaths)
 
 -- | Like 'resolveChartInput', except throws an exception if that path
 -- is not determined. Similarly, does not check actual file existence.
@@ -276,7 +276,7 @@ resolveRequiredChartInput ::
   Maybe ConfigWithPath ->
   -- Text description
   Text ->
-  -- Expected file_name(s) e.g. runs file
+  -- Expected file_name(s) e.g. activities file
   SearchFiles ->
   -- Maybe file.
   f OsPath ->
@@ -300,8 +300,8 @@ resolveRequiredChartInput params mConfigWithPath desc fileNames mInputOsPath = d
 --
 -- The 'FromAlt' / 'Traversable' instances allow us to be polymorphic over
 -- multiplicity. For instance, we want at most one file for chart-requests,
--- so f is specialized to 'Maybe'. On the other hand, runs allows multiple
--- files (e.g. runs.json and activities.csv), so f is 'List'.
+-- so f is specialized to 'Maybe'. On the other hand, activities allows multiple
+-- files (e.g. activities.json and activities.csv), so f is 'List'.
 --
 -- Returns 'empty' (per 'Alternative') if no explicit paths were given and
 -- we do not find any "expected" paths as a fallback.
@@ -319,7 +319,7 @@ resolveChartInput ::
   Maybe ConfigWithPath ->
   -- Text description
   Text ->
-  -- Expected file_name(s) e.g. runs file(s)
+  -- Expected file_name(s) e.g. activities file(s)
   SearchFiles ->
   -- Maybe file.
   f OsPath ->
@@ -447,21 +447,21 @@ chartRequestsSearch =
     $ [relfile|chart-requests.json|]
     :| [[relfile|chart-requests.jsonc|]]
 
-runsSearch :: SearchFiles
-runsSearch = MkSearchFiles $ runsJsonName :| [runsGarminName]
+activitiesSearch :: SearchFiles
+activitiesSearch = MkSearchFiles $ activitiesJsonName :| [activitiesGarminName]
   where
-    runsJsonName =
-      MkFileAliases $ [relfile|runs.json|] :| [[relfile|runs.jsonc|]]
-    runsGarminName =
+    activitiesJsonName =
+      MkFileAliases $ [relfile|activities.json|] :| [[relfile|activities.jsonc|]]
+    activitiesGarminName =
       MkFileAliases $ NE.singleton [relfile|Activities.csv|]
 
-runLabelsSearch :: SearchFiles
-runLabelsSearch =
+activityLabelsSearch :: SearchFiles
+activityLabelsSearch =
   MkSearchFiles
     $ NE.singleton
     $ MkFileAliases
-    $ [relfile|run-labels.json|]
-    :| [[relfile|run-labels.jsonc|]]
+    $ [relfile|activity-labels.json|]
+    :| [[relfile|activity-labels.jsonc|]]
 
 -- Handles an unknown (wrt. absolute/relative) path, resolving any
 -- relative paths. Polymorphic over file/dir path.

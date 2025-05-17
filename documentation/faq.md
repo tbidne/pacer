@@ -117,7 +117,7 @@ numeric
 
 ### How does file discovery work?
 
-The most explicit way to generate charts is to use the `--chart-requests` and `--runs` arguments. If these are not given, then we search for expected filenames in the following order:
+The most explicit way to generate charts is to use the `--chart-requests` and `--activities` arguments. If these are not given, then we search for expected filenames in the following order:
 
 - If `--data <dir>` was given:
   - `<dir>/<expected_filename(s)>`.
@@ -139,32 +139,32 @@ The only "expected filename" here is `chart-requests.json`, so this works out to
   - `<config.data>/chart-requests.json`.
 - `<xdg_config>/chart-requests.json`
 
-#### runs
+#### activities
 
-On the other hand, runs have two possible "expected filenames":
+On the other hand, activities have two possible "expected filenames":
 
-- `runs.json` (custom format)
+- `activities.json` (custom format)
 - `Activities.csv` (garmin)
 
 Therefore this works out to be:
 
 - If `--data <dir>` was given:
-  - `<dir>/runs.json`.
+  - `<dir>/activities.json`.
   - `<dir>/Activities.csv`.
 - If json config exists:
-  - `<config.runs>`.
-  - `<config.data>/runs.json`.
+  - `<config.activities>`.
+  - `<config.data>/activities.json`.
   - `<config.data>/Activities.csv`.
-- `xdg_config/runs.json`
+- `xdg_config/activities.json`
 - `xdg_config/Activities.csv`.
 
 > [!TIP]
 >
-> If `runs.json` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`. Also, whenever we search for `<file>.json`, we also search for `<file>.jsonc`.
+> If `activities.json` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`. Also, whenever we search for `<file>.json`, we also search for `<file>.jsonc`.
 
 ### How do I use this with Garmin?
 
-In addition to the custom `runs.json` format, we provide integration with garmin's `Activities.csv` file that can be downloaded from the website: https://connect.garmin.com/modern/activities.
+In addition to the custom `activities.json` format, we provide integration with garmin's `Activities.csv` file that can be downloaded from the website: https://connect.garmin.com/modern/activities.
 
 There are some caveats:
 
@@ -180,10 +180,10 @@ There are some caveats:
 
     Note that garmin only supports kilometers and miles.
 
-- Filtering by `labels` with garmin activities is a bit more involved. That is, with the custom `runs.json` format, we can label a run like:
+- Filtering by `labels` with garmin activities is a bit more involved. That is, with the custom `activities.json` format, we can label an activity like:
 
     ```jsonc
-    // runs.json
+    // activities.json
     {
       "datetime": "2024-10-25T12:00:00",
       "distance": "marathon",
@@ -192,7 +192,7 @@ There are some caveats:
     }
     ```
 
-    Then in the `chart-requests.json` we can filter on this label to take only runs with this label:
+    Then in the `chart-requests.json` we can filter on this label to take only activities with this label:
 
     ```jsonc
     // chart-requests.json
@@ -206,7 +206,7 @@ There are some caveats:
     Garmin `Activities.csv` files do not include any fields where we can add our labels, so instead we specify the labels in a separate file:
 
     ```jsonc
-    // run-labels.json
+    // activity-labels.json
     {
       "datetime": "2024-10-25 12:00:00",
       "labels": ["official", "marathon"]
@@ -220,18 +220,18 @@ There are some caveats:
     Running,2024-10-25 12:00:00,false,"Wellington Running","3.77","220","00:18:14","151","171","3.5","155","173","4:50","3:18","45","29","1.33","7.9","10.5","263","4:45","412","0.0","406","663","2,862","No","00:03:47.9","4","00:17:48.5","00:20:38","4","48"
     ```
 
-    Then the label will be attached to the run, and we can later filter on it in the `chart-requests`.
+    Then the label will be attached to the activity, and we can later filter on it in the `chart-requests`.
 
 - We assume files that contain the name `garmin` or end with `.csv` are garmin activities files. Otherwise we assume `.json` format.
 
 ### How do chart filters work?
 
-Chart requests allow us to filter runs based on some criteria. In general, `filters` contains a list of filters, where a run must satisfy all filters to be included. For example:
+Chart requests allow us to filter activities based on some criteria. In general, `filters` contains a list of filters, where an activity must satisfy all filters to be included. For example:
 
 ```jsonc
 // chart-requests.json
 {
-  "title": "Races and long runs",
+  "title": "Races and long activities",
   "filters": [
     "label = official_race",
     "distance >= 25 km",
@@ -241,7 +241,7 @@ Chart requests allow us to filter runs based on some criteria. In general, `filt
 }
 ```
 
-In this case, we will take all runs that satisfy **all** of the following criteria:
+In this case, we will take all activities that satisfy **all** of the following criteria:
 
 - Has label `official_race`.
 - Has `distance >= 25 km`.
@@ -250,9 +250,9 @@ In this case, we will take all runs that satisfy **all** of the following criter
 For instance, of the following, only `Race 1` will be selected.
 
 ```jsonc
-// runs.json
+// activities.json
 {
-  "runs": [
+  "activities": [
     {
       "datetime": "2025-03-20T14:30:00",
       "distance": "20 miles",

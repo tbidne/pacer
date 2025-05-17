@@ -101,7 +101,7 @@ instance Parser FilterOp where
 --                                 FilterType                                --
 -------------------------------------------------------------------------------
 
--- | Ways in which we can filter runs.
+-- | Ways in which we can filter activities.
 data FilterType a
   = FilterDistance FilterOp (SomeDistance a)
   | FilterDuration FilterOp (Duration a)

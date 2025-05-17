@@ -22,6 +22,13 @@ import Data.Set qualified as Set
 import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.IOrd (IEq ((~~)), (/~), (<.), (<~), (>.), (>~))
+import Pacer.Command.Chart.Data.Activity
+  ( Activity (MkActivity, datetime, distance, duration),
+    SomeActivities (MkSomeActivities),
+    SomeActivitiesKey,
+    SomeActivity (MkSomeActivity),
+  )
+import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
     ChartRequests (chartRequests),
@@ -75,13 +82,6 @@ import Pacer.Command.Chart.Data.Expr.Labels
         FilterLabelSetOpOneNMember
       ),
   )
-import Pacer.Command.Chart.Data.Run
-  ( Run (MkRun, datetime, distance, duration),
-    SomeRun (MkSomeRun),
-    SomeRuns (MkSomeRuns),
-    SomeRunsKey,
-  )
-import Pacer.Command.Chart.Data.Run qualified as Run
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
@@ -186,7 +186,7 @@ type AccY = NESeq (Tuple2 Timestamp Double)
 -- | Accumulator for chart with two Y axes.
 type AccY1 = NESeq (Tuple3 Timestamp Double Double)
 
--- | Turns a sequence of runs and chart requests into charts.
+-- | Turns a sequence of activities and chart requests into charts.
 mkChartDatas ::
   ( Display a,
     Fromℤ a,
@@ -200,12 +200,12 @@ mkChartDatas ::
   ) =>
   -- | Final distance unit to use.
   DistanceUnit ->
-  SomeRuns a ->
+  SomeActivities a ->
   ChartRequests a ->
   Eff es (Result CreateChartE (Seq ChartData))
-mkChartDatas finalDistUnit runs =
+mkChartDatas finalDistUnit activities =
   fmap sequenceA
-    . traverse (mkChartData finalDistUnit runs)
+    . traverse (mkChartData finalDistUnit activities)
     . (.chartRequests)
 
 -- NOTE: HLint incorrectly thinks some brackets are unnecessary.
@@ -213,7 +213,7 @@ mkChartDatas finalDistUnit runs =
 --
 {- HLINT ignore "Redundant bracket" -}
 
--- | Turns a sequence of runs and a chart request into a chart.
+-- | Turns a sequence of activities and a chart request into a chart.
 mkChartData ::
   forall es a.
   ( Display a,
@@ -228,22 +228,22 @@ mkChartData ::
   ) =>
   -- | Final distance unit to use.
   DistanceUnit ->
-  -- | List of runs.
-  SomeRuns a ->
+  -- | List of activities.
+  SomeActivities a ->
   -- | Chart request.
   ChartRequest a ->
-  -- | ChartData result. Nothing if no runs passed the request's filter.
+  -- | ChartData result. Nothing if no activities passed the request's filter.
   Eff es (Result CreateChartE ChartData)
-mkChartData finalDistUnit (MkSomeRuns (SetToSeqNE someRuns)) request = do
-  case filteredRuns of
+mkChartData finalDistUnit (MkSomeActivities (SetToSeqNE someActivities)) request = do
+  case filteredActivities of
     Empty -> pure $ Err $ CreateChartFilterEmpty request.title
     r :<| rs -> do
-      runs <- handleChartType request.chartType (r :<|| rs)
-      pure $ Ok $ mkChartDataSets finalDistUnit request runs
+      activities <- handleChartType request.chartType (r :<|| rs)
+      pure $ Ok $ mkChartDataSets finalDistUnit request activities
   where
-    filteredRuns = filterRuns someRuns request.filters
+    filteredActivities = filterActivities someActivities request.filters
 
--- | Transforms the runs based on the chart type.
+-- | Transforms the activities based on the chart type.
 handleChartType ::
   forall es a.
   ( Display a,
@@ -256,32 +256,32 @@ handleChartType ::
     Toℝ a
   ) =>
   Maybe ChartType ->
-  NESeq (SomeRun a) ->
-  Eff es (NESeq (SomeRun a))
-handleChartType @es @a mChartType someRuns = case mChartType of
-  Nothing -> pure someRuns
-  Just ChartTypeDefault -> pure someRuns
-  Just (ChartTypeSum period) -> sumPeriod (getStartDay someRuns) period
+  NESeq (SomeActivity a) ->
+  Eff es (NESeq (SomeActivity a))
+handleChartType @es @a mChartType someActivities = case mChartType of
+  Nothing -> pure someActivities
+  Just ChartTypeDefault -> pure someActivities
+  Just (ChartTypeSum period) -> sumPeriod (getStartDay someActivities) period
   where
-    getStartDay :: NESeq (SomeRun a) -> Day
+    getStartDay :: NESeq (SomeActivity a) -> Day
     getStartDay =
       TS.timestampToDay
-        . Run.someRunApplyRun (.datetime)
+        . Activity.someActivityApplyActivity (.datetime)
         . NESeq.head
 
     -- groupBy on Mapping to period
-    sumPeriod :: Day -> ChartSumPeriod -> Eff es (NESeq (SomeRun a))
+    sumPeriod :: Day -> ChartSumPeriod -> Eff es (NESeq (SomeActivity a))
     sumPeriod startDay period =
-      (fmap . fmap) sumRuns
+      (fmap . fmap) sumActivities
         . groupByPeriod
-        $ someRuns
+        $ someActivities
       where
         compPeriod :: Timestamp -> Timestamp -> Bool
         roundFn :: Timestamp -> Timestamp
 
         -- The idea here is:
         --
-        -- 1. We group the runs via the compPeriod function i.e. determine
+        -- 1. We group the activities via the compPeriod function i.e. determine
         --    if they belong in the same time interval.
         --
         -- 2. Round the first element in the group down to the interval
@@ -294,13 +294,13 @@ handleChartType @es @a mChartType someRuns = case mChartType of
           ChartSumDays days ->
             (TS.sameInterval startDay days, TS.roundInterval startDay days)
 
-        sumRuns :: NESeq (SomeRun a) -> SomeRun a
-        sumRuns (MkSomeRun sy y :<|| ys) = foldl1' go (init :<|| ys)
+        sumActivities :: NESeq (SomeActivity a) -> SomeActivity a
+        sumActivities (MkSomeActivity sy y :<|| ys) = foldl1' go (init :<|| ys)
           where
-            go :: SomeRun a -> SomeRun a -> SomeRun a
-            go (MkSomeRun sacc acc) (MkSomeRun sr r) =
-              MkSomeRun sacc
-                $ MkRun
+            go :: SomeActivity a -> SomeActivity a -> SomeActivity a
+            go (MkSomeActivity sacc acc) (MkSomeActivity sr r) =
+              MkSomeActivity sacc
+                $ MkActivity
                   { -- Only need to add distance and time, since everything
                     -- else is set in the initial value (init).
                     datetime = acc.datetime,
@@ -319,8 +319,8 @@ handleChartType @es @a mChartType someRuns = case mChartType of
                       r.distance
 
             init =
-              MkSomeRun sy
-                $ MkRun
+              MkSomeActivity sy
+                $ MkActivity
                   { datetime = roundFn y.datetime,
                     -- NOTE: No need to convert the distance to the requested
                     -- distance here, as mkChartDataSets will take care of it.
@@ -331,8 +331,8 @@ handleChartType @es @a mChartType someRuns = case mChartType of
                   }
 
         groupByPeriod ::
-          NESeq (SomeRun a) ->
-          Eff es (NESeq (NESeq (SomeRun a)))
+          NESeq (SomeActivity a) ->
+          Eff es (NESeq (NESeq (SomeActivity a)))
         groupByPeriod ys = do
           let xs =
                 U.neSeqGroupBy
@@ -354,8 +354,8 @@ handleChartType @es @a mChartType someRuns = case mChartType of
 
           pure xs
 
-    toDatetime :: SomeRun a -> Timestamp
-    toDatetime (MkSomeRun _ rs) = rs.datetime
+    toDatetime :: SomeActivity a -> Timestamp
+    toDatetime (MkSomeActivity _ rs) = rs.datetime
 
 mkChartDataSets ::
   forall a.
@@ -367,31 +367,31 @@ mkChartDataSets ::
   ) =>
   DistanceUnit ->
   ChartRequest a ->
-  NESeq (SomeRun a) ->
+  NESeq (SomeActivity a) ->
   ChartData
-mkChartDataSets @a finalDistUnit request runs@(MkSomeRun sd _ :<|| _) =
+mkChartDataSets @a finalDistUnit request activities@(MkSomeActivity sd _ :<|| _) =
   case request.y1Axis of
     Nothing ->
-      let vals = withSingI sd $ foldMap1 toAccY runs
+      let vals = withSingI sd $ foldMap1 toAccY activities
           yType = request.yAxis
        in ChartDataY (MkChartY vals yType finalDistUnit)
     Just y1Type ->
-      let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) runs
+      let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) activities
           yType = request.yAxis
        in ChartDataY1 (MkChartY1 vals yType y1Type finalDistUnit)
   where
-    toAccY :: SomeRun a -> AccY
-    toAccY sr@(MkSomeRun _ r) = NESeq.singleton (r.datetime, toY sr)
+    toAccY :: SomeActivity a -> AccY
+    toAccY sr@(MkSomeActivity _ r) = NESeq.singleton (r.datetime, toY sr)
 
-    toAccY1 :: YAxisType -> SomeRun a -> AccY1
-    toAccY1 yAxisType sr@(MkSomeRun _ r) =
+    toAccY1 :: YAxisType -> SomeActivity a -> AccY1
+    toAccY1 yAxisType sr@(MkSomeActivity _ r) =
       NESeq.singleton (r.datetime, toY sr, toYHelper yAxisType sr)
 
-    toY :: SomeRun a -> Double
+    toY :: SomeActivity a -> Double
     toY = toYHelper request.yAxis
 
-    toYHelper :: YAxisType -> SomeRun a -> Double
-    toYHelper axisType (MkSomeRun s r) = case axisType of
+    toYHelper :: YAxisType -> SomeActivity a -> Double
+    toYHelper axisType (MkSomeActivity s r) = case axisType of
       YAxisDistance ->
         withSingI s $ toℝ $ case finalDistUnit of
           -- NOTE: [Brackets with OverloadedRecordDot]
@@ -407,14 +407,14 @@ mkChartDataSets @a finalDistUnit request runs@(MkSomeRun sd _ :<|| _) =
           -- already throw errors somewhere, and the Meters are only here
           -- because we haven't proven to GHC that it is impossible. It would
           -- be nice to come up with something more robust.
-          Meter -> runToPace (DistU.convertToKilometers r)
-          Kilometer -> runToPace (DistU.convertToKilometers r)
-          Mile -> runToPace (DistU.convertDistance Mile r)
+          Meter -> activityToPace (DistU.convertToKilometers r)
+          Kilometer -> activityToPace (DistU.convertToKilometers r)
+          Mile -> activityToPace (DistU.convertDistance Mile r)
         where
-          runToPace runUnits =
-            (Run.derivePace runUnits).unPace.unDuration
+          activityToPace activityUnits =
+            (Activity.derivePace activityUnits).unPace.unDuration
 
-filterRuns ::
+filterActivities ::
   forall a.
   ( Fromℤ a,
     MetricSpace a,
@@ -422,55 +422,55 @@ filterRuns ::
     Semifield a,
     Show a
   ) =>
-  NESeq (SomeRunsKey a) ->
+  NESeq (SomeActivitiesKey a) ->
   List (FilterExpr a) ->
-  Seq (SomeRun a)
-filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
+  Seq (SomeActivity a)
+filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterActivity rs
   where
-    filterRun :: SomeRunsKey a -> Bool
-    filterRun r = all (eval (applyFilter r)) filters
+    filterActivity :: SomeActivitiesKey a -> Bool
+    filterActivity r = all (eval (applyFilter r)) filters
 
-    applyFilter :: SomeRunsKey a -> FilterType a -> Bool
-    applyFilter srk (FilterLabel op lbl) = applyLabel srk.unSomeRunsKey op lbl
-    applyFilter srk (FilterLabels lblSet) = applyLabels srk.unSomeRunsKey lblSet
-    applyFilter srk (FilterDate op m) = applyDate srk.unSomeRunsKey op m
-    applyFilter srk (FilterDistance op d) = applyDist srk.unSomeRunsKey op d
-    applyFilter srk (FilterDuration op d) = applyDur srk.unSomeRunsKey op d
-    applyFilter srk (FilterPace op p) = applyPace srk.unSomeRunsKey op p
+    applyFilter :: SomeActivitiesKey a -> FilterType a -> Bool
+    applyFilter srk (FilterLabel op lbl) = applyLabel srk.unSomeActivitiesKey op lbl
+    applyFilter srk (FilterLabels lblSet) = applyLabels srk.unSomeActivitiesKey lblSet
+    applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivitiesKey op m
+    applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivitiesKey op d
+    applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivitiesKey op d
+    applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivitiesKey op p
 
-    applyLabel :: SomeRun a -> FilterLabelOp -> Text -> Bool
-    applyLabel (MkSomeRun _ r) op lbl = (labelOpToFun op) r.labels lbl
+    applyLabel :: SomeActivity a -> FilterLabelOp -> Text -> Bool
+    applyLabel (MkSomeActivity _ r) op lbl = (labelOpToFun op) r.labels lbl
 
-    applyLabels :: SomeRun a -> FilterLabelSet -> Bool
-    applyLabels (MkSomeRun _ r) = \case
+    applyLabels :: SomeActivity a -> FilterLabelSet -> Bool
+    applyLabels (MkSomeActivity _ r) = \case
       FilterLabelSetOne op t -> (labelSetOneOpToFun op) r.labels t
       FilterLabelSetMany op set -> (labelSetManyOpToFun op) r.labels set
 
-    applyDate :: SomeRun a -> FilterOp -> Moment -> Bool
-    applyDate (MkSomeRun _ r) op m = (opToMFun op) runMoment m
+    applyDate :: SomeActivity a -> FilterOp -> Moment -> Bool
+    applyDate (MkSomeActivity _ r) op m = (opToMFun op) activityMoment m
       where
-        runMoment = MomentTimestamp r.datetime
+        activityMoment = MomentTimestamp r.datetime
 
-    applyDist :: SomeRun a -> FilterOp -> SomeDistance a -> Bool
-    applyDist (MkSomeRun @runDist sr r) op fDist =
+    applyDist :: SomeActivity a -> FilterOp -> SomeDistance a -> Bool
+    applyDist (MkSomeActivity @activityDist sr r) op fDist =
       withSingI sr $ (opToFun op) r.distance fDist'
       where
-        fDist' :: Distance runDist a
-        fDist' = withSingI sr $ DistU.convertDistance runDist fDist
+        fDist' :: Distance activityDist a
+        fDist' = withSingI sr $ DistU.convertDistance activityDist fDist
 
-    applyDur :: SomeRun a -> FilterOp -> Duration a -> Bool
-    applyDur (MkSomeRun _ r) op = (opToFun op) r.duration
+    applyDur :: SomeActivity a -> FilterOp -> Duration a -> Bool
+    applyDur (MkSomeActivity _ r) op = (opToFun op) r.duration
 
-    applyPace :: SomeRun a -> FilterOp -> SomePace a -> Bool
-    applyPace someRun@(MkSomeRun _ _) op (MkSomePace sfp fPace) =
-      -- 1. convert someRun to runPace
-      case Run.deriveSomePace someRun of
-        (MkSomePace @runDist srp runPace) ->
-          -- 2. convert filterPace to runPace's units
+    applyPace :: SomeActivity a -> FilterOp -> SomePace a -> Bool
+    applyPace someActivity@(MkSomeActivity _ _) op (MkSomePace sfp fPace) =
+      -- 1. convert someActivity to activityPace
+      case Activity.deriveSomePace someActivity of
+        (MkSomePace @activityDist srp activityPace) ->
+          -- 2. convert filterPace to activityPace's units
           withSingI srp
             $ withSingI sfp
-            $ case DistU.convertDistance runDist fPace of
-              fPace' -> (opToFun op) runPace fPace'
+            $ case DistU.convertDistance activityDist fPace of
+              fPace' -> (opToFun op) activityPace fPace'
 
     opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
     opToFun FilterOpEq = (==)

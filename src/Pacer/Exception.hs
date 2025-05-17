@@ -118,7 +118,7 @@ instance Exception CreateChartE where
     mconcat
       [ "Chart with title '",
         unpackText t,
-        "' is empty due to all runs being filtered out."
+        "' is empty due to all activities being filtered out."
       ]
 
 -- | General exception for when a file at an expected path does not exist.
@@ -203,5 +203,5 @@ instance Exception GarminE where
     GarminUnitRequired ->
       mconcat
         [ "The 'garmin.unit' setting is required in chart-requests json ",
-          "when used with a garmin runs file."
+          "when used with a garmin activities file."
         ]

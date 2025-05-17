@@ -37,7 +37,7 @@ import Pacer.Command
   )
 import Pacer.Command qualified as Command
 import Pacer.Command.Chart qualified as Chart
-import Pacer.Command.Chart.Data.Run (RunDatetimeOverlapE)
+import Pacer.Command.Chart.Data.Activity (ActivityDatetimeOverlapE)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
@@ -271,5 +271,5 @@ knownExceptions =
     MkExceptionProxy @PacerEx.FileNotFoundE,
     MkExceptionProxy @PacerEx.GarminE,
     MkExceptionProxy @PacerEx.NpmE,
-    MkExceptionProxy @RunDatetimeOverlapE
+    MkExceptionProxy @ActivityDatetimeOverlapE
   ]

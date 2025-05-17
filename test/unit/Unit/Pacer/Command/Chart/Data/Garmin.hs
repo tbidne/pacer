@@ -14,7 +14,7 @@ import Effectful.Logger.Dynamic
 import FileSystem.Path qualified as Path
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Params
-  ( RunsType (RunsDefault, RunsGarmin),
+  ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
   )
 import Unit.Prelude
 
@@ -22,13 +22,13 @@ tests :: TestTree
 tests =
   testGroup
     "Pacer.Command.Chart.Data.Garmin"
-    [ getRunsTypeTests
+    [ getActivitiesTypeTests
     ]
 
-getRunsTypeTests :: TestTree
-getRunsTypeTests =
+getActivitiesTypeTests :: TestTree
+getActivitiesTypeTests =
   testGroup
-    "getRunsType"
+    "getActivitiesType"
     [ testCsvGarmin,
       testJsonDefault,
       testNameGarmin,
@@ -37,37 +37,37 @@ getRunsTypeTests =
 
 testCsvGarmin :: TestTree
 testCsvGarmin = testCase ".csv returns garmin" $ do
-  (logs, result) <- runGetRunsType [osp|file.csv|]
-  RunsGarmin @=? result
+  (logs, result) <- runGetActivitiesType [osp|file.csv|]
+  ActivitiesGarmin @=? result
   [] @=? logs
 
 testJsonDefault :: TestTree
 testJsonDefault = testCase ".json returns default" $ do
-  (logs, result) <- runGetRunsType [osp|file.json|]
-  RunsDefault @=? result
+  (logs, result) <- runGetActivitiesType [osp|file.json|]
+  ActivitiesDefault @=? result
   [] @=? logs
 
 testNameGarmin :: TestTree
 testNameGarmin = testCase "name with 'garmin' returns default" $ do
-  (logs, result) <- runGetRunsType [osp|file_garmin|]
-  RunsGarmin @=? result
+  (logs, result) <- runGetActivitiesType [osp|file_garmin|]
+  ActivitiesGarmin @=? result
   [] @=? logs
 
 testNameActivities :: TestTree
 testNameActivities = testCase "name with 'activities' default" $ do
-  (logs, result) <- runGetRunsType [osp|some_activities_thing|]
-  RunsGarmin @=? result
+  (logs, result) <- runGetActivitiesType [osp|some_activities_thing|]
+  ActivitiesGarmin @=? result
   [] @=? logs
 
-  (logs2, result2) <- runGetRunsType [osp|some_Activities_thing|]
-  RunsGarmin @=? result2
+  (logs2, result2) <- runGetActivitiesType [osp|some_Activities_thing|]
+  ActivitiesGarmin @=? result2
   [] @=? logs2
 
-runGetRunsType :: OsPath -> IO (Tuple2 (List Text) RunsType)
-runGetRunsType runsOsPath = do
-  runsPath <- Path.parseAbsFile runsOsPath
+runGetActivitiesType :: OsPath -> IO (Tuple2 (List Text) ActivitiesType)
+runGetActivitiesType activitiesOsPath = do
+  activitiesPath <- Path.parseAbsFile activitiesOsPath
   logsRef <- Ref.newIORef []
-  result <- runner logsRef $ Garmin.getRunsType runsPath
+  result <- runner logsRef $ Garmin.getActivitiesType activitiesPath
   logs <- Ref.readIORef logsRef
   pure (logs, result)
   where
