@@ -8,5 +8,5 @@ Error: Pacer.Class.Parser.parseWith:1:22:
   |
 1 | labels ∋ {some label}
   |                      ^
-Unexpected char '{'. ∋ and ∌ require exactly one label, not set syntax.
+Unexpected char '{'. ∋ and ∌ require exactly one element, not set syntax.
 
