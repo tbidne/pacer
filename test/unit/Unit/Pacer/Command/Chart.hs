@@ -606,6 +606,12 @@ npmStr = case currentOs of
   Windows -> "npm.cmd"
   _ -> "npm"
 
+-- NOTE: The Activities.csv file currently warns due to an activity (cycling)
+-- w/ distance 0.0. Previously this did nothing since we were throwing away
+-- non-Running activities. Now, it _would_ log a warning, but our mock
+-- logger does nothing. So this is actually fine, and arguably nice to have
+-- since it proves the tests do not fail for a single parse failure,
+-- which is what we want. Still, we document it here in case just in case.
 createChartSeqTests :: TestTree
 createChartSeqTests =
   testGroup

@@ -4,7 +4,6 @@
 module Pacer.Command.Chart.Data.Garmin
   ( -- * Types
     GarminAct (..),
-    GarminRun (..),
 
     -- * Functions
     readActivitiesCsv,
@@ -23,6 +22,7 @@ import Data.Csv
   )
 import Data.Csv.Streaming (Records (Cons, Nil))
 import Data.Csv.Streaming qualified as Csv
+import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
@@ -51,16 +51,15 @@ import System.OsPath qualified as OsPath
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
-data GarminAct d a
-  = GarminActRun (GarminRun d a)
-  | GarminActOther
-  deriving stock (Eq, Show)
-
-data GarminRun d a = MkGarminRun
+data GarminAct d a = MkGarminAct
   { datetime :: Timestamp,
     distance :: Distance d a,
     duration :: Duration a,
-    title :: Text
+    title :: Text,
+    -- This could really be an NESet, but since we have to convert to
+    -- SomeRuns, which could be empty, the invariant here doesn't buy
+    -- us anything.
+    types :: Set Text
   }
   deriving stock (Eq, Show)
 
@@ -95,24 +94,21 @@ parseGarminRow ::
 parseGarminRow r = do
   actType :: Text <- r .: "Activity Type"
 
-  if actType == "Running"
-    then do
-      title <- r .: "Title"
-      datetime <- parseDatetime =<< r .: "Date"
-      distance <- parseX =<< r .: "Distance"
-      duration <- parseDuration =<< r .: "Moving Time"
+  title <- r .: "Title"
+  datetime <- parseDatetime =<< r .: "Date"
+  distance <- parseX =<< r .: "Distance"
+  duration <- parseDuration =<< r .: "Moving Time"
 
-      ts <- TS.fromLocalTime datetime
+  ts <- TS.fromLocalTime datetime
 
-      pure
-        $ GarminActRun
-        $ MkGarminRun
-          { datetime = ts,
-            distance,
-            duration,
-            title
-          }
-    else pure GarminActOther
+  pure
+    $ MkGarminAct
+      { datetime = ts,
+        distance,
+        duration,
+        title,
+        types = Set.singleton actType
+      }
   where
     parseDatetime :: String -> Parser LocalTime
     parseDatetime = Format.parseTimeM False Format.defaultTimeLocale timeFmt
@@ -177,7 +173,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
         -- idx starts at 1 because of the header
         Right (_, rs) -> snd <$> foldGarmin (2, []) rs
 
-    toSomeActivity :: (SingI d) => GarminRun d Double -> SomeActivity Double
+    toSomeActivity :: (SingI d) => GarminAct d Double -> SomeActivity Double
     toSomeActivity @d gr =
       MkSomeActivity (sing @d)
         $ MkActivity
@@ -186,8 +182,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
             duration = gr.duration,
             labels = Set.fromList [],
             title = Just gr.title,
-            -- TODO: This should be what we get from garmin.
-            types = Set.singleton "Running"
+            types = gr.types
           }
 
     foldGarmin ::
@@ -229,10 +224,8 @@ readActivitiesCsv @es inputDistUnit csvPath = do
           <> packText err
 
         foldGarmin (idx + 1, activitiesList) rs
-      Cons (Right r) rs -> case r of
-        GarminActOther -> foldGarmin (idx + 1, activitiesList) rs
-        GarminActRun gr ->
-          foldGarmin (idx + 1, toSomeActivity @d gr : activitiesList) rs
+      Cons (Right r) rs ->
+        foldGarmin (idx + 1, toSomeActivity @d r : activitiesList) rs
 
 -- Index and parsed activities
 type GarminAcc = Tuple2 Natural (List (SomeActivity Double))
