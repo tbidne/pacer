@@ -41,7 +41,7 @@ import Pacer.Command.Chart.Data.Expr
         FilterOpGte,
         FilterOpLt,
         FilterOpLte,
-        FilterOpNeq
+        FilterOpNEq
       ),
     FilterType
       ( FilterDate,
@@ -64,15 +64,15 @@ import Pacer.Command.Chart.Data.Expr.Labels
       ),
     FilterLabelSetOpMany
       ( FilterLabelSetOpManyEq,
-        FilterLabelSetOpManyGt,
-        FilterLabelSetOpManyGte,
-        FilterLabelSetOpManyLt,
-        FilterLabelSetOpManyLte,
-        FilterLabelSetOpManyNeq
+        FilterLabelSetOpManyNEq,
+        FilterLabelSetOpManyPSub,
+        FilterLabelSetOpManyPSuper,
+        FilterLabelSetOpManySub,
+        FilterLabelSetOpManySuper
       ),
     FilterLabelSetOpOne
       ( FilterLabelSetOpOneMember,
-        FilterLabelSetOpOneNmember
+        FilterLabelSetOpOneNMember
       ),
   )
 import Pacer.Command.Chart.Data.Run
@@ -474,7 +474,7 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
     opToFun FilterOpEq = (==)
-    opToFun FilterOpNeq = (/=)
+    opToFun FilterOpNEq = (/=)
     opToFun FilterOpLte = (<=)
     opToFun FilterOpLt = (<)
     opToFun FilterOpGte = (>=)
@@ -482,7 +482,7 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     opToMFun :: FilterOp -> (Moment -> Moment -> Bool)
     opToMFun FilterOpEq = (~~)
-    opToMFun FilterOpNeq = (/~)
+    opToMFun FilterOpNEq = (/~)
     opToMFun FilterOpLte = (<~)
     opToMFun FilterOpLt = (<.)
     opToMFun FilterOpGte = (>~)
@@ -494,14 +494,14 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
 
     labelSetOneOpToFun :: forall b. (Ord b) => FilterLabelSetOpOne -> (Set b -> b -> Bool)
     labelSetOneOpToFun FilterLabelSetOpOneMember = flip Set.member
-    labelSetOneOpToFun FilterLabelSetOpOneNmember = flip Set.notMember
+    labelSetOneOpToFun FilterLabelSetOpOneNMember = flip Set.notMember
 
     labelSetManyOpToFun :: forall b. (Ord b) => FilterLabelSetOpMany -> (Set b -> Set b -> Bool)
     labelSetManyOpToFun FilterLabelSetOpManyEq = (==)
-    labelSetManyOpToFun FilterLabelSetOpManyNeq = (/=)
+    labelSetManyOpToFun FilterLabelSetOpManyNEq = (/=)
     -- Superset rather than subset because that's how the syntax is defined,
     -- since the activity's labels is on the LHS. E.g. to filter on some
-    -- labels being a subset (gte) of an activity's labels we write:
+    -- labels being a subset of an activity's labels we write:
     --
     --   labels ⊇ {a, b, c}
     --
@@ -510,10 +510,10 @@ filterRuns @a rs filters = (.unSomeRunsKey) <$> NESeq.filter filterRun rs
     --    <op> labels {a, b, c}
     --
     -- Hence we need superset, not subset.
-    labelSetManyOpToFun FilterLabelSetOpManyGte = isSuperSetOf
-    labelSetManyOpToFun FilterLabelSetOpManyGt = isProperSuperSetOf
-    labelSetManyOpToFun FilterLabelSetOpManyLte = Set.isSubsetOf
-    labelSetManyOpToFun FilterLabelSetOpManyLt = Set.isProperSubsetOf
+    labelSetManyOpToFun FilterLabelSetOpManySuper = isSuperSetOf
+    labelSetManyOpToFun FilterLabelSetOpManyPSuper = isProperSuperSetOf
+    labelSetManyOpToFun FilterLabelSetOpManySub = Set.isSubsetOf
+    labelSetManyOpToFun FilterLabelSetOpManyPSub = Set.isProperSubsetOf
 
 isSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
 isSuperSetOf = flip Set.isSubsetOf

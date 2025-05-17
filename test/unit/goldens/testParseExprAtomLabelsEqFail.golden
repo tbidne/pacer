@@ -9,5 +9,5 @@ Error: Pacer.Class.Parser.parseWith:1:10:
 1 | labels = some label
   |          ^
 unexpected 's'
-expecting '{' or white space
+expecting '{', '∅', or white space
 

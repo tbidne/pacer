@@ -9,5 +9,5 @@ Error: Pacer.Class.Parser.parseWith:1:10:
 1 | duration % 4m24s
   |          ^^
 unexpected "% "
-expecting "/=", "<=", ">=", '<', '=', '>', or white space
+expecting "/=", "<=", ">=", '<', '=', '>', '≠', '≤', '≥', or white space
 

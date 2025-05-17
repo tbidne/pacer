@@ -9,5 +9,5 @@ Error: Pacer.Class.Parser.parseWith:1:11:
 1 | labels /= lbl
   |           ^
 unexpected 'l'
-expecting '{' or white space
+expecting '{', '∅', or white space
 

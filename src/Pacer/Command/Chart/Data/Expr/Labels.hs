@@ -42,13 +42,14 @@ data FilterLabelOp
 instance Display FilterLabelOp where
   displayBuilder = \case
     FilterLabelOpEq -> "="
-    FilterLabelOpNeq -> "/="
+    FilterLabelOpNeq -> "≠"
 
 instance Parser FilterLabelOp where
   parser =
     asum
       [ P.char '=' $> FilterLabelOpEq,
-        P.string "/=" $> FilterLabelOpNeq
+        P.string "/=" $> FilterLabelOpNeq,
+        P.char '≠' $> FilterLabelOpNeq
       ]
 
 -------------------------------------------------------------------------------
@@ -80,8 +81,12 @@ instance Display FilterLabelSet where
         [ "labels ",
           displayBuilder op,
           " ",
-          Utils.showMapSetInline displayBuilder set
+          displaySet set
         ]
+      where
+        displaySet s
+          | s == Set.empty = "∅"
+          | otherwise = Utils.showMapSetInline displayBuilder set
 
 instance Parser FilterLabelSet where
   parser = do
@@ -111,12 +116,18 @@ instance Parser FilterLabelSet where
       parseMany = do
         op <- parser
         MPC.space
+        labels <- parseEmptySet <|> parseSet
+        MPC.space
+        pure $ FilterLabelSetMany op labels
+
+      parseEmptySet = MPC.char '∅' $> Set.empty
+
+      parseSet = do
         MPC.char '{'
         txt <- MP.takeWhileP (Just "labels") (/= '}')
         labels <- parseCommaSep txt
         MPC.char '}'
         pure labels
-        pure $ FilterLabelSetMany op labels
 
       parseCommaSep txt = do
         let stripped = T.strip txt
@@ -149,20 +160,25 @@ data FilterLabelSetOpOne
   = -- | Membership.
     FilterLabelSetOpOneMember
   | -- | Not membership.
-    FilterLabelSetOpOneNmember
+    FilterLabelSetOpOneNMember
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
 instance Display FilterLabelSetOpOne where
   displayBuilder = \case
     FilterLabelSetOpOneMember -> "∋"
-    FilterLabelSetOpOneNmember -> "∌"
+    FilterLabelSetOpOneNMember -> "∌"
 
+-- See NOTE: [Operators]
+--
+-- This ostensibly violate principle 1 (ascii versions of all
+-- operators/expressions), but arguably it's fine, since e.g.
+-- 'A ∋ b' is equivalent to 'A = b'.
 instance Parser FilterLabelSetOpOne where
   parser =
     asum
       [ P.char '∋' $> FilterLabelSetOpOneMember,
-        P.char '∌' $> FilterLabelSetOpOneNmember
+        P.char '∌' $> FilterLabelSetOpOneNMember
       ]
 
 -- | Operator for set comparisons.
@@ -170,40 +186,87 @@ data FilterLabelSetOpMany
   = -- | Activity labels must equal the given set.
     FilterLabelSetOpManyEq
   | -- | Activity labels must not equal the given set.
-    FilterLabelSetOpManyNeq
+    FilterLabelSetOpManyNEq
   | -- | Activity labels must be a proper superset of the given set.
-    FilterLabelSetOpManyGt
+    FilterLabelSetOpManyPSuper
   | -- | Activity labels must be a superset of the given set.
-    FilterLabelSetOpManyGte
+    FilterLabelSetOpManySuper
   | -- | Activity labels must be a proper subset of the given set.
-    FilterLabelSetOpManyLt
+    FilterLabelSetOpManyPSub
   | -- | Activity labels must be a subset of given set.
-    FilterLabelSetOpManyLte
+    FilterLabelSetOpManySub
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
+
+-- See NOTE: [Operators]
+--
+-- For Super(sub)set operators, there are three choices. Pros/cons for
+-- superset, proper superset:
+--
+-- 1. ⊇, ⊃
+--
+--   Pros:
+--     - Consistent w/ inequalities (≥, >).
+--     - Visually distinct.
+--
+--   Cons:
+--     - Clashes with historical meaning of ⊃.
+--
+-- 2. ⊇, ⊋
+--
+--   Pros:
+--     - Unambiguous.
+--
+--   Cons:
+--     - Inconsistent with inequalities.
+--     - Visually confusing.
+--
+-- 3. ⊃, ⊋
+--
+--   Pros:
+--     - Consistent w/ historial meaning of ⊃.
+--     - Visually distinct.
+--
+--   Cons:
+--     - Inconsistent with inequalities.
+--     - Very idiosyncratic.
+--
+-- 1 is clearly the most logical, with the only downside being the clash with
+-- historical ⊃.
+--
+-- 2 is okay, but it is hard to read at a glance.
+--
+-- 3 is madness, sure to confuse.
+--
+-- We go with 1, due to the clear analogy with inequalities, and that we
+-- explain it in the faq. Also John Baez says it is becoming more popular
+-- :-).
+--
+-- https://math.stackexchange.com/a/581820
 
 instance Display FilterLabelSetOpMany where
   displayBuilder = \case
     FilterLabelSetOpManyEq -> "="
-    FilterLabelSetOpManyNeq -> "/="
-    FilterLabelSetOpManyGt -> "⊋"
-    FilterLabelSetOpManyGte -> "⊇"
-    FilterLabelSetOpManyLt -> "⊊"
-    FilterLabelSetOpManyLte -> "⊆"
+    FilterLabelSetOpManyNEq -> "≠"
+    FilterLabelSetOpManyPSuper -> "⊃"
+    FilterLabelSetOpManySuper -> "⊇"
+    FilterLabelSetOpManyPSub -> "⊂"
+    FilterLabelSetOpManySub -> "⊆"
 
 instance Parser FilterLabelSetOpMany where
   parser =
     asum
       [ P.char '=' $> FilterLabelSetOpManyEq,
-        P.string "/=" $> FilterLabelSetOpManyNeq,
-        P.string ">=" $> FilterLabelSetOpManyGte,
-        P.char '⊇' $> FilterLabelSetOpManyGte,
-        P.char '>' $> FilterLabelSetOpManyGt,
-        P.char '⊋' $> FilterLabelSetOpManyGt,
-        P.string "<=" $> FilterLabelSetOpManyLte,
-        P.char '⊆' $> FilterLabelSetOpManyLte,
-        P.char '<' $> FilterLabelSetOpManyLt,
-        P.char '⊊' $> FilterLabelSetOpManyLt
+        P.string "/=" $> FilterLabelSetOpManyNEq,
+        P.char '≠' $> FilterLabelSetOpManyNEq,
+        P.string ">=" $> FilterLabelSetOpManySuper,
+        P.char '⊇' $> FilterLabelSetOpManySuper,
+        P.char '>' $> FilterLabelSetOpManyPSuper,
+        P.char '⊃' $> FilterLabelSetOpManyPSuper,
+        P.string "<=" $> FilterLabelSetOpManySub,
+        P.char '⊆' $> FilterLabelSetOpManySub,
+        P.char '<' $> FilterLabelSetOpManyPSub,
+        P.char '⊂' $> FilterLabelSetOpManyPSub
       ]
 
 parseTextNonEmpty :: MParser Text

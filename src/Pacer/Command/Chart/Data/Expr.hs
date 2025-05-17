@@ -49,7 +49,7 @@ import Text.Megaparsec.Char qualified as MPC
 -- | Operator for filter comparisons.
 data FilterOp
   = FilterOpEq
-  | FilterOpNeq
+  | FilterOpNEq
   | FilterOpLte
   | FilterOpLt
   | FilterOpGte
@@ -60,20 +60,40 @@ data FilterOp
 instance Display FilterOp where
   displayBuilder = \case
     FilterOpEq -> "="
-    FilterOpNeq -> "/="
-    FilterOpLte -> "<="
+    FilterOpNEq -> "≠"
+    FilterOpLte -> "≤"
     FilterOpLt -> "<"
-    FilterOpGte -> ">="
+    FilterOpGte -> "≥"
     FilterOpGt -> ">"
+
+-- NOTE: [Operators]
+--
+-- In general, we have a few principles when choosing operators.
+--
+-- 1. Every operator/expression should always be expressible in plain ascii.
+--
+-- 2. For any "composite" ascii operator, if a unicode (non-ascii) variant
+--    exists, allow it. Hence adding ≥, ≤, ≠, ∅.
+--
+-- 3. There should be at most one operator for each of ascii, unicode.
+--
+-- 4. Displayed output should prioritize unicode operators, when they
+--    exist.
+--
+-- 5. Displayed output should always be a valid input i.e. no
+--    "prettifying" some operator to invalid syntax.
 
 instance Parser FilterOp where
   parser =
     asum
       [ P.string "<=" $> FilterOpLte,
+        P.char '≤' $> FilterOpLte,
         P.char '<' $> FilterOpLt,
         P.char '=' $> FilterOpEq,
-        P.string "/=" $> FilterOpNeq,
+        P.string "/=" $> FilterOpNEq,
+        P.char '≠' $> FilterOpNEq,
         P.string ">=" $> FilterOpGte,
+        P.char '≥' $> FilterOpGte,
         P.char '>' $> FilterOpGt
       ]
 
@@ -261,6 +281,12 @@ data ExprToken
   | TokenParenR
   deriving stock (Eq, Ord, Show)
 
+-- See NOTE: [Operators]
+--
+-- Notice that instead of unicode output, we have plain language.
+-- This is arguably clearer because not everyone is familiar with logical
+-- operators.
+
 instance Display ExprToken where
   displayBuilder = \case
     TokenString s -> displayBuilder s
@@ -325,6 +351,12 @@ instance VisualStream (List ExprToken) where
       . L.unwords
       . toList
       . fmap (unpackText . display)
+
+-- See NOTE: [Operators]
+--
+-- Notice the expressions are a bit of an exception wrt 3, because we have e.g.
+-- 'and', '&&', '∧'. We have our two ascii/unicode operators, but also a
+-- plain-language variant.
 
 exprLexer :: MParser (List ExprToken)
 exprLexer =

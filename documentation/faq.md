@@ -264,16 +264,17 @@ For instance, of the following, only `Race 1` will be selected.
       "title": "Race 1"
     },
     {
-      "datetime": "2025-03-20T14:30:00",
+      "datetime": "2025-02-20T14:30:00",
       "distance": "20 miles",
       "duration": "2h40m54s",
       "title": "Race 2"
     },
     {
-      "datetime": "2025-03-20T14:30:00",
+      "datetime": "2024-03-20T14:30:00",
       "distance": "20 miles",
       "duration": "2h40m54s",
       "labels": [
+        "official_race",
         "another label"
       ],
       "title": "Race 3"
@@ -282,9 +283,17 @@ For instance, of the following, only `Race 1` will be selected.
 }
 ```
 
+Race 2 is removed because it does not have label `official_race`. Race 3 is removed because it is not `> 2024`.
+
 #### Advanced filters
 
-We also provide more sophisticated ways to write filters e.g. set operations and boolean logic. For example, we can write:
+We also provide more sophisticated ways to write filters e.g.
+
+- Set operators.
+- Boolean logic.
+- Unicode versions of some operators.
+
+For example, we can write:
 
 ```jsonc
 {
@@ -293,7 +302,7 @@ We also provide more sophisticated ways to write filters e.g. set operations and
     "label = official_race or label = marathon",
     "labels ∌ casual",
     "labels ⊇ {evening, night}",
-    "distance >= 25 km or distance < 5 km",
+    "distance ≥ 25 km or distance < 5 km",
     "datetime > 2024",
     "not (pace < 5m /km)"
   ],
@@ -344,20 +353,17 @@ tz_offset
 ; op is general binary operators i.e. equalities and inequalities.
 op
   : op_eqs
-  | op_gte
-  | op_gt
-  | op_lte
-  | op_lt
+  | '>='
+  | '≥'
+  | '>'
+  | '<='
+  | '≤'
+  | '<'
 
 op_eqs
   : '='
   | '/='
-
-op_gte : '>='
-op_gt  : '>'
-
-op_lte : '<='
-op_lt  : '<'
+  | '≠'
 
 ; Operators for set membership e.g. 'A ∋ x' means "Set A has member x".
 ; 'A ∌ x' means "Set A does not have member x".
@@ -376,33 +382,34 @@ labels_op_many
 ; 'A >= B' and 'A ⊇ B' both mean A is a superset of B i.e. all of B is
 ; contained within A.
 labels_op_many_gte
-  : op_gte
+  : '>='
   | '⊇'
 
-; 'A > B' and 'A ⊋ B' both mean A is a _proper_ superset of B i.e. all of B is
+; 'A > B' and 'A ⊃ B' both mean A is a _proper_ superset of B i.e. all of B is
 ; contained within A and B _does not equal_ A.
 labels_op_many_gt
-  : op_gt
-  | '⊋'
+  : '>'
+  | '⊃'
 
 ; 'A <= B' and 'A ⊆ B' both mean A is a subset of B i.e. all of A is
 ; contained within B.
 labels_op_many_lte
-  : op_lte
+  : '<='
   | '⊆'
 
-; 'A < B' and 'A ⊊ B' both mean A is a _proper_ subset of B i.e. all of A is
+; 'A < B' and 'A ⊂ B' both mean A is a _proper_ subset of B i.e. all of A is
 ; contained within B and A _does not equal_ B.
 labels_op_many_lt
-  : op_lt
-  | '⊊'
+  : '<'
+  | '⊂'
 
 label : string
 
-; A label_set is either the empty set "{}" or a set with elements e.g.
+; A label_set is either the empty set ({} or ∅) or a set with elements e.g.
 ; {a, b, c}
 label_set
   : '{}'
+  | '∅'
   | '{' labels '}'
 
 labels

@@ -74,7 +74,7 @@ atomTests =
           MkGoldenParams
             { testDesc = "Labels eq",
               testName = [osp|testParseExprAtomLabelsEq|],
-              runner = pure $ parseExpr "labels = {}"
+              runner = pure $ parseExpr "labels = ∅"
             },
           MkGoldenParams
             { testDesc = "Labels eq fail",
@@ -99,7 +99,7 @@ atomTests =
           MkGoldenParams
             { testDesc = "Labels gt 2",
               testName = [osp|testParseExprAtomLabelsGt2|],
-              runner = pure $ parseExpr "labels ⊋ { a, b }"
+              runner = pure $ parseExpr "labels ⊃ { a, b }"
             },
           MkGoldenParams
             { testDesc = "Labels gte 1",
@@ -119,7 +119,7 @@ atomTests =
           MkGoldenParams
             { testDesc = "Labels lt 2",
               testName = [osp|testParseExprAtomLabelsLt2|],
-              runner = pure $ parseExpr "labels ⊊ { a, b }"
+              runner = pure $ parseExpr "labels ⊂ { a, b }"
             },
           MkGoldenParams
             { testDesc = "Labels lte 1",
