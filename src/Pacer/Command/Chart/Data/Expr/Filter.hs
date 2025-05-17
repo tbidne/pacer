@@ -7,8 +7,7 @@ where
 
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Expr.Labels
-import Pacer.Command.Chart.Data.Expr.Labels qualified as Labels
+import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Command.Chart.Data.Time.Moment (Moment)
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Duration)
@@ -78,14 +77,16 @@ instance Parser FilterOp where
 
 -- | Ways in which we can filter activities.
 data FilterType a
-  = FilterDistance FilterOp (SomeDistance a)
-  | FilterDuration FilterOp (Duration a)
-  | -- | Filters by presence of a single label.
-    FilterLabel FilterLabelOp Text
-  | -- | Filters by presence of multiple labels.
-    FilterLabels FilterLabelSet
-  | FilterDate FilterOp Moment
-  | FilterPace FilterOp (SomePace a)
+  = -- | Filter based on distance.
+    FilterDistance FilterOp (SomeDistance a)
+  | -- | Filter based on duration.
+    FilterDuration FilterOp (Duration a)
+  | -- | Filter based on label set.
+    FilterLabel (Set.FilterSet "label")
+  | -- | Filter based on date.
+    FilterDate FilterOp Moment
+  | -- | Filter based on pace.
+    FilterPace FilterOp (SomePace a)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
@@ -115,14 +116,7 @@ instance
           " ",
           displayBuilder d
         ]
-    FilterLabel op t ->
-      mconcat
-        [ "label ",
-          displayBuilder op,
-          " ",
-          displayBuilder t
-        ]
-    FilterLabels labelsSet -> displayBuilder labelsSet
+    FilterLabel labelsSet -> displayBuilder labelsSet
     FilterDate op m ->
       mconcat
         [ "datetime ",
@@ -149,22 +143,13 @@ instance
   where
   parser =
     asum
-      [ FilterLabels <$> parser <?> "labels",
-        parseLabel <?> "label",
+      [ FilterLabel <$> parser,
         parseDist <?> "distance",
         parseDuration <?> "duration",
         parsePace <?> "pace",
         parseDate <?> "datetime"
       ]
     where
-      parseLabel = do
-        void $ MPC.string "label"
-        MPC.space
-        op <- parser
-        MPC.space
-        lbl <- Labels.parseTextNonEmpty
-        pure $ FilterLabel op lbl
-
       parseDate = parsePred "datetime" FilterDate
       parseDist = parsePred "distance" FilterDistance
       parseDuration = parsePred "duration" FilterDuration
