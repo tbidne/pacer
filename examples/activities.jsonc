@@ -1,6 +1,12 @@
 {
   "activities": [
     {
+      "datetime": "2025-01-03",
+      "distance": "10 km",
+      "duration": "20m45s",
+      "type": "Indoor Cycling"
+    },
+    {
       "datetime": "2024-10-15",
       "distance": "5 km",
       "duration": "20m30s",

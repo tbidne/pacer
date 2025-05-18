@@ -183,6 +183,31 @@ build/charts.json
     },
     "extra": {},
     "title": "Runs by week"
+  },
+  {
+    "datasets": {
+      "xAxis": [
+        "2024-10-15",
+        "2024-10-20T14:30:00",
+        "2024-10-25T12:00:00-08:00",
+        "2024-10-26"
+      ],
+      "yAxes": {
+        "y": {
+          "data": [
+            5,
+            32.18,
+            42.195,
+            21.0975
+          ],
+          "id": "y",
+          "label": "km",
+          "type": "distance"
+        }
+      }
+    },
+    "extra": {},
+    "title": "Running and Cycling"
   }
 ]
 

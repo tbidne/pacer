@@ -103,6 +103,23 @@ MkSomeActivities
             }
           )
         }
+      , MkSomeActivitiesKey
+        { unSomeActivitiesKey = MkSomeActivity SKilometer
+          ( MkActivity
+            { atype = Just
+              ( MkActivityType
+                { unActivityType = "Indoor Cycling" }
+              )
+            , datetime = TimestampDate 2025-01-03
+            , distance = MkDistance
+              ( UnsafePositive 10.0 ) Kilometer
+            , duration = MkDuration
+              { unDuration = UnsafePositive 1245.0 }
+            , labels = fromList []
+            , title = Nothing
+            }
+          )
+        }
       ]
     )
   }

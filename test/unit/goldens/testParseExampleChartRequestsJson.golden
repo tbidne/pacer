@@ -116,6 +116,31 @@ MkChartRequests
       , yAxis = YAxisDistance
       , y1Axis = Nothing
       }
+    , MkChartRequest
+      { chartType = Nothing
+      , description = Nothing
+      , filters =
+        [ Or
+          ( Atom
+            ( FilterType FilterOpEqEq
+              ( MkActivityType
+                { unActivityType = "Running" }
+              )
+            )
+          )
+          ( Atom
+            ( FilterType FilterOpEqEq
+              ( MkActivityType
+                { unActivityType = "Indoor Cycling" }
+              )
+            )
+          )
+        ]
+      , title = "Running and Cycling"
+      , unit = Nothing
+      , yAxis = YAxisDistance
+      , y1Axis = Nothing
+      }
     ]
   , garminSettings = Just
     ( MkGarminSettings { distanceUnit = Just Kilometer } )

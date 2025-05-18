@@ -70,6 +70,13 @@
         "period": "week"
       },
       "y-axis": "distance"
+    },
+    {
+      "title": "Running and Cycling",
+      "y-axis": "distance",
+      "filters": [
+        "type = Running or type = Indoor Cycling"
+      ]
     }
   ]
 }
