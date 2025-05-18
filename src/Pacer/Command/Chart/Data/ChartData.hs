@@ -23,7 +23,6 @@ import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity, datetime, distance, duration),
-    ActivityType,
     Label (unLabel),
     SomeActivities (MkSomeActivities),
     SomeActivitiesKey,
@@ -42,7 +41,6 @@ import Pacer.Command.Chart.Data.ChartRequest
       ),
   )
 import Pacer.Command.Chart.Data.Expr (FilterExpr, eval)
-import Pacer.Command.Chart.Data.Expr.Eq (FilterOpEq)
 import Pacer.Command.Chart.Data.Expr.Eq qualified as Eq
 import Pacer.Command.Chart.Data.Expr.Filter
   ( FilterType
@@ -57,12 +55,6 @@ import Pacer.Command.Chart.Data.Expr.Filter
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
 import Pacer.Command.Chart.Data.Expr.Ord qualified as Ord
 import Pacer.Command.Chart.Data.Expr.Set
-  ( FilterSet
-      ( FilterElemElem,
-        FilterSetElem,
-        FilterSetSet
-      ),
-  )
 import Pacer.Command.Chart.Data.Expr.Set qualified as ESet
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
@@ -430,15 +422,24 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivitiesKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivitiesKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivitiesKey op p
-    applyFilter srk (FilterType op t) = applyType srk.unSomeActivitiesKey op t
+    applyFilter srk (FilterType fe) = case srk.unSomeActivitiesKey of
+      MkSomeActivity _ r -> case r.atype of
+        Just atype -> applyFilterElem (.unActivityType) atype fe
+        Nothing -> False
+
+    applyFilterElem :: (b -> Text) -> b -> FilterElem p -> Bool
+    applyFilterElem f actVal = \case
+      FilterElemEq op t -> Eq.toFun op (f actVal) t
+      FilterElemExists op set -> ESet.memberFun op (f actVal) set
 
     applyFilterSet :: forall b p. (b -> Text) -> Set b -> FilterSet p -> Bool
     applyFilterSet f set = \case
-      FilterElemElem op t -> ESet.elemElemToFun op textSet t
-      FilterSetElem op t -> ESet.setElemToFun op textSet t
-      FilterSetSet op t -> ESet.setSetToFun op textSet t
+      FilterSetElem (FilterElemEq op t) -> ESet.existsElemFun op actSet t
+      FilterSetElem (FilterElemExists op t) -> ESet.existsSetFun op actSet t
+      FilterSetHasElem op t -> ESet.hasElemFun op actSet t
+      FilterSetComp op t -> ESet.compFun op actSet t
       where
-        textSet = Set.map f set
+        actSet = Set.map f set
 
     applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
     applyDate (MkSomeActivity _ r) op m = Ord.toIFun op activityMoment m
@@ -465,8 +466,3 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
             $ withSingI sfp
             $ case DistU.convertDistance activityDist fPace of
               fPace' -> Ord.toFun op activityPace fPace'
-
-    applyType :: SomeActivity a -> FilterOpEq -> ActivityType -> Bool
-    applyType (MkSomeActivity _ r) op = case r.atype of
-      Nothing -> const False
-      Just atype -> Eq.toFun op atype

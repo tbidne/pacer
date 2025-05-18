@@ -5,8 +5,6 @@ module Pacer.Command.Chart.Data.Expr.Filter
 where
 
 import Pacer.Class.Parser (Parser (parser))
-import Pacer.Command.Chart.Data.Activity (ActivityType (MkActivityType))
-import Pacer.Command.Chart.Data.Expr.Eq (FilterOpEq)
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
 import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Command.Chart.Data.Time.Moment (Moment)
@@ -34,7 +32,7 @@ data FilterType a
   | -- | Filter based on pace.
     FilterPace FilterOpOrd (SomePace a)
   | -- | Filter based on type.
-    FilterType FilterOpEq ActivityType
+    FilterType (Set.FilterElem "type")
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
@@ -79,13 +77,7 @@ instance
           " ",
           displayBuilder d
         ]
-    FilterType op t ->
-      mconcat
-        [ "type ",
-          displayBuilder op,
-          " ",
-          displayBuilder t
-        ]
+    FilterType typeElem -> displayBuilder typeElem
 
 instance
   ( Fromℚ a,
@@ -104,21 +96,13 @@ instance
         parsePace <?> "pace",
         parseDate <?> "datetime",
         parseDate <?> "datetime",
-        parseType <?> "type"
+        FilterType <$> parser
       ]
     where
       parseDate = parsePred "datetime" FilterDate
       parseDist = parsePred "distance" FilterDistance
       parseDuration = parsePred "duration" FilterDuration
       parsePace = parsePred "pace" FilterPace
-
-      parseType = do
-        MPC.string "type"
-        MPC.space
-        op <- parser
-        MPC.space
-        txt <- Set.parseTextNonEmpty
-        pure $ FilterType op (MkActivityType txt)
 
       parsePred s cons = do
         MPC.string s

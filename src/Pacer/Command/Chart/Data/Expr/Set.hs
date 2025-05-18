@@ -1,12 +1,18 @@
 -- | Provides filters over generic set.
 module Pacer.Command.Chart.Data.Expr.Set
-  ( -- * Types
+  ( -- * FilterElem
+    FilterElem (..),
+    FilterElemOpSet (..),
+    memberFun,
+
+    -- * FilterSet
     FilterSet (..),
-    FilterSetElemOp (..),
-    FilterSetSetOp (..),
-    elemElemToFun,
-    setElemToFun,
-    setSetToFun,
+    FilterSetOpElem (..),
+    FilterSetOpSet (..),
+    existsElemFun,
+    existsSetFun,
+    hasElemFun,
+    compFun,
 
     -- * Misc
     parseTextNonEmpty,
@@ -15,8 +21,8 @@ where
 
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Data.String (IsString (fromString))
 import Data.Text qualified as T
+import Data.Text.Builder.Linear (Builder)
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Parser qualified as P
@@ -31,115 +37,119 @@ import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
 -------------------------------------------------------------------------------
---                                   Many                                    --
+--                                 FilterElem                                --
 -------------------------------------------------------------------------------
 
--- | Filters on the X set, hence we can test multiple xs at once.
-type FilterSet :: Symbol -> Type
-data FilterSet p
-  = -- | Tests a single y against an arbitrary element x in X e.g. written as
-    -- x = y. For instance, @label = some_label@. This tests for membership
-    -- of some_label in labels.
-    FilterElemElem FilterOpEq Text
-  | -- | Same as 'FilterElemElem' except it is written in set syntax e.g.
-    -- X ∋ y. Thus this is merely alternative ("more proper") syntax.
-    FilterSetElem FilterSetElemOp Text
-  | -- | Set comparisons e.g. @X ⊇ Y@.
-    FilterSetSet FilterSetSetOp (Set Text)
+-- | @FilterSet X@ tests set operations on the set @X@ e.g. X = "labels".
+-- Note that, wrt the operators, the LHS is always a set (e.g. labels set),
+-- so operators where the LHS is expected to be an element --
+-- FilterOpEq used by FilterSetExistsElem -- the LHS is considered to be
+-- an arbitrary element in the set.
+--
+-- For instance, @label = foo@ means
+-- "there exists an l in labels s.t. l == foo".
+type FilterElem :: Symbol -> Type
+data FilterElem p
+  = -- | Tests an element e for membership in X e.g.
+    --
+    -- 1. @label = foo@ <=> exists label l s.t. l == foo.
+    -- 2. @label /= foo@ <=> forall labels l, l /= foo.
+    --
+    -- Notice that negation negates the entire expression, not the inner
+    -- symbol. That is, 2 is equivalent to:
+    --
+    --   not (exists label l s.t. l == foo)
+    --
+    -- NOT
+    --
+    --   exists label l s.t. l /= foo
+    FilterElemEq FilterOpEq Text
+  | -- | Tests some x in X for membership in Y e.g.
+    --
+    -- 1. @label ∈ {a, b}@ <=> exists label l s.t. l == a or l == b.
+    -- 2. @label ∉ {a, b}@ <=> forall labels l, l /= a and l /= b.
+    --
+    -- This can be used to encode "OR". Once again, negation is out the
+    -- "outside", not the inside.
+    FilterElemExists FilterElemOpSet (Set Text)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
-instance (KnownSymbol s) => Display (FilterSet s) where
+instance (KnownSymbol s) => Display (FilterElem s) where
   displayBuilder = \case
-    FilterElemElem op t ->
+    FilterElemEq op t ->
       mconcat
-        [ fromString symStr,
+        [ symStr,
           " ",
           displayBuilder op,
           " ",
           displayBuilder t
         ]
-    FilterSetElem op t ->
+    FilterElemExists op set ->
       mconcat
-        [ fromString symStr,
-          "s ",
-          displayBuilder op,
+        [ symStr,
           " ",
-          displayBuilder t
-        ]
-    FilterSetSet op set ->
-      mconcat
-        [ fromString symStr,
-          "s ",
           displayBuilder op,
           " ",
           displaySet set
         ]
-      where
-        displaySet s
-          | s == Set.empty = "∅"
-          | otherwise = Utils.showMapSetInline displayBuilder set
+    where
+      symStr = displayBuilder $ symbolVal (Proxy :: Proxy s)
+
+-------------------------------------------------------------------------------
+--                                  Parsing                                  --
+-------------------------------------------------------------------------------
+
+instance (KnownSymbol s) => Parser (FilterElem s) where
+  parser = parseFilterElem symStr <?> symStr
     where
       symStr = symbolVal (Proxy :: Proxy s)
 
-instance (KnownSymbol s) => Parser (FilterSet s) where
-  parser =
-    asum
-      [ parseFilterSet symsStr <?> symStr,
-        parseFilterElemElem symStr <?> symsStr
-      ]
-    where
-      symStr = symbolVal (Proxy :: Proxy s)
-      symsStr = symStr <> "s"
-
-parseFilterElemElem :: String -> MParser (FilterSet s)
-parseFilterElemElem symStr = do
+parseFilterElem :: String -> MParser (FilterElem s)
+parseFilterElem symStr = do
   void $ MPC.string (T.pack symStr)
-  MPC.space
-  op <- parser
-  MPC.space
-  lbl <- parseTextNonEmpty
-  pure $ FilterElemElem op lbl
-
-parseFilterSet :: String -> MParser (FilterSet s)
-parseFilterSet symsStr = do
-  void $ MPC.string symTxt
   MPC.space
   asum
     [ parseOne,
       parseMany
     ]
   where
-    symTxt = T.pack symsStr
-
     parseOne = do
       op <- parser
       MPC.space
-      txt <- parseTextNonEmpty
-      case (T.find (\c -> c == '{' || c == '}') txt) of
-        Just c ->
-          fail
-            $ mconcat
-              [ "Unexpected char '",
-                [c],
-                "'. ∋ and ∌ require exactly one element, not set syntax."
-              ]
-        Nothing -> pure ()
-
-      pure $ FilterSetElem op txt
+      lbl <- parseSetElem
+      pure $ FilterElemEq op lbl
 
     parseMany = do
       op <- parser
       MPC.space
-      set <- parseEmptySet <|> parseSet
-      MPC.space
-      pure $ FilterSetSet op set
+      set <- parseSet symStr
+      pure $ FilterElemExists op set
 
+parseSetElem :: MParser Text
+parseSetElem = do
+  txt <- parseTextNonEmpty
+  case (T.find (\c -> c == '{' || c == '}') txt) of
+    Just c ->
+      fail
+        $ mconcat
+          [ "Unexpected char '",
+            [c],
+            "'. Expected exactly one element, not set syntax."
+          ]
+    Nothing -> pure txt
+
+parseSet :: String -> MParser (Set Text)
+parseSet name = do
+  set <- parseEmptySet <|> parseSetTxt
+  MPC.space
+  pure set
+  where
     parseEmptySet = MPC.char '∅' $> Set.empty
 
-    parseSet = do
+    parseSetTxt = do
       MPC.char '{'
-      txt <- MP.takeWhileP (Just symsStr) (/= '}')
+      txt <- MP.takeWhileP (Just name) (/= '}')
       set <- parseCommaSep txt
       MPC.char '}'
       pure set
@@ -170,44 +180,165 @@ parseFilterSet symsStr = do
 
           pure set
 
--- | Set operator for a single element.
-data FilterSetElemOp
+-------------------------------------------------------------------------------
+--                                  Operators                                --
+-------------------------------------------------------------------------------
+
+-- | Operator for LHS element and RHS set.
+data FilterElemOpSet
   = -- | Membership.
-    FilterSetElemOpMember
+    FilterElemInSet
   | -- | Not membership.
-    FilterSetElemOpNMember
+    FilterElemNotInSet
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
-instance Display FilterSetElemOp where
+instance Display FilterElemOpSet where
   displayBuilder = \case
-    FilterSetElemOpMember -> "∋"
-    FilterSetElemOpNMember -> "∌"
+    FilterElemInSet -> "∈"
+    FilterElemNotInSet -> "∉"
 
--- See NOTE: [Operators]
---
--- This ostensibly violate principle 1 (ascii versions of all
--- operators/expressions), but arguably it's fine, since e.g.
--- 'A ∋ b' is equivalent to 'A = b'.
-instance Parser FilterSetElemOp where
+instance Parser FilterElemOpSet where
   parser =
     asum
-      [ P.char '∋' $> FilterSetElemOpMember,
-        P.char '∌' $> FilterSetElemOpNMember
+      [ P.char '∈' $> FilterElemInSet,
+        P.string "in" $> FilterElemInSet,
+        P.char '∉' $> FilterElemNotInSet,
+        P.string "not_in" $> FilterElemNotInSet
+      ]
+
+-------------------------------------------------------------------------------
+--                                  Functions                                --
+-------------------------------------------------------------------------------
+
+memberFun :: (Ord a) => FilterElemOpSet -> a -> Set a -> Bool
+memberFun FilterElemInSet = Set.member
+memberFun FilterElemNotInSet = Set.notMember
+
+-------------------------------------------------------------------------------
+--                                 FilterSet                                 --
+-------------------------------------------------------------------------------
+
+-- | @FilterSet X@ tests set operations on the set @X@ e.g. X = "labels".
+-- Note that, wrt the operators, the LHS is always a set (e.g. labels set),
+-- so operators where the LHS is expected to be an element --
+-- FilterOpEq used by FilterSetExistsElem -- the LHS is considered to be
+-- an arbitrary element in the set.
+--
+-- For instance, @label = foo@ means
+-- "there exists an l in labels s.t. l == foo".
+type FilterSet :: Symbol -> Type
+data FilterSet p
+  = -- | Operations on an arbitrary element in X. Not only does this allow
+    -- alternative syntax for @X ∋ a@ -- i.e. @x = a@, it also allows
+    -- encoding "OR" e.g. @x ∈ {a, b}@ for any x in X.
+    FilterSetElem (FilterElem p)
+  | -- | Set membership.
+    FilterSetHasElem FilterSetOpElem Text
+  | -- | Set comparisons e.g. @labels ⊇ {label_1, label_2}@. This tests that
+    -- all labels exist within labels ("AND").
+    FilterSetComp FilterSetOpSet (Set Text)
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
+
+instance (KnownSymbol s) => Display (FilterSet s) where
+  displayBuilder = \case
+    FilterSetElem e -> displayBuilder e
+    FilterSetHasElem op t ->
+      mconcat
+        [ symsStrSpc,
+          displayBuilder op,
+          " ",
+          displayBuilder t
+        ]
+    FilterSetComp op set ->
+      mconcat
+        [ symsStrSpc,
+          displayBuilder op,
+          " ",
+          displaySet set
+        ]
+    where
+      symStr = displayBuilder $ symbolVal (Proxy :: Proxy s)
+      symsStrSpc = symStr <> "s "
+
+-------------------------------------------------------------------------------
+--                                   Parsing                                 --
+-------------------------------------------------------------------------------
+
+instance (KnownSymbol s) => Parser (FilterSet s) where
+  parser =
+    asum
+      [ -- plural needs to precede singular.
+        parseFilterSet symsStr <?> symsStr,
+        FilterSetElem <$> parser <?> symStr
+      ]
+    where
+      symStr = symbolVal (Proxy :: Proxy s)
+      symsStr = symStr <> "s"
+
+parseFilterSet :: String -> MParser (FilterSet s)
+parseFilterSet symsStr = do
+  void $ MPC.string symTxt
+  MPC.space
+  asum
+    [ parseOne,
+      parseMany
+    ]
+  where
+    symTxt = T.pack symsStr
+
+    parseOne = do
+      op <- parser
+      MPC.space
+      txt <- parseSetElem
+      pure $ FilterSetHasElem op txt
+
+    parseMany = do
+      op <- parser
+      MPC.space
+      set <- parseSet symsStr
+      pure $ FilterSetComp op set
+
+-------------------------------------------------------------------------------
+--                                  Operators                                --
+-------------------------------------------------------------------------------
+
+-- | Operatoror for LHS set and RHS element.
+data FilterSetOpElem
+  = -- | Membership.
+    FilterSetContainsElem
+  | -- | Not membership.
+    FilterSetNContainsElem
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
+
+instance Display FilterSetOpElem where
+  displayBuilder = \case
+    FilterSetContainsElem -> "∋"
+    FilterSetNContainsElem -> "∌"
+
+instance Parser FilterSetOpElem where
+  parser =
+    asum
+      [ P.char '∋' $> FilterSetContainsElem,
+        P.string "contains" $> FilterSetContainsElem,
+        P.char '∌' $> FilterSetNContainsElem,
+        P.string "not_contains" $> FilterSetNContainsElem
       ]
 
 -- | Operator for set comparisons.
-data FilterSetSetOp
+data FilterSetOpSet
   = -- | Activity set X must equal the given set.
-    FilterSetSetOpEq FilterOpEq
+    FilterSetOpSetEq FilterOpEq
   | -- | Activity set X must be a proper superset of the given set.
-    FilterSetSetOpPSuper
+    FilterSetOpSetPSuper
   | -- | Activity set X must be a superset of the given set.
-    FilterSetSetOpSuper
+    FilterSetOpSetSuper
   | -- | Activity set X must be a proper subset of the given set.
-    FilterSetSetOpPSub
+    FilterSetOpSetPSub
   | -- | Activity set X must be a subset of given set.
-    FilterSetSetOpSub
+    FilterSetOpSetSub
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
@@ -257,27 +388,62 @@ data FilterSetSetOp
 --
 -- https://math.stackexchange.com/a/581820
 
-instance Display FilterSetSetOp where
+instance Display FilterSetOpSet where
   displayBuilder = \case
-    FilterSetSetOpEq op -> displayBuilder op
-    FilterSetSetOpPSuper -> "⊃"
-    FilterSetSetOpSuper -> "⊇"
-    FilterSetSetOpPSub -> "⊂"
-    FilterSetSetOpSub -> "⊆"
+    FilterSetOpSetEq op -> displayBuilder op
+    FilterSetOpSetPSuper -> "⊃"
+    FilterSetOpSetSuper -> "⊇"
+    FilterSetOpSetPSub -> "⊂"
+    FilterSetOpSetSub -> "⊆"
 
-instance Parser FilterSetSetOp where
+instance Parser FilterSetOpSet where
   parser =
     asum
-      [ parser <&> FilterSetSetOpEq,
-        P.string ">=" $> FilterSetSetOpSuper,
-        P.char '⊇' $> FilterSetSetOpSuper,
-        P.char '>' $> FilterSetSetOpPSuper,
-        P.char '⊃' $> FilterSetSetOpPSuper,
-        P.string "<=" $> FilterSetSetOpSub,
-        P.char '⊆' $> FilterSetSetOpSub,
-        P.char '<' $> FilterSetSetOpPSub,
-        P.char '⊂' $> FilterSetSetOpPSub
+      [ parser <&> FilterSetOpSetEq,
+        P.string ">=" $> FilterSetOpSetSuper,
+        P.char '⊇' $> FilterSetOpSetSuper,
+        P.char '>' $> FilterSetOpSetPSuper,
+        P.char '⊃' $> FilterSetOpSetPSuper,
+        P.string "<=" $> FilterSetOpSetSub,
+        P.char '⊆' $> FilterSetOpSetSub,
+        P.char '<' $> FilterSetOpSetPSub,
+        P.char '⊂' $> FilterSetOpSetPSub
       ]
+
+-------------------------------------------------------------------------------
+--                                 Functions                                 --
+-------------------------------------------------------------------------------
+
+-- LHS always set i.e. FilterSet functions.
+
+existsElemFun :: (Ord a) => FilterOpEq -> Set a -> a -> Bool
+existsElemFun FilterOpEqEq = flip Set.member
+existsElemFun FilterOpEqNEq = flip Set.notMember
+
+existsSetFun :: (Ord a) => FilterElemOpSet -> Set a -> Set a -> Bool
+existsSetFun FilterElemInSet ls rs = Set.intersection ls rs /= mempty
+existsSetFun FilterElemNotInSet ls rs = Set.intersection ls rs == mempty
+
+hasElemFun :: (Ord a) => FilterSetOpElem -> Set a -> a -> Bool
+hasElemFun FilterSetContainsElem = flip Set.member
+hasElemFun FilterSetNContainsElem = flip Set.notMember
+
+compFun :: (Ord b) => FilterSetOpSet -> (Set b -> Set b -> Bool)
+compFun (FilterSetOpSetEq op) = Eq.toFun op
+compFun FilterSetOpSetSuper = isSuperSetOf
+compFun FilterSetOpSetPSuper = isProperSuperSetOf
+compFun FilterSetOpSetSub = Set.isSubsetOf
+compFun FilterSetOpSetPSub = Set.isProperSubsetOf
+
+isSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
+isSuperSetOf = flip Set.isSubsetOf
+
+isProperSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
+isProperSuperSetOf = flip Set.isProperSubsetOf
+
+-------------------------------------------------------------------------------
+--                                   Misc                                    --
+-------------------------------------------------------------------------------
 
 parseTextNonEmpty :: MParser Text
 parseTextNonEmpty = do
@@ -295,23 +461,7 @@ parseTextNonEmpty = do
   when (T.null stripped) $ fail "Unexpected empty text"
   pure stripped
 
-elemElemToFun :: (Ord a) => FilterOpEq -> Set a -> a -> Bool
-elemElemToFun FilterOpEqEq = flip Set.member
-elemElemToFun FilterOpEqNEq = flip Set.notMember
-
-setElemToFun :: (Ord a) => FilterSetElemOp -> Set a -> a -> Bool
-setElemToFun FilterSetElemOpMember = flip Set.member
-setElemToFun FilterSetElemOpNMember = flip Set.notMember
-
-setSetToFun :: (Ord b) => FilterSetSetOp -> (Set b -> Set b -> Bool)
-setSetToFun (FilterSetSetOpEq op) = Eq.toFun op
-setSetToFun FilterSetSetOpSuper = isSuperSetOf
-setSetToFun FilterSetSetOpPSuper = isProperSuperSetOf
-setSetToFun FilterSetSetOpSub = Set.isSubsetOf
-setSetToFun FilterSetSetOpPSub = Set.isProperSubsetOf
-
-isSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
-isSuperSetOf = flip Set.isSubsetOf
-
-isProperSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
-isProperSuperSetOf = flip Set.isProperSubsetOf
+displaySet :: (Display a, Eq a) => Set a -> Builder
+displaySet s
+  | s == Set.empty = "∅"
+  | otherwise = Utils.showMapSetInline displayBuilder s

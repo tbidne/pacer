@@ -26,6 +26,7 @@ basicTests getTestDir =
       testFilterPreds getTestDir,
       testFilterDates getTestDir,
       testFilterGlobal getTestDir,
+      testFilterGlobalMultiTypes getTestDir,
       testFilterEmptyError getTestDir,
       testFilterParseExprError getTestDir,
       testDuplicateDateError getTestDir,
@@ -99,6 +100,11 @@ testFilterGlobal :: IO OsPath -> TestTree
 testFilterGlobal = testChart desc [osp|testFilterGlobal|]
   where
     desc = "Uses global filters"
+
+testFilterGlobalMultiTypes :: IO OsPath -> TestTree
+testFilterGlobalMultiTypes = testChart desc [osp|testFilterGlobalMultiTypes|]
+  where
+    desc = "Uses global filters with multiple types"
 
 testFilterEmptyError :: IO OsPath -> TestTree
 testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]

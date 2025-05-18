@@ -1,0 +1,82 @@
+{
+  // Only used for garmin activities.csv. Ignored for custom activities.json.
+  "garmin": {
+    "unit": "km"
+  },
+  "filters": [
+    "type ∈ {Running, Indoor Cycling}"
+  ],
+  "charts": [
+    {
+      "title": "Activities by distance",
+      "description": "This is some activities plotted by distance.",
+      "y-axis": "distance",
+      "filters": [
+        "type = Running"
+      ]
+    },
+    {
+      "title": "Activities by distance and pace",
+      "description": "The same activities as before, but in miles.",
+      "y-axis": "distance",
+      "y1-axis": "pace",
+      "unit": "mi"
+    },
+    {
+      // Only takes activities with label 'marathon'
+      "title": "Marathons",
+      "filters": [
+        "label = marathon",
+        "datetime >= 2024"
+      ],
+      "y-axis": "duration",
+      "y1-axis": "pace"
+    },
+    {
+      // Takes activities w/ label 'official' but _not_ marathon.
+      "title": "Official non-marathons",
+      "filters": [
+        "label = official",
+        "label /= marathon"
+      ],
+      "y-axis": "pace"
+    },
+    {
+      // Takes half-marathon and marathon
+      "title": "Marathons and half-marathons",
+      "filters": [
+        "label = half-marathon or label = marathon"
+      ],
+      "y-axis": "pace"
+    },
+    {
+      "title": "Long activities",
+      "filters": [
+        "distance >= 25 km"
+      ],
+      /* We can optionally specify the chart type. 'default' is the same as
+       * leaving it off.
+      */
+      "type": {
+        "name": "default"
+      },
+      "y-axis": "distance",
+      "y1-axis": "pace"
+    },
+    {
+      "title": "Runs by week",
+      /* The 'sum' type sums all activities for a certain time period. Valid periods
+       * are 'year', 'month', 'week', and 'N days' (e.g. '50 days').
+      */
+      "type": {
+        "name": "sum",
+        "period": "week"
+      },
+      "y-axis": "distance"
+    },
+    {
+      "title": "Running",
+      "y-axis": "distance"
+    }
+  ]
+}

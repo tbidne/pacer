@@ -1,0 +1,12 @@
+Text: 'type = {some type}'
+
+Tokens: [type,=,{some,type}]
+
+Expr Text: type = {some type}
+
+Error: Pacer.Class.Parser.parseWith:1:19:
+  |
+1 | type = {some type}
+  |                   ^
+Unexpected char '{'. Expected exactly one element, not set syntax.
+

@@ -231,19 +231,35 @@ Chart requests allow us to filter activities based on some criteria. In general,
 ```jsonc
 // chart-requests.json
 {
-  "title": "Races and long activities",
+  // Global filter, applies to every chart.
   "filters": [
-    "label = official_race",
-    "distance >= 25 km",
-    "datetime > 2024",
     "type = Running"
   ],
-  "y-axis": "distance"
+  "charts": [
+    {
+      "title": "Races and long runs",
+      // Local filters, applies only to this chart.
+      "filters": [
+        "label = official_race",
+        "distance >= 25 km",
+        "datetime > 2024"
+      ],
+      "y-axis": "distance"
+    },
+    {
+      "title": "Short runs",
+      "filters": [
+        "distance < 5 km",
+      ],
+      "y-axis": "distance"
+    }
+  ]
 }
 ```
 
-In this case, we will take all activities that satisfy **all** of the following criteria:
+In this case, the first chart request will take all activities that satisfy **all** of the following criteria:
 
+- Has type `Running`.
 - Has label `official_race`.
 - Has `distance >= 25 km`.
 - Has `datetime > 2024` (i.e. 2025 onwards).
@@ -306,9 +322,10 @@ For example, we can write:
     "label = official_race or label = marathon",
     "labels ∌ casual",
     "labels ⊇ {evening, night}",
-    "distance ≥ 25 km or distance < 5 km",
+    "distance ≥ 25 km xor distance < 5 km",
     "datetime > 2024",
-    "not (pace < 5m /km)"
+    "not (pace < 5m /km)",
+    "type ∈ {Running, Cycling}"
   ],
   "y-axis": "distance"
 }
@@ -319,9 +336,10 @@ In this case, we will take all activities that satisfy **all** of the following 
 - Has label `official_race` and/or `marathon`.
 - Does _not_ have label `casual`.
 - Has labels `evening` and `night`.
-- Has `distance >= 25 km` and/or `distance < 5 km`.
+- Has `distance >= 25 km` _or_ `distance < 5 km`, **not** both.
 - Has `datetime > 2024` (i.e. 2025 onwards).
 - Does _not_ have `pace < 5m /km`.
+- Has type `Running` or `Cycling`.
 
 The grammar is below.
 
@@ -334,9 +352,9 @@ atom
   | 'distance' op             distance
   | 'duration' op             duration
   | 'pace'     op             pace
-  | 'label'    op_eqs         string
+  | 'label'    elem_ops
   | 'labels'   set_ops
-  | 'type'     op_eqs         string
+  | 'type'     elem_ops
 
 ; E.g. 2024, 2024-08, 2024-08-15, 2024-08-15 14:20:00, 2024-08-15 14:20:00+0800
 datetime
@@ -357,65 +375,132 @@ tz_offset
 ; op is general binary operators i.e. equalities and inequalities.
 op
   : op_eqs
-  | '>='
-  | '≥'
+  | op_gte
   | '>'
-  | '<='
-  | '≤'
+  | op_lte
   | '<'
 
 op_eqs
   : '='
-  | '/='
-  | '≠'
+  | op_neq
 
+op_neq
+  : '≠'
+  | '/='  ; alias for ≠
+
+op_gte
+  : '≥'
+  | '>='  ; alias for ≥
+
+op_lte
+  : '≤'
+  | '<='  ; alias for ≤
+
+; Operators where the LHS is an individual element and the RHS is either
+; an element or a set. For instance:
+;
+;   type = some_type ; Tests that the activity type is some_type.
+;   type ∈ {t1, t2}  ; Tests that the activity type is t1 or t2.
+;
+; When the LHS refers to an arbitrary element in an actual set (e.g. 'label'
+; as an element in 'labels' set), we have the following:
+;
+;   label =  some_label ; Tests that some_label exists in the labels set.
+;   label /= some_label ; Tests that some_label does _not_ exist in the labels set.
+;
+; In other words, this is equivalent to membership; respectively:
+;
+;   labels ∋ some_label
+;   labels ∌ some_label
+;
+; We also have
+;
+;   label ∈ {l1, l2} ; Tests that either l1 or l2 exists in the labels set.
+;   label ∉ {l1, l2} ; Tests that l1 _and_ l2 do not exist in the labels set.
+;
+; These are equivalent to intersection. Respectively:
+;
+;   labels ∩ {l1, l2} ≠ ∅
+;   labels ∩ {l1, l2} = ∅
+elem_ops
+  : op_eqs       string
+  | elem_op_set  set_strings
+
+elem_op_set
+  : elem_op_in
+  | elem_op_not_in
+
+elem_op_in
+  : ∈
+  | 'in'  ; alias for ∈
+
+elem_op_not_in
+  : ∉
+  | 'not_in'  ; alias for ∉
+
+
+; Operators where LHS is a set (e.g. labels) and the RHS is either an
+; individual element or another set.
+;
+;   labels ∋ some_label ; Tests that labels has an element some_label.
+;   labels ∌ some_label ; Tests that labels does _not_ have element some_label.
+;
+;   labels ⊇ {l1, l2} ; Tests that labels has elements l1 and l2.
 set_ops
-  : set_op_one string
-  | set_op_many set_strings
+  : set_op_elem string
+  | set_op_set set_strings
 
 ; Operators for set membership e.g. 'A ∋ x' means "Set A has member x".
 ; 'A ∌ x' means "Set A does not have member x".
-set_op_one
+set_op_elem
+  : set_op_contains
+  | set_op_not_contains
+
+set_op_contains
   : '∋'
-  | '∌'
+  | 'contains'  ; alias for ∋
+
+set_op_not_contains
+  : '∌'
+  | 'not_contains'  ; alias for ∌
 
 ; Operators for set comparisons.
-set_op_many
+set_op_set
   : op_eqs
-  | set_op_many_gte
-  | set_op_many_gt
-  | set_op_many_lte
-  | set_op_many_lt
+  | set_op_gte
+  | set_op_gt
+  | set_op_lte
+  | set_op_lt
 
 ; 'A >= B' and 'A ⊇ B' both mean A is a superset of B i.e. all of B is
 ; contained within A.
-set_op_many_gte
-  : '>='
-  | '⊇'
+set_op_gte
+  : '⊇'
+  | '>='  ; alias for ⊇
 
 ; 'A > B' and 'A ⊃ B' both mean A is a _proper_ superset of B i.e. all of B is
 ; contained within A and B _does not equal_ A.
-set_op_many_gt
-  : '>'
-  | '⊃'
+set_op_gt
+  : '⊃'
+  | '>'  ; alias for ⊃
 
 ; 'A <= B' and 'A ⊆ B' both mean A is a subset of B i.e. all of A is
 ; contained within B.
-set_op_many_lte
-  : '<='
-  | '⊆'
+set_op_lte
+  : '⊆'
+  | '<='  ; alias for ⊆
 
 ; 'A < B' and 'A ⊂ B' both mean A is a _proper_ subset of B i.e. all of A is
 ; contained within B and A _does not equal_ B.
-set_op_many_lt
-  : '<'
-  | '⊂'
+set_op_lt
+  : '⊂'
+  | '<'  ; alias for ⊂
 
 ; A label_set is either the empty set ({} or ∅) or a set with elements e.g.
 ; {a, b, c}
 set_strings
-  : '{}'
-  | '∅'
+  : '∅'
+  | '{}'             ; alias for ∅
   | '{' strings '}'
 
 strings
@@ -439,22 +524,22 @@ expr
 
 not
   : 'not'
-  | '!'
-  | '¬'
+  | '!'    ; alias for not
+  | '¬'    ; alias for not
 
 or
   : 'or'
-  | '||'
-  | '∨'
+  | '||'  ; alias for or
+  | '∨'   ; alias for or
 
 and
   : 'and'
-  | '&&'
-  | '∧'
+  | '&&'   ; alias for and
+  | '∧'    ; alias for and
 
 xor
   : 'xor'
-  | '⊕'
+  | '⊕'    ; alias for xor
 ```
 
 > [!NOTE]

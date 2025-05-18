@@ -5,10 +5,8 @@ MkChartRequests
       , description = Just "This is some activities plotted by distance."
       , filters =
         [ Atom
-          ( FilterType FilterOpEqEq
-            ( MkActivityType
-              { unActivityType = "Running" }
-            )
+          ( FilterType
+            ( FilterElemEq FilterOpEqEq "Running" )
           )
         ]
       , title = "Activities by distance"
@@ -31,7 +29,9 @@ MkChartRequests
       , filters =
         [ Atom
           ( FilterLabel
-            ( FilterElemElem FilterOpEqEq "marathon" )
+            ( FilterSetElem
+              ( FilterElemEq FilterOpEqEq "marathon" )
+            )
           )
         , Atom
           ( FilterDate FilterOpOrdGte
@@ -56,11 +56,15 @@ MkChartRequests
       , filters =
         [ Atom
           ( FilterLabel
-            ( FilterElemElem FilterOpEqEq "official" )
+            ( FilterSetElem
+              ( FilterElemEq FilterOpEqEq "official" )
+            )
           )
         , Atom
           ( FilterLabel
-            ( FilterElemElem FilterOpEqNEq "marathon" )
+            ( FilterSetElem
+              ( FilterElemEq FilterOpEqNEq "marathon" )
+            )
           )
         ]
       , title = "Official non-marathons"
@@ -75,12 +79,16 @@ MkChartRequests
         [ Or
           ( Atom
             ( FilterLabel
-              ( FilterElemElem FilterOpEqEq "half-marathon" )
+              ( FilterSetElem
+                ( FilterElemEq FilterOpEqEq "half-marathon" )
+              )
             )
           )
           ( Atom
             ( FilterLabel
-              ( FilterElemElem FilterOpEqEq "marathon" )
+              ( FilterSetElem
+                ( FilterElemEq FilterOpEqEq "marathon" )
+              )
             )
           )
         ]
@@ -122,17 +130,13 @@ MkChartRequests
       , filters =
         [ Or
           ( Atom
-            ( FilterType FilterOpEqEq
-              ( MkActivityType
-                { unActivityType = "Running" }
-              )
+            ( FilterType
+              ( FilterElemEq FilterOpEqEq "Running" )
             )
           )
           ( Atom
-            ( FilterType FilterOpEqEq
-              ( MkActivityType
-                { unActivityType = "Indoor Cycling" }
-              )
+            ( FilterType
+              ( FilterElemEq FilterOpEqEq "Indoor Cycling" )
             )
           )
         ]
