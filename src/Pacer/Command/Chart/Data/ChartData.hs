@@ -32,7 +32,7 @@ import Pacer.Command.Chart.Data.Activity
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
-    ChartRequests (chartRequests),
+    ChartRequests (chartRequests, filters),
     ChartSumPeriod (ChartSumDays, ChartSumMonth, ChartSumWeek, ChartSumYear),
     ChartType (ChartTypeDefault, ChartTypeSum),
     YAxisType
@@ -185,10 +185,11 @@ mkChartDatas ::
   SomeActivities a ->
   ChartRequests a ->
   Eff es (Result CreateChartE (Seq ChartData))
-mkChartDatas finalDistUnit activities =
+mkChartDatas finalDistUnit activities requests =
   fmap sequenceA
-    . traverse (mkChartData finalDistUnit activities)
+    . traverse (mkChartData finalDistUnit requests.filters activities)
     . (.chartRequests)
+    $ requests
 
 -- NOTE: HLint incorrectly thinks some brackets are unnecessary.
 -- See NOTE: [Brackets with OverloadedRecordDot].
@@ -210,20 +211,26 @@ mkChartData ::
   ) =>
   -- | Final distance unit to use.
   DistanceUnit ->
+  -- | Global filters
+  List (FilterExpr a) ->
   -- | List of activities.
   SomeActivities a ->
   -- | Chart request.
   ChartRequest a ->
   -- | ChartData result. Nothing if no activities passed the request's filter.
   Eff es (Result CreateChartE ChartData)
-mkChartData finalDistUnit (MkSomeActivities (SetToSeqNE someActivities)) request = do
+mkChartData finalDistUnit globalFilters as request = do
   case filteredActivities of
     Empty -> pure $ Err $ CreateChartFilterEmpty request.title
     r :<| rs -> do
       activities <- handleChartType request.chartType (r :<|| rs)
       pure $ Ok $ mkChartDataSets finalDistUnit request activities
   where
-    filteredActivities = filterActivities someActivities request.filters
+    (MkSomeActivities (SetToSeqNE someActivities)) = as
+    filteredActivities =
+      filterActivities
+        someActivities
+        (globalFilters ++ request.filters)
 
 -- | Transforms the activities based on the chart type.
 handleChartType ::

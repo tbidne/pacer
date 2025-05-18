@@ -3,16 +3,14 @@
   "garmin": {
     "unit": "km"
   },
-  // We can add global filters here that apply to every chart-request.
   "filters": [
-
+    "type = Running"
   ],
   "charts": [
     {
       "title": "Activities by distance",
       "description": "This is some activities plotted by distance.",
       "y-axis": "distance",
-      // These filters apply only to this individual chart.
       "filters": [
         "type = Running"
       ]
@@ -77,11 +75,8 @@
       "y-axis": "distance"
     },
     {
-      "title": "Running and Cycling",
-      "y-axis": "distance",
-      "filters": [
-        "type = Running or type = Indoor Cycling"
-      ]
+      "title": "Running",
+      "y-axis": "distance"
     }
   ]
 }

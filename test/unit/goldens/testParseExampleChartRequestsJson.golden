@@ -142,6 +142,7 @@ MkChartRequests
       , y1Axis = Nothing
       }
     ]
+  , filters = []
   , garminSettings = Just
     ( MkGarminSettings { distanceUnit = Just Kilometer } )
   }

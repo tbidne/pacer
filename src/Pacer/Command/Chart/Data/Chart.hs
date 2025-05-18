@@ -13,8 +13,9 @@ import Pacer.Command.Chart.Data.ChartExtra (ChartExtra)
 import Pacer.Command.Chart.Data.ChartExtra qualified as ChartExtra
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (title, unit),
-    ChartRequests (chartRequests),
+    ChartRequests (chartRequests, filters),
   )
+import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
@@ -55,7 +56,11 @@ mkCharts ::
   SomeActivities a ->
   ChartRequests a ->
   Eff es (Result CreateChartE (Seq Chart))
-mkCharts activities = fmap sequenceA . traverse (mkChart activities) . (.chartRequests)
+mkCharts activities requests =
+  fmap sequenceA
+    . traverse (mkChart requests.filters activities)
+    . (.chartRequests)
+    $ requests
 
 mkChart ::
   forall es a.
@@ -69,12 +74,18 @@ mkChart ::
     Show a,
     Toℝ a
   ) =>
+  List (FilterExpr a) ->
   SomeActivities a ->
   ChartRequest a ->
   Eff es (Result CreateChartE Chart)
-mkChart someActivities request = fmap toChart <$> eChartData
+mkChart globalFilters someActivities request = fmap toChart <$> eChartData
   where
-    eChartData = ChartData.mkChartData finalDistUnit someActivities request
+    eChartData =
+      ChartData.mkChartData
+        finalDistUnit
+        globalFilters
+        someActivities
+        request
     chartExtra = ChartExtra.mkChartExtra request
 
     toChart chartData =

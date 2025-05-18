@@ -185,7 +185,11 @@ instance FromJSON GarminSettings where
 
 -- | List of chart requests.
 data ChartRequests a = MkChartRequests
-  { chartRequests :: Seq (ChartRequest a),
+  { -- | Individual chart requests.
+    chartRequests :: Seq (ChartRequest a),
+    -- | Global filters.
+    filters :: List (FilterExpr a),
+    -- | Garming settings.
     garminSettings :: Maybe GarminSettings
   }
   deriving stock (Eq, Generic, Show)
@@ -203,10 +207,12 @@ instance
   parseJSON = asnWithObject "ChartRequests" $ \v -> do
     garminSettings <- v .:? "garmin"
     chartRequests <- v .: "charts"
-    Utils.failUnknownFields "ChartRequests" ["charts", "garmin"] v
+    filters <- v .:?: "filters"
+    Utils.failUnknownFields "ChartRequests" ["charts", "filters", "garmin"] v
     pure
       $ MkChartRequests
         { chartRequests,
+          filters,
           garminSettings
         }
 
