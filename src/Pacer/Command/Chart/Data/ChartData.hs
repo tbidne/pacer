@@ -18,10 +18,8 @@ import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Set (Set)
-import Data.Set qualified as Set
 import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
-import Pacer.Class.IOrd (IEq ((~~)), (/~), (<.), (<~), (>.), (>~))
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity, datetime, distance, duration),
     SomeActivities (MkSomeActivities),
@@ -42,15 +40,7 @@ import Pacer.Command.Chart.Data.ChartRequest
   )
 import Pacer.Command.Chart.Data.Expr (FilterExpr, eval)
 import Pacer.Command.Chart.Data.Expr.Filter
-  ( FilterOp
-      ( FilterOpEq,
-        FilterOpGt,
-        FilterOpGte,
-        FilterOpLt,
-        FilterOpLte,
-        FilterOpNEq
-      ),
-    FilterType
+  ( FilterType
       ( FilterDate,
         FilterDistance,
         FilterDuration,
@@ -58,7 +48,16 @@ import Pacer.Command.Chart.Data.Expr.Filter
         FilterPace
       ),
   )
+import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
+import Pacer.Command.Chart.Data.Expr.Ord qualified as Ord
 import Pacer.Command.Chart.Data.Expr.Set
+  ( FilterSet
+      ( FilterElemElem,
+        FilterSetElem,
+        FilterSetSet
+      ),
+  )
+import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
@@ -413,34 +412,34 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
     filterActivity r = all (eval (applyFilter r)) filters
 
     applyFilter :: SomeActivitiesKey a -> FilterType a -> Bool
-    applyFilter srk (FilterLabel lblSet) = applyFilterSet srk.unSomeActivitiesKey lblSet
+    applyFilter srk (FilterLabel lblSet) = applyFilterSet srk.labels lblSet
     applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivitiesKey op m
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivitiesKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivitiesKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivitiesKey op p
 
-    applyFilterSet :: SomeActivity a -> FilterSet p -> Bool
-    applyFilterSet (MkSomeActivity _ r) = \case
-      FilterElemElem op t -> (filterElemElemOpToFun op) r.labels t
-      FilterSetElem op t -> (filterSetElemOpToFun op) r.labels t
-      FilterSetSet op t -> (filterSetSetOpToFun op) r.labels t
+    applyFilterSet :: Set Text -> FilterSet p -> Bool
+    applyFilterSet set = \case
+      FilterElemElem op t -> Set.elemElemToFun op set t
+      FilterSetElem op t -> Set.setElemToFun op set t
+      FilterSetSet op t -> Set.setSetToFun op set t
 
-    applyDate :: SomeActivity a -> FilterOp -> Moment -> Bool
-    applyDate (MkSomeActivity _ r) op m = (opToMFun op) activityMoment m
+    applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
+    applyDate (MkSomeActivity _ r) op m = Ord.toIFun op activityMoment m
       where
         activityMoment = MomentTimestamp r.datetime
 
-    applyDist :: SomeActivity a -> FilterOp -> SomeDistance a -> Bool
+    applyDist :: SomeActivity a -> FilterOpOrd -> SomeDistance a -> Bool
     applyDist (MkSomeActivity @activityDist sr r) op fDist =
-      withSingI sr $ (opToFun op) r.distance fDist'
+      withSingI sr $ Ord.toFun op r.distance fDist'
       where
         fDist' :: Distance activityDist a
         fDist' = withSingI sr $ DistU.convertDistance activityDist fDist
 
-    applyDur :: SomeActivity a -> FilterOp -> Duration a -> Bool
-    applyDur (MkSomeActivity _ r) op = (opToFun op) r.duration
+    applyDur :: SomeActivity a -> FilterOpOrd -> Duration a -> Bool
+    applyDur (MkSomeActivity _ r) op = Ord.toFun op r.duration
 
-    applyPace :: SomeActivity a -> FilterOp -> SomePace a -> Bool
+    applyPace :: SomeActivity a -> FilterOpOrd -> SomePace a -> Bool
     applyPace someActivity@(MkSomeActivity _ _) op (MkSomePace sfp fPace) =
       -- 1. convert someActivity to activityPace
       case Activity.deriveSomePace someActivity of
@@ -449,53 +448,4 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
           withSingI srp
             $ withSingI sfp
             $ case DistU.convertDistance activityDist fPace of
-              fPace' -> (opToFun op) activityPace fPace'
-
-    opToFun :: forall b. (Ord b) => FilterOp -> (b -> b -> Bool)
-    opToFun FilterOpEq = (==)
-    opToFun FilterOpNEq = (/=)
-    opToFun FilterOpLte = (<=)
-    opToFun FilterOpLt = (<)
-    opToFun FilterOpGte = (>=)
-    opToFun FilterOpGt = (>)
-
-    opToMFun :: FilterOp -> (Moment -> Moment -> Bool)
-    opToMFun FilterOpEq = (~~)
-    opToMFun FilterOpNEq = (/~)
-    opToMFun FilterOpLte = (<~)
-    opToMFun FilterOpLt = (<.)
-    opToMFun FilterOpGte = (>~)
-    opToMFun FilterOpGt = (>.)
-
-    filterElemElemOpToFun :: forall b. (Ord b) => FilterElemElemOp -> (Set b -> b -> Bool)
-    filterElemElemOpToFun FilterElemElemOpEq = flip Set.member
-    filterElemElemOpToFun FilterElemElemOpNeq = flip Set.notMember
-
-    filterSetElemOpToFun :: forall b. (Ord b) => FilterSetElemOp -> (Set b -> b -> Bool)
-    filterSetElemOpToFun FilterSetElemOpMember = flip Set.member
-    filterSetElemOpToFun FilterSetElemOpNMember = flip Set.notMember
-
-    filterSetSetOpToFun :: forall b. (Ord b) => FilterSetSetOp -> (Set b -> Set b -> Bool)
-    filterSetSetOpToFun FilterSetSetOpEq = (==)
-    filterSetSetOpToFun FilterSetSetOpNEq = (/=)
-    -- Superset rather than subset because that's how the syntax is defined,
-    -- since the activity's labels is on the LHS. E.g. to filter on some
-    -- labels being a subset of an activity's labels we write:
-    --
-    --   labels ⊇ {a, b, c}
-    --
-    -- We respect this order when applying all of labels i.e.
-    --
-    --    <op> labels {a, b, c}
-    --
-    -- Hence we need superset, not subset.
-    filterSetSetOpToFun FilterSetSetOpSuper = isSuperSetOf
-    filterSetSetOpToFun FilterSetSetOpPSuper = isProperSuperSetOf
-    filterSetSetOpToFun FilterSetSetOpSub = Set.isSubsetOf
-    filterSetSetOpToFun FilterSetSetOpPSub = Set.isProperSubsetOf
-
-isSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
-isSuperSetOf = flip Set.isSubsetOf
-
-isProperSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
-isProperSuperSetOf = flip Set.isProperSubsetOf
+              fPace' -> Ord.toFun op activityPace fPace'

@@ -341,6 +341,21 @@ newtype SomeActivitiesKey a
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
 
+instance HasField "atype" (SomeActivitiesKey a) (Maybe Text) where
+  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.atype
+
+instance HasField "datetime" (SomeActivitiesKey a) Timestamp where
+  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.datetime
+
+instance HasField "duration" (SomeActivitiesKey a) (Duration a) where
+  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.duration
+
+instance HasField "labels" (SomeActivitiesKey a) (Set Text) where
+  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.labels
+
+instance HasField "title" (SomeActivitiesKey a) (Maybe Text) where
+  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.title
+
 instance Eq (SomeActivitiesKey a) where
   MkSomeActivitiesKey (MkSomeActivity _ r1)
     == MkSomeActivitiesKey (MkSomeActivity _ r2) =

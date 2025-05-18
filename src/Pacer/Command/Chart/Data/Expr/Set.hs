@@ -2,9 +2,11 @@
 module Pacer.Command.Chart.Data.Expr.Set
   ( -- * Types
     FilterSet (..),
-    FilterElemElemOp (..),
     FilterSetElemOp (..),
     FilterSetSetOp (..),
+    elemElemToFun,
+    setElemToFun,
+    setSetToFun,
 
     -- * Misc
     parseTextNonEmpty,
@@ -18,38 +20,15 @@ import Data.Text qualified as T
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Parser qualified as P
+import Pacer.Command.Chart.Data.Expr.Eq
+  ( FilterOpEq (FilterOpEqEq, FilterOpEqNEq),
+  )
+import Pacer.Command.Chart.Data.Expr.Eq qualified as Eq
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import Text.Megaparsec ((<?>))
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
-
--------------------------------------------------------------------------------
---                                    One                                    --
--------------------------------------------------------------------------------
-
--- | Operator for filtering on a single label. These are based on simple
--- inclusion/exclusion.
-data FilterElemElemOp
-  = -- | Activity set X must contain the given y.
-    FilterElemElemOpEq
-  | -- | Activity set X must not contain the given y.
-    FilterElemElemOpNeq
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (NFData)
-
-instance Display FilterElemElemOp where
-  displayBuilder = \case
-    FilterElemElemOpEq -> "="
-    FilterElemElemOpNeq -> "≠"
-
-instance Parser FilterElemElemOp where
-  parser =
-    asum
-      [ P.char '=' $> FilterElemElemOpEq,
-        P.string "/=" $> FilterElemElemOpNeq,
-        P.char '≠' $> FilterElemElemOpNeq
-      ]
 
 -------------------------------------------------------------------------------
 --                                   Many                                    --
@@ -61,7 +40,7 @@ data FilterSet p
   = -- | Tests a single y against an arbitrary element x in X e.g. written as
     -- x = y. For instance, @label = some_label@. This tests for membership
     -- of some_label in labels.
-    FilterElemElem FilterElemElemOp Text
+    FilterElemElem FilterOpEq Text
   | -- | Same as 'FilterElemElem' except it is written in set syntax e.g.
     -- X ∋ y. Thus this is merely alternative ("more proper") syntax.
     FilterSetElem FilterSetElemOp Text
@@ -220,9 +199,7 @@ instance Parser FilterSetElemOp where
 -- | Operator for set comparisons.
 data FilterSetSetOp
   = -- | Activity set X must equal the given set.
-    FilterSetSetOpEq
-  | -- | Activity set X must not equal the given set.
-    FilterSetSetOpNEq
+    FilterSetSetOpEq FilterOpEq
   | -- | Activity set X must be a proper superset of the given set.
     FilterSetSetOpPSuper
   | -- | Activity set X must be a superset of the given set.
@@ -282,8 +259,7 @@ data FilterSetSetOp
 
 instance Display FilterSetSetOp where
   displayBuilder = \case
-    FilterSetSetOpEq -> "="
-    FilterSetSetOpNEq -> "≠"
+    FilterSetSetOpEq op -> displayBuilder op
     FilterSetSetOpPSuper -> "⊃"
     FilterSetSetOpSuper -> "⊇"
     FilterSetSetOpPSub -> "⊂"
@@ -292,9 +268,7 @@ instance Display FilterSetSetOp where
 instance Parser FilterSetSetOp where
   parser =
     asum
-      [ P.char '=' $> FilterSetSetOpEq,
-        P.string "/=" $> FilterSetSetOpNEq,
-        P.char '≠' $> FilterSetSetOpNEq,
+      [ parser <&> FilterSetSetOpEq,
         P.string ">=" $> FilterSetSetOpSuper,
         P.char '⊇' $> FilterSetSetOpSuper,
         P.char '>' $> FilterSetSetOpPSuper,
@@ -320,3 +294,24 @@ parseTextNonEmpty = do
   -- so good? It would be nice to understand this.
   when (T.null stripped) $ fail "Unexpected empty text"
   pure stripped
+
+elemElemToFun :: (Ord a) => FilterOpEq -> Set a -> a -> Bool
+elemElemToFun FilterOpEqEq = flip Set.member
+elemElemToFun FilterOpEqNEq = flip Set.notMember
+
+setElemToFun :: (Ord a) => FilterSetElemOp -> Set a -> a -> Bool
+setElemToFun FilterSetElemOpMember = flip Set.member
+setElemToFun FilterSetElemOpNMember = flip Set.notMember
+
+setSetToFun :: (Ord b) => FilterSetSetOp -> (Set b -> Set b -> Bool)
+setSetToFun (FilterSetSetOpEq op) = Eq.toFun op
+setSetToFun FilterSetSetOpSuper = isSuperSetOf
+setSetToFun FilterSetSetOpPSuper = isProperSuperSetOf
+setSetToFun FilterSetSetOpSub = Set.isSubsetOf
+setSetToFun FilterSetSetOpPSub = Set.isProperSubsetOf
+
+isSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
+isSuperSetOf = flip Set.isSubsetOf
+
+isProperSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
+isProperSuperSetOf = flip Set.isProperSubsetOf

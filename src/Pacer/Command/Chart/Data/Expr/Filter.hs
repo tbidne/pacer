@@ -1,12 +1,11 @@
 -- | Provides filter.
 module Pacer.Command.Chart.Data.Expr.Filter
   ( FilterType (..),
-    FilterOp (..),
   )
 where
 
 import Pacer.Class.Parser (Parser (parser))
-import Pacer.Class.Parser qualified as P
+import Pacer.Command.Chart.Data.Expr.Ord
 import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Command.Chart.Data.Time.Moment (Moment)
 import Pacer.Data.Distance (SomeDistance)
@@ -17,76 +16,21 @@ import Text.Megaparsec ((<?>))
 import Text.Megaparsec.Char qualified as MPC
 
 -------------------------------------------------------------------------------
---                                  FilterOp                                 --
--------------------------------------------------------------------------------
-
--- | Operator for filter comparisons.
-data FilterOp
-  = FilterOpEq
-  | FilterOpNEq
-  | FilterOpLte
-  | FilterOpLt
-  | FilterOpGte
-  | FilterOpGt
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (NFData)
-
-instance Display FilterOp where
-  displayBuilder = \case
-    FilterOpEq -> "="
-    FilterOpNEq -> "≠"
-    FilterOpLte -> "≤"
-    FilterOpLt -> "<"
-    FilterOpGte -> "≥"
-    FilterOpGt -> ">"
-
--- NOTE: [Operators]
---
--- In general, we have a few principles when choosing operators.
---
--- 1. Every operator/expression should always be expressible in plain ascii.
---
--- 2. For any "composite" ascii operator, if a unicode (non-ascii) variant
---    exists, allow it. Hence adding ≥, ≤, ≠, ∅.
---
--- 3. There should be at most one operator for each of ascii, unicode.
---
--- 4. Displayed output should prioritize unicode operators, when they
---    exist.
---
--- 5. Displayed output should always be a valid input i.e. no
---    "prettifying" some operator to invalid syntax.
-
-instance Parser FilterOp where
-  parser =
-    asum
-      [ P.string "<=" $> FilterOpLte,
-        P.char '≤' $> FilterOpLte,
-        P.char '<' $> FilterOpLt,
-        P.char '=' $> FilterOpEq,
-        P.string "/=" $> FilterOpNEq,
-        P.char '≠' $> FilterOpNEq,
-        P.string ">=" $> FilterOpGte,
-        P.char '≥' $> FilterOpGte,
-        P.char '>' $> FilterOpGt
-      ]
-
--------------------------------------------------------------------------------
 --                                 FilterType                                --
 -------------------------------------------------------------------------------
 
 -- | Ways in which we can filter activities.
 data FilterType a
   = -- | Filter based on distance.
-    FilterDistance FilterOp (SomeDistance a)
+    FilterDistance FilterOpOrd (SomeDistance a)
   | -- | Filter based on duration.
-    FilterDuration FilterOp (Duration a)
+    FilterDuration FilterOpOrd (Duration a)
   | -- | Filter based on label set.
     FilterLabel (Set.FilterSet "label")
   | -- | Filter based on date.
-    FilterDate FilterOp Moment
+    FilterDate FilterOpOrd Moment
   | -- | Filter based on pace.
-    FilterPace FilterOp (SomePace a)
+    FilterPace FilterOpOrd (SomePace a)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 

@@ -24,10 +24,10 @@ MkChartRequests
       , filters =
         [ Atom
           ( FilterLabel
-            ( FilterElemElem FilterElemElemOpEq "marathon" )
+            ( FilterElemElem FilterOpEqEq "marathon" )
           )
         , Atom
-          ( FilterDate FilterOpGte
+          ( FilterDate FilterOpOrdGte
             ( MomentYear
               ( MkYear
                 { unYear = UnsafeInterval
@@ -49,11 +49,11 @@ MkChartRequests
       , filters =
         [ Atom
           ( FilterLabel
-            ( FilterElemElem FilterElemElemOpEq "official" )
+            ( FilterElemElem FilterOpEqEq "official" )
           )
         , Atom
           ( FilterLabel
-            ( FilterElemElem FilterElemElemOpNeq "marathon" )
+            ( FilterElemElem FilterOpEqNEq "marathon" )
           )
         ]
       , title = "Official non-marathons"
@@ -68,12 +68,12 @@ MkChartRequests
         [ Or
           ( Atom
             ( FilterLabel
-              ( FilterElemElem FilterElemElemOpEq "half-marathon" )
+              ( FilterElemElem FilterOpEqEq "half-marathon" )
             )
           )
           ( Atom
             ( FilterLabel
-              ( FilterElemElem FilterElemElemOpEq "marathon" )
+              ( FilterElemElem FilterOpEqEq "marathon" )
             )
           )
         ]
@@ -87,7 +87,7 @@ MkChartRequests
       , description = Nothing
       , filters =
         [ Atom
-          ( FilterDistance FilterOpGte
+          ( FilterDistance FilterOpOrdGte
             ( MkSomeDistance SKilometer
               ( MkDistance
                 ( UnsafePositive 25.0 ) Kilometer
