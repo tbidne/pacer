@@ -4,6 +4,8 @@
 module Pacer.Command.Chart.Data.Activity
   ( -- * Activity
     Activity (..),
+    ActivityType (..),
+    Label (..),
 
     -- ** Functions
     derivePace,
@@ -78,6 +80,18 @@ import Pacer.Utils qualified as Utils
 --                                 Activity                                  --
 -------------------------------------------------------------------------------
 
+-- | Activity type.
+newtype ActivityType = MkActivityType {unActivityType :: Text}
+  deriving stock (Generic, Show)
+  deriving anyclass (NFData)
+  deriving newtype (Eq, FromJSON, IsString, Ord, ToJSON)
+
+-- | Activity label.
+newtype Label = MkLabel {unLabel :: Text}
+  deriving stock (Generic, Show)
+  deriving anyclass (NFData)
+  deriving newtype (Eq, FromJSON, IsString, Ord, ToJSON)
+
 -- | Type for activities.
 type Activity :: DistanceUnit -> Type -> Type
 data Activity dist a = MkActivity
@@ -86,7 +100,7 @@ data Activity dist a = MkActivity
     -- justification is for interfacing with garmin (which has exactly one
     -- type), and though we could just parse that into labels, it is probably
     -- simpler to separate them.
-    atype :: Maybe Text,
+    atype :: Maybe ActivityType,
     -- | The start time of the activity.
     datetime :: Timestamp,
     -- | The activity's total distance.
@@ -94,7 +108,7 @@ data Activity dist a = MkActivity
     -- | The activity's total duration.
     duration :: Duration a,
     -- | Optional labels.
-    labels :: Set Text,
+    labels :: Set Label,
     -- | Optional title.
     title :: Maybe Text
   }
@@ -218,7 +232,10 @@ instance
           "duration" .= durationTimeString,
           "labels" .= r.labels
         ]
-      ++ Utils.encodeMaybes [("title", r.title), ("type", r.atype)]
+      ++ Utils.encodeMaybes
+        [ ("title", r.title),
+          ("type", fmap (.unActivityType) r.atype)
+        ]
     where
       durationTimeString =
         RelTime.toString
@@ -341,7 +358,7 @@ newtype SomeActivitiesKey a
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
 
-instance HasField "atype" (SomeActivitiesKey a) (Maybe Text) where
+instance HasField "atype" (SomeActivitiesKey a) (Maybe ActivityType) where
   getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.atype
 
 instance HasField "datetime" (SomeActivitiesKey a) Timestamp where
@@ -350,7 +367,7 @@ instance HasField "datetime" (SomeActivitiesKey a) Timestamp where
 instance HasField "duration" (SomeActivitiesKey a) (Duration a) where
   getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.duration
 
-instance HasField "labels" (SomeActivitiesKey a) (Set Text) where
+instance HasField "labels" (SomeActivitiesKey a) (Set Label) where
   getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.labels
 
 instance HasField "title" (SomeActivitiesKey a) (Maybe Text) where

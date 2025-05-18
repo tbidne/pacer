@@ -58,6 +58,7 @@ import Pacer.Command.Chart.Data.Activity
         labels,
         title
       ),
+    Label,
     SomeActivities (MkSomeActivities),
     SomeActivitiesKey (MkSomeActivitiesKey),
   )
@@ -773,7 +774,7 @@ testUpdateLabels = testCase "Updates labels from map" $ do
     y3 = mkSr "No labels" (unsafeTs "2024-08-12") []
     y4 = mkSr "TZ match" (unsafeTs "2024-08-15T15:00:00-0800") ["tz_label"]
 
-    labelMap :: Map Timestamp (NESet Text)
+    labelMap :: Map Timestamp (NESet Label)
     labelMap =
       Map.fromList
         [ (unsafeTs "2024-08-10T12:20:30", unsafeNESet ["l2", "l3"]),

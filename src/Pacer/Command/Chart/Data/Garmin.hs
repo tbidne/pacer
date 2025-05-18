@@ -31,6 +31,7 @@ import FileSystem.UTF8 (decodeUtf8Lenient)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity),
+    ActivityType (MkActivityType),
     SomeActivities,
     SomeActivity (MkSomeActivity),
   )
@@ -51,7 +52,7 @@ import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
 data GarminAct d a = MkGarminAct
-  { atype :: Text,
+  { atype :: ActivityType,
     datetime :: Timestamp,
     distance :: Distance d a,
     duration :: Duration a,
@@ -88,7 +89,7 @@ parseGarminRow ::
   NamedRecord ->
   Parser (GarminAct d a)
 parseGarminRow r = do
-  actType :: Text <- r .: "Activity Type"
+  activityType <- MkActivityType <$> r .: "Activity Type"
 
   title <- r .: "Title"
   datetime <- parseDatetime =<< r .: "Date"
@@ -99,7 +100,7 @@ parseGarminRow r = do
 
   pure
     $ MkGarminAct
-      { atype = actType,
+      { atype = activityType,
         datetime = ts,
         distance,
         duration,

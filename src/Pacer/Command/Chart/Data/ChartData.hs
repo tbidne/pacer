@@ -18,10 +18,12 @@ import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Set (Set)
+import Data.Set qualified as Set
 import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity, datetime, distance, duration),
+    Label (unLabel),
     SomeActivities (MkSomeActivities),
     SomeActivitiesKey,
     SomeActivity (MkSomeActivity),
@@ -57,7 +59,7 @@ import Pacer.Command.Chart.Data.Expr.Set
         FilterSetSet
       ),
   )
-import Pacer.Command.Chart.Data.Expr.Set qualified as Set
+import Pacer.Command.Chart.Data.Expr.Set qualified as ESet
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
@@ -412,17 +414,19 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
     filterActivity r = all (eval (applyFilter r)) filters
 
     applyFilter :: SomeActivitiesKey a -> FilterType a -> Bool
-    applyFilter srk (FilterLabel lblSet) = applyFilterSet srk.labels lblSet
+    applyFilter srk (FilterLabel lblSet) = applyFilterSet (.unLabel) srk.labels lblSet
     applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivitiesKey op m
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivitiesKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivitiesKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivitiesKey op p
 
-    applyFilterSet :: Set Text -> FilterSet p -> Bool
-    applyFilterSet set = \case
-      FilterElemElem op t -> Set.elemElemToFun op set t
-      FilterSetElem op t -> Set.setElemToFun op set t
-      FilterSetSet op t -> Set.setSetToFun op set t
+    applyFilterSet :: forall b p. (b -> Text) -> Set b -> FilterSet p -> Bool
+    applyFilterSet f set = \case
+      FilterElemElem op t -> ESet.elemElemToFun op textSet t
+      FilterSetElem op t -> ESet.setElemToFun op textSet t
+      FilterSetSet op t -> ESet.setSetToFun op textSet t
+      where
+        textSet = Set.map f set
 
     applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
     applyDate (MkSomeActivity _ r) op m = Ord.toIFun op activityMoment m

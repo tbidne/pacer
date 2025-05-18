@@ -10,6 +10,8 @@ import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity),
+    ActivityType (MkActivityType),
+    Label (MkLabel),
     SomeActivities,
     SomeActivity (MkSomeActivity),
   )
@@ -325,10 +327,12 @@ genActivity = do
   -- positive check.
   duration <- MkDuration <$> UT.genDoubleMinPos 120
   labels <-
-    Set.fromList <$> G.list (R.linearFrom 0 0 5) UT.genText
+    Set.fromList
+      . fmap MkLabel
+      <$> G.list (R.linearFrom 0 0 5) UT.genText
   title <- G.maybe UT.genText
 
-  atype <- G.maybe UT.genText
+  atype <- fmap MkActivityType <$> G.maybe UT.genText
 
   pure
     $ MkActivity

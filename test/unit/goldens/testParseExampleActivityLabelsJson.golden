@@ -3,12 +3,22 @@ MkActivityLabels
     [
       ( TimestampTime 2024-10-10 12:00:00
       , fromList
-        ( "half-marathon" :| [ "official" ] )
+        ( MkLabel
+          { unLabel = "half-marathon" } :|
+          [ MkLabel
+            { unLabel = "official" }
+          ]
+        )
       )
     ,
       ( TimestampTime 2024-10-25 12:00:00
       , fromList
-        ( "marathon" :| [ "official" ] )
+        ( MkLabel
+          { unLabel = "marathon" } :|
+          [ MkLabel
+            { unLabel = "official" }
+          ]
+        )
       )
     ]
   }

@@ -39,6 +39,7 @@ import FileSystem.OsPath (decodeLenient, decodeThrowM)
 import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
 import Pacer.Command.Chart.Data.Activity
   ( Activity,
+    Label,
     SomeActivities,
   )
 import Pacer.Command.Chart.Data.Activity qualified as Activity
@@ -369,7 +370,7 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
       mconcat
         [ display ts,
           ": ",
-          Utils.showMapListInline identity (toList $ NESet.toList labels)
+          Utils.showMapListInline (.unLabel) (toList $ NESet.toList labels)
         ]
 
     -- DistanceUnit should be set if this is a garmin (csv) file.
@@ -398,11 +399,11 @@ type ChartPaths =
 -- activity in SomeActivities.
 updateLabels ::
   -- | Timestamp -> labels map.
-  Map Timestamp (NESet Text) ->
+  Map Timestamp (NESet Label) ->
   -- | All activities.
   SomeActivities a ->
   -- | (New activities, unmatching timestamps).
-  Tuple2 (SomeActivities a) (Map Timestamp (NESet Text))
+  Tuple2 (SomeActivities a) (Map Timestamp (NESet Label))
 updateLabels activityLabels rs = (newActivities, unmatched)
   where
     (newActivities, matched) =

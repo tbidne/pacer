@@ -10,8 +10,10 @@ MkSomeActivities
           , duration = MkDuration
             { unDuration = UnsafePositive 4800.0 }
           , labels = fromList
-            [ "half-marathon"
-            , "official"
+            [ MkLabel
+              { unLabel = "half-marathon" }
+            , MkLabel
+              { unLabel = "official" }
             ]
           , title = Just "Some half marathon"
           }
@@ -20,7 +22,10 @@ MkSomeActivities
       [ MkSomeActivitiesKey
         { unSomeActivitiesKey = MkSomeActivity SKilometer
           ( MkActivity
-            { atype = Just "Running"
+            { atype = Just
+              ( MkActivityType
+                { unActivityType = "Running" }
+              )
             , datetime = TimestampDate 2024-10-15
             , distance = MkDistance
               ( UnsafePositive 5.0 ) Kilometer
@@ -40,7 +45,10 @@ MkSomeActivities
               ( UnsafePositive 20.0 ) Mile
             , duration = MkDuration
               { unDuration = UnsafePositive 9654.0 }
-            , labels = fromList [ "label1" ]
+            , labels = fromList
+              [ MkLabel
+                { unLabel = "label1" }
+              ]
             , title = Nothing
             }
           )
@@ -55,8 +63,10 @@ MkSomeActivities
             , duration = MkDuration
               { unDuration = UnsafePositive 12000.0 }
             , labels = fromList
-              [ "marathon"
-              , "official"
+              [ MkLabel
+                { unLabel = "marathon" }
+              , MkLabel
+                { unLabel = "official" }
               ]
             , title = Just "Some Marathon"
             }
@@ -72,8 +82,10 @@ MkSomeActivities
             , duration = MkDuration
               { unDuration = UnsafePositive 18900.0 }
             , labels = fromList
-              [ "marathon"
-              , "official"
+              [ MkLabel
+                { unLabel = "marathon" }
+              , MkLabel
+                { unLabel = "official" }
               ]
             , title = Just "Another marathon"
             }
