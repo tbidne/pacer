@@ -235,7 +235,8 @@ Chart requests allow us to filter activities based on some criteria. In general,
   "filters": [
     "label = official_race",
     "distance >= 25 km",
-    "datetime > 2024"
+    "datetime > 2024",
+    "type = Running"
   ],
   "y-axis": "distance"
 }
@@ -261,13 +262,15 @@ For instance, of the following, only `Race 1` will be selected.
         "official_race",
         "another label"
       ],
-      "title": "Race 1"
+      "title": "Race 1",
+      "type": "Running"
     },
     {
       "datetime": "2025-02-20T14:30:00",
       "distance": "20 miles",
       "duration": "2h40m54s",
-      "title": "Race 2"
+      "title": "Race 2",
+      "type": "Running"
     },
     {
       "datetime": "2024-03-20T14:30:00",
@@ -277,7 +280,8 @@ For instance, of the following, only `Race 1` will be selected.
         "official_race",
         "another label"
       ],
-      "title": "Race 3"
+      "title": "Race 3",
+      "type": "Running"
     }
   ]
 }
@@ -330,9 +334,9 @@ atom
   | 'distance' op             distance
   | 'duration' op             duration
   | 'pace'     op             pace
-  | 'label'    op_eqs         label
-  | 'labels'   labels_op_one  label
-  | 'labels'   labels_op_many label_set
+  | 'label'    op_eqs         string
+  | 'labels'   set_ops
+  | 'type'     op_eqs         string
 
 ; E.g. 2024, 2024-08, 2024-08-15, 2024-08-15 14:20:00, 2024-08-15 14:20:00+0800
 datetime
@@ -365,56 +369,58 @@ op_eqs
   | '/='
   | '≠'
 
+set_ops
+  : set_op_one string
+  | set_op_many set_strings
+
 ; Operators for set membership e.g. 'A ∋ x' means "Set A has member x".
 ; 'A ∌ x' means "Set A does not have member x".
-labels_op_one
+set_op_one
   : '∋'
   | '∌'
 
 ; Operators for set comparisons.
-labels_op_many
+set_op_many
   : op_eqs
-  | labels_op_many_gte
-  | labels_op_many_gt
-  | labels_op_many_lte
-  | labels_op_many_lt
+  | set_op_many_gte
+  | set_op_many_gt
+  | set_op_many_lte
+  | set_op_many_lt
 
 ; 'A >= B' and 'A ⊇ B' both mean A is a superset of B i.e. all of B is
 ; contained within A.
-labels_op_many_gte
+set_op_many_gte
   : '>='
   | '⊇'
 
 ; 'A > B' and 'A ⊃ B' both mean A is a _proper_ superset of B i.e. all of B is
 ; contained within A and B _does not equal_ A.
-labels_op_many_gt
+set_op_many_gt
   : '>'
   | '⊃'
 
 ; 'A <= B' and 'A ⊆ B' both mean A is a subset of B i.e. all of A is
 ; contained within B.
-labels_op_many_lte
+set_op_many_lte
   : '<='
   | '⊆'
 
 ; 'A < B' and 'A ⊂ B' both mean A is a _proper_ subset of B i.e. all of A is
 ; contained within B and A _does not equal_ B.
-labels_op_many_lt
+set_op_many_lt
   : '<'
   | '⊂'
 
-label : string
-
 ; A label_set is either the empty set ({} or ∅) or a set with elements e.g.
 ; {a, b, c}
-label_set
+set_strings
   : '{}'
   | '∅'
-  | '{' labels '}'
+  | '{' strings '}'
 
-labels
-  : label
-  | label ',' labels
+strings
+  : string
+  | string ',' string
 ```
 
 ##### Expressions

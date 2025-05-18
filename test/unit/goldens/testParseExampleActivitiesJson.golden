@@ -3,7 +3,10 @@ MkSomeActivities
     ( MkSomeActivitiesKey
       { unSomeActivitiesKey = MkSomeActivity SKilometer
         ( MkActivity
-          { atype = Nothing
+          { atype = Just
+            ( MkActivityType
+              { unActivityType = "Running" }
+            )
           , datetime = TimestampZoned 2024-10-10 12:00:00 -0800
           , distance = MkDistance
             ( UnsafePositive 21.0975 ) Kilometer
@@ -39,7 +42,10 @@ MkSomeActivities
       , MkSomeActivitiesKey
         { unSomeActivitiesKey = MkSomeActivity SMile
           ( MkActivity
-            { atype = Nothing
+            { atype = Just
+              ( MkActivityType
+                { unActivityType = "Running" }
+              )
             , datetime = TimestampTime 2024-10-20 14:30:00
             , distance = MkDistance
               ( UnsafePositive 20.0 ) Mile
@@ -56,7 +62,10 @@ MkSomeActivities
       , MkSomeActivitiesKey
         { unSomeActivitiesKey = MkSomeActivity SKilometer
           ( MkActivity
-            { atype = Nothing
+            { atype = Just
+              ( MkActivityType
+                { unActivityType = "Running" }
+              )
             , datetime = TimestampZoned 2024-10-25 12:00:00 -0800
             , distance = MkDistance
               ( UnsafePositive 42.195 ) Kilometer
@@ -75,7 +84,10 @@ MkSomeActivities
       , MkSomeActivitiesKey
         { unSomeActivitiesKey = MkSomeActivity SKilometer
           ( MkActivity
-            { atype = Nothing
+            { atype = Just
+              ( MkActivityType
+                { unActivityType = "Running" }
+              )
             , datetime = TimestampZoned 2024-10-28 12:00:00 -0800
             , distance = MkDistance
               ( UnsafePositive 42.195 ) Kilometer

@@ -23,6 +23,7 @@ import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity, datetime, distance, duration),
+    ActivityType,
     Label (unLabel),
     SomeActivities (MkSomeActivities),
     SomeActivitiesKey,
@@ -41,13 +42,16 @@ import Pacer.Command.Chart.Data.ChartRequest
       ),
   )
 import Pacer.Command.Chart.Data.Expr (FilterExpr, eval)
+import Pacer.Command.Chart.Data.Expr.Eq (FilterOpEq)
+import Pacer.Command.Chart.Data.Expr.Eq qualified as Eq
 import Pacer.Command.Chart.Data.Expr.Filter
   ( FilterType
       ( FilterDate,
         FilterDistance,
         FilterDuration,
         FilterLabel,
-        FilterPace
+        FilterPace,
+        FilterType
       ),
   )
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
@@ -419,6 +423,7 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivitiesKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivitiesKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivitiesKey op p
+    applyFilter srk (FilterType op t) = applyType srk.unSomeActivitiesKey op t
 
     applyFilterSet :: forall b p. (b -> Text) -> Set b -> FilterSet p -> Bool
     applyFilterSet f set = \case
@@ -453,3 +458,8 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
             $ withSingI sfp
             $ case DistU.convertDistance activityDist fPace of
               fPace' -> Ord.toFun op activityPace fPace'
+
+    applyType :: SomeActivity a -> FilterOpEq -> ActivityType -> Bool
+    applyType (MkSomeActivity _ r) op = case r.atype of
+      Nothing -> const False
+      Just atype -> Eq.toFun op atype

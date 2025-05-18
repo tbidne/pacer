@@ -3,7 +3,14 @@ MkChartRequests
     [ MkChartRequest
       { chartType = Nothing
       , description = Just "This is some activities plotted by distance."
-      , filters = []
+      , filters =
+        [ Atom
+          ( FilterType FilterOpEqEq
+            ( MkActivityType
+              { unActivityType = "Running" }
+            )
+          )
+        ]
       , title = "Activities by distance"
       , unit = Nothing
       , yAxis = YAxisDistance

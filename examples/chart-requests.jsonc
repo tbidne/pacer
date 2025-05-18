@@ -7,7 +7,10 @@
     {
       "title": "Activities by distance",
       "description": "This is some activities plotted by distance.",
-      "y-axis": "distance"
+      "y-axis": "distance",
+      "filters": [
+        "type = Running"
+      ]
     },
     {
       "title": "Activities by distance and pace",
