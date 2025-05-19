@@ -48,8 +48,8 @@ import Text.Megaparsec.Char qualified as MPC
 --
 -- For instance, @label = foo@ means
 -- "there exists an l in labels s.t. l == foo".
-type FilterElem :: Symbol -> Type
-data FilterElem p
+type FilterElem :: Symbol -> Type -> Type
+data FilterElem p a
   = -- | Tests an element e for membership in X e.g.
     --
     -- 1. @label = foo@ <=> exists label l s.t. l == foo.
@@ -63,7 +63,7 @@ data FilterElem p
     -- NOT
     --
     --   exists label l s.t. l /= foo
-    FilterElemEq FilterOpEq Text
+    FilterElemEq FilterOpEq a
   | -- | Tests some x in X for membership in Y e.g.
     --
     -- 1. @label ∈ {a, b}@ <=> exists label l s.t. l == a or l == b.
@@ -71,11 +71,11 @@ data FilterElem p
     --
     -- This can be used to encode "OR". Once again, negation is out the
     -- "outside", not the inside.
-    FilterElemExists FilterElemOpSet (Set Text)
+    FilterElemExists FilterElemOpSet (Set a)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
-instance (KnownSymbol s) => Display (FilterElem s) where
+instance (Display a, Eq a, KnownSymbol s) => Display (FilterElem s a) where
   displayBuilder = \case
     FilterElemEq op t ->
       mconcat
@@ -100,12 +100,12 @@ instance (KnownSymbol s) => Display (FilterElem s) where
 --                                  Parsing                                  --
 -------------------------------------------------------------------------------
 
-instance (KnownSymbol s) => Parser (FilterElem s) where
+instance (KnownSymbol s, Ord a, Parser a) => Parser (FilterElem s a) where
   parser = parseFilterElem symStr <?> symStr
     where
       symStr = symbolVal (Proxy :: Proxy s)
 
-parseFilterElem :: String -> MParser (FilterElem s)
+parseFilterElem :: (Ord a, Parser a) => String -> MParser (FilterElem s a)
 parseFilterElem symStr = do
   void $ MPC.string (T.pack symStr)
   MPC.space
@@ -126,7 +126,7 @@ parseFilterElem symStr = do
       set <- parseSet symStr
       pure $ FilterElemExists op set
 
-parseSetElem :: MParser Text
+parseSetElem :: (Parser a) => MParser a
 parseSetElem = do
   txt <- parseTextNonEmpty
   case (T.find (\c -> c == '{' || c == '}') txt) of
@@ -137,9 +137,9 @@ parseSetElem = do
             [c],
             "'. Expected exactly one element, not set syntax."
           ]
-    Nothing -> pure txt
+    Nothing -> failErr $ P.parseAll txt
 
-parseSet :: String -> MParser (Set Text)
+parseSet :: (Ord a, Parser a) => String -> MParser (Set a)
 parseSet name = do
   set <- parseEmptySet <|> parseSetTxt
   MPC.space
@@ -165,20 +165,19 @@ parseSet name = do
         --    means we either had a leading/trailing comma or
         --    "consecutive" ones e.g. {a,  ,b}, BAD.
         else do
-          let set =
-                Set.fromList
-                  . fmap T.strip
+          let xs =
+                fmap T.strip
                   . T.split (== ',')
                   $ txt
 
-          when (any T.null set)
+          when (any T.null xs)
             $ fail
             $ mconcat
               [ "Unexpected empty text. Possibly there are leading/",
                 "trailing/consecutive commas."
               ]
 
-          pure set
+          Set.fromList <$> (failErr $ traverse P.parseAll xs)
 
 -------------------------------------------------------------------------------
 --                                  Operators                                --
@@ -227,21 +226,21 @@ memberFun FilterElemNotInSet = Set.notMember
 --
 -- For instance, @label = foo@ means
 -- "there exists an l in labels s.t. l == foo".
-type FilterSet :: Symbol -> Type
-data FilterSet p
+type FilterSet :: Symbol -> Type -> Type
+data FilterSet p a
   = -- | Operations on an arbitrary element in X. Not only does this allow
     -- alternative syntax for @X ∋ a@ -- i.e. @x = a@, it also allows
     -- encoding "OR" e.g. @x ∈ {a, b}@ for any x in X.
-    FilterSetElem (FilterElem p)
+    FilterSetElem (FilterElem p a)
   | -- | Set membership.
-    FilterSetHasElem FilterSetOpElem Text
+    FilterSetHasElem FilterSetOpElem a
   | -- | Set comparisons e.g. @labels ⊇ {label_1, label_2}@. This tests that
     -- all labels exist within labels ("AND").
-    FilterSetComp FilterSetOpSet (Set Text)
+    FilterSetComp FilterSetOpSet (Set a)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
-instance (KnownSymbol s) => Display (FilterSet s) where
+instance (Display a, Eq a, KnownSymbol s) => Display (FilterSet s a) where
   displayBuilder = \case
     FilterSetElem e -> displayBuilder e
     FilterSetHasElem op t ->
@@ -266,7 +265,7 @@ instance (KnownSymbol s) => Display (FilterSet s) where
 --                                   Parsing                                 --
 -------------------------------------------------------------------------------
 
-instance (KnownSymbol s) => Parser (FilterSet s) where
+instance (KnownSymbol s, Ord a, Parser a) => Parser (FilterSet s a) where
   parser =
     asum
       [ -- plural needs to precede singular.
@@ -277,7 +276,7 @@ instance (KnownSymbol s) => Parser (FilterSet s) where
       symStr = symbolVal (Proxy :: Proxy s)
       symsStr = symStr <> "s"
 
-parseFilterSet :: String -> MParser (FilterSet s)
+parseFilterSet :: (Ord a, Parser a) => String -> MParser (FilterSet s a)
 parseFilterSet symsStr = do
   void $ MPC.string symTxt
   MPC.space

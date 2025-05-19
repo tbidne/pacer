@@ -41,6 +41,7 @@ import Control.Monad.Combinators.Expr (Operator (InfixL, Prefix))
 import Data.ByteString qualified as BS
 import Data.Char qualified as Ch
 import Data.Set qualified as Set
+import Data.String (IsString (fromString))
 import Data.Text qualified as T
 import Data.Time.Format (ParseTime)
 import Data.Time.Format qualified as Format
@@ -70,6 +71,13 @@ type MParser a = Parsec Void Text a
 class Parser a where
   -- | Megaparsec parser for the given type.
   parser :: MParser a
+  default parser :: (IsString a) => MParser a
+  parser = do
+    str <-
+      MP.takeWhile1P
+        (Just "nonempty-string")
+        (const True)
+    pure $ fromString $ T.unpack str
 
 instance Parser Word16 where
   parser = parseIntegral

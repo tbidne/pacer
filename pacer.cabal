@@ -38,6 +38,7 @@ source-repository head
 common common-lang
   default-extensions:
     ApplicativeDo
+    DefaultSignatures
     DeriveAnyClass
     DerivingVia
     DuplicateRecordFields

@@ -18,12 +18,10 @@ import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Set (Set)
-import Data.Set qualified as Set
 import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity, datetime, distance, duration),
-    Label (unLabel),
     SomeActivities (MkSomeActivities),
     SomeActivitiesKey,
     SomeActivity (MkSomeActivity),
@@ -417,29 +415,27 @@ filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterA
     filterActivity r = all (eval (applyFilter r)) filters
 
     applyFilter :: SomeActivitiesKey a -> FilterType a -> Bool
-    applyFilter srk (FilterLabel lblSet) = applyFilterSet (.unLabel) srk.labels lblSet
+    applyFilter srk (FilterLabel lblSet) = applyFilterSet srk.labels lblSet
     applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivitiesKey op m
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivitiesKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivitiesKey op d
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivitiesKey op p
     applyFilter srk (FilterType fe) = case srk.unSomeActivitiesKey of
       MkSomeActivity _ r -> case r.atype of
-        Just atype -> applyFilterElem (.unActivityType) atype fe
+        Just atype -> applyFilterElem atype fe
         Nothing -> False
 
-    applyFilterElem :: (b -> Text) -> b -> FilterElem p -> Bool
-    applyFilterElem f actVal = \case
-      FilterElemEq op t -> Eq.toFun op (f actVal) t
-      FilterElemExists op set -> ESet.memberFun op (f actVal) set
+    applyFilterElem :: (Ord b) => b -> FilterElem p b -> Bool
+    applyFilterElem actVal = \case
+      FilterElemEq op t -> Eq.toFun op actVal t
+      FilterElemExists op set -> ESet.memberFun op actVal set
 
-    applyFilterSet :: forall b p. (b -> Text) -> Set b -> FilterSet p -> Bool
-    applyFilterSet f set = \case
-      FilterSetElem (FilterElemEq op t) -> ESet.existsElemFun op actSet t
-      FilterSetElem (FilterElemExists op t) -> ESet.existsSetFun op actSet t
-      FilterSetHasElem op t -> ESet.hasElemFun op actSet t
-      FilterSetComp op t -> ESet.compFun op actSet t
-      where
-        actSet = Set.map f set
+    applyFilterSet :: forall b p. (Ord b) => Set b -> FilterSet p b -> Bool
+    applyFilterSet set = \case
+      FilterSetElem (FilterElemEq op t) -> ESet.existsElemFun op set t
+      FilterSetElem (FilterElemExists op t) -> ESet.existsSetFun op set t
+      FilterSetHasElem op t -> ESet.hasElemFun op set t
+      FilterSetComp op t -> ESet.compFun op set t
 
     applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
     applyDate (MkSomeActivity _ r) op m = Ord.toIFun op activityMoment m

@@ -83,13 +83,13 @@ import Pacer.Utils qualified as Utils
 -- | Activity type.
 newtype ActivityType = MkActivityType {unActivityType :: Text}
   deriving stock (Generic, Show)
-  deriving anyclass (NFData)
+  deriving anyclass (Parser, NFData)
   deriving newtype (Display, Eq, FromJSON, IsString, Ord, ToJSON)
 
 -- | Activity label.
 newtype Label = MkLabel {unLabel :: Text}
   deriving stock (Generic, Show)
-  deriving anyclass (NFData)
+  deriving anyclass (Parser, NFData)
   deriving newtype (Display, Eq, FromJSON, IsString, Ord, ToJSON)
 
 -- | Type for activities.

@@ -5,6 +5,7 @@ module Pacer.Command.Chart.Data.Expr.Filter
 where
 
 import Pacer.Class.Parser (Parser (parser))
+import Pacer.Command.Chart.Data.Activity (ActivityType, Label)
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
 import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Command.Chart.Data.Time.Moment (Moment)
@@ -26,13 +27,13 @@ data FilterType a
   | -- | Filter based on duration.
     FilterDuration FilterOpOrd (Duration a)
   | -- | Filter based on label set.
-    FilterLabel (Set.FilterSet "label")
+    FilterLabel (Set.FilterSet "label" Label)
   | -- | Filter based on date.
     FilterDate FilterOpOrd Moment
   | -- | Filter based on pace.
     FilterPace FilterOpOrd (SomePace a)
   | -- | Filter based on type.
-    FilterType (Set.FilterElem "type")
+    FilterType (Set.FilterElem "type" ActivityType)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 

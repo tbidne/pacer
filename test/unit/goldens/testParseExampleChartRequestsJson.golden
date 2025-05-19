@@ -6,7 +6,11 @@ MkChartRequests
       , filters =
         [ Atom
           ( FilterType
-            ( FilterElemEq FilterOpEqEq "Running" )
+            ( FilterElemEq FilterOpEqEq
+              ( MkActivityType
+                { unActivityType = "Running" }
+              )
+            )
           )
         ]
       , title = "Activities by distance"
@@ -30,7 +34,11 @@ MkChartRequests
         [ Atom
           ( FilterLabel
             ( FilterSetElem
-              ( FilterElemEq FilterOpEqEq "marathon" )
+              ( FilterElemEq FilterOpEqEq
+                ( MkLabel
+                  { unLabel = "marathon" }
+                )
+              )
             )
           )
         , Atom
@@ -57,13 +65,21 @@ MkChartRequests
         [ Atom
           ( FilterLabel
             ( FilterSetElem
-              ( FilterElemEq FilterOpEqEq "official" )
+              ( FilterElemEq FilterOpEqEq
+                ( MkLabel
+                  { unLabel = "official" }
+                )
+              )
             )
           )
         , Atom
           ( FilterLabel
             ( FilterSetElem
-              ( FilterElemEq FilterOpEqNEq "marathon" )
+              ( FilterElemEq FilterOpEqNEq
+                ( MkLabel
+                  { unLabel = "marathon" }
+                )
+              )
             )
           )
         ]
@@ -80,14 +96,22 @@ MkChartRequests
           ( Atom
             ( FilterLabel
               ( FilterSetElem
-                ( FilterElemEq FilterOpEqEq "half-marathon" )
+                ( FilterElemEq FilterOpEqEq
+                  ( MkLabel
+                    { unLabel = "half-marathon" }
+                  )
+                )
               )
             )
           )
           ( Atom
             ( FilterLabel
               ( FilterSetElem
-                ( FilterElemEq FilterOpEqEq "marathon" )
+                ( FilterElemEq FilterOpEqEq
+                  ( MkLabel
+                    { unLabel = "marathon" }
+                  )
+                )
               )
             )
           )
@@ -131,12 +155,20 @@ MkChartRequests
         [ Or
           ( Atom
             ( FilterType
-              ( FilterElemEq FilterOpEqEq "Running" )
+              ( FilterElemEq FilterOpEqEq
+                ( MkActivityType
+                  { unActivityType = "Running" }
+                )
+              )
             )
           )
           ( Atom
             ( FilterType
-              ( FilterElemEq FilterOpEqEq "Indoor Cycling" )
+              ( FilterElemEq FilterOpEqEq
+                ( MkActivityType
+                  { unActivityType = "Indoor Cycling" }
+                )
+              )
             )
           )
         ]
