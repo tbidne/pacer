@@ -40,37 +40,44 @@ import Text.Megaparsec.Char qualified as MPC
 --                                 FilterElem                                --
 -------------------------------------------------------------------------------
 
--- | @FilterSet X@ tests set operations on the set @X@ e.g. X = "labels".
--- Note that, wrt the operators, the LHS is always a set (e.g. labels set),
--- so operators where the LHS is expected to be an element --
--- FilterOpEq used by FilterSetExistsElem -- the LHS is considered to be
--- an arbitrary element in the set.
+-- | @FilterSet X@ tests set operations on some element x e.g.
 --
--- For instance, @label = foo@ means
--- "there exists an l in labels s.t. l == foo".
+-- - @x = y@
+-- - @x ∈ Y@
+--
+-- X can be a single value (e.g. type) or a set itself (e.g. labels set,
+-- written as singular \'label\') e.g.
+--
+-- - @"type = some_type"@
+-- - @"type ∈ {t1, t2}"@
+--
+-- When X is a set, the element x should be understood to be an arbitrary
+-- @x ∈ X@ i.e. we are dealing with existence:
+--
+-- - @∃x ∈ X s.t. x = y@
+-- - @∃x ∈ X s.t. x ∈ Y@
+--
+-- E.g.
+--
+-- - @"label = some_label" ≣ ∃l ∈ activity.labels s.t. l = "some_label"@
+-- - @"label ∈ {l1, l2}"   ≣ ∃l ∈ activity.labels s.t. l ∈ {"l1", "l2"}@
+--
+-- The second allows us to encode disjunction (OR) at the operator level.
+-- Note that negation applies to the _entire_ expression i.e. the above
+-- becomes:
+--
+-- - @∄x ∈ X s.t. x = y ≣ ∀x ∈ X, x ≠ y@
+-- - @∄x ∈ X s.t. x ∈ Y ≣ ∀x ∈ X, x ∉ Y@
+--
+-- E.g.
+--
+-- - @"label ≠ some_label" ≣ ∀l ∈ activity.labels, l ≠ "some_label"@
+-- - @"label ∉ {l1, l2}"   ≣ ∀l ∈ activity.labels, l ∉ {"l1", "l2"}@
 type FilterElem :: Symbol -> Type -> Type
 data FilterElem p a
-  = -- | Tests an element e for membership in X e.g.
-    --
-    -- 1. @label = foo@ <=> exists label l s.t. l == foo.
-    -- 2. @label /= foo@ <=> forall labels l, l /= foo.
-    --
-    -- Notice that negation negates the entire expression, not the inner
-    -- symbol. That is, 2 is equivalent to:
-    --
-    --   not (exists label l s.t. l == foo)
-    --
-    -- NOT
-    --
-    --   exists label l s.t. l /= foo
+  = -- | Equality test.
     FilterElemEq FilterOpEq a
-  | -- | Tests some x in X for membership in Y e.g.
-    --
-    -- 1. @label ∈ {a, b}@ <=> exists label l s.t. l == a or l == b.
-    -- 2. @label ∉ {a, b}@ <=> forall labels l, l /= a and l /= b.
-    --
-    -- This can be used to encode "OR". Once again, negation is out the
-    -- "outside", not the inside.
+  | -- | Membership test.
     FilterElemExists FilterElemOpSet (Set a)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
