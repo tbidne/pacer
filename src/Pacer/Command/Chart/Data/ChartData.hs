@@ -107,6 +107,8 @@ instance ToJSON ChartY where
 
       yAxis = mkYJson c.yDistUnit y c.yType "y"
 
+-- See NOTE: [Numeric Type]
+
 -- | Data for a chart with two Y axes.
 data ChartY1 = MkChartY1
   { -- | Data for a chart with two y Axes.

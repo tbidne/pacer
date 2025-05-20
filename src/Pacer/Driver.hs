@@ -142,6 +142,62 @@ getEnv ::
   ) =>
   Eff es Env
 getEnv = do
+  -- NOTE: [Numeric Type]
+  --
+  -- This is where we choose the core numeric type for pacer for cli commands.
+  -- The chart command is set in fixed in ChartData. A couple notes:
+  --
+  -- We have tried to relax the mandatory invariants, that is, reducing
+  -- core types from e.g.
+  --
+  --   MkDistance { unDistance :: Positive a }
+  --
+  -- to one of:
+  --
+  --   1. MkDistance { unDistance :: NonNegative a }
+  --   2. MkDistance { unDistance :: a }
+  --
+  -- There are two aspects here:
+  --
+  --   A. Moving the invariant from the core type to here.
+  --   B. Reducing the type from Positive to NonNegative.
+  --
+  -- B is arguably the Right Thing To Do, since zero is a perfectly sensible
+  -- (albeit silly) value for the general CLI commands. Positive was only
+  -- chosen for convenience i.e. to ensure division was okay.
+  --
+  -- Thus relaxing to NonNegative is _fine_, though care has to be taken
+  -- to ensure division is safe (e.g. only using 'safe' division operators,
+  -- and failing fast otherwise). The real reason this hasn't been done yet
+  -- is it is a major pain with charts. The charts relies on Positive values
+  -- in several places (calculating pace for filters, output values), and
+  -- refactoring everything to allow failure is pretty terrible.
+  --
+  -- It's doable, but in the absence of a compelling reason, does not seem
+  -- worth it. Especially because such values cannot even be charted, without
+  -- giving them an arbitrary value like zero. So we give up logging errors
+  -- in the parser, only to log them later in the complicated chart creation
+  -- logic? And this is all so that CLI allows zero values? Probably not
+  -- worth it.
+  --
+  -- A, OTOH, is interesting since we can still preserve our Positive
+  -- invariants, i.e. just move Positive here and hardcode it in ChartData.
+  -- That's fine. A nice bonus is that some of the tests are easier to write,
+  -- since we can then write Monoid/Group instances. But other parts get
+  -- worse, since we still need to generate Positive values in some cases.
+  -- This also means we could have a divergence in test and actual behavior,
+  -- given actual behavior is using Positive and tests might not be.
+  --
+  -- Once again, it's probably not worth it unless there is a compelling
+  -- reason.
+  --
+  -- The whole impetus to explore this was that the parse error in garmin
+  -- was terrible, since it logged every non-positive error on a new line,
+  -- and it turns out there can be quite a few in real data. We have
+  -- improved on the error by special-casing this to print all non-positive
+  -- errors inline. So it could be a very long line, but at least it's just
+  -- one. If this gets more annoying, we could add config to ignore this
+  -- specific error.
   args <- execParser (parserInfo @Double)
 
   -- Normally, we combine the Args' LogLevel with the json Config's LogLevel
