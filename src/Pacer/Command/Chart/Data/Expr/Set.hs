@@ -463,4 +463,9 @@ parseTextNonEmpty = do
 displaySet :: (Display a, Eq a) => Set a -> Builder
 displaySet s
   | s == Set.empty = "∅"
-  | otherwise = Utils.showMapSetInline displayBuilder s
+  | otherwise = showFn s
+  where
+    showFn xs =
+      Utils.showListLike
+        . Utils.ShowListInline (Utils.ShowListMap displayBuilder xs)
+        $ mempty {Utils.brackets = Utils.ShowListBracketsCurly}

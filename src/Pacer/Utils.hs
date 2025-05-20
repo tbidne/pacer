@@ -20,12 +20,15 @@ module Pacer.Utils
     showtOsPath,
     showPath,
     showtPath,
-    showListInline,
-    showSetInline,
+
+    -- ** List-like
     showMapListInline,
-    showMapSetInline,
-    showListNewlines,
     showMapListNewlines,
+    showListLike,
+    ShowListStyle (..),
+    ShowListTarget (..),
+    ShowListInlineConfig (..),
+    ShowListBracketStyle (..),
 
     -- * File discovery
     SearchFiles (..),
@@ -62,7 +65,6 @@ import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
-import Data.Set (Set)
 import Data.Text qualified as T
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
@@ -95,34 +97,99 @@ showPath = OsPath.decodeLenient . toOsPath
 showtPath :: Path b t -> Text
 showtPath = showtOsPath . toOsPath
 
-showListInline :: (IsString a, Semigroup a) => List a -> a
-showListInline = showMapListInline identity
+-- | Bracket style.
+data ShowListBracketStyle
+  = ShowListBracketsSquare
+  | ShowListBracketsCurly
+  | ShowListBracketsNone
 
-showSetInline :: (IsString a, Semigroup a) => Set a -> a
-showSetInline = showMapSetInline identity
+instance Semigroup ShowListBracketStyle where
+  ShowListBracketsNone <> _ = ShowListBracketsNone
+  _ <> ShowListBracketsNone = ShowListBracketsNone
+  ShowListBracketsCurly <> _ = ShowListBracketsCurly
+  _ <> ShowListBracketsCurly = ShowListBracketsCurly
+  _ <> _ = ShowListBracketsSquare
 
-showMapListInline :: (IsString b, Semigroup b) => (a -> b) -> List a -> b
-showMapListInline = showMapListInlineSyms "[" "]"
+instance Monoid ShowListBracketStyle where
+  mempty = ShowListBracketsSquare
 
-showMapSetInline :: (IsString b, Semigroup b) => (a -> b) -> Set a -> b
-showMapSetInline f = showMapListInlineSyms "{" "}" f . toList
+-- | Inline config.
+data ShowListInlineConfig = MkShowListInlineConfig
+  { -- | Whether comma separator should have a space.
+    spaces :: Bool,
+    brackets :: ShowListBracketStyle
+  }
 
-showMapListInlineSyms :: (IsString b, Semigroup b) => b -> b -> (a -> b) -> List a -> b
-showMapListInlineSyms l r _ [] = l <> r
-showMapListInlineSyms l r f xs@(_ : _) = l <> go xs
-  where
-    go [] = r
-    go [y] = f y <> r
-    go (y : ys) = f y <> ", " <> go ys
+instance Semigroup ShowListInlineConfig where
+  l <> r =
+    MkShowListInlineConfig
+      { spaces = l.spaces && r.spaces,
+        brackets = l.brackets <> r.brackets
+      }
 
-showListNewlines :: (IsString a, Semigroup a) => List a -> a
-showListNewlines = showMapListNewlines identity
+instance Monoid ShowListInlineConfig where
+  mempty = MkShowListInlineConfig True mempty
 
-showMapListNewlines :: (IsString b, Semigroup b) => (a -> b) -> List a -> b
-showMapListNewlines f = go
-  where
-    go [] = ""
-    go (y : ys) = "\n  - " <> f y <> go ys
+-- | Wrapper for showing a list-like value.
+type ShowListTarget :: (Type -> Type) -> Type -> Type
+data ShowListTarget f r where
+  -- | The structure is the processed type.
+  ShowListActual :: f r -> ShowListTarget f r
+  -- | The structure needs its contents mapped to a suitable type.
+  ShowListMap :: (a -> r) -> f a -> ShowListTarget f r
+
+-- | Base show list type.
+type ShowListStyle :: (Type -> Type) -> Type -> Type
+data ShowListStyle f r
+  = -- | Inline style.
+    ShowListInline (ShowListTarget f r) ShowListInlineConfig
+  | -- | Newline style.
+    ShowListNewlines (ShowListTarget f r)
+
+showMapListInline :: (Foldable f, IsString c, Semigroup c) => (a -> c) -> f a -> c
+showMapListInline f xs =
+  showListLike
+    . ShowListInline (ShowListMap f xs)
+    $ mempty
+
+showMapListNewlines :: (Foldable f, IsString c, Semigroup c) => (a -> c) -> f a -> c
+showMapListNewlines f =
+  showListLike
+    . ShowListNewlines
+    . ShowListMap f
+
+-- | Shows a list-like value.
+showListLike :: (Foldable f, IsString r, Semigroup r) => ShowListStyle f r -> r
+showListLike = \case
+  ShowListNewlines sl -> go ys
+    where
+      go :: forall x. (IsString x, Semigroup x) => List x -> x
+      go [] = ""
+      go (z : zs) = "\n  - " <> z <> go zs
+
+      ys = case sl of
+        ShowListActual xs -> toList xs
+        ShowListMap f xs -> f <$> toList xs
+  ShowListInline sl cfg -> case ys of
+    [] -> l <> r
+    _ -> l <> go ys
+    where
+      go [] = r
+      go [z] = z <> r
+      go (z : zs) = z <> sep <> go zs
+
+      ys = case sl of
+        ShowListActual xs -> toList xs
+        ShowListMap f xs -> f <$> toList xs
+
+      (l, r) = case cfg.brackets of
+        ShowListBracketsSquare -> ("[", "]")
+        ShowListBracketsCurly -> ("{", "}")
+        ShowListBracketsNone -> ("", "")
+
+      sep
+        | cfg.spaces = ", "
+        | otherwise = ","
 
 seqGroupBy :: forall a. (a -> a -> Bool) -> Seq a -> Seq (NESeq a)
 seqGroupBy p = go

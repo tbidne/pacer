@@ -22,6 +22,7 @@ import Data.Csv
   )
 import Data.Csv.Streaming (Records (Cons, Nil))
 import Data.Csv.Streaming qualified as Csv
+import Data.List qualified as L
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
@@ -47,6 +48,7 @@ import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Duration (Duration)
 import Pacer.Exception (GarminE (GarminDecode, GarminMeters, GarminOther))
 import Pacer.Prelude hiding ((.:))
+import Pacer.Utils qualified as Utils
 import System.OsPath qualified as OsPath
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
@@ -168,7 +170,17 @@ readActivitiesCsv @es inputDistUnit csvPath = do
       case Csv.decodeByName @(GarminAct d Double) (fromStrictBS bs) of
         Left err -> throwM $ GarminDecode err
         -- idx starts at 1 because of the header
-        Right (_, rs) -> snd <$> foldGarmin (2, []) rs
+        Right (_, rs) -> do
+          (_, posErrs, acts) <- foldGarmin (2, [], []) rs
+
+          unless (posErrs == mempty) $ do
+            let errsList = displayList (L.reverse posErrs)
+
+            $(Logger.logError)
+              $ "Failed parsing non-positive values on line(s): "
+              <> errsList
+
+          pure acts
 
     toSomeActivity :: (SingI d) => GarminAct d Double -> SomeActivity Double
     toSomeActivity @d gr =
@@ -188,7 +200,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
       GarminAcc ->
       Records (GarminAct d Double) ->
       Eff es GarminAcc
-    foldGarmin (!idx, activitiesList) = \case
+    foldGarmin (!idx, posErrs, activitiesList) = \case
       (Nil Nothing leftover) -> do
         unless (BSL.null leftover)
           $ $(Logger.logWarn)
@@ -197,13 +209,9 @@ readActivitiesCsv @es inputDistUnit csvPath = do
           <> ": "
           <> (bsToTxt $ leftover)
 
-        pure (idx + 1, activitiesList)
+        pure (idx + 1, posErrs, activitiesList)
       (Nil (Just err) leftover) -> do
-        $(Logger.logError)
-          $ "Csv parse error on line "
-          <> showt idx
-          <> ": "
-          <> packText err
+        posErrs' <- handleErr posErrs idx err
 
         unless (BSL.null leftover)
           $ $(Logger.logWarn)
@@ -212,20 +220,68 @@ readActivitiesCsv @es inputDistUnit csvPath = do
           <> ": "
           <> (bsToTxt $ leftover)
 
-        pure (idx + 1, activitiesList)
+        pure (idx + 1, posErrs', activitiesList)
       Cons (Left err) rs -> do
-        $(Logger.logError)
-          $ "Csv parse error on line "
-          <> showt idx
-          <> ": "
-          <> packText err
+        posErrs' <- handleErr posErrs idx err
 
-        foldGarmin (idx + 1, activitiesList) rs
+        foldGarmin (idx + 1, posErrs', activitiesList) rs
       Cons (Right r) rs ->
-        foldGarmin (idx + 1, toSomeActivity @d r : activitiesList) rs
+        foldGarmin (idx + 1, posErrs, toSomeActivity @d r : activitiesList) rs
+
+    -- Basically, handle known errors better than always printing out each
+    -- one individually. At least for zero errors this is way too verbose.
+    handleErr :: List Natural -> Natural -> String -> Eff es (List Natural)
+    handleErr errs idx err
+      | isNonPosErr = pure $ idx : errs
+      | otherwise = do
+          $(Logger.logError)
+            $ "Csv parse error on line "
+            <> showt idx
+            <> ": "
+            <> errTxt
+          pure errs
+      where
+        errTxt = packText err
+        isNonPosErr = "non-positive" `T.isInfixOf` errTxt
+
+-- Summarizes list of natural e.g.
+--
+-- λ. displayList [1,2,3,5,8,10,11,14,15,16]
+-- "[1-3,5,8,10-11,14-16]"
+displayList :: List Natural -> Text
+displayList = showFn . groupSequential
+  where
+    showFn xs =
+      Utils.showListLike
+        . Utils.ShowListInline (Utils.ShowListMap showGroup xs)
+        $ mempty {Utils.spaces = False}
+
+    showGroup :: [Natural] -> Text
+    showGroup [] = ""
+    showGroup (start : es) = case L.unsnoc es of
+      Nothing -> showt start
+      Just (_, end) -> showt start <> "-" <> showt end
+
+    groupSequential :: List Natural -> List (List Natural)
+    groupSequential [] = []
+    groupSequential (x : xs) = case go 1 [x] xs of
+      (grp, []) -> [L.reverse grp]
+      (grp, rest) -> L.reverse grp : groupSequential rest
+      where
+        go _ acc [] = (acc, [])
+        go !cnt acc (y : ys)
+          | y - x == cnt = go (cnt + 1) (y : acc) ys
+          | otherwise = (acc, (y : ys))
 
 -- Index and parsed activities
-type GarminAcc = Tuple2 Natural (List (SomeActivity Double))
+type GarminAcc =
+  Tuple3
+    -- index
+    Natural
+    -- non-positive errors
+    (List Natural)
+    -- result
+    (List (SomeActivity Double))
 
 -- heuristics to decide if we should decode csv or json.
 getActivitiesType ::
