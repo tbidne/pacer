@@ -10,6 +10,7 @@ module Pacer.Command.Chart.Data.Garmin
 
     -- * Misc
     getActivitiesType,
+    displaySummarizedSequences,
   )
 where
 
@@ -174,7 +175,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
           (_, posErrs, acts) <- foldGarmin (2, [], []) rs
 
           unless (posErrs == mempty) $ do
-            let errsList = displayList (L.reverse posErrs)
+            let errsList = displaySummarizedSequences (L.reverse posErrs)
 
             $(Logger.logError)
               $ "Failed parsing non-positive values on line(s): "
@@ -246,10 +247,10 @@ readActivitiesCsv @es inputDistUnit csvPath = do
 
 -- Summarizes list of natural e.g.
 --
--- λ. displayList [1,2,3,5,8,10,11,14,15,16]
+-- λ. displaySummarizedSequences [1,2,3,5,8,10,11,14,15,16]
 -- "[1-3,5,8,10-11,14-16]"
-displayList :: List Natural -> Text
-displayList = showFn . groupSequential
+displaySummarizedSequences :: List Natural -> Text
+displaySummarizedSequences = showFn . groupSequential
   where
     showFn xs =
       Utils.showListLike

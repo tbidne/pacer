@@ -8,6 +8,7 @@ import Unit.Pacer.Command.Chart.Data.Activity qualified
 import Unit.Pacer.Command.Chart.Data.ActivityLabel qualified
 import Unit.Pacer.Command.Chart.Data.ChartRequest qualified
 import Unit.Pacer.Command.Chart.Data.Expr qualified
+import Unit.Pacer.Command.Chart.Data.Garmin qualified
 import Unit.Pacer.Command.Chart.Data.Time.Moment qualified
 import Unit.Pacer.Command.Chart.Data.Time.Timestamp qualified
 import Unit.Pacer.Command.Chart.Params qualified
@@ -27,10 +28,11 @@ main =
       "Unit"
       [ Unit.Pacer.Class.Parser.tests,
         Unit.Pacer.Command.Chart.tests,
-        Unit.Pacer.Command.Chart.Data.ChartRequest.tests,
-        Unit.Pacer.Command.Chart.Data.Expr.tests,
         Unit.Pacer.Command.Chart.Data.Activity.tests,
         Unit.Pacer.Command.Chart.Data.ActivityLabel.tests,
+        Unit.Pacer.Command.Chart.Data.ChartRequest.tests,
+        Unit.Pacer.Command.Chart.Data.Expr.tests,
+        Unit.Pacer.Command.Chart.Data.Garmin.tests,
         Unit.Pacer.Command.Chart.Data.Time.Moment.tests,
         Unit.Pacer.Command.Chart.Data.Time.Timestamp.tests,
         Unit.Pacer.Command.Chart.Params.tests,
