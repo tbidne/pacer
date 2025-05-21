@@ -1,129 +1,131 @@
 build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-19"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            280
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-19"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              280
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Long runs"
     },
-    "extra": {},
-    "title": "Long runs"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-18",
-        "2024-10-19"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            30,
-            45
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-18",
+          "2024-10-19"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              30,
+              45
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Long runs 2"
     },
-    "extra": {},
-    "title": "Long runs 2"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-16"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            198,
-            183.75
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-16"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              198,
+              183.75
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Fast runs"
     },
-    "extra": {},
-    "title": "Fast runs"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-17",
-        "2024-10-18"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            2520,
-            9000
-          ],
-          "id": "y",
-          "label": "time",
-          "type": "duration"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-17",
+          "2024-10-18"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              2520,
+              9000
+            ],
+            "id": "y",
+            "label": "time",
+            "type": "duration"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Specific duration runs"
     },
-    "extra": {},
-    "title": "Specific duration runs"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-17",
-        "2024-10-18"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            2520,
-            9000
-          ],
-          "id": "y",
-          "label": "time",
-          "type": "duration"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-17",
+          "2024-10-18"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              2520,
+              9000
+            ],
+            "id": "y",
+            "label": "time",
+            "type": "duration"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Specific duration runs using and"
     },
-    "extra": {},
-    "title": "Specific duration runs using and"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-17",
-        "2024-10-18"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            10,
-            30
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-17",
+          "2024-10-18"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              10,
+              30
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
-    },
-    "extra": {},
-    "title": "Runs within date range"
-  }
-]
+      },
+      "extra": {},
+      "title": "Runs within date range"
+    }
+  ]
+}
 

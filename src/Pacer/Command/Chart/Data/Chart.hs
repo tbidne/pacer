@@ -1,5 +1,6 @@
 module Pacer.Command.Chart.Data.Chart
-  ( Chart (..),
+  ( Charts (..),
+    Chart (..),
     mkChart,
     mkCharts,
   )
@@ -20,6 +21,19 @@ import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
 import Pacer.Prelude
+
+-- | Holds multiple charts.
+newtype Charts = MkCharts
+  { -- | Individual charts.
+    charts :: NESeq Chart
+  }
+  deriving stock (Eq, Show)
+
+instance ToJSON Charts where
+  toJSON c =
+    Asn.object
+      [ "charts" .= c.charts
+      ]
 
 -- | Holds all data associated to a single chart.
 data Chart = MkChart
@@ -55,9 +69,9 @@ mkCharts ::
   ) =>
   SomeActivities a ->
   ChartRequests a ->
-  Eff es (Result CreateChartE (Seq Chart))
+  Eff es (Result CreateChartE Charts)
 mkCharts activities requests =
-  fmap sequenceA
+  fmap (fmap MkCharts . sequenceA)
     . traverse (mkChart requests.filters activities)
     . (.chartRequests)
     $ requests

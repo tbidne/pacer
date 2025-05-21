@@ -63,7 +63,7 @@ import Pacer.Command.Chart.Data.Activity
     SomeActivitiesKey (MkSomeActivitiesKey),
   )
 import Pacer.Command.Chart.Data.Activity qualified as R
-import Pacer.Command.Chart.Data.Chart (Chart (chartData))
+import Pacer.Command.Chart.Data.Chart (Chart (chartData), Charts (charts))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
   ( ChartParams
@@ -679,7 +679,10 @@ testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
           testName = fullTestName,
           runner = do
             paths <- mkPaths
-            result <- fmap (.chartData) <$> runCreateChartSeqEff paths
+            result <-
+              fmap (.chartData)
+                . (.charts)
+                <$> runCreateChartSeqEff paths
             pure $ toStrictBS $ U.encodePretty result
         }
 
@@ -706,7 +709,7 @@ testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
 
     dataDir = [ospPathSep|test/unit/data|]
 
-runCreateChartSeqEff :: ChartPaths -> IO (Seq Chart)
+runCreateChartSeqEff :: ChartPaths -> IO Charts
 runCreateChartSeqEff paths =
   runEff
     . runReader logEnv

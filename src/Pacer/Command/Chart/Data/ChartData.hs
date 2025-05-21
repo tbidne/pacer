@@ -6,7 +6,6 @@ module Pacer.Command.Chart.Data.ChartData
     ChartY (..),
     ChartY1 (..),
     mkChartData,
-    mkChartDatas,
   )
 where
 
@@ -29,7 +28,6 @@ import Pacer.Command.Chart.Data.Activity
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
-    ChartRequests (chartRequests, filters),
     ChartSumPeriod (ChartSumDays, ChartSumMonth, ChartSumWeek, ChartSumYear),
     ChartType (ChartTypeDefault, ChartTypeSum),
     YAxisType
@@ -159,29 +157,6 @@ type AccY = NESeq (Tuple2 Timestamp Double)
 
 -- | Accumulator for chart with two Y axes.
 type AccY1 = NESeq (Tuple3 Timestamp Double Double)
-
--- | Turns a sequence of activities and chart requests into charts.
-mkChartDatas ::
-  ( Display a,
-    Fromℤ a,
-    Logger :> es,
-    MetricSpace a,
-    Ord a,
-    Reader LogEnv :> es,
-    Semifield a,
-    Show a,
-    Toℚ a
-  ) =>
-  -- | Final distance unit to use.
-  DistanceUnit ->
-  SomeActivities a ->
-  ChartRequests a ->
-  Eff es (Result CreateChartE (Seq ChartData))
-mkChartDatas finalDistUnit activities requests =
-  fmap sequenceA
-    . traverse (mkChartData finalDistUnit requests.filters activities)
-    . (.chartRequests)
-    $ requests
 
 -- NOTE: HLint incorrectly thinks some brackets are unnecessary.
 -- See NOTE: [Brackets with OverloadedRecordDot].

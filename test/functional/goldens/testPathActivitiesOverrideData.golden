@@ -1,213 +1,215 @@
 build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            5,
-            32.18,
-            42.195,
-            21.0975
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5,
+              32.18,
+              42.195,
+              21.0975
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {
+        "description": "This is some activities plotted by distance."
+      },
+      "title": "Activities by distance"
     },
-    "extra": {
-      "description": "This is some activities plotted by distance."
-    },
-    "title": "Activities by distance"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            3.107520198881293,
-            20,
-            26.22436295835923,
-            13.112181479179615
-          ],
-          "id": "y",
-          "label": "mi",
-          "type": "distance"
-        },
-        "y1": {
-          "data": [
-            395.81399999999996,
-            482.7,
-            457.5897618201209,
-            457.5897618201209
-          ],
-          "id": "y1",
-          "label": "pace /mi",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              3.107520198881293,
+              20,
+              26.22436295835923,
+              13.112181479179615
+            ],
+            "id": "y",
+            "label": "mi",
+            "type": "distance"
+          },
+          "y1": {
+            "data": [
+              395.81399999999996,
+              482.7,
+              457.5897618201209,
+              457.5897618201209
+            ],
+            "id": "y1",
+            "label": "pace /mi",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {
+        "description": "The same activities as before, but in miles."
+      },
+      "title": "Activities by distance and pace"
     },
-    "extra": {
-      "description": "The same activities as before, but in miles."
-    },
-    "title": "Activities by distance and pace"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-25T12:00:00-08:00"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            12000
-          ],
-          "id": "y",
-          "label": "time",
-          "type": "duration"
-        },
-        "y1": {
-          "data": [
-            284.3938855314611
-          ],
-          "id": "y1",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-25T12:00:00-08:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              12000
+            ],
+            "id": "y",
+            "label": "time",
+            "type": "duration"
+          },
+          "y1": {
+            "data": [
+              284.3938855314611
+            ],
+            "id": "y1",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Marathons"
     },
-    "extra": {},
-    "title": "Marathons"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            284.3938855314611
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              284.3938855314611
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Official non-marathons"
     },
-    "extra": {},
-    "title": "Official non-marathons"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            284.3938855314611,
-            284.3938855314611
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              284.3938855314611,
+              284.3938855314611
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Marathons and half-marathons"
     },
-    "extra": {},
-    "title": "Marathons and half-marathons"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            32.18,
-            42.195
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
-        },
-        "y1": {
-          "data": [
-            300,
-            284.3938855314611
-          ],
-          "id": "y1",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              32.18,
+              42.195
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          },
+          "y1": {
+            "data": [
+              300,
+              284.3938855314611
+            ],
+            "id": "y1",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Long activities"
     },
-    "extra": {},
-    "title": "Long activities"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-14",
-        "2024-10-21"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            37.18,
-            63.292500000000004
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-14",
+          "2024-10-21"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              37.18,
+              63.292500000000004
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Runs by week"
     },
-    "extra": {},
-    "title": "Runs by week"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            5,
-            32.18,
-            42.195,
-            21.0975
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5,
+              32.18,
+              42.195,
+              21.0975
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
-    },
-    "extra": {},
-    "title": "Running and Cycling"
-  }
-]
+      },
+      "extra": {},
+      "title": "Running and Cycling"
+    }
+  ]
+}
 

@@ -1,5 +1,5 @@
 import * as charts from "../data/charts.json";
-import { POutput, PChartExtra } from "./marshal/pacer";
+import { PCharts, PChartExtra } from "./marshal/pacer";
 import { createChart } from "./marshal/chartjs";
 import { mkChartDiv, addChartSelectorOption } from "./utils";
 
@@ -59,11 +59,11 @@ function addChartSelectorOnClick(selector: HTMLSelectElement): void {
 }
 
 /**
- * We widen charts to chartsTyped since if charts.json does not have any
+ * We widen charts to PCharts since if charts.json does not have any
  * charts with a y1 axis, ts will infer the y1 prop does not exist,
  * hence the y1 access will fail.
  */
-const chartsTyped = charts as POutput;
+const pacerCharts = charts as PCharts;
 
 /**
  * Map from index to chart div. We use this to change the chart visibility,
@@ -78,8 +78,10 @@ function main() {
   const chartContainer = getChartContainer();
   const chartSelector = getChartSelector();
 
-  for (var i = 0; i < chartsTyped.length; i++) {
-    const chart = chartsTyped[i];
+  const charts = pacerCharts.charts;
+
+  for (var i = 0; i < charts.length; i++) {
+    const chart = charts[i];
 
     let title = chart.title;
     addChartSelectorOption(chartSelector, i, title);
@@ -93,7 +95,7 @@ function main() {
     createChart(title, elemId, chart.datasets.xAxis, chart.datasets.yAxes);
   }
 
-  if (chartsTyped.length > 0) {
+  if (charts.length > 0) {
     addChartSelectorOnClick(chartSelector);
   }
 }

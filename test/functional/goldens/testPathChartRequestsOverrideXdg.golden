@@ -1,72 +1,74 @@
 build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2020-10-31"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            30
-          ],
-          "id": "y",
-          "label": "mi",
-          "type": "distance"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2020-10-31"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              30
+            ],
+            "id": "y",
+            "label": "mi",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {
+        "description": "Simple charts"
+      },
+      "title": "Runs by distance"
     },
-    "extra": {
-      "description": "Simple charts"
-    },
-    "title": "Runs by distance"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2020-10-31"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            10800
-          ],
-          "id": "y",
-          "label": "time",
-          "type": "duration"
-        },
-        "y1": {
-          "data": [
-            30
-          ],
-          "id": "y1",
-          "label": "mi",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2020-10-31"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              10800
+            ],
+            "id": "y",
+            "label": "time",
+            "type": "duration"
+          },
+          "y1": {
+            "data": [
+              30
+            ],
+            "id": "y1",
+            "label": "mi",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Runs by duration"
     },
-    "extra": {},
-    "title": "Runs by duration"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2020-10-31"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            360
-          ],
-          "id": "y",
-          "label": "pace /mi",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2020-10-31"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              360
+            ],
+            "id": "y",
+            "label": "pace /mi",
+            "type": "pace"
+          }
         }
-      }
-    },
-    "extra": {},
-    "title": "Runs by pace"
-  }
-]
+      },
+      "extra": {},
+      "title": "Runs by pace"
+    }
+  ]
+}
 

@@ -1,6 +1,6 @@
 MkChartRequests
   { chartRequests = fromList
-    [ MkChartRequest
+    ( MkChartRequest
       { chartType = Nothing
       , description = Just "This is some activities plotted by distance."
       , filters =
@@ -17,94 +17,21 @@ MkChartRequests
       , unit = Nothing
       , yAxis = YAxisDistance
       , y1Axis = Nothing
-      }
-    , MkChartRequest
-      { chartType = Nothing
-      , description = Just "The same activities as before, but in miles."
-      , filters = []
-      , title = "Activities by distance and pace"
-      , unit = Just Mile
-      , yAxis = YAxisDistance
-      , y1Axis = Just YAxisPace
-      }
-    , MkChartRequest
-      { chartType = Nothing
-      , description = Nothing
-      , filters =
-        [ Atom
-          ( FilterLabel
-            ( FilterSetElem
-              ( FilterElemEq FilterOpEqEq
-                ( MkLabel
-                  { unLabel = "marathon" }
-                )
-              )
-            )
-          )
-        , Atom
-          ( FilterDate FilterOpOrdGte
-            ( MomentYear
-              ( MkYear
-                { unYear = UnsafeInterval
-                  ( Closed 1950 )
-                  ( Closed 2099 ) 2024
-                }
-              )
-            )
-          )
-        ]
-      , title = "Marathons"
-      , unit = Nothing
-      , yAxis = YAxisDuration
-      , y1Axis = Just YAxisPace
-      }
-    , MkChartRequest
-      { chartType = Nothing
-      , description = Nothing
-      , filters =
-        [ Atom
-          ( FilterLabel
-            ( FilterSetElem
-              ( FilterElemEq FilterOpEqEq
-                ( MkLabel
-                  { unLabel = "official" }
-                )
-              )
-            )
-          )
-        , Atom
-          ( FilterLabel
-            ( FilterSetElem
-              ( FilterElemEq FilterOpEqNEq
-                ( MkLabel
-                  { unLabel = "marathon" }
-                )
-              )
-            )
-          )
-        ]
-      , title = "Official non-marathons"
-      , unit = Nothing
-      , yAxis = YAxisPace
-      , y1Axis = Nothing
-      }
-    , MkChartRequest
-      { chartType = Nothing
-      , description = Nothing
-      , filters =
-        [ Or
-          ( Atom
-            ( FilterLabel
-              ( FilterSetElem
-                ( FilterElemEq FilterOpEqEq
-                  ( MkLabel
-                    { unLabel = "half-marathon" }
-                  )
-                )
-              )
-            )
-          )
-          ( Atom
+      } :|
+      [ MkChartRequest
+        { chartType = Nothing
+        , description = Just "The same activities as before, but in miles."
+        , filters = []
+        , title = "Activities by distance and pace"
+        , unit = Just Mile
+        , yAxis = YAxisDistance
+        , y1Axis = Just YAxisPace
+        }
+      , MkChartRequest
+        { chartType = Nothing
+        , description = Nothing
+        , filters =
+          [ Atom
             ( FilterLabel
               ( FilterSetElem
                 ( FilterElemEq FilterOpEqEq
@@ -114,70 +41,144 @@ MkChartRequests
                 )
               )
             )
-          )
-        ]
-      , title = "Marathons and half-marathons"
-      , unit = Nothing
-      , yAxis = YAxisPace
-      , y1Axis = Nothing
-      }
-    , MkChartRequest
-      { chartType = Just ChartTypeDefault
-      , description = Nothing
-      , filters =
-        [ Atom
-          ( FilterDistance FilterOpOrdGte
-            ( MkSomeDistance SKilometer
-              ( MkDistance
-                ( UnsafePositive 25.0 ) Kilometer
-              )
-            )
-          )
-        ]
-      , title = "Long activities"
-      , unit = Nothing
-      , yAxis = YAxisDistance
-      , y1Axis = Just YAxisPace
-      }
-    , MkChartRequest
-      { chartType = Just ( ChartTypeSum ChartSumWeek )
-      , description = Nothing
-      , filters = []
-      , title = "Runs by week"
-      , unit = Nothing
-      , yAxis = YAxisDistance
-      , y1Axis = Nothing
-      }
-    , MkChartRequest
-      { chartType = Nothing
-      , description = Nothing
-      , filters =
-        [ Or
-          ( Atom
-            ( FilterType
-              ( FilterElemEq FilterOpEqEq
-                ( MkActivityType
-                  { unActivityType = "Running" }
+          , Atom
+            ( FilterDate FilterOpOrdGte
+              ( MomentYear
+                ( MkYear
+                  { unYear = UnsafeInterval
+                    ( Closed 1950 )
+                    ( Closed 2099 ) 2024
+                  }
                 )
               )
             )
-          )
-          ( Atom
-            ( FilterType
-              ( FilterElemEq FilterOpEqEq
-                ( MkActivityType
-                  { unActivityType = "Indoor Cycling" }
+          ]
+        , title = "Marathons"
+        , unit = Nothing
+        , yAxis = YAxisDuration
+        , y1Axis = Just YAxisPace
+        }
+      , MkChartRequest
+        { chartType = Nothing
+        , description = Nothing
+        , filters =
+          [ Atom
+            ( FilterLabel
+              ( FilterSetElem
+                ( FilterElemEq FilterOpEqEq
+                  ( MkLabel
+                    { unLabel = "official" }
+                  )
                 )
               )
             )
-          )
-        ]
-      , title = "Running and Cycling"
-      , unit = Nothing
-      , yAxis = YAxisDistance
-      , y1Axis = Nothing
-      }
-    ]
+          , Atom
+            ( FilterLabel
+              ( FilterSetElem
+                ( FilterElemEq FilterOpEqNEq
+                  ( MkLabel
+                    { unLabel = "marathon" }
+                  )
+                )
+              )
+            )
+          ]
+        , title = "Official non-marathons"
+        , unit = Nothing
+        , yAxis = YAxisPace
+        , y1Axis = Nothing
+        }
+      , MkChartRequest
+        { chartType = Nothing
+        , description = Nothing
+        , filters =
+          [ Or
+            ( Atom
+              ( FilterLabel
+                ( FilterSetElem
+                  ( FilterElemEq FilterOpEqEq
+                    ( MkLabel
+                      { unLabel = "half-marathon" }
+                    )
+                  )
+                )
+              )
+            )
+            ( Atom
+              ( FilterLabel
+                ( FilterSetElem
+                  ( FilterElemEq FilterOpEqEq
+                    ( MkLabel
+                      { unLabel = "marathon" }
+                    )
+                  )
+                )
+              )
+            )
+          ]
+        , title = "Marathons and half-marathons"
+        , unit = Nothing
+        , yAxis = YAxisPace
+        , y1Axis = Nothing
+        }
+      , MkChartRequest
+        { chartType = Just ChartTypeDefault
+        , description = Nothing
+        , filters =
+          [ Atom
+            ( FilterDistance FilterOpOrdGte
+              ( MkSomeDistance SKilometer
+                ( MkDistance
+                  ( UnsafePositive 25.0 ) Kilometer
+                )
+              )
+            )
+          ]
+        , title = "Long activities"
+        , unit = Nothing
+        , yAxis = YAxisDistance
+        , y1Axis = Just YAxisPace
+        }
+      , MkChartRequest
+        { chartType = Just ( ChartTypeSum ChartSumWeek )
+        , description = Nothing
+        , filters = []
+        , title = "Runs by week"
+        , unit = Nothing
+        , yAxis = YAxisDistance
+        , y1Axis = Nothing
+        }
+      , MkChartRequest
+        { chartType = Nothing
+        , description = Nothing
+        , filters =
+          [ Or
+            ( Atom
+              ( FilterType
+                ( FilterElemEq FilterOpEqEq
+                  ( MkActivityType
+                    { unActivityType = "Running" }
+                  )
+                )
+              )
+            )
+            ( Atom
+              ( FilterType
+                ( FilterElemEq FilterOpEqEq
+                  ( MkActivityType
+                    { unActivityType = "Indoor Cycling" }
+                  )
+                )
+              )
+            )
+          ]
+        , title = "Running and Cycling"
+        , unit = Nothing
+        , yAxis = YAxisDistance
+        , y1Axis = Nothing
+        }
+      ]
+    )
   , filters = []
   , garminSettings = Just
     ( MkGarminSettings { distanceUnit = Just Kilometer } )

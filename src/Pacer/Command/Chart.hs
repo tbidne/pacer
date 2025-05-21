@@ -44,7 +44,7 @@ import Pacer.Command.Chart.Data.Activity
   )
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.ActivityLabel (ActivityLabels (MkActivityLabels))
-import Pacer.Command.Chart.Data.Chart (Chart)
+import Pacer.Command.Chart.Data.Chart (Charts)
 import Pacer.Command.Chart.Data.Chart qualified as Chart
 import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
@@ -305,7 +305,7 @@ createChartSeq ::
     Reader LogEnv :> es
   ) =>
   ChartPaths ->
-  Eff es (Seq Chart)
+  Eff es Charts
 createChartSeq chartPaths = do
   (chartRequests, activitiesWithLabels) <- readChartInputs chartPaths
   throwErr =<< Chart.mkCharts activitiesWithLabels chartRequests

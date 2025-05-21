@@ -1,119 +1,121 @@
 build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26T12:00:00-08:00",
-        "2024-10-27T12:00:00-08:00"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            5,
-            32.18,
-            42.195,
-            10,
-            10
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26T12:00:00-08:00",
+          "2024-10-27T12:00:00-08:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5,
+              32.18,
+              42.195,
+              10,
+              10
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Chart 1"
     },
-    "extra": {},
-    "title": "Chart 1"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            9654,
-            12000
-          ],
-          "id": "y",
-          "label": "time",
-          "type": "duration"
-        },
-        "y1": {
-          "data": [
-            32.18,
-            42.195
-          ],
-          "id": "y1",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              9654,
+              12000
+            ],
+            "id": "y",
+            "label": "time",
+            "type": "duration"
+          },
+          "y1": {
+            "data": [
+              32.18,
+              42.195
+            ],
+            "id": "y1",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Chart 2"
     },
-    "extra": {},
-    "title": "Chart 2"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-25T12:00:00-08:00"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            284.3938855314611
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-25T12:00:00-08:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              284.3938855314611
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Chart 3"
     },
-    "extra": {},
-    "title": "Chart 3"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-26T12:00:00-08:00"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            360
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-26T12:00:00-08:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              360
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Chart 4"
     },
-    "extra": {},
-    "title": "Chart 4"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-26T12:00:00-08:00"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            360
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-26T12:00:00-08:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              360
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
-    },
-    "extra": {},
-    "title": "Chart 5"
-  }
-]
+      },
+      "extra": {},
+      "title": "Chart 5"
+    }
+  ]
+}
 

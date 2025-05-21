@@ -1,132 +1,134 @@
 build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-02",
-        "2024-10-05",
-        "2024-10-15",
-        "2024-10-18",
-        "2024-10-19",
-        "2025-01-15",
-        "2025-01-25"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            5,
-            5,
-            5,
-            5,
-            5,
-            5,
-            5
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-02",
+          "2024-10-05",
+          "2024-10-15",
+          "2024-10-18",
+          "2024-10-19",
+          "2025-01-15",
+          "2025-01-25"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Runs by distance"
     },
-    "extra": {},
-    "title": "Runs by distance"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-09-30",
-        "2024-10-14",
-        "2025-01-13",
-        "2025-01-20"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            10,
-            15,
-            5,
-            5
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
-        },
-        "y1": {
-          "data": [
-            246,
-            246,
-            246,
-            246
-          ],
-          "id": "y1",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-09-30",
+          "2024-10-14",
+          "2025-01-13",
+          "2025-01-20"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              10,
+              15,
+              5,
+              5
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          },
+          "y1": {
+            "data": [
+              246,
+              246,
+              246,
+              246
+            ],
+            "id": "y1",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Runs by week"
     },
-    "extra": {},
-    "title": "Runs by week"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-01",
-        "2025-01-01"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            15.537600994406464,
-            6.215040397762586
-          ],
-          "id": "y",
-          "label": "mi",
-          "type": "distance"
-        },
-        "y1": {
-          "data": [
-            6150,
-            2460
-          ],
-          "id": "y1",
-          "label": "time",
-          "type": "duration"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-01",
+          "2025-01-01"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              15.537600994406464,
+              6.215040397762586
+            ],
+            "id": "y",
+            "label": "mi",
+            "type": "distance"
+          },
+          "y1": {
+            "data": [
+              6150,
+              2460
+            ],
+            "id": "y1",
+            "label": "time",
+            "type": "duration"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Runs by month"
     },
-    "extra": {},
-    "title": "Runs by month"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-01-01",
-        "2025-01-01"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            6150,
-            2460
-          ],
-          "id": "y",
-          "label": "time",
-          "type": "duration"
-        },
-        "y1": {
-          "data": [
-            246,
-            246
-          ],
-          "id": "y1",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-01-01",
+          "2025-01-01"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              6150,
+              2460
+            ],
+            "id": "y",
+            "label": "time",
+            "type": "duration"
+          },
+          "y1": {
+            "data": [
+              246,
+              246
+            ],
+            "id": "y1",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
-    },
-    "extra": {},
-    "title": "Runs by year"
-  }
-]
+      },
+      "extra": {},
+      "title": "Runs by year"
+    }
+  ]
+}
 

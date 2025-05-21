@@ -186,7 +186,7 @@ instance FromJSON GarminSettings where
 -- | List of chart requests.
 data ChartRequests a = MkChartRequests
   { -- | Individual chart requests.
-    chartRequests :: Seq (ChartRequest a),
+    chartRequests :: NESeq (ChartRequest a),
     -- | Global filters.
     filters :: List (FilterExpr a),
     -- | Garming settings.

@@ -1,93 +1,95 @@
 another-build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            5,
-            32.18,
-            42.195,
-            21.0975
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5,
+              32.18,
+              42.195,
+              21.0975
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {
+        "description": "Simple charts"
+      },
+      "title": "Runs by distance"
     },
-    "extra": {
-      "description": "Simple charts"
-    },
-    "title": "Runs by distance"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            1230,
-            9654,
-            12000,
-            6000
-          ],
-          "id": "y",
-          "label": "time",
-          "type": "duration"
-        },
-        "y1": {
-          "data": [
-            5,
-            32.18,
-            42.195,
-            21.0975
-          ],
-          "id": "y1",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              1230,
+              9654,
+              12000,
+              6000
+            ],
+            "id": "y",
+            "label": "time",
+            "type": "duration"
+          },
+          "y1": {
+            "data": [
+              5,
+              32.18,
+              42.195,
+              21.0975
+            ],
+            "id": "y1",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Runs by duration"
     },
-    "extra": {},
-    "title": "Runs by duration"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15",
-        "2024-10-20T14:30:00",
-        "2024-10-25T12:00:00-08:00",
-        "2024-10-26"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            246,
-            300,
-            284.3938855314611,
-            284.3938855314611
-          ],
-          "id": "y",
-          "label": "pace /km",
-          "type": "pace"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              246,
+              300,
+              284.3938855314611,
+              284.3938855314611
+            ],
+            "id": "y",
+            "label": "pace /km",
+            "type": "pace"
+          }
         }
-      }
-    },
-    "extra": {},
-    "title": "Runs by pace"
-  }
-]
+      },
+      "extra": {},
+      "title": "Runs by pace"
+    }
+  ]
+}
 

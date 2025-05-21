@@ -1,26 +1,28 @@
 build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2020-10-31"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            30
-          ],
-          "id": "y",
-          "label": "mi",
-          "type": "distance"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2020-10-31"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              30
+            ],
+            "id": "y",
+            "label": "mi",
+            "type": "distance"
+          }
         }
-      }
-    },
-    "extra": {
-      "description": "This uses the XDG directory."
-    },
-    "title": "Runs by distance"
-  }
-]
+      },
+      "extra": {
+        "description": "This uses the XDG directory."
+      },
+      "title": "Runs by distance"
+    }
+  ]
+}
 

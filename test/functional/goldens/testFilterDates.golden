@@ -1,91 +1,93 @@
 build/charts.json
 
-[
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-08-15",
-        "2024-10-15"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            42.195,
-            42.195
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-08-15",
+          "2024-10-15"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              42.195,
+              42.195
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Chart 1"
     },
-    "extra": {},
-    "title": "Chart 1"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2023-10-15",
-        "2024-08-15",
-        "2024-10-15"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            42.195,
-            42.195,
-            42.195
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2023-10-15",
+          "2024-08-15",
+          "2024-10-15"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              42.195,
+              42.195,
+              42.195
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Chart 2"
     },
-    "extra": {},
-    "title": "Chart 2"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2020-06-01",
-        "2021-07-01",
-        "2023-10-15"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            42.195,
-            42.195,
-            42.195
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2020-06-01",
+          "2021-07-01",
+          "2023-10-15"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              42.195,
+              42.195,
+              42.195
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
+      },
+      "extra": {},
+      "title": "Chart 3"
     },
-    "extra": {},
-    "title": "Chart 3"
-  },
-  {
-    "datasets": {
-      "xAxis": [
-        "2024-10-15"
-      ],
-      "yAxes": {
-        "y": {
-          "data": [
-            42.195
-          ],
-          "id": "y",
-          "label": "km",
-          "type": "distance"
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              42.195
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
         }
-      }
-    },
-    "extra": {},
-    "title": "Chart 4"
-  }
-]
+      },
+      "extra": {},
+      "title": "Chart 4"
+    }
+  ]
+}
 

@@ -9,10 +9,11 @@ import { YAxesT, YAxisId, YAxisLabel, YAxisType } from "./common";
  * Eventually, we will cleanly separate these so the backend sends the minimum
  * required data (i.e. no css / ui stuff), and the types exactly reflect that.
  *
- * The key type is POutput.
+ * The key type is PCharts.
  */
-
-type POutput = PChart[];
+type PCharts = {
+  charts: PChart[];
+};
 
 /**
  * The core type sent by pacer backend.
@@ -37,4 +38,4 @@ type PYAxis = {
   type: YAxisType;
 };
 
-export { POutput, PChart, PChartExtra, PYAxis };
+export { PCharts, PChart, PChartExtra, PYAxis };
