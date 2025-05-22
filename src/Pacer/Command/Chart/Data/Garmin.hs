@@ -170,7 +170,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
     bsToActivities d bs =
       case Csv.decodeByName @(GarminAct d Double) (fromStrictBS bs) of
         Left err -> throwM $ GarminDecode err
-        -- idx starts at 1 because of the header
+        -- idx starts at 2 because of the header
         Right (_, rs) -> do
           (_, posErrs, acts) <- foldGarmin (2, [], []) rs
 
@@ -178,7 +178,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
             let errsList = displaySummarizedSequences (L.reverse posErrs)
 
             $(Logger.logError)
-              $ "Failed parsing non-positive values on line(s): "
+              $ "Skipping non-positive values found on line(s): "
               <> errsList
 
           pure acts
@@ -202,7 +202,8 @@ readActivitiesCsv @es inputDistUnit csvPath = do
       Records (GarminAct d Double) ->
       Eff es GarminAcc
     foldGarmin (!idx, posErrs, activitiesList) = \case
-      (Nil Nothing leftover) -> do
+      (Nil mErr leftover) -> do
+        -- log leftover data
         unless (BSL.null leftover)
           $ $(Logger.logWarn)
           $ "Csv bytes leftover on line "
@@ -210,16 +211,9 @@ readActivitiesCsv @es inputDistUnit csvPath = do
           <> ": "
           <> (bsToTxt $ leftover)
 
-        pure (idx + 1, posErrs, activitiesList)
-      (Nil (Just err) leftover) -> do
-        posErrs' <- handleErr posErrs idx err
-
-        unless (BSL.null leftover)
-          $ $(Logger.logWarn)
-          $ "Csv bytes leftover on line "
-          <> showt idx
-          <> ": "
-          <> (bsToTxt $ leftover)
+        posErrs' <- case mErr of
+          Just err -> handleErr posErrs idx err
+          Nothing -> pure posErrs
 
         pure (idx + 1, posErrs', activitiesList)
       Cons (Left err) rs -> do
@@ -232,15 +226,15 @@ readActivitiesCsv @es inputDistUnit csvPath = do
     -- Basically, handle known errors better than always printing out each
     -- one individually. At least for zero errors this is way too verbose.
     handleErr :: List Natural -> Natural -> String -> Eff es (List Natural)
-    handleErr errs idx err
-      | isNonPosErr = pure $ idx : errs
+    handleErr nonPosErrs idx err
+      | isNonPosErr = pure $ idx : nonPosErrs
       | otherwise = do
           $(Logger.logError)
             $ "Csv parse error on line "
             <> showt idx
             <> ": "
             <> errTxt
-          pure errs
+          pure nonPosErrs
       where
         errTxt = packText err
         isNonPosErr = "non-positive" `T.isInfixOf` errTxt
