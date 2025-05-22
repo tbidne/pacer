@@ -1,25 +1,25 @@
 body {
-  background-color: #191b1c;
+  /*background-color: #191b1c;*/
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: center;
 }
 
 h1 {
   /* see NOTE: [Text Color] */
-  color: #c3c3c3;
+  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
 }
 
 h2 {
   /* see NOTE: [Text Color] */
-  color: #c3c3c3;
+  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: left;
 }
 
 h4 {
   /* see NOTE: [Text Color] */
-  color: #c3c3c3;
+  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: left;
 }
@@ -53,7 +53,7 @@ h4 {
 
 p {
   /* see NOTE: [Text Color] */
-  color: #c3c3c3;
+  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: left;
 }
@@ -67,4 +67,43 @@ p {
 .description {
   left: 5%;
   position: relative;
+}
+
+.checkbox {
+  opacity: 0;
+  /*position: absolute;*/
+  position: relative;
+  float: left;
+}
+
+.checkbox-label {
+  background-color: #111;
+  width: 50px;
+  height: 26px;
+  border-radius: 50px;
+  position: relative;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fa-moon {color: #f1c40f;}
+
+.fa-sun {color: #f39c12;}
+
+.checkbox-label .ball {
+  background-color: #fff;
+  width: 22px;
+  height: 22px;
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  border-radius: 50%;
+  transition: transform 0.2s linear;
+}
+
+.checkbox:checked + .checkbox-label .ball {
+  transform: translateX(24px);
 }

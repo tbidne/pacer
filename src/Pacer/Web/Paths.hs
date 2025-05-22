@@ -54,6 +54,7 @@ webInternalFiles =
               [relfile|index.html|],
               [relfile|index.ts|],
               [relfile|style.css|],
+              [relfile|theme.ts|],
               [relfile|utils.ts|]
             ]
     marshalFiles =

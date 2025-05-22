@@ -3,13 +3,8 @@ import { PYAxis } from "./pacer";
 import { CChartOpts, CDataSets, CTicks, CYAxis, CYOptT } from "./chartjs/types";
 import { YAxesT, YAxisLabel, mapYAxes } from "./common";
 import { formatOptsSeconds, formatSeconds } from "../utils";
+import { themes } from "../theme";
 
-// TODO: At some point, it would be nice to figure out a css solution here
-// e.g. so we can have light/dark options.
-const BG_DARK = "#191b1c";
-const GRAY_DARK = "#393939";
-const GRAY_LIGHT = "#c3c3c3";
-const GRAY_LIGHT_OPAC = "rgba(204, 204, 204, 0.75)";
 const POINT_RADIUS = 20;
 const AXIS_FONT_SIZE = 16;
 
@@ -52,7 +47,7 @@ function makeYAxes(yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
 function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
   function makeTicks(yLabel: YAxisLabel): CTicks {
     const ticks: CTicks = {
-      color: GRAY_LIGHT,
+      color: themes.dark.labels,
     };
     const yTimePrefix = getYTimePrefix(yLabel);
     if (yTimePrefix != null) {
@@ -64,11 +59,11 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
   function makeYAxis<A>(position: A, title: YAxisLabel): CYOptT<A> {
     return {
       grid: {
-        color: GRAY_DARK,
+        color: themes.dark.grid,
       },
       position: position,
       title: {
-        color: GRAY_LIGHT,
+        color: themes.dark.labels,
         display: true,
         font: {
           size: AXIS_FONT_SIZE,
@@ -84,16 +79,16 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
     plugins: {
       // see NOTE: [Background Color]
       customCanvasBackgroundColor: {
-        color: BG_DARK,
+        color: themes.dark.bg,
       },
       legend: {
         labels: {
-          color: GRAY_LIGHT,
+          color: themes.dark.labels,
         },
       },
       title: {
         align: "center",
-        color: GRAY_LIGHT,
+        color: themes.dark.labels,
         // Disabled because the title is in the selector. Re-enable if we
         // ever change up the UI e.g. put the selector somewhere else.
         display: false,
@@ -103,9 +98,9 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
         text: title,
       },
       tooltip: {
-        backgroundColor: GRAY_LIGHT_OPAC,
-        bodyColor: "black",
-        titleColor: "black",
+        backgroundColor: themes.dark.tooltip_bg,
+        bodyColor: themes.dark.tooltip,
+        titleColor: themes.dark.tooltip,
       },
     },
     pointHitRadius: POINT_RADIUS,
@@ -119,13 +114,13 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
           unit: "day",
         },
         grid: {
-          color: GRAY_DARK,
+          color: themes.dark.grid,
         },
         ticks: {
-          color: GRAY_LIGHT,
+          color: themes.dark.labels,
         },
         title: {
-          color: GRAY_LIGHT,
+          color: themes.dark.labels,
           display: true,
           font: {
             size: AXIS_FONT_SIZE,
@@ -151,15 +146,15 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
 //
 // https://www.chartjs.org/docs/latest/configuration/canvas-background.html
 const bg_plugin = {
-  id: 'customCanvasBackgroundColor',
+  id: "customCanvasBackgroundColor",
   beforeDraw: (chart: any, args: any, options: any) => {
-    const {ctx} = chart;
+    const { ctx } = chart;
     ctx.save();
-    ctx.globalCompositeOperation = 'destination-over';
-    ctx.fillStyle = options.color || '#99ffff';
+    ctx.globalCompositeOperation = "destination-over";
+    ctx.fillStyle = options.color || "#99ffff";
     ctx.fillRect(0, 0, chart.width, chart.height);
     ctx.restore();
-  }
+  },
 };
 
 /**
@@ -168,13 +163,14 @@ const bg_plugin = {
  * @param elem_id The html id for the chart e.g. canvas-1.
  * @param xAxis X-axis data.
  * @param yAxes Y-axes data.
+ * @returns The created chart.
  */
 function createChart(
   title: string,
   elemId: string,
   xAxis: string[],
   yAxes: YAxesT<PYAxis>,
-): void {
+): Chart<"line"> {
   const chartOpts = makeChartOpts(title, yAxes);
   const cYAxes = makeYAxes(yAxes);
 
@@ -183,14 +179,14 @@ function createChart(
     datasets.push(cYAxes.y1);
   }
 
-  new Chart(elemId, {
+  return new Chart<"line">(elemId, {
     type: "line",
     data: {
       labels: xAxis,
       datasets: datasets,
     },
     options: chartOpts,
-    plugins: [bg_plugin]
+    plugins: [bg_plugin],
   });
 }
 

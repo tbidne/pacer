@@ -17,8 +17,8 @@ type CChartOpts = {
   maintainAspectRatio: boolean;
   plugins: {
     customCanvasBackgroundColor: {
-      color: string,
-    },
+      color: string;
+    };
     legend: {
       labels: {
         color: string;

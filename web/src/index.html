@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-bs-theme="dark">
+<html id="html_head" lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <link
@@ -8,20 +8,32 @@
       integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT"
       crossorigin="anonymous"
     />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/all.min.css"
+      rel="stylesheet"
+    />
     <title>Running Charts</title>
   </head>
 
   <body class="main">
-    <h1>Charts by Pacer</h1>
+    <h1 id="title">Charts by Pacer</h1>
 
     <div class="container">
-      <div class="row mb-5">
-        <div class="col-6">
+      <div class="row mb-4">
+        <div class="col-9">
           <select
             class="form-select form-select-sm chart-selector"
             id="chart-selector"
             aria-label="Default select example"
           ></select>
+        </div>
+        <div class="col-3">
+          <input type="checkbox" class="checkbox" id="checkbox">
+          <label for="checkbox" class="checkbox-label">
+            <i class="fas fa-sun"></i>
+            <i class="fas fa-moon"></i>
+            <span class="ball"></span>
+          </label>
         </div>
       </div>
       <div class="row">
