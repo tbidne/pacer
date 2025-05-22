@@ -16,6 +16,9 @@ import { YAxisId, YAxisLabel } from "../common";
 type CChartOpts = {
   maintainAspectRatio: boolean;
   plugins: {
+    customCanvasBackgroundColor: {
+      color: string,
+    },
     legend: {
       labels: {
         color: string;

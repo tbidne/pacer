@@ -6,6 +6,7 @@ import { formatOptsSeconds, formatSeconds } from "../utils";
 
 // TODO: At some point, it would be nice to figure out a css solution here
 // e.g. so we can have light/dark options.
+const BG_DARK = "#191b1c";
 const GRAY_DARK = "#393939";
 const GRAY_LIGHT = "#c3c3c3";
 const GRAY_LIGHT_OPAC = "rgba(204, 204, 204, 0.75)";
@@ -81,6 +82,10 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
   const copts: CChartOpts = {
     maintainAspectRatio: false,
     plugins: {
+      // see NOTE: [Background Color]
+      customCanvasBackgroundColor: {
+        color: BG_DARK,
+      },
       legend: {
         labels: {
           color: GRAY_LIGHT,
@@ -140,6 +145,23 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
   return copts;
 }
 
+// NOTE: [Background Color]
+//
+// This is required to set the background color when saving charts.
+//
+// https://www.chartjs.org/docs/latest/configuration/canvas-background.html
+const bg_plugin = {
+  id: 'customCanvasBackgroundColor',
+  beforeDraw: (chart: any, args: any, options: any) => {
+    const {ctx} = chart;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = options.color || '#99ffff';
+    ctx.fillRect(0, 0, chart.width, chart.height);
+    ctx.restore();
+  }
+};
+
 /**
  * Creates a chart.
  * @param title The title of the chart.
@@ -168,6 +190,7 @@ function createChart(
       datasets: datasets,
     },
     options: chartOpts,
+    plugins: [bg_plugin]
   });
 }
 
