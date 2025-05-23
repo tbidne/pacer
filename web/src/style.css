@@ -1,24 +1,11 @@
 /* NOTE: [Css Themes]
 
-Some of the theme values need to also exist in the theme.ts (having a single
-source of truth is not trivial).
+Some of values used here need to be set from the ts:
 
-  - --global-background-color == theme.background
-  - --text-color == theme.labels
-
+  - --global-background-color
+  - --selector-border-color
+  - --text-color
 */
-
-[ui-theme=light] {
-  --global-background-color: #e6e7ed;
-  --selector-border-color: #343b59;
-  --text-color: #343b59;
-}
-
-[ui-theme=dark] {
-  --global-background-color: #191b1c;
-  --selector-border-color: #495057;
-  --text-color: #c3c3c3;
-}
 
 body {
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";

@@ -8,8 +8,9 @@ type Color = string;
 type Theme = {
   background: Color;
   grid: Color;
-  text: Color;
   name: "light" | "dark";
+  selectorBorderColor: Color;
+  text: Color;
   tooltipBackground: Color;
   tooltip: Color;
 };
@@ -25,6 +26,7 @@ const themeMap: ThemeMap = new Map([
       background: "#191b1c",
       grid: "#3d3d3d",
       name: "dark",
+      selectorBorderColor: "#495057",
       text: "#c3c3c3",
       tooltipBackground: "rgba(204, 204, 204, 0.75)",
       tooltip: "#393939",
@@ -36,6 +38,7 @@ const themeMap: ThemeMap = new Map([
       background: "#e6e7ed",
       grid: "#828aad",
       name: "light",
+      selectorBorderColor: "#343b59",
       text: "#343b59",
       tooltipBackground: "rgba(0, 0, 0, 0.75)",
       tooltip: "#c3c3c3",
@@ -56,6 +59,16 @@ type ChartElement = {
 
 type ChartExtra = [HTMLHeadingElement, HTMLParagraphElement];
 
+function setGlobalStyleProp(value: string, color: Color): void {
+  document.documentElement.style.setProperty(value, color);
+}
+
+function setGlobalStyleProps(theme: Theme): void {
+  setGlobalStyleProp("--global-background-color", theme.background);
+  setGlobalStyleProp("--selector-border-color", theme.selectorBorderColor);
+  setGlobalStyleProp("--text-color", theme.text);
+}
+
 function setThemeKey(
   themeName: ThemeKey,
   charts: ChartElements,
@@ -63,17 +76,9 @@ function setThemeKey(
 ): void {
   const theme = themeMap.get(themeName);
 
-  document.documentElement.style.setProperty(
-    "--global-background-color",
-    theme.background,
-  );
-  document.documentElement.style.setProperty("--grid-color", theme.grid);
-  document.documentElement.style.setProperty("--text-color", theme.text);
-  document.documentElement.style.setProperty("--tooltip-color", theme.tooltip);
-  document.documentElement.style.setProperty(
-    "--tooltip-background-color",
-    theme.tooltipBackground,
-  );
+  // Non-canvas value are controlled by css vars, so we need to update them
+  // based on the selected theme.
+  setGlobalStyleProps(theme);
 
   function updateScale(scale: any): void {
     scale.grid.color = theme.grid;
@@ -101,23 +106,9 @@ function setThemeKey(
       updateScale(scales.y1);
     }
 
-    // ugh this doesn't work w/ the var.
     (<any>plugins).customCanvasBackgroundColor.color = theme.background;
     chart.update();
   });
-
-  // Set UI theme. We use a css theme to control as much as we can, which
-  // turns out to be non-chart elements (e.g. selectors, raw html).
-  // Unfortunately, the chart's values don't seems to respond to css vars
-  // well, and when we try to grab them from the UI, they're too "old"
-  // e.g. we grab the previous value, not the new selection. For now, let's
-  // just change chart data manually here, and live with the two sources
-  // of truth.
-  //
-  // Note this might make custom themes difficult, e.g. we can easily use
-  // custom color values here, but how do we add a custom css theme?
-  const html = <HTMLHtmlElement>document.getElementById("html_head");
-  html.setAttribute("ui-theme", theme.name);
 }
 
 function setTheme(
@@ -163,9 +154,14 @@ function getThemeSelector(): HTMLSelectElement {
 // TODO: If we ever support custom themes, they will probably be included
 // here as a param.
 function setup(selected: ThemeKey): [ThemeMap, HTMLSelectElement] {
+  // populate selector.
   const themeSelector = getThemeSelector();
   const allThemes = themeMap;
   addThemesToUI(selected, themeSelector, allThemes);
+
+  // set global css values.
+  const selectedTheme = allThemes.get(selected);
+  setGlobalStyleProps(selectedTheme);
 
   return [allThemes, themeSelector];
 }
