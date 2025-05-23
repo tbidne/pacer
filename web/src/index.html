@@ -1,5 +1,5 @@
 <!doctype html>
-<html id="html_head" lang="en" data-bs-theme="dark">
+<html id="html_head" lang="en" ui-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <link
@@ -20,20 +20,19 @@
 
     <div class="container">
       <div class="row mb-4">
-        <div class="col-9">
+        <div class="col-6">
           <select
             class="form-select form-select-sm chart-selector"
             id="chart-selector"
             aria-label="Default select example"
           ></select>
         </div>
-        <div class="col-3">
-          <input type="checkbox" class="checkbox" id="checkbox">
-          <label for="checkbox" class="checkbox-label">
-            <i class="fas fa-sun"></i>
-            <i class="fas fa-moon"></i>
-            <span class="ball"></span>
-          </label>
+        <div class="col-6">
+          <select
+            class="form-select form-select-sm theme-selector"
+            id="theme-selector"
+            aria-label="Default select theme"
+          ></select>
         </div>
       </div>
       <div class="row">

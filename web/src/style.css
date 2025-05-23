@@ -1,34 +1,64 @@
+/* NOTE: [Css Themes]
+
+Some of the theme values need to also exist in the theme.ts (having a single
+source of truth is not trivial).
+
+  - --global-background-color == theme.background
+  - --text-color == theme.labels
+
+*/
+
+[ui-theme=light] {
+  --global-background-color: white;
+  --selector-border-color: #dee2e6;
+  --text-color: #393939;
+}
+
+[ui-theme=dark] {
+  --global-background-color: #191b1c;
+  --selector-border-color: #495057;
+  --text-color: #c3c3c3;
+}
+
 body {
-  /*background-color: #191b1c;*/
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: center;
+  background: var(--global-background-color);
 }
 
 h1 {
-  /* see NOTE: [Text Color] */
-  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+  color: var(--text-color);
 }
 
 h2 {
-  /* see NOTE: [Text Color] */
-  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: left;
 }
 
 h4 {
-  /* see NOTE: [Text Color] */
-  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: left;
 }
 
 .chart-selector {
-  left: 40%;
-  position: absolute;
+  float: right;
   text-align: center;
-  width: 20vw
+  width: 20vw;
+
+  background-color: var(--global-background-color);
+  color: var(--text-color);
+  border-color: var(--selector-border-color);
+}
+
+.theme-selector {
+  float: left;
+  text-align: center;
+  width: 20vw;
+
+  background-color: var(--global-background-color);
+  color: var(--text-color);
+  border-color: var(--selector-border-color);
 }
 
 .chart-container {
@@ -52,8 +82,6 @@ h4 {
 }
 
 p {
-  /* see NOTE: [Text Color] */
-  /* color: #c3c3c3; */
   font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
   text-align: left;
 }
@@ -62,16 +90,19 @@ p {
   left: 5%;
   position: relative;
   text-align: left;
+
+  color: var(--text-color);
 }
 
 .description {
   left: 5%;
   position: relative;
+
+  color: var(--text-color);
 }
 
 .checkbox {
   opacity: 0;
-  /*position: absolute;*/
   position: relative;
   float: left;
 }

@@ -1,9 +1,9 @@
-import { Chart, ChartOptions } from "chart.js/auto";
 import * as charts from "../data/charts.json";
 import { PCharts, PChartExtra } from "./marshal/pacer";
-import { createChart } from "./marshal/chartjs";
-import { mkChartDiv, addChartSelectorOption } from "./utils";
-import { Theme, themes } from "./theme";
+import * as ModChartJs from "./marshal/chartjs";
+import * as ModUtils from "./utils";
+import { ChartElement, ChartElements } from "./theme";
+import * as ModTheme from "./theme";
 
 function handleExtra(
   chartDiv: HTMLDivElement,
@@ -37,67 +37,6 @@ function getChartSelector(): HTMLSelectElement {
 
 function getChartContainer(): HTMLDivElement {
   return <HTMLDivElement>document.getElementById("chart-container-id");
-}
-
-function getThemeCheckbox(): HTMLInputElement {
-  return <HTMLInputElement>document.getElementById("checkbox");
-}
-
-function setThemeBool(isLight: boolean, charts: ChartData): void {
-  const theme = isLight ? themes.light : themes.dark;
-
-  function updateScale(scale: any): void {
-    scale.grid.color = theme.grid;
-    scale.ticks.color = theme.labels;
-    scale.title.color = theme.labels;
-  }
-
-  charts.map((chartData) => {
-    const chart = chartData.chart;
-    const opts: ChartOptions<"line"> = chart.options;
-    const plugins = opts.plugins;
-
-    plugins.legend.labels.color = theme.labels;
-    plugins.legend.title.color = theme.labels;
-    plugins.tooltip.backgroundColor = theme.tooltip_bg;
-    plugins.tooltip.bodyColor = theme.tooltip;
-    plugins.tooltip.titleColor = theme.tooltip;
-
-    const scales = chart.options.scales;
-    updateScale(scales.x);
-    updateScale(scales.y);
-
-    if (scales.y1 != null) {
-      updateScale(scales.y1);
-    }
-
-    (<any>plugins).customCanvasBackgroundColor.color = theme.bg;
-
-    const extra = chartData.extra;
-    if (extra) {
-      extra.map((e) => e.attributeStyleMap.set("color", theme.labels));
-    }
-
-    chart.update();
-  });
-
-  const html = <HTMLHtmlElement>document.getElementById("html_head");
-  html.setAttribute("data-bs-theme", theme.name);
-
-  const title = <HTMLHtmlElement>document.getElementById("title");
-
-  title.attributeStyleMap.set("color", theme.labels);
-}
-
-function setTheme(checkBox: HTMLInputElement, charts: ChartData): void {
-  setThemeBool(checkBox.checked, charts);
-}
-
-function addThemeBtnOnClick(
-  charts: ChartData,
-  checkBox: HTMLInputElement,
-): void {
-  checkBox.addEventListener("click", () => setTheme(checkBox, charts));
 }
 
 function addChartSelectorOnClick(selector: HTMLSelectElement): void {
@@ -139,40 +78,35 @@ const pacerCharts = charts as PCharts;
  */
 const chartDivs: Map<number, [string, HTMLDivElement]> = new Map([]);
 
-type ChartData = ChartElement[];
-
-/**
- * This is our created chart, with optional extras. We hold this data for
- * later updating the theme.
- */
-type ChartElement = {
-  chart: Chart<"line">;
-  extra?: [HTMLHeadingElement, HTMLParagraphElement];
-};
-
 function main() {
+  // setup themes
+  const initThemeName = "dark";
+  const themeResult = ModTheme.setup(initThemeName);
+  const allThemes = themeResult[0];
+  const themeSelector = themeResult[1];
+  const initTheme = allThemes.get(initThemeName);
+
   const chartContainer = getChartContainer();
   const chartSelector = getChartSelector();
 
   const pcharts = pacerCharts.charts;
 
-  const themeCheckbox = getThemeCheckbox();
-
-  const allChartData: ChartData = [];
+  const allChartData: ChartElements = [];
 
   for (var i = 0; i < pcharts.length; i++) {
     const pchart = pcharts[i];
 
     let title = pchart.title;
-    addChartSelectorOption(chartSelector, i, title);
-    const result = mkChartDiv(chartContainer, i);
+    ModUtils.addChartSelectorOption(chartSelector, i, title);
+    const result = ModUtils.mkChartDiv(chartContainer, i);
     const chartDiv = result[0];
     const elemId = result[1];
 
     chartDivs.set(i, [title, chartDiv]);
 
     const extra = handleExtra(chartDiv, i, pchart.extra);
-    const chart = createChart(
+    const chart = ModChartJs.createChart(
+      initTheme,
       title,
       elemId,
       pchart.datasets.xAxis,
@@ -191,14 +125,7 @@ function main() {
 
   if (pcharts.length > 0) {
     addChartSelectorOnClick(chartSelector);
-    addThemeBtnOnClick(allChartData, themeCheckbox);
-  }
-
-  // will eventually get this from chart-requests.
-  const isLight: boolean = false;
-  if (isLight) {
-    themeCheckbox.checked = true;
-    setThemeBool(true, allChartData);
+    ModTheme.addThemeBtnOnClick(allChartData, themeSelector, allThemes);
   }
 }
 

@@ -3,7 +3,7 @@ import { PYAxis } from "./pacer";
 import { CChartOpts, CDataSets, CTicks, CYAxis, CYOptT } from "./chartjs/types";
 import { YAxesT, YAxisLabel, mapYAxes } from "./common";
 import { formatOptsSeconds, formatSeconds } from "../utils";
-import { themes } from "../theme";
+import { Theme } from "../theme";
 
 const POINT_RADIUS = 20;
 const AXIS_FONT_SIZE = 16;
@@ -44,10 +44,14 @@ function makeYAxes(yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
   return mapYAxes(makeYAxis, yAxes);
 }
 
-function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
+function makeChartOpts(
+  theme: Theme,
+  title: string,
+  yAxes: YAxesT<PYAxis>,
+): CChartOpts {
   function makeTicks(yLabel: YAxisLabel): CTicks {
     const ticks: CTicks = {
-      color: themes.dark.labels,
+      color: theme.text,
     };
     const yTimePrefix = getYTimePrefix(yLabel);
     if (yTimePrefix != null) {
@@ -59,11 +63,11 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
   function makeYAxis<A>(position: A, title: YAxisLabel): CYOptT<A> {
     return {
       grid: {
-        color: themes.dark.grid,
+        color: theme.grid,
       },
       position: position,
       title: {
-        color: themes.dark.labels,
+        color: theme.text,
         display: true,
         font: {
           size: AXIS_FONT_SIZE,
@@ -79,16 +83,16 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
     plugins: {
       // see NOTE: [Background Color]
       customCanvasBackgroundColor: {
-        color: themes.dark.bg,
+        color: theme.background,
       },
       legend: {
         labels: {
-          color: themes.dark.labels,
+          color: theme.text,
         },
       },
       title: {
         align: "center",
-        color: themes.dark.labels,
+        color: theme.text,
         // Disabled because the title is in the selector. Re-enable if we
         // ever change up the UI e.g. put the selector somewhere else.
         display: false,
@@ -98,9 +102,9 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
         text: title,
       },
       tooltip: {
-        backgroundColor: themes.dark.tooltip_bg,
-        bodyColor: themes.dark.tooltip,
-        titleColor: themes.dark.tooltip,
+        backgroundColor: theme.tooltipBackground,
+        bodyColor: theme.tooltip,
+        titleColor: theme.tooltip,
       },
     },
     pointHitRadius: POINT_RADIUS,
@@ -114,13 +118,13 @@ function makeChartOpts(title: string, yAxes: YAxesT<PYAxis>): CChartOpts {
           unit: "day",
         },
         grid: {
-          color: themes.dark.grid,
+          color: theme.grid,
         },
         ticks: {
-          color: themes.dark.labels,
+          color: theme.text,
         },
         title: {
-          color: themes.dark.labels,
+          color: theme.text,
           display: true,
           font: {
             size: AXIS_FONT_SIZE,
@@ -166,12 +170,13 @@ const bg_plugin = {
  * @returns The created chart.
  */
 function createChart(
+  theme: Theme,
   title: string,
   elemId: string,
   xAxis: string[],
   yAxes: YAxesT<PYAxis>,
 ): Chart<"line"> {
-  const chartOpts = makeChartOpts(title, yAxes);
+  const chartOpts = makeChartOpts(theme, title, yAxes);
   const cYAxes = makeYAxes(yAxes);
 
   const datasets: CDataSets = [cYAxes.y];
