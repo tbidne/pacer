@@ -1,12 +1,5 @@
 import { Chart, ChartOptions } from "chart.js";
 
-const GRAY_DARK = "#393939";
-const GRAY_LIGHT = "#c3c3c3";
-const GRAY_LIGHT_OPAC = "rgba(204, 204, 204, 0.75)";
-const GRAY_DARK_OPAC = "rgba(0, 0, 0, 0.75)";
-
-const BOOTSTRAP_DARK_BG = "#212529";
-
 type Color = string;
 
 // This should probably just be a function that takes an enum themeName
@@ -32,9 +25,9 @@ const themeMap: ThemeMap = new Map([
       background: "#191b1c",
       grid: "#3d3d3d",
       name: "dark",
-      text: GRAY_LIGHT,
-      tooltipBackground: GRAY_LIGHT_OPAC,
-      tooltip: GRAY_DARK,
+      text: "#c3c3c3",
+      tooltipBackground: "rgba(204, 204, 204, 0.75)",
+      tooltip: "#393939",
     },
   ],
   [
@@ -44,8 +37,8 @@ const themeMap: ThemeMap = new Map([
       grid: "#828aad",
       name: "light",
       text: "#343b59",
-      tooltipBackground: GRAY_DARK_OPAC,
-      tooltip: GRAY_LIGHT,
+      tooltipBackground: "rgba(0, 0, 0, 0.75)",
+      tooltip: "#c3c3c3",
     },
   ],
 ]);
