@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Pacer.Command.Chart.Data.Garmin (tests) where
@@ -15,13 +16,13 @@ import Effectful.Logger.Dynamic
     ToLogStr (toLogStr),
     fromLogStr,
   )
-import FileSystem.Path qualified as Path
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Params
   ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
   )
+import Pacer.Utils qualified as Utils
 import Text.Read qualified as TR
 import Unit.Prelude
 
@@ -45,43 +46,44 @@ getActivitiesTypeTests =
 
 testCsvGarmin :: TestTree
 testCsvGarmin = testCase ".csv returns garmin" $ do
-  (logs, result) <- runGetActivitiesType [osp|/file.csv|]
+  (logs, result) <- runGetActivitiesType [relfilePathSep|file.csv|]
   ActivitiesGarmin @=? result
   [] @=? logs
 
 testJsonDefault :: TestTree
 testJsonDefault = testCase ".json returns default" $ do
-  (logs, result) <- runGetActivitiesType [osp|/file.json|]
+  (logs, result) <- runGetActivitiesType [relfilePathSep|file.json|]
   ActivitiesDefault @=? result
   [] @=? logs
 
 testNameGarmin :: TestTree
 testNameGarmin = testCase "name with 'garmin' returns default" $ do
-  (logs, result) <- runGetActivitiesType [osp|/file_garmin|]
+  (logs, result) <- runGetActivitiesType [relfilePathSep|file_garmin|]
   ActivitiesGarmin @=? result
   [] @=? logs
 
 testNameActivities :: TestTree
 testNameActivities = testCase "name with 'activities' default" $ do
-  (logs, result) <- runGetActivitiesType [osp|/some_activities_thing|]
+  (logs, result) <- runGetActivitiesType [relfilePathSep|some_activities_thing|]
   ActivitiesDefault @=? result
-  mkExpected "/some_activities_thing" @=? logs
+  mkExpected "some_activities_thing" @=? logs
 
-  (logs2, result2) <- runGetActivitiesType [osp|/some_Activities_thing|]
+  (logs2, result2) <- runGetActivitiesType [relfilePathSep|some_Activities_thing|]
   ActivitiesDefault @=? result2
-  mkExpected "/some_Activities_thing" @=? logs2
+  mkExpected "some_Activities_thing" @=? logs2
   where
     mkExpected name =
       [ mconcat
           [ "Unknown file type: '",
+            Utils.showtPath root,
             name,
             "'. Guessing custom json format."
           ]
       ]
 
-runGetActivitiesType :: OsPath -> IO (Tuple2 (List Text) ActivitiesType)
-runGetActivitiesType activitiesOsPath = do
-  activitiesPath <- Path.parseAbsFile activitiesOsPath
+runGetActivitiesType :: Path Rel File -> IO (Tuple2 (List Text) ActivitiesType)
+runGetActivitiesType activitiesFile = do
+  let activitiesPath = root <</>> activitiesFile
   logsRef <- Ref.newIORef []
   result <- runner logsRef $ Garmin.getActivitiesType activitiesPath
   logs <- Ref.readIORef logsRef
@@ -270,3 +272,15 @@ runLoggerCapture ref = interpret_ $ \case
     pure ()
     where
       toText = decodeUtf8Lenient . fromLogStr . toLogStr
+
+{- ORMOLU_DISABLE -}
+
+root :: Path Abs Dir
+root =
+#if POSIX
+  [absdir|/|]
+#else
+  [absdir|C:\|]
+#endif
+
+{- ORMOLU_ENABLE -}
