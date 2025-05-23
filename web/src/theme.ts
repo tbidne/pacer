@@ -40,10 +40,10 @@ const themeMap: ThemeMap = new Map([
   [
     "light",
     {
-      background: "white",
-      grid: GRAY_DARK,
+      background: "#e6e7ed",
+      grid: "#828aad",
       name: "light",
-      text: GRAY_DARK,
+      text: "#343b59",
       tooltipBackground: GRAY_DARK_OPAC,
       tooltip: GRAY_LIGHT,
     },

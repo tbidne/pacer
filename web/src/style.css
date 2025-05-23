@@ -9,9 +9,9 @@ source of truth is not trivial).
 */
 
 [ui-theme=light] {
-  --global-background-color: white;
-  --selector-border-color: #dee2e6;
-  --text-color: #393939;
+  --global-background-color: #e6e7ed;
+  --selector-border-color: #343b59;
+  --text-color: #343b59;
 }
 
 [ui-theme=dark] {
