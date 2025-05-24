@@ -140,6 +140,7 @@
                   PACER_HASH = "${self.rev or self.dirtyRev}";
                   PACER_MODIFIED = "${builtins.toString self.lastModified}";
                   PACER_SHORT_HASH = "${self.shortRev or self.dirtyShortRev}";
+                  PACER_NODE = "${node.version}";
 
                   # We have makeWrapper so wrapProgram is available in
                   # postFixup. Git is needed to run the tests (git diff).

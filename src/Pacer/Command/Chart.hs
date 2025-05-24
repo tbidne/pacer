@@ -34,9 +34,7 @@ import Effectful.FileSystem.PathWriter.Dynamic
   )
 import Effectful.FileSystem.PathWriter.Dynamic qualified as PW
 import Effectful.Logger.Dynamic qualified as Logger
-import Effectful.Process.Typed.Dynamic qualified as TP
-import FileSystem.OsPath (decodeLenient, decodeThrowM)
-import GHC.IO.Exception (ExitCode (ExitFailure, ExitSuccess))
+import FileSystem.OsPath (decodeLenient)
 import Pacer.Command.Chart.Data.Activity
   ( Activity,
     Label,
@@ -49,6 +47,7 @@ import Pacer.Command.Chart.Data.Chart qualified as Chart
 import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
+import Pacer.Command.Chart.Node qualified as Node
 import Pacer.Command.Chart.Params
   ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
     ChartParams
@@ -64,13 +63,11 @@ import Pacer.Command.Chart.Params
 import Pacer.Configuration.Env.Types (CachedPaths, LogEnv)
 import Pacer.Configuration.Env.Types qualified as Types
 import Pacer.Data.Distance.Units (DistanceUnit)
-import Pacer.Exception (GarminE (GarminUnitRequired), NpmE (MkNpmE))
+import Pacer.Exception (GarminE (GarminUnitRequired))
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import Pacer.Web qualified as Web
 import Pacer.Web.Paths qualified as WPaths
-import System.IO (FilePath)
-import System.IO.Error qualified as Error
 import System.OsPath qualified as OsPath
 
 -- | Handles chart command.
@@ -132,20 +129,7 @@ createCharts params = addNamespace "createCharts" $ do
         jsonPath
     else do
       -- 1. Check that node exists
-      --
-      -- It is very important we use findExecutable to find the exe, rather
-      -- than relying on it being on the PATH via 'npm'. Otherwise windows on
-      -- CI dies with mysterious errors about not being able to find certain
-      -- files.
-      npmPath <-
-        PR.findExecutable npmName >>= \case
-          Just npmPath -> pure npmPath
-          Nothing -> do
-            throwPathIOError
-              npmName
-              "createCharts"
-              Error.doesNotExistErrorType
-              "Required npm executable not found. Please add it to the PATH."
+      npmExe <- Node.findNpm params.cleanInstall
 
       -- 2. Create web dir
       webDir <- WPaths.getWebPath
@@ -177,8 +161,6 @@ createCharts params = addNamespace "createCharts" $ do
 
         let buildNode = not nodeModulesExists || params.cleanInstall
 
-        npmPathStr <- decodeThrowM npmPath
-
         -- 5.1 Only install if one of the following two is true:
         --
         -- i. node_modules does not exist.
@@ -189,11 +171,11 @@ createCharts params = addNamespace "createCharts" $ do
             $ PW.removePathForcibly nodeModulesOsPath
 
           $(Logger.logDebug) "Installing node dependencies"
-          runNpm npmPathStr ["install", "--save"]
+          Node.runNpm_ npmExe ["install", "--save"]
 
         -- 5.2 Build the html/js
         $(Logger.logDebug) "Building charts"
-        runNpm npmPathStr ["run", "start"]
+        Node.runNpm_ npmExe ["run", "start"]
 
       -- 6. Copy the build products to current directory
       let destDir = cwdPath <</>> [reldir|build|]
@@ -231,20 +213,6 @@ createCharts params = addNamespace "createCharts" $ do
         { overwrite = OverwriteNone,
           targetName = TargetNameLiteral buildDirOsPath
         }
-
-runNpm ::
-  ( HasCallStack,
-    TypedProcess :> es
-  ) =>
-  FilePath ->
-  List String ->
-  Eff es ()
-runNpm npmPathStr args = do
-  let npmCmd = TP.proc npmPathStr args
-  (ec, stdout, stderr) <- TP.readProcess npmCmd
-  case ec of
-    ExitSuccess -> pure ()
-    ExitFailure i -> throwM $ MkNpmE npmName args i (stdout <> "\n" <> stderr)
 
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.
@@ -427,11 +395,3 @@ jsonName = [relfile|charts.json|]
 
 nodeModulesDir :: Path Rel Dir
 nodeModulesDir = [reldir|node_modules|]
-
-npmName :: OsPath
-
-#if WINDOWS
-npmName = [osp|npm.cmd|]
-#else
-npmName = [osp|npm|]
-#endif

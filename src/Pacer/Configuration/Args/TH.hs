@@ -3,6 +3,7 @@
 
 module Pacer.Configuration.Args.TH
   ( gitData,
+    nodeVersion,
   )
 where
 
@@ -132,3 +133,11 @@ displayUnixTime var unixTimeOsStr = do
           value = Just unixTimeOsStr,
           reason = FS.OsString.encodeLenient str
         }
+
+nodeVersion :: Code Q OsString
+nodeVersion = toCode nodeVersionFromEnvQ
+  where
+    toCode = GRT.qToCode . GRT.projectConst [osstr|<not included>|]
+
+nodeVersionFromEnvQ :: Q (Either EnvError OsString)
+nodeVersionFromEnvQ = GRT.envValQ [osstr|PACER_NODE|]

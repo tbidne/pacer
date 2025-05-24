@@ -41,6 +41,10 @@ module Pacer.Utils
     seqGroupBy,
     neSeqGroupBy,
 
+    -- * Directory reading
+    Directory (..),
+    readDirectory,
+
     -- * Misc
     PaceMetersErrMsg,
   )
@@ -66,6 +70,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as T
+import Effectful.FileSystem.FileReader.Dynamic qualified as FR
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
 import FileSystem.OsPath (decodeLenient, encodeLenient)
@@ -73,6 +78,7 @@ import FileSystem.OsPath qualified as OsPath
 import FileSystem.Path qualified as Path
 import GHC.IsList (IsList (Item))
 import GHC.IsList qualified as IL
+import Language.Haskell.TH.Syntax (Lift)
 import Pacer.Class.FromAlt (FromAlt, isNonEmpty)
 import Pacer.Class.Parser qualified as P
 import Pacer.Prelude
@@ -485,3 +491,46 @@ encodePretty = AsnPretty.encodePretty' cfg
         { confIndent = Spaces 2,
           confTrailingNewline = True
         }
+
+-- | Represents a directory.
+data Directory = MkDirectory
+  { -- | Files with contents.
+    files :: List (Tuple2 (Path Rel File) ByteString),
+    -- | Directories.
+    subdirs :: List (Path Rel Dir)
+  }
+  deriving stock (Lift)
+
+-- FIXME: Maybe mode this to Node internal
+
+readDirectory ::
+  ( HasCallStack,
+    FileReader :> es,
+    PathReader :> es
+  ) =>
+  Path Abs Dir ->
+  Eff es Directory
+readDirectory dir = do
+  (fileOsPaths, dirOsPaths) <- PR.listDirectoryRecursive (toOsPath dir)
+
+  files <-
+    traverse (\(f, bs) -> (,bs) <$> Path.parseRelFile f)
+      =<< readFiles dir fileOsPaths
+
+  subdirs <- traverse Path.parseRelDir dirOsPaths
+  pure
+    $ MkDirectory
+      { files,
+        subdirs
+      }
+
+readFiles ::
+  ( HasCallStack,
+    FileReader :> es
+  ) =>
+  Path Abs Dir ->
+  List OsPath ->
+  Eff es (List (Tuple2 OsPath ByteString))
+readFiles dirPath = traverse $ \f -> (f,) <$> FR.readBinaryFile (dirOsPath </> f)
+  where
+    dirOsPath = toOsPath dirPath

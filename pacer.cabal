@@ -35,6 +35,14 @@ source-repository head
   type:     git
   location: https://github.com/tbidne/pacer
 
+flag bundle-node
+  description:
+    Bundles pacer with node dependencies at build-time, so no
+    runtime dependencies required.
+
+  default:     False
+  manual:      False
+
 common common-lang
   default-extensions:
     ApplicativeDo
@@ -62,6 +70,9 @@ common common-lang
 
   else
     cpp-options: -DLINUX -DPOSIX
+
+  if flag(bundle-node)
+    cpp-options: -DBUNDLE_NODE
 
   default-language:   GHC2024
 
@@ -94,6 +105,8 @@ library
     Pacer.Command.Chart.Data.Time.Timestamp
     Pacer.Command.Chart.Data.Time.Timestamp.Internal
     Pacer.Command.Chart.Data.Time.Year
+    Pacer.Command.Chart.Node
+    Pacer.Command.Chart.Node.Internal
     Pacer.Command.Chart.Params
     Pacer.Command.Convert
     Pacer.Command.Convert.Args
@@ -168,6 +181,11 @@ library
     , time-effectful                   ^>=0.1
     , typed-process-dynamic-effectful  ^>=0.1
     , unordered-containers             ^>=0.2.20
+
+  if flag(bundle-node)
+    build-depends:
+      , tar   ^>=0.6.4.0
+      , zlib  ^>=0.7.1.0
 
   hs-source-dirs:  src
 

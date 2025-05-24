@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Pacer.Configuration.Args
@@ -29,6 +30,9 @@ import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Pacer.Class.Parser qualified as P
 import Pacer.Command qualified as Command
+#if BUNDLE_NODE
+import Pacer.Command.Chart.Node.Internal qualified as NodeI
+#endif
 import Pacer.Configuration.Args.TH qualified as TH
 import Pacer.Configuration.Logging (LogLevelParam, LogVerbosity)
 import Pacer.Configuration.Logging qualified as Logging
@@ -133,8 +137,16 @@ versLong =
     [ "Pacer: " <> showVersion Paths.version,
       " - Git revision: " <> OsString.decodeLenient versionInfo.gitHash,
       " - Commit date:  " <> OsString.decodeLenient versionInfo.gitCommitDate,
-      " - GHC version:  " <> versionInfo.ghc
+      " - GHC version:  " <> versionInfo.ghc,
+      " - Node version: " <> OsString.decodeLenient nodeVers
     ]
+
+nodeVers :: OsString
+#if BUNDLE_NODE
+nodeVers = $$NodeI.nodeVersionTH
+#else
+nodeVers = $$TH.nodeVersion
+#endif
 
 data VersionInfo = MkVersionInfo
   { gitCommitDate :: OsString,

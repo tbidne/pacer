@@ -405,11 +405,11 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   FindExecutable p -> case p of
     [osp|npm|] ->
       asks @ChartEnv (.coreEnv.npmExists) <&> \case
-        True -> Just [osp|npm_exe|]
+        True -> Just [osp|/npm_exe|]
         False -> Nothing
     [osp|npm.cmd|] ->
       asks @ChartEnv (.coreEnv.npmExists) <&> \case
-        True -> Just [osp|npm_exe|]
+        True -> Just [osp|/npm_exe|]
         False -> Nothing
     _ -> error $ "findExecutable: unexpected: " ++ show p
   GetCurrentDirectory -> PRS.getCurrentDirectory
@@ -469,9 +469,9 @@ runTypedProcessMock ::
   Eff es a
 runTypedProcessMock = interpret_ $ \case
   ReadProcess pc -> case processConfigToCmd pc of
-    "Raw command: npm_exe install --save" ->
+    "Raw command: /npm_exe install --save" ->
       incIORef (.refsEnv.numNpmInstallCalls) $> mockResult
-    "Raw command: npm_exe run start" ->
+    "Raw command: /npm_exe run start" ->
       incIORef (.refsEnv.numNpmBuildCalls) $> mockResult
     other -> error $ "readProcess: unexpected: " ++ other
   other -> error $ "runTypedProcessMock: unimplemented: " ++ (showEffectCons other)

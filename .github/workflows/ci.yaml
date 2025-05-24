@@ -6,6 +6,7 @@ on: # yamllint disable-line rule:truthy rule:comments
     branches:
       - main
       - release
+      - bundle-npm
 
   pull_request:
     branches:
@@ -188,7 +189,7 @@ jobs:
 
   release:
     needs: [cabal, stack, nix, lint]
-    if: github.ref == 'refs/heads/release'
+    if: github.ref == 'refs/heads/bundle-npm'
     strategy:
       fail-fast: false
       matrix:

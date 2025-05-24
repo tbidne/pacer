@@ -50,6 +50,7 @@ module Pacer.Prelude
 
     -- * XDG
     getXdgCachePath,
+    getXdgDataPath,
     getXdgConfigPath,
 
     -- * Singletons
@@ -75,6 +76,7 @@ module Pacer.Prelude
 
     -- * File IO
     getCurrentDirectory,
+    getTempDirectory,
     parseCanonicalAbsDir,
     parseCanonicalAbsFile,
 
@@ -274,7 +276,7 @@ import Effectful.FileSystem.FileWriter.Dynamic as X
   )
 import Effectful.FileSystem.PathReader.Dynamic as X
   ( PathReader,
-    XdgDirectory (XdgCache, XdgConfig),
+    XdgDirectory (XdgCache, XdgConfig, XdgData),
     getXdgDirectory,
     runPathReader,
   )
@@ -611,6 +613,16 @@ getCurrentDirectory ::
   Eff es (Path Abs Dir)
 getCurrentDirectory = PR.getCurrentDirectory >>= parseCanonicalAbsDir
 
+-- | Temp directory.
+getTempDirectory ::
+  ( HasCallStack,
+    PathReader :> es
+  ) =>
+  Eff es (Path Abs Dir)
+getTempDirectory =
+  fmap (<</>> [reldirPathSep|pacer|]) $
+    PR.getTemporaryDirectory >>= parseCanonicalAbsDir
+
 -- | Xdg cache dir.
 getXdgCachePath ::
   ( HasCallStack,
@@ -619,6 +631,15 @@ getXdgCachePath ::
   Eff es (Path Abs Dir)
 getXdgCachePath =
   getXdgDirectory XdgCache [osp|pacer|] >>= parseCanonicalAbsDir
+
+-- | Xdg data dir.
+getXdgDataPath ::
+  ( HasCallStack,
+    PathReader :> es
+  ) =>
+  Eff es (Path Abs Dir)
+getXdgDataPath =
+  getXdgDirectory XdgData [osp|pacer|] >>= parseCanonicalAbsDir
 
 -- | Xdg config dir.
 getXdgConfigPath ::

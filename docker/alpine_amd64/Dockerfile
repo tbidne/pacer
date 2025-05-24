@@ -6,6 +6,7 @@ ARG CABAL_PROJ
 ARG CABAL_VERS
 ARG GHC_VERS
 ARG suffix
+ARG node_suffix
 
 RUN mkdir -p /opt/pacer
 ADD . /opt/pacer
@@ -53,7 +54,18 @@ echo "*** Building pacer ***"
 cd /opt/pacer
 
 cabal update
+
+# --------------------------------------------------------------------------- #
+#                                Without node                                 #
+# --------------------------------------------------------------------------- #
+
 export PACER_HOME=$(pwd); cabal install exe:pacer --installdir bin/ --program-suffix $suffix --enable-executable-static --enable-executable-stripping --project-file $CABAL_PROJ --ghc-options -Werror
+
+# --------------------------------------------------------------------------- #
+#                                  With node                                  #
+# --------------------------------------------------------------------------- #
+
+export PACER_HOME=$(pwd); cabal install exe:pacer -fbundle-node --installdir bin/ --program-suffix $node_suffix --enable-executable-static --enable-executable-stripping --project-file $CABAL_PROJ --ghc-options -Werror
 
 echo "*** Copy binary ***"
 
