@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -443,25 +444,36 @@ chartRequestsSearch :: SearchFiles
 chartRequestsSearch =
   MkSearchFiles
     $ NE.singleton
-    $ MkFileAliases
-    $ [relfile|chart-requests.json|]
-    :| [[relfile|chart-requests.jsonc|]]
+    $ MkFileAliases aliases
+  where
+    aliases =
+      [ [relfile|chart-requests.json|],
+        [relfile|chart-requests.jsonc|],
+        [relfile|chart_requests.json|],
+        [relfile|chart_requests.jsonc|]
+      ]
 
 activitiesSearch :: SearchFiles
-activitiesSearch = MkSearchFiles $ activitiesJsonName :| [activitiesGarminName]
+activitiesSearch = MkSearchFiles [activitiesJsonName, activitiesGarminName]
   where
     activitiesJsonName =
-      MkFileAliases $ [relfile|activities.json|] :| [[relfile|activities.jsonc|]]
+      MkFileAliases
+        [[relfile|activities.json|], [relfile|activities.jsonc|]]
     activitiesGarminName =
-      MkFileAliases $ NE.singleton [relfile|Activities.csv|]
+      MkFileAliases [[relfile|Activities.csv|]]
 
 activityLabelsSearch :: SearchFiles
 activityLabelsSearch =
   MkSearchFiles
     $ NE.singleton
-    $ MkFileAliases
-    $ [relfile|activity-labels.json|]
-    :| [[relfile|activity-labels.jsonc|]]
+    $ MkFileAliases aliases
+  where
+    aliases =
+      [ [relfile|activity-labels.json|],
+        [relfile|activity-labels.jsonc|],
+        [relfile|activity_labels.json|],
+        [relfile|activity_labels.jsonc|]
+      ]
 
 -- Handles an unknown (wrt. absolute/relative) path, resolving any
 -- relative paths. Polymorphic over file/dir path.

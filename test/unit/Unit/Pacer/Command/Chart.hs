@@ -400,7 +400,11 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
           [ [osp|Activities.csv|],
             [osp|activities.csv|],
             [osp|activity-labels.json|],
-            [osp|activity-labels.jsonc|]
+            [osp|activity-labels.jsonc|],
+            [osp|activity_labels.json|],
+            [osp|activity_labels.jsonc|],
+            [osp|chart_requests.json|],
+            [osp|chart_requests.jsonc|]
           ]
   FindExecutable p -> case p of
     [osp|npm|] ->

@@ -160,7 +160,10 @@ Therefore this works out to be:
 
 > [!TIP]
 >
-> If `activities.json` and `Activities.csv` exist in the same directory then we will combine them. Note that file discovery is case-insensitive e.g. we will also find `activities.csv`. Also, whenever we search for `<file>.json`, we also search for `<file>.jsonc`.
+> - If `activities.json` and `Activities.csv` exist in the same directory then we will combine them.
+> - File discovery is case-insensitive e.g. we will also find `activities.csv`.
+> - Whenever we search for `<file>.json`, we also search for `<file>.jsonc`.
+> - Hyphens and underscores are interchangeable e.g. we search for `chart-requests` and `chart_requests`.
 
 ### How do I use this with Garmin?
 
