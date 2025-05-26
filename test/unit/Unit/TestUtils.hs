@@ -397,8 +397,18 @@ genNonComment = fmap encodeUtf8 genNonCommentTxt
 
 genNonCommentTxt :: Gen Text
 genNonCommentTxt =
-  removeSlashStar
-    . removeDoubleSlash
+  -- Do not generate any slashes. Consider o/w e.g.
+  --
+  --   - genNonCommentTxt: "/"
+  --   - genBlockComment: "/**/"
+  --
+  -- Then we have
+  --
+  --   "//**/"
+  --
+  -- Which is invalid text. This string was generated on CI and causes the
+  -- tests to fail; presumably something like the above happened.
+  removeSlash
     -- G.text rather than G.utf8 (ByteString) as it is easier to remove
     -- unwanted substrings from Text.
     <$> G.text r G.unicode
@@ -420,11 +430,8 @@ genBlockComment = do
 removeNewlines :: Text -> Text
 removeNewlines = T.replace "\n" ""
 
-removeDoubleSlash :: Text -> Text
-removeDoubleSlash = removePat2 '/' '/'
-
-removeSlashStar :: Text -> Text
-removeSlashStar = removePat2 '/' '*'
+removeSlash :: Text -> Text
+removeSlash = T.replace "/" ""
 
 removeStarSlash :: Text -> Text
 removeStarSlash = removePat2 '*' '/'
