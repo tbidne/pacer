@@ -177,7 +177,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
           unless (posErrs == mempty) $ do
             let errsList = displaySummarizedSequences (L.reverse posErrs)
 
-            $(Logger.logError)
+            $(Logger.logWarn)
               $ "Skipping non-positive values found on line(s): "
               <> errsList
 
