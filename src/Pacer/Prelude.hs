@@ -79,6 +79,7 @@ module Pacer.Prelude
     parseCanonicalAbsFile,
 
     -- * Aeson
+    asnObject,
     asnWithObject,
     asnWithText,
 
@@ -687,3 +688,6 @@ asnWithText = Asn.withText
 
 asnWithObject :: String -> (AsnT.Object -> AsnT.Parser a) -> AsnT.Value -> AsnT.Parser a
 asnWithObject = Asn.withObject
+
+asnObject :: [AsnT.Pair] -> AsnT.Value
+asnObject = Asn.object

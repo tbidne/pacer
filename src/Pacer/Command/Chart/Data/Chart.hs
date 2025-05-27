@@ -14,26 +14,31 @@ import Pacer.Command.Chart.Data.ChartExtra (ChartExtra)
 import Pacer.Command.Chart.Data.ChartExtra qualified as ChartExtra
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (title, unit),
-    ChartRequests (chartRequests, filters),
+    ChartRequests (chartRequests, filters, themeConfig),
+    ChartThemeConfig,
   )
 import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
 import Pacer.Prelude
+import Pacer.Utils qualified as Utils
 
 -- | Holds multiple charts.
-newtype Charts = MkCharts
+data Charts = MkCharts
   { -- | Individual charts.
-    charts :: NESeq Chart
+    charts :: NESeq Chart,
+    -- | Optional theme config.
+    theme :: Maybe ChartThemeConfig
   }
   deriving stock (Eq, Show)
 
 instance ToJSON Charts where
   toJSON c =
     Asn.object
-      [ "charts" .= c.charts
-      ]
+      $ [ "charts" .= c.charts
+        ]
+      ++ Utils.encodeMaybe ("theme", c.theme)
 
 -- | Holds all data associated to a single chart.
 data Chart = MkChart
@@ -71,10 +76,15 @@ mkCharts ::
   ChartRequests a ->
   Eff es (Result CreateChartE Charts)
 mkCharts activities requests =
-  fmap (fmap MkCharts . sequenceA)
+  fmap toCharts
     . traverse (mkChart requests.filters activities)
     . (.chartRequests)
     $ requests
+  where
+    toCharts :: (NESeq (Result CreateChartE Chart)) -> Result CreateChartE Charts
+    toCharts =
+      fmap (\xs -> MkCharts xs requests.themeConfig)
+        . sequenceA
 
 mkChart ::
   forall es a.

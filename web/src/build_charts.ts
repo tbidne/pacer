@@ -2,6 +2,7 @@ import { PCharts, PChartExtra } from "./marshal/pacer";
 import * as ModChartJs from "./marshal/chartjs";
 import * as ModUtils from "./utils";
 import { ChartElement, ChartElements } from "./theme";
+import { ThemeConfig } from "./theme";
 import * as ModTheme from "./theme";
 
 async function getChartsJson(): Promise<PCharts> {
@@ -77,10 +78,15 @@ const chartDivs: Map<number, [string, HTMLDivElement]> = new Map([]);
 
 function main(pacerCharts: PCharts) {
   // setup themes
-  const initThemeName = "dark";
-  const themeResult = ModTheme.setup(initThemeName);
-  const allThemes = themeResult[0];
-  const themeSelector = themeResult[1];
+  let themeConfig: ThemeConfig = null;
+  if (pacerCharts.theme != null) {
+    themeConfig = pacerCharts.theme;
+  }
+
+  const themeResult = ModTheme.setup(themeConfig);
+  const initThemeName = themeResult[0];
+  const allThemes = themeResult[1];
+  const themeSelector = themeResult[2];
   const initTheme = allThemes.get(initThemeName);
 
   const chartContainer = getChartContainer();

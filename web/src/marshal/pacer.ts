@@ -1,4 +1,5 @@
 import { YAxesT, YAxisId, YAxisLabel, YAxisType } from "./common";
+import { ThemeConfig } from "../theme";
 
 /**
  * This file contains types sent from pacer i.e. the haskell backend.
@@ -13,6 +14,7 @@ import { YAxesT, YAxisId, YAxisLabel, YAxisType } from "./common";
  */
 type PCharts = {
   charts: PChart[];
+  theme?: ThemeConfig;
 };
 
 /**

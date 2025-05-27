@@ -1,5 +1,10 @@
 import { Chart, ChartOptions } from "chart.js";
 
+type ThemeConfig = {
+  default?: ThemeKey;
+  themes?: Theme[];
+};
+
 type Color = string;
 
 // This should probably just be a function that takes an enum themeName
@@ -8,24 +13,24 @@ type Color = string;
 type Theme = {
   background: Color;
   grid: Color;
-  name: "light" | "dark";
+  name: "Light" | "Dark";
   selectorBorderColor: Color;
   text: Color;
   tooltipBackground: Color;
   tooltip: Color;
 };
 
-type ThemeKey = "dark" | "light";
+type ThemeKey = string;
 
-type ThemeMap = Map<ThemeKey, Theme>;
+type ThemeMap = Map<string, Theme>;
 
 const themeMap: ThemeMap = new Map([
   [
-    "dark",
+    "Dark",
     {
       background: "#191b1c",
       grid: "#3d3d3d",
-      name: "dark",
+      name: "Dark",
       selectorBorderColor: "#495057",
       text: "#c3c3c3",
       tooltipBackground: "rgba(204, 204, 204, 0.75)",
@@ -33,11 +38,11 @@ const themeMap: ThemeMap = new Map([
     },
   ],
   [
-    "light",
+    "Light",
     {
       background: "#e6e7ed",
       grid: "#828aad",
-      name: "light",
+      name: "Light",
       selectorBorderColor: "#343b59",
       text: "#343b59",
       tooltipBackground: "rgba(0, 0, 0, 0.75)",
@@ -151,25 +156,49 @@ function getThemeSelector(): HTMLSelectElement {
   return <HTMLSelectElement>document.getElementById("theme-selector");
 }
 
-// TODO: If we ever support custom themes, they will probably be included
-// here as a param.
-function setup(selected: ThemeKey): [ThemeMap, HTMLSelectElement] {
-  // populate selector.
+function initialThemeKey(config: ThemeConfig): ThemeKey {
+  if (config.default != null) {
+    return config.default;
+  } else {
+    return "Dark";
+  }
+}
+
+function userThemes(config: ThemeConfig): Theme[] {
+  if (config.themes != null) {
+    return config.themes;
+  } else {
+    return [];
+  }
+}
+
+function setup(config: ThemeConfig): [ThemeKey, ThemeMap, HTMLSelectElement] {
   const themeSelector = getThemeSelector();
   const allThemes = themeMap;
+
+  // add user themes.
+  userThemes(config).forEach((t) => {
+    allThemes.set(t.name, t);
+  });
+
+  // get selected.
+  const selected = initialThemeKey(config);
+
+  // populate selector.
   addThemesToUI(selected, themeSelector, allThemes);
 
   // set global css values.
   const selectedTheme = allThemes.get(selected);
   setGlobalStyleProps(selectedTheme);
 
-  return [allThemes, themeSelector];
+  return [selected, allThemes, themeSelector];
 }
 
 export {
   ChartElement,
   ChartElements,
   Theme,
+  ThemeConfig,
   ThemeKey,
   ThemeMap,
   addThemeBtnOnClick,

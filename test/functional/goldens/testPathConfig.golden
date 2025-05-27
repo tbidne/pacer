@@ -236,6 +236,20 @@ build/charts.json
       "extra": {},
       "title": "Running and Cycling"
     }
-  ]
+  ],
+  "theme": {
+    "default": "Pink",
+    "themes": [
+      {
+        "background": "#320054",
+        "grid": "#ff49dc",
+        "name": "Pink",
+        "selectorBackgroundColor": "#ff49dc",
+        "text": "#ff49dc",
+        "tooltip": "#ff49dc",
+        "tooltipBackground": "#320054"
+      }
+    ]
+  }
 }
 

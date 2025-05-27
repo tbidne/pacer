@@ -6,6 +6,7 @@ module Pacer.Utils
 
     -- ** Encoding
     encodeMaybe,
+    encodeMonoid,
     encodeMaybes,
     encodePretty,
 
@@ -80,6 +81,14 @@ import Pacer.Prelude
 -- | Encodes 'Maybe's to a possibly empty list.
 encodeMaybes :: (ToJSON v) => List (Tuple2 Key (Maybe v)) -> List Pair
 encodeMaybes = (>>= encodeMaybe)
+
+-- | Encodes a 'Monoid' to a possibly empty list.
+encodeMonoid :: (Eq v, Monoid v, ToJSON v) => Tuple2 Key v -> List Pair
+encodeMonoid = encodeMaybe . second toMaybe
+  where
+    toMaybe x
+      | x == mempty = Nothing
+      | otherwise = Just x
 
 -- | Encodes a 'Maybe' to a possibly empty list.
 encodeMaybe :: (ToJSON v) => Tuple2 Key (Maybe v) -> List Pair

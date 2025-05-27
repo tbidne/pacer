@@ -7,6 +7,23 @@
   "filters": [
 
   ],
+  // Optional theme configuration.
+  "theme": {
+    // We can select the default theme.
+    "default": "Pink",
+    // We can also add custom themes.
+    "themes": [
+      {
+        "name": "Pink",
+        "background": "#320054",
+        "grid": "#ff49dc",
+        "selectorBorderColor": "#ff49dc",
+        "text": "#ff49dc",
+        "tooltipBackground": "#320054",
+        "tooltip": "#ff49dc"
+      }
+    ]
+  },
   "charts": [
     {
       "title": "Activities by distance",

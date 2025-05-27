@@ -182,4 +182,20 @@ MkChartRequests
   , filters = []
   , garminSettings = Just
     ( MkGarminSettings { distanceUnit = Just Kilometer } )
+  , themeConfig = Just
+    ( MkChartThemeConfig
+      { defaultTheme = Just "Pink"
+      , themes =
+        [ MkChartTheme
+          { background = "#320054"
+          , grid = "#ff49dc"
+          , name = "Pink"
+          , selectorBorderColor = "#ff49dc"
+          , text = "#ff49dc"
+          , tooltipBackground = "#320054"
+          , tooltip = "#ff49dc"
+          }
+        ]
+      }
+    )
   }
