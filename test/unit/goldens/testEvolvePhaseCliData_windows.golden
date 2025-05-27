@@ -6,4 +6,5 @@ MkChartParams
   , chartRequestsPath = "C:\root\cli-data\chart-requests.json"
   , dataDir = ()
   , json = False
+  , port = 3000
   }

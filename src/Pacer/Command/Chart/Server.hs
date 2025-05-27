@@ -1,0 +1,98 @@
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
+-- | Chart functionality.
+module Pacer.Command.Chart.Server
+  ( launchServer,
+
+    -- * Effect
+    ServerEff (..),
+    run,
+
+    -- ** Handlers
+    runServerEff,
+    runServerEffMock,
+  )
+where
+
+import Effectful.Logger.Dynamic qualified as Logger
+import FileSystem.OsPath (decodeThrowM)
+import Network.Wai.Handler.Warp (Port)
+import Network.Wai.Handler.Warp qualified as Warp
+import Pacer.Command.Chart.Data.Chart (Charts)
+import Pacer.Prelude
+import Servant
+  ( Application,
+    Get,
+    JSON,
+    Raw,
+    (:<|>) ((:<|>)),
+  )
+import Servant qualified as Servant
+import System.IO (FilePath)
+
+-- To avoid effectful clash.
+type (::>) :: forall k. k -> Type -> Type
+type k ::> a = k Servant.:> a
+
+-- | Endpoints used by the frontend.
+type Api =
+  "health" ::> Get '[JSON] Text
+    :<|> "charts" ::> Get '[JSON] Charts
+
+-- | Total API, including the raw static assets.
+type WebApi = "api" ::> Api :<|> Raw
+
+-- | staticDir should be an absolute path to the xdg_cache/web/dist directory.
+-- Morally it is @Path Abs Dir@, though we resort to FilePath since that's
+-- what serveDirectoryFileServer uses, and we don't want to deserialize here.
+mkApp :: FilePath -> Charts -> Application
+mkApp staticDir charts = Servant.serve webApi server
+  where
+    server = serveApi :<|> Servant.serveDirectoryFileServer staticDir
+
+    serveApi = pure "Pacer is up!" :<|> pure charts
+
+    webApi :: Proxy WebApi
+    webApi = Proxy
+
+launchServer ::
+  ( HasCallStack,
+    Logger :> es,
+    LoggerNS :> es,
+    ServerEff :> es
+  ) =>
+  Word16 ->
+  Path Abs Dir ->
+  Charts ->
+  Eff es ()
+launchServer port webDistPath charts = addNamespace "launchServer" $ do
+  $(Logger.logInfo) msg
+  webDistStr <- decodeThrowM (toOsPath webDistPath)
+
+  run portInt (mkApp webDistStr charts)
+  where
+    msg =
+      mconcat
+        [ "Serving charts on http://localhost:",
+          showt portInt,
+          ". Please open your browser 🙂."
+        ]
+    portInt = fromIntegral @Word16 @Int port
+
+data ServerEff :: Effect where
+  Run :: Port -> Application -> ServerEff m ()
+
+type instance DispatchOf ServerEff = Dynamic
+
+runServerEff :: (IOE :> es) => Eff (ServerEff : es) a -> Eff es a
+runServerEff = interpret_ $ \case
+  Run p a -> liftIO $ Warp.run p a
+
+runServerEffMock :: Eff (ServerEff : es) a -> Eff es a
+runServerEffMock = interpret_ $ \case
+  Run _ _ -> pure ()
+
+run :: (HasCallStack, ServerEff :> es) => Port -> Application -> Eff es ()
+run p = send . Run p

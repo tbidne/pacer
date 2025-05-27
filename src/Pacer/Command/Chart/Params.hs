@@ -42,6 +42,7 @@ import Pacer.Configuration.Env.Types (CachedPaths, getCachedXdgConfigPath)
 import Pacer.Configuration.Env.Types qualified as Types
 import Pacer.Configuration.Phase
   ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
+    ConfigPhaseF,
   )
 import Pacer.Exception
   ( ChartFileMissingE
@@ -116,7 +117,7 @@ data ChartParams p = MkChartParams
     activityPaths :: ActivityPathsF p,
     -- | Build directory.
     buildDir :: BuildDirF p,
-    -- | If true, copies clean install of web dir and installs node deps.
+    -- | If true, copies clean install of web dir.
     cleanInstall :: Bool,
     -- | Optional path to chart-requests.json.
     chartRequestsPath :: PathF p File,
@@ -124,7 +125,9 @@ data ChartParams p = MkChartParams
     dataDir :: PathF p Dir,
     -- | If true, stops the build after generating the intermediate json
     -- file.
-    json :: Bool
+    json :: Bool,
+    -- | Port the server runs on.
+    port :: ConfigPhaseF p Word16
   }
 
 type ChartParamsArgs = ChartParams ConfigPhaseArgs
@@ -134,6 +137,7 @@ type ChartParamsFinal = ChartParams ConfigPhaseFinal
 deriving stock instance
   ( Eq (ActivityPathsF p),
     Eq (BuildDirF p),
+    Eq (ConfigPhaseF p Word16),
     Eq (MPathF p File),
     Eq (PathF p Dir),
     Eq (PathF p File)
@@ -143,6 +147,7 @@ deriving stock instance
 deriving stock instance
   ( Show (ActivityPathsF p),
     Show (BuildDirF p),
+    Show (ConfigPhaseF p Word16),
     Show (MPathF p File),
     Show (PathF p Dir),
     Show (PathF p File)
@@ -184,6 +189,8 @@ evolvePhase @es params mConfigWithPath = do
             Nothing -> defaultBuildDir
         Nothing -> defaultBuildDir
 
+  let port = fromMaybe 3000 params.port
+
   pure
     $ MkChartParams
       { activityLabelsPath,
@@ -192,7 +199,8 @@ evolvePhase @es params mConfigWithPath = do
         cleanInstall = params.cleanInstall,
         chartRequestsPath,
         dataDir = (),
-        json = params.json
+        json = params.json,
+        port
       }
   where
     defaultBuildDir :: Eff es (Path Abs Dir)

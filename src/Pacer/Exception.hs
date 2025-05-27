@@ -4,7 +4,6 @@ module Pacer.Exception
     CreateChartE (..),
     FileNotFoundE (..),
     GarminE (..),
-    NpmE (..),
 
     -- ** Commands
     CommandConvertE (..),
@@ -15,7 +14,6 @@ where
 
 import Data.List qualified as L
 import FileSystem.OsPath (decodeLenient)
-import FileSystem.UTF8 (decodeUtf8Lenient)
 import GHC.TypeLits (symbolVal)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
@@ -168,20 +166,6 @@ instance Exception ChartFileMissingE where
 
       displayDir Nothing = ""
       displayDir (Just d) = "\n - " <> decodeLenient d
-
-data NpmE = MkNpmE OsPath (List String) Int LazyByteString
-  deriving stock (Show)
-
-instance Exception NpmE where
-  displayException (MkNpmE exeName args i t) =
-    mconcat
-      [ "Command '",
-        L.unwords (decodeLenient exeName : args),
-        "' exited with error code ",
-        show i,
-        ": ",
-        unpackText $ decodeUtf8Lenient $ toStrictBS t
-      ]
 
 -- | Garmin exceptions.
 data GarminE

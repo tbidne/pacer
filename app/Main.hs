@@ -6,6 +6,7 @@ module Main (main) where
 import Control.Exception.Annotation.Utils
   ( setIgnoreKnownCallStackHandler,
   )
+import Pacer.Command.Chart.Server (runServerEff)
 import Pacer.Driver qualified as Driver
 import Pacer.Prelude hiding (IO, putStrLn)
 import System.IO (IO)
@@ -27,6 +28,6 @@ main = do
         . runOptparse
         . runPathReader
         . runPathWriter
+        . runServerEff
         . runTerminal
         . runTime
-        . runTypedProcess

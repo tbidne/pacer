@@ -6,4 +6,5 @@ MkChartParams
   , chartRequestsPath = "/root/xdg/config/pacer/chart-requests.json"
   , dataDir = ()
   , json = False
+  , port = 3000
   }

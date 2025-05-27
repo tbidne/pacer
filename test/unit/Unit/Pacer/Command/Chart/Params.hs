@@ -575,7 +575,8 @@ baseChartParams =
       dataDir = Nothing,
       json = False,
       activityLabelsPath = Nothing,
-      activityPaths = []
+      activityPaths = [],
+      port = Nothing
     }
 
 baseConfig :: Config

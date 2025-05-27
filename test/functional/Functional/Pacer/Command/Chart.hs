@@ -363,10 +363,3 @@ testPathConfig getTestDir = testGoldenParams getTestDir params
 
     buildDir p = unsafeDecode $ p </> [osp|build|]
     configPath = unsafeDecode [ospPathSep|examples/config.jsonc|]
-
--- TODO: Would be nice to have an e2e test for chart generation i.e. actually
--- invoke node and generate a real html page.
---
--- We do this in CI but it would be nice to have a test here. It would need
--- to be guarded since it requires npm, and we cannot use the existing
--- golden framework since that mocks file writing.

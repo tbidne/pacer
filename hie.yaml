@@ -13,6 +13,9 @@ cradle:
     - path: "test/functional"
       component: "pacer:test:functional"
 
+    - path: "test/e2e"
+      component: "pacer:test:e2e"
+
     - path: "bench/utils"
       component: "pacer:lib:bench-utils"
 

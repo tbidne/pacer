@@ -38,6 +38,7 @@ import Pacer.Command
 import Pacer.Command qualified as Command
 import Pacer.Command.Chart qualified as Chart
 import Pacer.Command.Chart.Data.Activity (ActivityDatetimeOverlapE)
+import Pacer.Command.Chart.Server (ServerEff)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
@@ -66,9 +67,9 @@ runApp ::
     Optparse :> es,
     PathReader :> es,
     PathWriter :> es,
+    ServerEff :> es,
     Terminal :> es,
-    Time :> es,
-    TypedProcess :> es
+    Time :> es
   ) =>
   Eff es ()
 runApp = withEnv runCommand
@@ -80,9 +81,9 @@ runCommand ::
     FileWriter :> es,
     PathReader :> es,
     PathWriter :> es,
+    ServerEff :> es,
     Terminal :> es,
-    Time :> es,
-    TypedProcess :> es
+    Time :> es
   ) =>
   Env ->
   Eff es ()
@@ -326,6 +327,5 @@ knownExceptions =
     MkExceptionProxy @PacerEx.CreateChartE,
     MkExceptionProxy @PacerEx.FileNotFoundE,
     MkExceptionProxy @PacerEx.GarminE,
-    MkExceptionProxy @PacerEx.NpmE,
     MkExceptionProxy @ActivityDatetimeOverlapE
   ]

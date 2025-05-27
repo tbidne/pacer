@@ -15,7 +15,8 @@ import Pacer.Command.Chart.Params
         chartRequestsPath,
         cleanInstall,
         dataDir,
-        json
+        json,
+        port
       ),
     ChartParamsArgs,
   )
@@ -32,6 +33,7 @@ parser = do
   cleanInstall <- cleanInstallParser
   dataDir <- dataDirParser
   json <- jsonParser
+  port <- portParser
 
   pure
     $ MkChartParams
@@ -41,14 +43,19 @@ parser = do
         dataDir,
         json,
         activityLabelsPath,
-        activityPaths
+        activityPaths,
+        port
       }
 
 mBuildDirPath :: Parser (Maybe OsPath)
 mBuildDirPath =
   mOsPathParser Nothing "build-dir" "PATH" helpTxt
   where
-    helpTxt = "Optional path to build directory. Defaults to ./build."
+    helpTxt =
+      mconcat
+        [ "Optional path to build directory, used with --json. Defaults ",
+          "to ./build."
+        ]
 
 mChartRequestsParser :: Parser (Maybe OsPath)
 mChartRequestsParser =
@@ -131,3 +138,15 @@ cleanInstallParser =
           Utils.mkHelp "If active, cleans prior build files."
         ]
     )
+
+portParser :: Parser (Maybe Word16)
+portParser =
+  OA.optional
+    $ OA.option
+      OA.auto
+      ( mconcat
+          [ OA.short 'p',
+            OA.long "port",
+            Utils.mkHelp "Port upon which the server runs. Defaults to 3000."
+          ]
+      )

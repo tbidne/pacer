@@ -27,7 +27,7 @@ import Pacer.Command.Scale.Args qualified as Scale
 import Pacer.Command.Scale.Params qualified as Scale
 import Pacer.Configuration.Config (ConfigWithPath)
 import Pacer.Configuration.Env.Types (CachedPaths)
-import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
+import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal), ConfigPhaseF)
 import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 
@@ -52,6 +52,7 @@ deriving stock instance
     Eq (Derive.DeriveQuantityF p a),
     Eq (Chart.ActivityPathsF p),
     Eq (Chart.BuildDirF p),
+    Eq (ConfigPhaseF p Word16),
     Eq (Chart.MPathF p File),
     Eq (Chart.PathF p Dir),
     Eq (Chart.PathF p File),
@@ -65,6 +66,7 @@ deriving stock instance
     Show (Derive.DeriveQuantityF p a),
     Show (Chart.ActivityPathsF p),
     Show (Chart.BuildDirF p),
+    Show (ConfigPhaseF p Word16),
     Show (Chart.MPathF p File),
     Show (Chart.PathF p Dir),
     Show (Chart.PathF p File),
@@ -113,7 +115,8 @@ parser =
       Utils.mkCommandDesc
         $ mconcat
           [ "Generates charts based on a chart-requests file and an ",
-            "activites file(s). Requires npm to be installed."
+            "activites file(s). Runs a web-server that serves the charts ",
+            "on localhost."
           ]
     convertTxt =
       Utils.mkCommandDesc

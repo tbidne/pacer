@@ -7,3 +7,7 @@ cabal.project.local
 
 # stack
 /.stack-work
+
+# web
+/web/dist
+/web/node_modules

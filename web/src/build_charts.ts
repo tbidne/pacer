@@ -1,9 +1,13 @@
-import * as charts from "../data/charts.json";
 import { PCharts, PChartExtra } from "./marshal/pacer";
 import * as ModChartJs from "./marshal/chartjs";
 import * as ModUtils from "./utils";
 import { ChartElement, ChartElements } from "./theme";
 import * as ModTheme from "./theme";
+
+async function getChartsJson(): Promise<PCharts> {
+  const response = await fetch("/api/charts");
+  return await response.json();
+}
 
 function handleExtra(
   chartDiv: HTMLDivElement,
@@ -63,13 +67,6 @@ function addChartSelectorOnClick(selector: HTMLSelectElement): void {
 }
 
 /**
- * We widen charts to PCharts since if charts.json does not have any
- * charts with a y1 axis, ts will infer the y1 prop does not exist,
- * hence the y1 access will fail.
- */
-const pacerCharts = charts as PCharts;
-
-/**
  * Map from index to chart div. We use this to change the chart visibility,
  * when a new option is selected.
  *
@@ -78,7 +75,7 @@ const pacerCharts = charts as PCharts;
  */
 const chartDivs: Map<number, [string, HTMLDivElement]> = new Map([]);
 
-function main() {
+function main(pacerCharts: PCharts) {
   // setup themes
   const initThemeName = "dark";
   const themeResult = ModTheme.setup(initThemeName);
@@ -129,4 +126,4 @@ function main() {
   }
 }
 
-main();
+getChartsJson().then(main);

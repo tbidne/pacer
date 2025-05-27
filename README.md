@@ -23,9 +23,11 @@
   - [Scale](#scale)
 - [Installation](#installation)
 - [Building](#building)
-  - [Cabal](#cabal)
-  - [Stack](#stack)
-  - [Nix](#nix)
+  - [Frontend](#frontend)
+  - [Backend](#backend)
+    - [Cabal](#cabal)
+    - [Stack](#stack)
+    - [Nix](#nix)
 - [FAQ](#faq)
 
 # Introduction
@@ -40,24 +42,12 @@ Pacer is a CLI application for runners. Pacer offers roughly two different servi
 
 ## Chart
 
-The `chart` command generates a `build` directory that contains an html file with charts.
-
-```
-build/
-├── bundle.js
-└── index.html
-
-1 directory, 2 files
-```
+The `chart` command generates graphical chart data and runs a web server that displays this data in the browser, by default on `localhost:3000`.
 
 Charts are generated from two inputs:
 
 - An `activities` file(s) (`json` or garmin `csv`), containing a list of all activities the user may want to chart. Multiple files will be combined.
 - A `chart-requests.json` file, that determines how to construct the chart(s). The html page will contain a chart for each request in the file.
-
-> [!IMPORTANT]
->
-> The `chart` command requires `npm` (nodejs) to be installed: https://nodejs.org/en/download
 
 ### Examples
 
@@ -67,7 +57,7 @@ Building the example here i.e.
 $ pacer chart --data examples/
 ```
 
-will generate an html page with several charts like this one:
+will run a server displaying several charts like this one:
 
 ![example_chart](examples/chart.png)
 
@@ -155,12 +145,40 @@ The [releases](https://github.com/tbidne/pacer/releases) page has binaries built
 
 # Building
 
-If you have never built a haskell program before, [Cabal](#cabal) is probably the best choice.
-
-## Cabal
+## Frontend
 
 ### Prerequisites
 
+* [`nodejs 22+`](https://nodejs.org/en/download)
+
+### Building
+
+Once you have `nodejs`, the frontend can be built from the `web/` directory:
+
+```
+# Change to the web directory
+$ cd web
+
+# Install nodejs dependencies
+$ npm install --save
+
+# Build frontend
+$ npm run build
+```
+
+## Backend
+
+If you have never built a haskell program before, [Cabal](#cabal) is probably the best choice.
+
+> [!WARNING]
+>
+> With the exception of [`nix`](#nix), building the backend requires that the [`frontend`](#frontend) is built first.
+
+### Cabal
+
+#### Prerequisites
+
+* [`frontend`](#frontend)
 * [`cabal 2.4+`](https://www.haskell.org/cabal/download.html)
 * [`ghc 9.10 - 9.12`](https://gitlab.haskell.org/ghc/ghc/-/wikis/GHC%20Status)
 
@@ -168,7 +186,7 @@ The easiest way to install these is generally [`ghcup`](https://www.haskell.org/
 
 The current "blessed" version is `ghc-9.10.1`.
 
-### Build Pacer
+#### Build Pacer
 
 Once you have `cabal` and `ghc`, `pacer` can be built locally with `cabal build` or installed globally (e.g. `~/.local/bin/pacer`) with `cabal install`.
 
@@ -178,31 +196,32 @@ For further reproducibility, an optional freeze file can be used for the "blesse
 cabal build --project-file cabal.ghc<XYZ>.project
 ```
 
-## Stack
+### Stack
 
-### Prerequisites
+#### Prerequisites
 
+* [`frontend`](#frontend)
 * [`stack`](https://docs.haskellstack.org/en/stable/)
 
 Like `cabal` and `ghc`, `stack` can be installed with [`ghcup`](https://www.haskell.org/ghcup/).
 
-### Build Pacer
+#### Build Pacer
 
 Once you have `stack`, `pacer` can be built with `stack build` or installed globally (i.e. `~/.local/bin/pacer`) with `stack install`.
 
-## Nix
+### Nix
 
-### Prerequisites
+#### Prerequisites
 
 * [nix](https://nixos.org/download.html)
-
-> [!TIP]
->
-> The nix build comes packaged with `node`, so there is no need to install it separately to use the `chart` command.
 
 ### Manually
 
 Building with `nix` uses [flakes](https://nixos.wiki/wiki/Flakes). `pacer` can be built with `nix build`, which will compile and run the tests.
+
+> [!TIP]
+>
+> Nix will automatically build the [frontend](#frontend), so there is no need to manually invoke `nodejs`.
 
 ### Nix expression
 

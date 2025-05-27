@@ -115,7 +115,6 @@
                 "optparse-effectful"
                 "terminal-effectful"
                 "time-effectful"
-                "typed-process-dynamic-effectful"
               ];
           };
           compilerPkgs = {
@@ -126,6 +125,18 @@
             mkDrv = false;
           };
           node = pkgs.nodejs_22;
+
+          # Overriding buildNpmPackage just so we can explicitly set the
+          # nodejs version. Make sure this doesn't hurt caching.
+          buildNpmPackage = pkgs.buildNpmPackage.override {
+            nodejs = node;
+          };
+
+          frontend = buildNpmPackage {
+            name = "frontend";
+            src = ./web;
+            npmDepsHash = "sha256-YnxX/dwzsOLIb1o34yRawSfVFzMDbXZ45REQiFit05I=";
+          };
 
           mkPkg =
             returnShellEnv:
@@ -141,23 +152,19 @@
                   PACER_MODIFIED = "${builtins.toString self.lastModified}";
                   PACER_SHORT_HASH = "${self.shortRev or self.dirtyShortRev}";
 
-                  # We have makeWrapper so wrapProgram is available in
-                  # postFixup. Git is needed to run the tests (git diff).
-                  nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ [
-                    pkgs.git
-                    pkgs.makeWrapper
-                  ];
-
-                  # This is apparently unnecessary, but knowing what version of
-                  # node pacer is using could be helpful.
-                  installPhase =
-                    oldAttrs.installPhase
-                    + ''
-                      ln -s ${node.out}/bin/npm $out/bin/npm
-                    '';
-                  postFixup = ''
-                    wrapProgram $out/bin/pacer --prefix PATH : ${pkgs.lib.makeBinPath webDeps}
+                  # The haskell exe requires the nodejs generated dist/* files
+                  # at build time. Hence we have to build them first then copy
+                  # them over.
+                  postUnpack = ''
+                    mkdir -p $sourceRoot/web/dist
+                    cp ${frontend}/lib/node_modules/pacer/dist/* $sourceRoot/web/dist
                   '';
+
+                  # Git is needed to run the tests (git diff).
+                  nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ [
+                    frontend
+                    pkgs.git
+                  ];
                 });
 
               # TODO: Once hlint is back to working with our GHC we can
@@ -181,17 +188,19 @@
           webDeps = [ node ];
         in
         {
-          packages.default = mkPkg false;
+          packages = {
+            inherit frontend;
+            default = mkPkg false;
+
+            # This enables the e2e tests. Note that it currently fails, due
+            # to trying to write to the home directory.
+            e2e = (mkPkg false).overrideAttrs {
+              RUN_E2E = "1";
+            };
+          };
 
           devShells = {
             default = mkPkg true;
-
-            # Blank shell intended to be used with --unset PATH, to test that
-            # we are correctly bundling node dep (default github image has
-            # node, but we want to ensure we are using __our__ dep).
-            ci = pkgs.mkShell {
-              buildInputs = [ ];
-            };
 
             stack = pkgs.mkShell {
               buildInputs = [

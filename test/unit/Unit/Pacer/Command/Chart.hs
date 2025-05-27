@@ -3,7 +3,6 @@
 
 module Unit.Pacer.Command.Chart (tests) where
 
-import Control.Exception (IOException)
 import Data.Char qualified as Ch
 import Data.IORef qualified as Ref
 import Data.List qualified as L
@@ -12,7 +11,6 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
-import Data.Text qualified as T
 import Effectful.FileSystem.FileReader.Dynamic (FileReader (ReadBinaryFile))
 import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
 import Effectful.FileSystem.PathReader.Dynamic
@@ -38,10 +36,6 @@ import Effectful.FileSystem.PathWriter.Dynamic
       ),
   )
 import Effectful.Logger.Dynamic (Logger (LoggerLog))
-import Effectful.Process.Typed.Dynamic
-  ( ProcessConfig,
-    TypedProcess (ReadProcess),
-  )
 import Effectful.Terminal.Dynamic (Terminal (PutStr, PutStrLn))
 import FileSystem.IO (readBinaryFileIO)
 import FileSystem.OsPath (decodeLenient)
@@ -78,6 +72,7 @@ import Pacer.Command.Chart.Params
     ChartParamsArgs,
   )
 import Pacer.Command.Chart.Params qualified as ChartParams
+import Pacer.Command.Chart.Server (ServerEff, runServerEffMock)
 import Pacer.Configuration.Env.Types
   ( CachedPaths,
     LogEnv
@@ -91,7 +86,6 @@ import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
 import Pacer.Data.Distance qualified as D
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Utils qualified as U
-import System.Exit (ExitCode (ExitSuccess))
 import System.OsPath qualified as OsPath
 import System.OsString qualified as OsString
 import Test.Tasty.HUnit (assertEqual)
@@ -111,8 +105,7 @@ createChartTests :: TestTree
 createChartTests =
   testGroup
     "createCharts"
-    [ createChartSuccessTests,
-      createChartFailureTests
+    [ createChartSuccessTests
     ]
 
 createChartSuccessTests :: TestTree
@@ -121,14 +114,13 @@ createChartSuccessTests =
     "Happy paths"
     [ testDefault,
       testJson,
-      testPathNodeModExists,
-      testPathNodeModExistsClean
+      testClean
     ]
 
 testDefault :: TestTree
 testDefault = testCase "Default" $ do
   refsEnv <- runCreateCharts coreEnv params
-  assertEnvRefs refsEnv [1, 1, 1, 0, 1, 1]
+  assertEnvRefs refsEnv [0, 0, 1, 1]
   where
     params =
       MkChartParams
@@ -138,19 +130,18 @@ testDefault = testCase "Default" $ do
           json = False,
           chartRequestsPath = Nothing,
           activityLabelsPath = Nothing,
-          activityPaths = []
+          activityPaths = [],
+          port = Nothing
         }
     coreEnv =
       MkCoreEnv
-        { cachedPaths = mempty,
-          nodeModulesExists = False,
-          npmExists = True
+        { cachedPaths = mempty
         }
 
 testJson :: TestTree
 testJson = testCase "With --json" $ do
   refsEnv <- runCreateCharts coreEnv params
-  assertEnvRefs refsEnv [1, 0, 0, 0, 0, 1]
+  assertEnvRefs refsEnv [1, 0, 0, 1]
   where
     params =
       MkChartParams
@@ -160,42 +151,18 @@ testJson = testCase "With --json" $ do
           json = True,
           chartRequestsPath = Nothing,
           activityLabelsPath = Nothing,
-          activityPaths = []
+          activityPaths = [],
+          port = Nothing
         }
     coreEnv =
       MkCoreEnv
-        { cachedPaths = mempty,
-          nodeModulesExists = False,
-          -- npm is False since it doesn't need to exist w/ --json
-          npmExists = False
+        { cachedPaths = mempty
         }
 
-testPathNodeModExists :: TestTree
-testPathNodeModExists = testCase "node_modules exists" $ do
+testClean :: TestTree
+testClean = testCase "With --clean" $ do
   refsEnv <- runCreateCharts coreEnv params
-  assertEnvRefs refsEnv [1, 1, 0, 0, 1, 1]
-  where
-    params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          dataDir = Nothing,
-          json = False,
-          chartRequestsPath = Nothing,
-          activityLabelsPath = Nothing,
-          activityPaths = []
-        }
-    coreEnv =
-      MkCoreEnv
-        { cachedPaths = mempty,
-          nodeModulesExists = True,
-          npmExists = True
-        }
-
-testPathNodeModExistsClean :: TestTree
-testPathNodeModExistsClean = testCase "With --clean" $ do
-  refsEnv <- runCreateCharts coreEnv params
-  assertEnvRefs refsEnv [15, 1, 1, 2, 1, 1]
+  assertEnvRefs refsEnv [2, 1, 1, 1]
   where
     params =
       MkChartParams
@@ -205,50 +172,12 @@ testPathNodeModExistsClean = testCase "With --clean" $ do
           json = False,
           chartRequestsPath = Nothing,
           activityLabelsPath = Nothing,
-          activityPaths = []
+          activityPaths = [],
+          port = Nothing
         }
     coreEnv =
       MkCoreEnv
-        { cachedPaths = mempty,
-          nodeModulesExists = True,
-          npmExists = True
-        }
-
-createChartFailureTests :: TestTree
-createChartFailureTests =
-  testGroup
-    "Failures"
-    [ testNoNpmFailure
-    ]
-
-testNoNpmFailure :: TestTree
-testNoNpmFailure = testCase "No npm failure" $ do
-  (refsEnv, ex) <- runCreateChartsEx @IOException coreEnv params
-
-  assertEnvRefs refsEnv [0, 0, 0, 0, 0, 1]
-  expectedErr @=? displayException ex
-  where
-    expectedErr =
-      mconcat
-        [ npmStr,
-          ": createCharts: does not exist (Required npm executable not ",
-          "found. Please add it to the PATH.)"
-        ]
-    params =
-      MkChartParams
-        { buildDir = Nothing,
-          cleanInstall = False,
-          dataDir = Nothing,
-          json = False,
-          chartRequestsPath = Nothing,
-          activityLabelsPath = Nothing,
-          activityPaths = []
-        }
-    coreEnv =
-      MkCoreEnv
-        { cachedPaths = mempty,
-          nodeModulesExists = False,
-          npmExists = False
+        { cachedPaths = mempty
         }
 
 assertEnvRefs :: RefsEnv -> List Word8 -> IO ()
@@ -260,8 +189,6 @@ assertEnvRefs refsEnv expecteds = do
 
     refs =
       [ ("numFileWriterCalls", refsEnv.numFileWriterCalls),
-        ("numNpmBuildCalls", refsEnv.numNpmBuildCalls),
-        ("numNpmInstallCalls", refsEnv.numNpmInstallCalls),
         ("numRemoveDirectoryCalls", refsEnv.numRemoveDirectoryCalls),
         ("numXdgCacheCalls", refsEnv.numXdgCacheCalls),
         ("numXdgConfigCalls", refsEnv.numXdgConfigCalls)
@@ -281,15 +208,11 @@ assertRefs xs = for_ xs $ \(desc, ref, expected) -> do
   assertEqual msg expected result
 
 data CoreEnv = MkCoreEnv
-  { cachedPaths :: CachedPaths,
-    nodeModulesExists :: Bool,
-    npmExists :: Bool
+  { cachedPaths :: CachedPaths
   }
 
 data RefsEnv = MkRefsEnv
   { numFileWriterCalls :: IORef Word8,
-    numNpmBuildCalls :: IORef Word8,
-    numNpmInstallCalls :: IORef Word8,
     numRemoveDirectoryCalls :: IORef Word8,
     numXdgCacheCalls :: IORef Word8,
     numXdgConfigCalls :: IORef Word8
@@ -341,7 +264,6 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     [osp|build|] -> pure False
     [osp|dist|] -> pure True
     [osp|pacer|] -> pure True
-    [osp|node_modules|] -> asks @ChartEnv (.coreEnv.nodeModulesExists)
     [osp|web|] -> pure True
     other -> do
       -- we need the current directory to return true, but it can be
@@ -376,24 +298,12 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
 
       knownFiles =
         Set.fromList
-          [ [osp|build_charts.ts|],
+          [ [osp|bundle.js|],
             [osp|chart-requests.json|],
             [osp|chart-requests.jsonc|],
-            [osp|chartjs.ts|],
-            [osp|common.ts|],
             [osp|index.html|],
-            [osp|index.ts|],
-            [osp|pacer.ts|],
-            [osp|package.json|],
-            [osp|package-lock.json|],
             [osp|activities.json|],
-            [osp|activities.jsonc|],
-            [osp|style.css|],
-            [osp|theme.ts|],
-            [osp|tsconfig.json|],
-            [osp|types.ts|],
-            [osp|utils.ts|],
-            [osp|webpack.config.js|]
+            [osp|activities.jsonc|]
           ]
       knownMissingFiles =
         Set.fromList
@@ -407,14 +317,6 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
             [osp|chart_requests.jsonc|]
           ]
   FindExecutable p -> case p of
-    [osp|npm|] ->
-      asks @ChartEnv (.coreEnv.npmExists) <&> \case
-        True -> Just [osp|npm_exe|]
-        False -> Nothing
-    [osp|npm.cmd|] ->
-      asks @ChartEnv (.coreEnv.npmExists) <&> \case
-        True -> Just [osp|npm_exe|]
-        False -> Nothing
     _ -> error $ "findExecutable: unexpected: " ++ show p
   GetCurrentDirectory -> PRS.getCurrentDirectory
   GetXdgDirectory xdg p -> case xdg of
@@ -450,7 +352,6 @@ runPathWriterMock ::
 runPathWriterMock = interpret_ $ \case
   CreateDirectory _ -> pure ()
   CreateDirectoryIfMissing _ _ -> pure ()
-  -- Needed when node_modules exists
   RemovePathForcibly _ -> incIORef (.refsEnv.numRemoveDirectoryCalls)
   SetCurrentDirectory _ -> pure ()
   other -> error $ "runPathWriterMock: unimplemented: " ++ (showEffectCons other)
@@ -465,27 +366,6 @@ runTerminalMock = interpret_ $ \case
   PutStrLn _ -> pure ()
   other -> error $ "runTerminalMock: unimplemented: " ++ (showEffectCons other)
 
-runTypedProcessMock ::
-  ( IORefE :> es,
-    Reader ChartEnv :> es
-  ) =>
-  Eff (TypedProcess : es) a ->
-  Eff es a
-runTypedProcessMock = interpret_ $ \case
-  ReadProcess pc -> case processConfigToCmd pc of
-    "Raw command: npm_exe install --save" ->
-      incIORef (.refsEnv.numNpmInstallCalls) $> mockResult
-    "Raw command: npm_exe run start" ->
-      incIORef (.refsEnv.numNpmBuildCalls) $> mockResult
-    other -> error $ "readProcess: unexpected: " ++ other
-  other -> error $ "runTypedProcessMock: unimplemented: " ++ (showEffectCons other)
-  where
-    processConfigToCmd :: ProcessConfig i o e -> String
-    processConfigToCmd = unpackText . T.strip . packText . show
-
-    mockResult :: (ExitCode, LazyByteString, LazyByteString)
-    mockResult = (ExitSuccess, "stdout", "stderr")
-
 incIORef ::
   ( IORefE :> es,
     Reader ChartEnv :> es
@@ -499,8 +379,8 @@ type TestEffects =
     FileWriter,
     PathReader,
     PathWriter,
+    ServerEff,
     Terminal,
-    TypedProcess,
     Logger,
     LoggerNS,
     IORefE,
@@ -519,8 +399,8 @@ runTestEff env m =
     . runIORef
     . runLoggerNS mempty
     . runLoggerMock
-    . runTypedProcessMock
     . runTerminalMock
+    . runServerEffMock
     . runPathWriterMock
     . runPathReaderMock
     . runFileWriterMock
@@ -540,8 +420,6 @@ runMockChartIO ::
   IO RefsEnv
 runMockChartIO coreEnv m = do
   numFileWriterCalls <- Ref.newIORef 0
-  numNpmBuildCalls <- Ref.newIORef 0
-  numNpmInstallCalls <- Ref.newIORef 0
   numRemoveDirectoryCalls <- Ref.newIORef 0
   numXdgCacheCalls <- Ref.newIORef 0
   numXdgConfigCalls <- Ref.newIORef 0
@@ -549,8 +427,6 @@ runMockChartIO coreEnv m = do
   let refsEnv =
         MkRefsEnv
           { numFileWriterCalls,
-            numNpmBuildCalls,
-            numNpmInstallCalls,
             numRemoveDirectoryCalls,
             numXdgCacheCalls,
             numXdgConfigCalls
@@ -564,53 +440,12 @@ runMockChartIO coreEnv m = do
   _ <- runTestEff env m
   pure refsEnv
 
-runMockChartIOEx ::
-  (Exception e) =>
-  CoreEnv ->
-  Eff TestEffects a ->
-  IO (Tuple2 RefsEnv e)
-runMockChartIOEx @e coreEnv m = do
-  numFileWriterCalls <- Ref.newIORef 0
-  numNpmBuildCalls <- Ref.newIORef 0
-  numNpmInstallCalls <- Ref.newIORef 0
-  numRemoveDirectoryCalls <- Ref.newIORef 0
-  numXdgCacheCalls <- Ref.newIORef 0
-  numXdgConfigCalls <- Ref.newIORef 0
-
-  let refsEnv =
-        MkRefsEnv
-          { numFileWriterCalls,
-            numNpmBuildCalls,
-            numNpmInstallCalls,
-            numRemoveDirectoryCalls,
-            numXdgCacheCalls,
-            numXdgConfigCalls
-          }
-      env =
-        MkChartEnv
-          { coreEnv,
-            refsEnv
-          }
-
-  eResult <- try @_ @e $ runTestEff env m
-  case eResult of
-    Left ex -> pure (refsEnv, ex)
-    Right _ -> assertFailure $ "Expected exception, received none"
-
 runCreateCharts :: CoreEnv -> ChartParamsArgs -> IO RefsEnv
 runCreateCharts coreEnv params = runMockChartIO coreEnv $ do
   params' <- ChartParams.evolvePhase params Nothing
-  Chart.createCharts $ params'
-
-runCreateChartsEx :: (Exception e) => CoreEnv -> ChartParamsArgs -> IO (RefsEnv, e)
-runCreateChartsEx coreEnv params = runMockChartIOEx coreEnv $ do
-  params' <- ChartParams.evolvePhase params Nothing
-  Chart.createCharts $ params'
-
-npmStr :: String
-npmStr = case currentOs of
-  Windows -> "npm.cmd"
-  _ -> "npm"
+  -- call handle since that is the actual entry point. createCharts
+  -- merely creates the Charts, for later file writing or serving.
+  Chart.handle $ params'
 
 -- NOTE: The Activities.csv file currently warns due to an activity (cycling)
 -- w/ distance 0.0. Previously this did nothing since we were throwing away

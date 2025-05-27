@@ -47,6 +47,12 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Build frontend
+        run: |
+          cd web
+          npm install --save
+          npm run build
+
       - name: Configure
         run: cabal configure ${{ matrix.ghc.proj_file }} --enable-tests --ghc-options -Werror
 
@@ -61,20 +67,9 @@ jobs:
         id: functional
         run: cabal test ${{ matrix.ghc.proj_file }} pacer:functional --test-options '--size-cutoff 100000'
 
-      - name: Generate charts html/hs
-
-        # TODO: [Testing html]
-        #
-        # It would be nice if we could test that the html page actually
-        # does what we want because it is possible for webpack to succeed yet
-        # the page is broken.
-        #
-        # It may be possible to require 0 console errors, though of course that
-        # could be overly restrictive.
-        run: |
-          cabal run pacer ${{ matrix.ghc.proj_file }} -- chart --data examples
-          # Let's test it overwrites successfully
-          cabal run pacer ${{ matrix.ghc.proj_file }} -- chart --data examples
+      - name: End to end tests
+        shell: bash
+        run: RUN_E2E=1 cabal test ${{ matrix.ghc.proj_file }} pacer:e2e
 
       - name: Complexity tests
         shell: bash
@@ -122,7 +117,13 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 23.x
+          node-version: 22.x
+
+      - name: Build frontend
+        run: |
+          cd web
+          npm install --save
+          npm run build
 
       - name: Build
         run: stack build --ghc-options -Werror
@@ -135,13 +136,9 @@ jobs:
         id: functional
         run: stack test pacer:test:functional --ghc-options -Werror
 
-      - name: Generate charts html/hs
-
-        # See TODO: [Testing html]
-        run: |
-          stack run pacer -- chart --data examples
-          # Let's test it overwrites successfully
-          stack run pacer -- chart --data examples
+      - name: End to end tests
+        shell: bash
+        run: RUN_E2E=1 stack test pacer:test:e2e --ghc-options -Werror
 
   nix:
     strategy:
@@ -162,10 +159,6 @@ jobs:
 
       - name: Compile & run tests
         run: nix build -L
-
-      # Enter dev shell w/o npm.
-      - name: Test executable
-        run: nix develop --unset PATH .#ci -c bash -c ".github/scripts/nix_test.sh"
 
   lint:
     runs-on: "ubuntu-latest"

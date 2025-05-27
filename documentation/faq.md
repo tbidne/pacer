@@ -10,8 +10,6 @@
   - [How does file discovery work?](#how-does-file-discovery-work)
   - [How do I use this with Garmin](#how-do-i-use-this-with-garmin)
   - [How do chart filters work?](#how-do-chart-filters-work)
-- [Running](#running)
-  - [What is NPM, and why do I need it?](#what-is-npm-and-why-do-i-need-it)
 
 ## General
 
@@ -559,17 +557,3 @@ xor
 > ```
 >
 > The clearest way to write an expression is a matter of taste.
-
-## Running
-
-### What is NPM, and why do I need it?
-
-[NPM](https://en.wikipedia.org/wiki/Npm) is the "node package manager", and the `chart` command requires it to be installed, since we use `node` to build the charts. See https://nodejs.org/en/download for installation instructions.
-
-To test installation, verify that `npm -v` works and returns some version:
-
-```
-# The version does not necessarily have to be the same.
-$ npm -v
-10.9.0
-```

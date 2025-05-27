@@ -95,6 +95,7 @@ library
     Pacer.Command.Chart.Data.Time.Timestamp.Internal
     Pacer.Command.Chart.Data.Time.Year
     Pacer.Command.Chart.Params
+    Pacer.Command.Chart.Server
     Pacer.Command.Convert
     Pacer.Command.Convert.Args
     Pacer.Command.Convert.Params
@@ -126,48 +127,49 @@ library
     Pacer.Web.Utils
 
   build-depends:
-    , aeson                            >=2.0      && <2.3
-    , aeson-pretty                     ^>=0.8.9
-    , algebra-simple                   ^>=0.1
-    , base                             >=4.20.0.0 && <4.22
-    , bytestring                       >=0.10.12  && <0.13
-    , cassava                          ^>=0.5.3.2
-    , containers                       >=0.6.3.1  && <0.9
-    , deepseq                          >=1.4.6.0  && <1.6
-    , effectful                        ^>=2.5.0.0
-    , effectful-utils                  ^>=0.1
-    , exception-utils                  ^>=0.1
-    , exceptions                       ^>=0.10.4
-    , filepath                         >=1.5      && <1.6
-    , fs-effectful                     ^>=0.1
-    , fs-utils                         ^>=0.1
-    , ghc-experimental                 >=0.1.0.0  && <9.1202
-    , gitrev-typed                     ^>=0.1
-    , hashable                         >=1.4.7.0  && <1.6
-    , ioref-effectful                  ^>=0.1
-    , logger-effectful                 ^>=0.1
-    , logger-ns-effectful              ^>=0.1
-    , megaparsec                       ^>=9.7.0
-    , nonempty-containers              >=0.3.4.2  && <0.4
-    , optics-core                      ^>=0.4
-    , optics-th                        ^>=0.4
-    , optparse-applicative             >=0.15     && <0.19
-    , optparse-effectful               ^>=0.1
-    , os-string                        ^>=2.0.0
-    , parser-combinators               ^>=1.3.0
-    , path                             ^>=0.9.6
-    , relative-time                    ^>=0.1
-    , singletons                       ^>=3.0.3
-    , smart-math                       ^>=0.1
-    , template-haskell                 >=2.21     && <2.24
-    , terminal-effectful               ^>=0.1
-    , text                             >=1.2.3.2  && <2.2
-    , text-builder-linear              ^>=0.1.3
-    , text-display                     ^>=1.0.0.0
-    , time                             >=1.9.3    && <1.15
-    , time-effectful                   ^>=0.1
-    , typed-process-dynamic-effectful  ^>=0.1
-    , unordered-containers             ^>=0.2.20
+    , aeson                 >=2.0      && <2.3
+    , aeson-pretty          ^>=0.8.9
+    , algebra-simple        ^>=0.1
+    , base                  >=4.20.0.0 && <4.22
+    , bytestring            >=0.10.12  && <0.13
+    , cassava               ^>=0.5.3.2
+    , containers            >=0.6.3.1  && <0.9
+    , deepseq               >=1.4.6.0  && <1.6
+    , effectful             ^>=2.5.0.0
+    , effectful-utils       ^>=0.1
+    , exception-utils       ^>=0.1
+    , exceptions            ^>=0.10.4
+    , filepath              >=1.5      && <1.6
+    , fs-effectful          ^>=0.1
+    , fs-utils              ^>=0.1
+    , ghc-experimental      >=0.1.0.0  && <9.1202
+    , gitrev-typed          ^>=0.1
+    , hashable              >=1.4.7.0  && <1.6
+    , ioref-effectful       ^>=0.1
+    , logger-effectful      ^>=0.1
+    , logger-ns-effectful   ^>=0.1
+    , megaparsec            ^>=9.7.0
+    , nonempty-containers   >=0.3.4.2  && <0.4
+    , optics-core           ^>=0.4
+    , optics-th             ^>=0.4
+    , optparse-applicative  >=0.15     && <0.19
+    , optparse-effectful    ^>=0.1
+    , os-string             ^>=2.0.0
+    , parser-combinators    ^>=1.3.0
+    , path                  ^>=0.9.6
+    , relative-time         ^>=0.1
+    , servant-server        ^>=0.20
+    , singletons            ^>=3.0.3
+    , smart-math            ^>=0.1
+    , template-haskell      >=2.21     && <2.24
+    , terminal-effectful    ^>=0.1
+    , text                  >=1.2.3.2  && <2.2
+    , text-builder-linear   ^>=0.1.3
+    , text-display          ^>=1.0.0.0
+    , time                  >=1.9.3    && <1.15
+    , time-effectful        ^>=0.1
+    , unordered-containers  ^>=0.2.20
+    , warp                  ^>=3.4.0
 
   hs-source-dirs:  src
 
@@ -214,21 +216,20 @@ test-suite unit
     , filepath
     , fs-effectful
     , fs-utils
-    , hedgehog                         >=1.0.2    && <1.6
+    , hedgehog             >=1.0.2    && <1.6
     , logger-effectful
     , nonempty-containers
     , os-string
     , pacer
-    , pretty-simple                    ^>=4.1.2.0
-    , tasty                            >=1.1.0.3  && <1.6
-    , tasty-golden                     ^>=2.3.1.1
-    , tasty-hedgehog                   >=1.0.0.2  && <1.5
-    , tasty-hunit                      >=0.9      && <0.11
+    , pretty-simple        ^>=4.1.2.0
+    , tasty                >=1.1.0.3  && <1.6
+    , tasty-golden         ^>=2.3.1.1
+    , tasty-hedgehog       >=1.0.0.2  && <1.5
+    , tasty-hunit          >=0.9      && <0.11
     , terminal-effectful
     , text
     , time
-    , typed-process-dynamic-effectful
-    , tz                               ^>=0.1.3.3
+    , tz                   ^>=0.1.3.3
 
   hs-source-dirs: test/unit
   ghc-options:    -threaded -with-rtsopts=-N
@@ -261,6 +262,22 @@ test-suite functional
     , text
 
   hs-source-dirs: test/functional
+  ghc-options:    -threaded
+
+test-suite e2e
+  import:         common-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , effectful
+    , env-guard
+    , http-client  >=0.5.9 && <0.8
+    , pacer
+    , tasty
+    , tasty-hunit
+
+  hs-source-dirs: test/e2e
   ghc-options:    -threaded
 
 library bench-utils

@@ -301,7 +301,6 @@ import Effectful.LoggerNS.Static as X
     runLoggerNS,
   )
 import Effectful.Optparse.Static as X (Optparse, execParser, runOptparse)
-import Effectful.Process.Typed.Dynamic as X (TypedProcess, runTypedProcess)
 import Effectful.Reader.Static as X (Reader, ask, asks, local, runReader)
 import Effectful.State.Static.Local as X
   ( State,
