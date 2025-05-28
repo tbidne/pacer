@@ -32,11 +32,16 @@ module Pacer.Utils
     ShowListBracketStyle (..),
 
     -- * File discovery
+    DirNotExistsHandler (..),
     SearchFiles (..),
     FileAliases (..),
     searchFiles,
+    DirExistsCheck (..),
     searchFileAliases,
     searchFilesToList,
+
+    -- ** Errors
+    DirNotFoundE (..),
 
     -- * Seq
     seqGroupBy,
@@ -314,6 +319,24 @@ decodeJson =
 
 infixl 9 .:?:
 
+-- | Exception for a directory not existing.
+newtype DirNotFoundE = MkDirNotFoundE OsPath
+  deriving stock (Show)
+
+instance Exception DirNotFoundE where
+  displayException (MkDirNotFoundE p) =
+    mconcat
+      [ "Directory not found: ",
+        decodeLenient p
+      ]
+
+-- | How to handle a directory not existing.
+data DirNotExistsHandler
+  = -- | Directory not required; inexistence OK.
+    DirNotExistsOk
+  | -- | Directory required; inexistence should error.
+    DirNotExistsFail
+
 -- | Attempts to discover files based on 'SearchFiles' i.e.
 -- "expected" filenames. For each search file @s@, produces a search result
 -- @r@ per 'searchFile', and combines the result via '(<|>)'.
@@ -329,26 +352,26 @@ searchFiles ::
   ) =>
   -- | File names to search.
   SearchFiles ->
+  -- | How to handle the directory not existing.
+  DirNotExistsHandler ->
   -- | Data dir to search.
   Path Abs Dir ->
   Eff es (f (Path Abs File))
-searchFiles fileNames dataDir = do
+searchFiles fileNames dner dataDir = do
   $(Logger.logDebug) msg
 
   dExists <- PR.doesDirectoryExist dataDirOsPath
 
   if dExists
     then go . NE.toList $ fileNames.unSearchFiles
-    else do
-      $(Logger.logDebug) $ mkDirNotExistMsg dataDir
-      pure empty
+    else handleEmptyDir dner dataDir
   where
     dataDirOsPath = toOsPath dataDir
 
     go :: (HasCallStack) => List FileAliases -> Eff es (f (Path Abs File))
     go [] = pure empty
     go (f : fs) = do
-      result <- searchFileAliases False dataDir f
+      result <- searchFileAliases DirExistsCheckOff dataDir f
       (result <|>) <$> go fs
 
     msg =
@@ -361,6 +384,20 @@ searchFiles fileNames dataDir = do
 
     fileNamesList = searchFilesToList fileNames
 
+-- | Handles empty directory according to the parameter i.e. either throws
+-- an exception or logs and returns empty.
+handleEmptyDir ::
+  ( Alternative f,
+    Logger :> es
+  ) =>
+  DirNotExistsHandler ->
+  Path b Dir ->
+  Eff es (f a)
+handleEmptyDir DirNotExistsFail dataDir = throwM $ MkDirNotFoundE (toOsPath dataDir)
+handleEmptyDir DirNotExistsOk dataDir = do
+  $(Logger.logDebug) $ mkDirNotExistMsg dataDir
+  pure empty
+
 mkDirNotExistMsg :: Path b Dir -> Text
 mkDirNotExistMsg d =
   mconcat
@@ -368,6 +405,15 @@ mkDirNotExistMsg d =
       packText $ showPath d,
       "' does not exist."
     ]
+
+-- | Determines whether to check a directory for existence prior to usage.
+-- Generally used for the purposes of better error messages / not repeating
+-- checks.
+data DirExistsCheck
+  = -- | Check existence prior to usage.
+    DirExistsCheckOn
+  | -- | Do not check existence prior to usage.
+    DirExistsCheckOff
 
 -- | Searches for a single file with potentially multiple aliases. Returns
 -- at most one result.
@@ -380,14 +426,21 @@ searchFileAliases ::
     Logger :> es,
     PathReader :> es
   ) =>
-  -- | If True, checks dataDir for existence. If False, skips the check.
-  Bool ->
+  -- | Determines whether we check the directory for existence.
+  -- If we do not check, we still use it i.e. we assume the check has
+  -- already taken place. If the check is off, then failures are allowed
+  -- i.e. return empty.
+  DirExistsCheck ->
   Path Abs Dir ->
   FileAliases ->
   Eff es (f (Path Abs File))
 searchFileAliases checkExists dataDir aliases = do
-  if checkExists
-    then do
+  -- Cases:
+  --
+  -- 1. searchFiles: dir must exist but already checked
+  -- 2. config: dir might not exist
+  case checkExists of
+    DirExistsCheckOn -> do
       -- NOTE: [Data dir existence]
       --
       -- Check dir existence first, since otherwise none of this matters.
@@ -395,10 +448,9 @@ searchFileAliases checkExists dataDir aliases = do
 
       if dExists
         then runSearch
-        else do
-          $(Logger.logDebug) $ mkDirNotExistMsg dataDir
-          pure empty
-    else runSearch
+        -- Lack of existence OK, hence log and return empty.
+        else handleEmptyDir DirNotExistsOk dataDir
+    DirExistsCheckOff -> runSearch
   where
     runSearch = go . NE.toList $ aliases.unAliases
     dataDirOsPath = toOsPath dataDir

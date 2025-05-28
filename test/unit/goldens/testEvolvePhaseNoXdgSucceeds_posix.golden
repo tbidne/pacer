@@ -1,0 +1,10 @@
+MkChartParams
+  { activityLabelsPath = Nothing
+  , activityPaths = "/root/cli-activities.json" :| []
+  , buildDir = "/cwd/build/"
+  , cleanInstall = False
+  , chartRequestsPath = "/root/cli-cr.json"
+  , dataDir = ()
+  , json = False
+  , port = 3000
+  }

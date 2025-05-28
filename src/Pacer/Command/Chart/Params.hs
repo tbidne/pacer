@@ -55,7 +55,11 @@ import Pacer.Exception
     FileNotFoundE (MkFileNotFoundE),
   )
 import Pacer.Prelude
-import Pacer.Utils (FileAliases (MkFileAliases), SearchFiles (MkSearchFiles))
+import Pacer.Utils
+  ( DirNotExistsHandler (DirNotExistsFail, DirNotExistsOk),
+    FileAliases (MkFileAliases),
+    SearchFiles (MkSearchFiles),
+  )
 import Pacer.Utils qualified as Utils
 import System.OsPath qualified as OsPath
 
@@ -381,7 +385,8 @@ findCliPath mDataDir fileNames mFiles = addNamespace "findCliPath" $ do
     fallback = case mDataDir of
       Nothing -> pure empty
       Just dataDir ->
-        parseCanonicalAbsDir dataDir >>= Utils.searchFiles fileNames
+        parseCanonicalAbsDir dataDir
+          >>= Utils.searchFiles fileNames DirNotExistsFail
 
 findConfigPath ::
   ( FromAlt f,
@@ -429,7 +434,7 @@ findConfigPath fileNames configSel (Just configWithPath) =
             Path.parseAbsDir
             Path.parseRelDir
             dataDir
-        Utils.searchFiles fileNames configDataDirPath
+        Utils.searchFiles fileNames DirNotExistsFail configDataDirPath
       Nothing -> pure empty
 
 findXdgPath ::
@@ -446,7 +451,7 @@ findXdgPath ::
 findXdgPath fileNames = addNamespace "findXdgPath" $ do
   -- 3. Fallback to xdg
   xdgDir <- getCachedXdgConfigPath
-  Utils.searchFiles fileNames xdgDir
+  Utils.searchFiles fileNames DirNotExistsOk xdgDir
 
 chartRequestsSearch :: SearchFiles
 chartRequestsSearch =

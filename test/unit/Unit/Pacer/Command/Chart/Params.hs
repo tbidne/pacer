@@ -60,6 +60,7 @@ successTests =
       testEvolvePhaseConfigAbsData,
       testEvolvePhaseConfigRelData,
       testEvolvePhaseXdgPaths,
+      testEvolvePhaseNoXdgSucceeds,
       testEvolvePhaseGarmin,
       testEvolvePhaseBoth
     ]
@@ -325,6 +326,33 @@ testEvolvePhaseXdgPaths =
         (Just [osp|no-data|])
         baseConfig
 
+testEvolvePhaseNoXdgSucceeds :: TestTree
+testEvolvePhaseNoXdgSucceeds =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Xdg is not required",
+        testName = [osp|testEvolvePhaseNoXdgSucceeds|],
+        runner = goldenRunnerXdg XdgMissing params config
+      }
+  where
+    -- Tests that the xdg directory is not required by ensuring that we
+    -- use an xdg directory that does not "exist", per XdgMissing.
+    --
+    -- This hits the check when searching for activity-labels, which are
+    -- not required in general, hence it falls through all checks.
+    --
+    -- We don't do this with chart-requests or activities since those are
+    -- (eventually) required, hence will error if nothing is found
+    -- (this is separate from a hypothetical xdg error).
+    params =
+      set' #chartRequestsPath (Just [osp|cli-cr.json|])
+        $ set'
+          #activityPaths
+          [[osp|cli-activities.json|]]
+          baseChartParams
+
+    config = baseConfig
+
 testEvolvePhaseGarmin :: TestTree
 testEvolvePhaseGarmin =
   testGoldenParamsOs
@@ -362,6 +390,7 @@ failureTests =
   testGroup
     "Failures"
     [ testEvolvePhaseCliPathsEx,
+      testEvolvePhaseCliDataDirEx,
       testEvolvePhaseConfigPathsEx,
       testEvolvePhaseMissingEx
     ]
@@ -396,6 +425,22 @@ testEvolvePhaseCliPathsEx =
           (Just [osp|rel-cr.json|])
           baseConfig
 
+testEvolvePhaseCliDataDirEx :: TestTree
+testEvolvePhaseCliDataDirEx =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Exception for unknown CLI data dir",
+        testName = [osp|testEvolvePhaseCliDataDirEx|],
+        runner = goldenRunner params config
+      }
+  where
+    params =
+      set'
+        #dataDir
+        (Just $ rootOsPath </> [osp|bad_dir|])
+        baseChartParams
+    config = baseConfig
+
 testEvolvePhaseConfigPathsEx :: TestTree
 testEvolvePhaseConfigPathsEx =
   testGoldenParamsOs
@@ -424,7 +469,7 @@ testEvolvePhaseMissingEx =
     $ MkGoldenParams
       { testDesc = "Exception for missing paths",
         testName = [osp|testEvolvePhaseMissingEx|],
-        runner = goldenRunnerXdg False params config
+        runner = goldenRunnerXdg XdgEmpty params config
       }
   where
     params =
@@ -438,17 +483,28 @@ testEvolvePhaseMissingEx =
         (Just [osp|some-config-data|])
         baseConfig
 
+-- | How to handle xdg directory.
+data XdgHandler
+  = -- | Xdg directory has pacer files.
+    XdgGood
+  | -- | Xdg directory does not have pacer files.
+    XdgEmpty
+  | -- | Xdg directory does not exist.
+    XdgMissing
+  deriving stock (Eq, Show)
+
 data MockEnv = MkMockEnv
   { cachedPaths :: CachedPaths,
     knownDirectories :: Set OsPath,
+    knownDirectoriesFalse :: Set OsPath,
     knownFiles :: Set OsPath,
     -- Returns xdg dir w/ expected files iff xdg is true
-    xdg :: Bool
+    xdg :: XdgHandler
   }
   deriving stock (Eq, Show)
 
 runEvolvePhase ::
-  Bool ->
+  XdgHandler ->
   ChartParamsArgs ->
   Maybe ConfigWithPath ->
   IO ChartParamsFinal
@@ -472,6 +528,12 @@ runEvolvePhase xdg params mConfig = do
                     [ospPathSep|no-data/|],
                     [ospPathSep|some-dir/|],
                     [ospPathSep|xdg/config/pacer/|]
+                  ],
+          knownDirectoriesFalse =
+            Set.fromList
+              $ (rootOsPath </>)
+              <$> [ [ospPathSep|missing_xdg/config/pacer/|],
+                    [ospPathSep|bad_dir/|]
                   ],
           knownFiles =
             Set.fromList
@@ -517,9 +579,11 @@ runPathReaderMock = interpret_ $ \case
   CanonicalizePath p -> pure $ rootOsPath </> p
   DoesDirectoryExist p -> do
     knownDirs <- asks @MockEnv (.knownDirectories)
-    if p `Set.member` knownDirs
-      then pure True
-      else error $ "doesDirectoryExist: unknown dir: " ++ show p
+    knownDirsFalse <- asks @MockEnv (.knownDirectoriesFalse)
+    if
+      | p `Set.member` knownDirs -> pure True
+      | p `Set.member` knownDirsFalse -> pure False
+      | otherwise -> error $ "doesDirectoryExist: unexpected dir: " ++ show p
   DoesFileExist p -> do
     knownFiles <- asks @MockEnv (.knownFiles)
     pure $ p `Set.member` knownFiles
@@ -528,10 +592,10 @@ runPathReaderMock = interpret_ $ \case
     case d of
       XdgConfig -> do
         xdg <- asks @MockEnv (.xdg)
-        pure
-          $ if xdg
-            then rootOsPath </> [ospPathSep|xdg/config|] </> p
-            else rootOsPath </> [ospPathSep|bad_xdg/config|] </> p
+        pure $ case xdg of
+          XdgGood -> rootOsPath </> [ospPathSep|xdg/config|] </> p
+          XdgEmpty -> rootOsPath </> [ospPathSep|bad_xdg/config|] </> p
+          XdgMissing -> rootOsPath </> [ospPathSep|missing_xdg/config|] </> p
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
   ListDirectory p
     | dirName == [osp|cli-garmin|] ->
@@ -548,9 +612,9 @@ runPathReaderMock = interpret_ $ \case
   other -> error $ "runPathReaderMock: unimplemented: " ++ showEffectCons other
 
 goldenRunner :: ChartParamsArgs -> Config -> IO ByteString
-goldenRunner = goldenRunnerXdg True
+goldenRunner = goldenRunnerXdg XdgGood
 
-goldenRunnerXdg :: Bool -> ChartParamsArgs -> Config -> IO ByteString
+goldenRunnerXdg :: XdgHandler -> ChartParamsArgs -> Config -> IO ByteString
 goldenRunnerXdg xdg params config = do
   let configPath =
         MkConfigWithPath
