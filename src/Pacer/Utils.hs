@@ -411,7 +411,7 @@ mkDirNotExistMsg d =
 -- checks.
 data DirExistsCheck
   = -- | Check existence prior to usage.
-    DirExistsCheckOn
+    DirExistsCheckOn DirNotExistsHandler
   | -- | Do not check existence prior to usage.
     DirExistsCheckOff
 
@@ -440,7 +440,7 @@ searchFileAliases checkExists dataDir aliases = do
   -- 1. searchFiles: dir must exist but already checked
   -- 2. config: dir might not exist
   case checkExists of
-    DirExistsCheckOn -> do
+    DirExistsCheckOn existsHandler -> do
       -- NOTE: [Data dir existence]
       --
       -- Check dir existence first, since otherwise none of this matters.
@@ -449,7 +449,7 @@ searchFileAliases checkExists dataDir aliases = do
       if dExists
         then runSearch
         -- Lack of existence OK, hence log and return empty.
-        else handleEmptyDir DirNotExistsOk dataDir
+        else handleEmptyDir existsHandler dataDir
     DirExistsCheckOff -> runSearch
   where
     runSearch = go . NE.toList $ aliases.unAliases

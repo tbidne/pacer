@@ -61,6 +61,7 @@ import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
 import Pacer.Utils
   ( DirExistsCheck (DirExistsCheckOn),
+    DirNotExistsHandler (DirNotExistsOk),
     FileAliases (MkFileAliases),
   )
 import Pacer.Utils qualified as Utils
@@ -245,7 +246,7 @@ getEnv = do
           mPath <-
             Utils.searchFileAliases
               @Maybe
-              DirExistsCheckOn
+              (DirExistsCheckOn DirNotExistsOk)
               xdgConfig
               configAliases
 
