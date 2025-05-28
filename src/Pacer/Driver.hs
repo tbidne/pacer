@@ -11,6 +11,10 @@ module Pacer.Driver
     -- * Exceptions
     displayInnerMatchKnown,
     knownExceptions,
+
+    -- * Misc
+    Env,
+    getEnv,
   )
 where
 
@@ -55,7 +59,10 @@ import Pacer.Configuration.Env.Types
 import Pacer.Configuration.Logging (LogLevelParam (LogNone, LogSome))
 import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
-import Pacer.Utils (DirExistsCheck (DirExistsCheckOff), FileAliases (MkFileAliases))
+import Pacer.Utils
+  ( DirExistsCheck (DirExistsCheckOn),
+    FileAliases (MkFileAliases),
+  )
 import Pacer.Utils qualified as Utils
 import System.OsPath qualified as FP
 
@@ -235,7 +242,12 @@ getEnv = do
                   $ [relfile|config.json|]
                   :| [[relfile|config.jsonc|]]
 
-          mPath <- Utils.searchFileAliases @Maybe DirExistsCheckOff xdgConfig configAliases
+          mPath <-
+            Utils.searchFileAliases
+              @Maybe
+              DirExistsCheckOn
+              xdgConfig
+              configAliases
 
           case mPath of
             Nothing -> pure (Just xdgConfig, Nothing)

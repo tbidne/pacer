@@ -204,6 +204,7 @@ test-suite unit
     Unit.Pacer.Data.Distance.Units
     Unit.Pacer.Data.Duration
     Unit.Pacer.Data.Pace
+    Unit.Pacer.Driver
     Unit.Pacer.Utils
     Unit.Prelude
     Unit.TestUtils
@@ -213,6 +214,7 @@ test-suite unit
     , base
     , bytestring
     , containers
+    , effectful
     , filepath
     , fs-effectful
     , fs-utils
