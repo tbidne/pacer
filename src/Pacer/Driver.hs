@@ -61,7 +61,7 @@ import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
 import Pacer.Utils
   ( DirExistsCheck (DirExistsCheckOn),
-    DirNotExistsHandler (DirNotExistsOk),
+    DirNotExistsStrategy (DirNotExistsOk),
     FileAliases (MkFileAliases),
   )
 import Pacer.Utils qualified as Utils

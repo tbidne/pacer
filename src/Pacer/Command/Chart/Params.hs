@@ -56,7 +56,7 @@ import Pacer.Exception
   )
 import Pacer.Prelude
 import Pacer.Utils
-  ( DirNotExistsHandler (DirNotExistsFail, DirNotExistsOk),
+  ( DirNotExistsStrategy (DirNotExistsFail, DirNotExistsOk),
     FileAliases (MkFileAliases),
     SearchFiles (MkSearchFiles),
   )

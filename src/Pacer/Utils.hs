@@ -32,7 +32,7 @@ module Pacer.Utils
     ShowListBracketStyle (..),
 
     -- * File discovery
-    DirNotExistsHandler (..),
+    DirNotExistsStrategy (..),
     SearchFiles (..),
     FileAliases (..),
     searchFiles,
@@ -331,7 +331,7 @@ instance Exception DirNotFoundE where
       ]
 
 -- | How to handle a directory not existing.
-data DirNotExistsHandler
+data DirNotExistsStrategy
   = -- | Directory not required; inexistence OK.
     DirNotExistsOk
   | -- | Directory required; inexistence should error.
@@ -353,7 +353,7 @@ searchFiles ::
   -- | File names to search.
   SearchFiles ->
   -- | How to handle the directory not existing.
-  DirNotExistsHandler ->
+  DirNotExistsStrategy ->
   -- | Data dir to search.
   Path Abs Dir ->
   Eff es (f (Path Abs File))
@@ -390,7 +390,7 @@ handleEmptyDir ::
   ( Alternative f,
     Logger :> es
   ) =>
-  DirNotExistsHandler ->
+  DirNotExistsStrategy ->
   Path b Dir ->
   Eff es (f a)
 handleEmptyDir DirNotExistsFail dataDir = throwM $ MkDirNotFoundE (toOsPath dataDir)
@@ -411,7 +411,7 @@ mkDirNotExistMsg d =
 -- checks.
 data DirExistsCheck
   = -- | Check existence prior to usage.
-    DirExistsCheckOn DirNotExistsHandler
+    DirExistsCheckOn DirNotExistsStrategy
   | -- | Do not check existence prior to usage.
     DirExistsCheckOff
 
