@@ -242,6 +242,20 @@ jobs:
           ghc-version: ${{ env.GHC_VERS }}
           cabal-version: ${{ env.CABAL_VERS }}
 
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Build frontend
+        if: ${{ matrix.platform.name != 'alpine_amd64' && matrix.platform.name != 'alpine_arm64v8' }}
+        run: |
+          cd web
+          echo "*** Installing nodejs deps ***"
+          npm install --save
+          echo "*** Building frontend ***"
+          npm run build
+
       - name: Install binary
         shell: bash
         run: |

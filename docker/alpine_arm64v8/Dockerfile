@@ -35,6 +35,8 @@ apk add --no-cache \
   zlib-dev \
   zlib-static
 
+apk add --update nodejs npm
+
 echo "*** Installing ghcup ***"
 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_MINIMAL=1 sh
 
@@ -46,6 +48,15 @@ echo "*** Installing ghc $GHC_VERS ***"
 ghcup install ghc $GHC_VERS --set
 
 echo "*** Installing cabal $CABAL_VERS ***"
+ghcup install cabal $CABAL_VERS --set
+
+echo "*** Installing nodejs deps ***"
+cd /opt/pacer/web
+npm install --save
+
+echo "*** Building frontend ***"
+npm run build
+
 ghcup install cabal $CABAL_VERS --set
 
 echo "*** Building pacer ***"
