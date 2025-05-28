@@ -157,7 +157,7 @@ function getThemeSelector(): HTMLSelectElement {
 }
 
 function initialThemeKey(config: ThemeConfig): ThemeKey {
-  if (config.default != null) {
+  if (config != null && config.default != null) {
     return config.default;
   } else {
     return "Dark";
@@ -165,7 +165,7 @@ function initialThemeKey(config: ThemeConfig): ThemeKey {
 }
 
 function userThemes(config: ThemeConfig): Theme[] {
-  if (config.themes != null) {
+  if (config != null && config.themes != null) {
     return config.themes;
   } else {
     return [];
