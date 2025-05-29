@@ -27,7 +27,10 @@ import Pacer.Command.Scale.Args qualified as Scale
 import Pacer.Command.Scale.Params qualified as Scale
 import Pacer.Configuration.Config (ConfigWithPath)
 import Pacer.Configuration.Env.Types (CachedPaths)
-import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal), ConfigPhaseF)
+import Pacer.Configuration.Phase
+  ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
+    ConfigPhaseF,
+  )
 import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
 
