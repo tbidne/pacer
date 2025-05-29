@@ -4,6 +4,7 @@ module Pacer.Command.Chart.Args
   )
 where
 
+import Data.Sequence qualified as Seq
 import Options.Applicative (Parser)
 import Options.Applicative qualified as OA
 import Pacer.Command.Chart.Params
@@ -68,8 +69,9 @@ mActivityLabelsParser = mOsPathParser Nothing "activity-labels" "PATH" helpTxt
   where
     helpTxt = "Optional path to activity-labels file. Overrides --data."
 
-mActivitiesParser :: Parser (List OsPath)
-mActivitiesParser = OA.many $ osPathParser Nothing "activities" "PATHs..." helpTxt
+mActivitiesParser :: Parser (Seq OsPath)
+mActivitiesParser =
+  Seq.fromList <$> OA.many (osPathParser Nothing "activities" "PATHs..." helpTxt)
   where
     helpTxt =
       mconcat

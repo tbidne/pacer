@@ -9,6 +9,7 @@ module Pacer.Configuration.Config
 where
 
 import Data.Aeson.Types qualified as AsnT
+import Data.Sequence (Seq (Empty))
 import FileSystem.OsPath qualified as OsPath
 import Pacer.Configuration.Logging (LogLevelParam, LogVerbosity)
 import Pacer.Prelude
@@ -66,7 +67,7 @@ data ChartConfig = MkChartConfig
   { -- | Optional path to activity-labels.json.
     activityLabelsPath :: Maybe OsPath,
     -- | Optional path to activities file.
-    activityPaths :: List OsPath,
+    activityPaths :: Seq OsPath,
     -- | Build dir.
     buildDir :: Maybe OsPath,
     -- | Optional path to directory with activities file(s) and
@@ -81,13 +82,13 @@ instance Semigroup ChartConfig where
   MkChartConfig x1 x2 x3 x4 x5 <> MkChartConfig y1 y2 y3 y4 y5 =
     MkChartConfig
       (x1 <|> y1)
-      (x2 ++ y2)
+      (x2 <> y2)
       (x3 <|> y3)
       (x4 <|> y4)
       (x5 <|> y5)
 
 instance Monoid ChartConfig where
-  mempty = MkChartConfig Nothing [] Nothing Nothing Nothing
+  mempty = MkChartConfig Nothing Empty Nothing Nothing Nothing
 
 instance FromJSON ChartConfig where
   parseJSON = asnWithObject "ChartConfig" $ \v -> do

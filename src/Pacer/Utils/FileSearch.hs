@@ -205,6 +205,9 @@ searchFiles fileNames dner dataDir = do
     go [] = pure empty
     go (f : fs) = do
       result <- searchFileAliases DirExistsCheckOff dataDir f
+      -- Notice we do _not_ use (<+<|>+>), since that short circuits on
+      -- non-empty, but here we want to defer to the Alternative instance,
+      -- which may take multiple.
       (result <|>) <$> go fs
 
     msg =

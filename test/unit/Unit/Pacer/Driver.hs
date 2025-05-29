@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Pacer.Driver (tests) where
@@ -139,8 +140,8 @@ runPathReaderMock = reinterpret_ runPathReader $ \case
     -- the 2nd i.e. almost certainly an error!
     if
       | p == rootOsPath </> [ospPathSep|xdg/config/pacer/|] -> pure False
-      | p == rootOsPath </> [osp|cwd/|] -> pure True
-      | p == rootOsPath </> [osp|cwd_config/|] -> pure True
+      | p == rootOsPath </> [ospPathSep|cwd/|] -> pure True
+      | p == rootOsPath </> [ospPathSep|cwd_config/|] -> pure True
       | otherwise -> error $ "Unexpected dir: " ++ show p
   DoesFileExist p ->
     if

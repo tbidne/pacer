@@ -1,6 +1,7 @@
 MkChartParams
   { activityLabelsPath = Nothing
-  , activityPaths = "/root/cli-garmin/activities.csv" :| []
+  , activityPaths = fromList
+    ( "/root/cli-garmin/activities.csv" :| [] )
   , buildDir = "/cwd/build/"
   , cleanInstall = False
   , chartRequestsPath = "/root/cli-garmin/chart-requests.json"

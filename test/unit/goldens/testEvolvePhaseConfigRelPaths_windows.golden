@@ -1,6 +1,7 @@
 MkChartParams
   { activityLabelsPath = Nothing
-  , activityPaths = "C:\root\config-data\rel-activities.json" :| []
+  , activityPaths = fromList
+    ( "C:\root\config-data\rel-activities.json" :| [] )
   , buildDir = "C:\cwd\build\"
   , cleanInstall = False
   , chartRequestsPath = "C:\root\config-data\rel-cr.json"

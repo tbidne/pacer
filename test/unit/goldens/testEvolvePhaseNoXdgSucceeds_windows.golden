@@ -1,6 +1,7 @@
 MkChartParams
   { activityLabelsPath = Nothing
-  , activityPaths = "C:\root\cli-activities.json" :| []
+  , activityPaths = fromList
+    ( "C:\root\cli-activities.json" :| [] )
   , buildDir = "C:\cwd\build\"
   , cleanInstall = False
   , chartRequestsPath = "C:\root\cli-cr.json"

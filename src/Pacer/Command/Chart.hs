@@ -246,7 +246,7 @@ type ChartPaths =
   Tuple3
     (Path Abs File) -- chart-requests
     (Maybe (Path Abs File)) -- activity-labels
-    (NonEmpty (Path Abs File)) -- activities
+    (NESeq (Path Abs File)) -- activities
 
 -- | Updates all activities with labels from the given map @m@. Returns a (possibly
 -- empty) subset of @m@ that was 'unmatched' i.e. had no corresponding

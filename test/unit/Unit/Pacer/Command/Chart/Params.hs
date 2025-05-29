@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Pacer.Command.Chart.Params (tests) where

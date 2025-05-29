@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
@@ -300,13 +301,14 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     where
       (dir, fileName) = OsPath.splitFileName p
 
-      dirt = Utils.Show.showtOsPath dir
+      dirt = Utils.Show.showtOsPath $ OsPath.dropTrailingPathSeparator dir
 
       -- Files where the directory exists but we want the file to not exist.
       -- Have to do it in this convoluted way since the directory may
       -- non-deterministically include the actual absolute path, due to
       -- parseAbs.
-      knownDirFileMissing = "cwd/" `T.isSuffixOf` dirt
+      --
+      knownDirFileMissing = "cwd" `T.isSuffixOf` dirt
 
       knownFiles =
         Set.fromList
@@ -557,7 +559,7 @@ testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
       pure
         $ ( cwd <</>> chartRequests,
             (cwd <</>>) <$> labels,
-            (cwd <</>> activities) :| []
+            (cwd <</>> activities) :<|| []
           )
 
     dataDir = [ospPathSep|test/unit/data|]

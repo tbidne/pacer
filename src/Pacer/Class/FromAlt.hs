@@ -9,6 +9,7 @@ where
 
 import Data.Foldable qualified as F
 import Data.Functor.Identity (Identity (Identity))
+import Data.Sequence qualified as Seq
 import Pacer.Prelude
 
 -- | Extension to 'Alternative' class.
@@ -39,6 +40,14 @@ instance FromAlt List where
   isEmpty = F.null
   toAlt1 [] = Nothing
   toAlt1 (x : xs) = Just (x :| xs)
+
+instance FromAlt Seq where
+  type Alt1 Seq = NESeq
+
+  isEmpty = F.null
+
+  toAlt1 Seq.Empty = Nothing
+  toAlt1 (x :<| xs) = Just (x :<|| xs)
 
 asum1M :: forall t m f a. (Foldable t, FromAlt f, Monad m) => t (m (f a)) -> m (f a)
 asum1M = foldr alt1M (pure empty)

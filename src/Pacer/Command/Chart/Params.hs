@@ -108,8 +108,8 @@ type family MPathF p t where
 
 type ActivityPathsF :: ConfigPhase -> Type
 type family ActivityPathsF p where
-  ActivityPathsF ConfigPhaseArgs = List OsPath
-  ActivityPathsF ConfigPhaseFinal = NonEmpty (Path Abs File)
+  ActivityPathsF ConfigPhaseArgs = Seq OsPath
+  ActivityPathsF ConfigPhaseFinal = NESeq (Path Abs File)
 
 -- | Chart params.
 type ChartParams :: ConfigPhase -> Type
@@ -229,7 +229,7 @@ type ChartInputs =
     -- activity-labels
     (Maybe (Path Abs File))
     -- activity-paths
-    (NonEmpty (Path Abs File))
+    (NESeq (Path Abs File))
 
 getChartInputs ::
   forall es.
@@ -255,7 +255,7 @@ getChartInputs params mConfigWithPath = do
 
   activityPaths <-
     resolveRequiredChartInput
-      @[]
+      @Seq
       params
       mConfigWithPath
       "activities"
