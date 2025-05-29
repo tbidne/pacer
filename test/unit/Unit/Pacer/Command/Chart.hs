@@ -11,6 +11,7 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
+import Data.Text qualified as T
 import Effectful.FileSystem.FileReader.Dynamic (FileReader (ReadBinaryFile))
 import Effectful.FileSystem.FileWriter.Dynamic (FileWriter (WriteBinaryFile))
 import Effectful.FileSystem.PathReader.Dynamic
@@ -86,6 +87,7 @@ import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
 import Pacer.Data.Distance qualified as D
 import Pacer.Data.Duration (Duration (MkDuration))
 import Pacer.Utils qualified as U
+import Pacer.Utils.Show qualified as Utils.Show
 import System.OsPath qualified as OsPath
 import System.OsString qualified as OsString
 import Test.Tasty.HUnit (assertEqual)
@@ -262,6 +264,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   CanonicalizePath p -> PRS.canonicalizePath p
   DoesDirectoryExist p -> case dirName of
     [osp|build|] -> pure False
+    [osp|cwd|] -> pure True
     [osp|dist|] -> pure True
     [osp|pacer|] -> pure True
     [osp|web|] -> pure True
@@ -290,11 +293,20 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
       dirName = L.last $ OsPath.splitDirectories p
   DoesFileExist p ->
     if
+      | knownDirFileMissing -> pure False
       | fileName `Set.member` knownFiles -> pure True
       | fileName `Set.member` knownMissingFiles -> pure False
       | otherwise -> error $ "doesFileExist: unexpected: '" ++ show fileName ++ "'"
     where
-      (_dir, fileName) = OsPath.splitFileName p
+      (dir, fileName) = OsPath.splitFileName p
+
+      dirt = Utils.Show.showtOsPath dir
+
+      -- Files where the directory exists but we want the file to not exist.
+      -- Have to do it in this convoluted way since the directory may
+      -- non-deterministically include the actual absolute path, due to
+      -- parseAbs.
+      knownDirFileMissing = "cwd/" `T.isSuffixOf` dirt
 
       knownFiles =
         Set.fromList
@@ -318,7 +330,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
           ]
   FindExecutable p -> case p of
     _ -> error $ "findExecutable: unexpected: " ++ show p
-  GetCurrentDirectory -> PRS.getCurrentDirectory
+  GetCurrentDirectory -> pure [osp|cwd|]
   GetXdgDirectory xdg p -> case xdg of
     XdgCache ->
       incIORef (.refsEnv.numXdgCacheCalls)
@@ -339,7 +351,8 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   where
     knownDirs =
       Set.fromList
-        [ [osp|dist|],
+        [ [osp|cwd|],
+          [osp|dist|],
           [osp|pacer|]
         ]
 

@@ -59,6 +59,7 @@ successTests =
       testEvolvePhaseConfigRelPaths,
       testEvolvePhaseConfigAbsData,
       testEvolvePhaseConfigRelData,
+      testEvolvePhaseCwd,
       testEvolvePhaseXdgPaths,
       testEvolvePhaseNoXdgSucceeds,
       testEvolvePhaseGarmin,
@@ -301,6 +302,20 @@ testEvolvePhaseConfigRelData =
         (Just [osp|./|])
         baseConfig
 
+testEvolvePhaseCwd :: TestTree
+testEvolvePhaseCwd =
+  testGoldenParamsOs
+    $ MkGoldenParams
+      { testDesc = "Uses current directory",
+        testName = [osp|testEvolvePhaseCwd|],
+        runner = goldenRunnerCwd (toOsPath cwd) params config
+      }
+  where
+    params = baseChartParams
+    config = baseConfig
+
+    cwd = baseRoot <</>> [reldir|cwd_files|]
+
 testEvolvePhaseXdgPaths :: TestTree
 testEvolvePhaseXdgPaths =
   testGoldenParamsOs
@@ -495,6 +510,7 @@ data XdgHandler
 
 data MockEnv = MkMockEnv
   { cachedPaths :: CachedPaths,
+    cwd :: Maybe OsPath,
     knownDirectories :: Set OsPath,
     knownDirectoriesFalse :: Set OsPath,
     knownFiles :: Set OsPath,
@@ -504,16 +520,20 @@ data MockEnv = MkMockEnv
   deriving stock (Eq, Show)
 
 runEvolvePhase ::
+  -- | Current directory override.
+  Maybe OsPath ->
+  -- | Xdg override.
   XdgHandler ->
   ChartParamsArgs ->
   Maybe ConfigWithPath ->
   IO ChartParamsFinal
-runEvolvePhase xdg params mConfig = do
+runEvolvePhase mCwd xdg params mConfig = do
   runner $ Params.evolvePhase params mConfig
   where
     env =
       MkMockEnv
         { cachedPaths = mempty,
+          cwd = mCwd,
           knownDirectories =
             Set.fromList
               $ (rootOsPath </>)
@@ -525,6 +545,8 @@ runEvolvePhase xdg params mConfig = do
                     [ospPathSep|config-data/config-data/|],
                     [ospPathSep|config-data/no-data/|],
                     [ospPathSep|config-data/some-config-data/|],
+                    (toOsPath cwdPath),
+                    (toOsPath $ baseRoot <</>> [reldir|cwd_files|]),
                     [ospPathSep|no-data/|],
                     [ospPathSep|some-dir/|],
                     [ospPathSep|xdg/config/pacer/|]
@@ -553,6 +575,10 @@ runEvolvePhase xdg params mConfig = do
                     [ospPathSep|config-data/activities.json|],
                     [ospPathSep|config-data/rel-cr.json|],
                     [ospPathSep|config-data/rel-activities.json|],
+                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/activities.json|]),
+                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/Activities.csv|]),
+                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/chart-requests.json|]),
+                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/activity-labels.json|]),
                     [ospPathSep|xdg/config/pacer/chart-requests.json|],
                     [ospPathSep|xdg/config/pacer/activities.json|]
                   ],
@@ -587,7 +613,10 @@ runPathReaderMock = interpret_ $ \case
   DoesFileExist p -> do
     knownFiles <- asks @MockEnv (.knownFiles)
     pure $ p `Set.member` knownFiles
-  GetCurrentDirectory -> pure (toOsPath cwdPath)
+  GetCurrentDirectory ->
+    asks @MockEnv (.cwd) <&> \case
+      Nothing -> (toOsPath cwdPath)
+      Just cwd -> cwd
   GetXdgDirectory d p ->
     case d of
       XdgConfig -> do
@@ -614,14 +643,25 @@ runPathReaderMock = interpret_ $ \case
 goldenRunner :: ChartParamsArgs -> Config -> IO ByteString
 goldenRunner = goldenRunnerXdg XdgGood
 
+goldenRunnerCwd :: OsPath -> ChartParamsArgs -> Config -> IO ByteString
+goldenRunnerCwd cwd = goldenRunnerGeneral (Just cwd) XdgGood
+
 goldenRunnerXdg :: XdgHandler -> ChartParamsArgs -> Config -> IO ByteString
-goldenRunnerXdg xdg params config = do
+goldenRunnerXdg = goldenRunnerGeneral Nothing
+
+goldenRunnerGeneral ::
+  Maybe OsPath ->
+  XdgHandler ->
+  ChartParamsArgs ->
+  Config ->
+  IO ByteString
+goldenRunnerGeneral mCwd xdg params config = do
   let configPath =
         MkConfigWithPath
           { dirPath = rootPath <</>> [reldir|config-data|],
             config
           }
-  trySync (runEvolvePhase xdg params (Just configPath)) <&> \case
+  trySync (runEvolvePhase mCwd xdg params (Just configPath)) <&> \case
     Right x -> pShowBS x
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
@@ -649,27 +689,20 @@ baseConfig = set' #chartConfig (Just mempty) mempty
 {- ORMOLU_DISABLE -}
 
 absBuildDir :: Path Abs Dir
-absBuildDir =
-#if POSIX
-  [absdir|/abs/build-dir|]
-#else
-  [absdir|C:\abs\build-dir|]
-#endif
+absBuildDir = baseRoot <</>> [reldirPathSep|abs/build-dir|]
 
 cwdPath :: Path Abs Dir
-cwdPath =
-#if POSIX
-  [absdir|/cwd|]
-#else
-  [absdir|C:\cwd|]
-#endif
+cwdPath = baseRoot <</>> [reldir|cwd|]
 
 rootPath :: Path Abs Dir
-rootPath =
+rootPath = baseRoot <</>> [reldir|root|]
+
+baseRoot :: Path Abs Dir
+baseRoot =
 #if POSIX
-  [absdir|/root|]
+  [absdir|/|]
 #else
-  [absdir|C:\root|]
+  [absdir|C:\|]
 #endif
 
 {- ORMOLU_ENABLE -}

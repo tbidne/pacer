@@ -349,6 +349,7 @@ resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
     -- 1. Cli file paths e.g. --chart-requests.
     -- 2. Cli dir e.g. --data
     -- 3. Config path.
+    -- 4. Current directory.
     -- 4. Xdg dir.
     Utils.FileSearch.resolveFilePath
       desc
@@ -356,6 +357,7 @@ resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
       [ const (Utils.FileSearch.findFilePath mInputOsPath),
         Utils.FileSearch.findDirectoryPath params.dataDir,
         findConfigPath configSel mConfigWithPath,
+        Utils.FileSearch.findCurrentDirectoryPath,
         Utils.FileSearch.findXdgPath
       ]
 

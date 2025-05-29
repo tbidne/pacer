@@ -1,0 +1,10 @@
+MkChartParams
+  { activityLabelsPath = Just "C:\cwd_files\activity-labels.json"
+  , activityPaths = "C:\cwd_files\activities.json" :| [ "C:\cwd_files\Activities.csv" ]
+  , buildDir = "C:\cwd_files\build\"
+  , cleanInstall = False
+  , chartRequestsPath = "C:\cwd_files\chart-requests.json"
+  , dataDir = ()
+  , json = False
+  , port = 3000
+  }
