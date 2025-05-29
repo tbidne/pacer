@@ -3,6 +3,7 @@
 
 module Pacer.Utils.FileSearch
   ( -- * High-level
+    FileSearchStrategy (..),
     resolveFilePath,
 
     -- ** Strategies
@@ -35,7 +36,7 @@ import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import Effectful.Logger.Dynamic qualified as Logger
 import FileSystem.OsPath (decodeLenient, encodeLenient)
 import FileSystem.Path qualified as Path
-import Pacer.Class.FromAlt (FromAlt, asum1M, isNonEmpty)
+import Pacer.Class.FromAlt (FromAlt, isNonEmpty)
 import Pacer.Configuration.Env.Types (CachedPaths, getCachedCurrentDirectory, getCachedXdgConfigPath)
 import Pacer.Prelude
 import Pacer.Utils.Show qualified as Show
@@ -54,11 +55,11 @@ resolveFilePath ::
   -- | Expected file_name(s) e.g. activities file(s).
   SearchFiles ->
   -- | Search strategies.
-  List (SearchFiles -> Eff es (f (Path Abs File))) ->
+  List (FileSearchStrategy f es) ->
   Eff es (f (Path Abs File))
 resolveFilePath desc fileNames strategies =
   addNamespace "resolveFilePath" $ addNamespace desc $ do
-    asum1M $ (($ fileNames) <$> strategies)
+    (fold strategies).unFileSearchStrategy fileNames
 
 -- | General exception for when a file at an expected path does not exist.
 -- We would normally use IOException for this, except we want a custom type
@@ -74,6 +75,30 @@ instance Exception FileNotFoundE where
         decodeLenient p
       ]
 
+-- | FileSearchStrategy represents a single strategy for finding a single
+-- "type" of file(s), e.g. searching the current directory for the
+-- chart-requests file, or searching xdg for multiple activities files.
+--
+-- The semigroup instance takes the first "non-empty", per the FromAlt
+-- instance. In practice empty is generally Nothing (Maybe, for a single file),
+-- or [] (List/Seq, for multiple results).
+type FileSearchStrategy :: (Type -> Type) -> List Effect -> Type
+newtype FileSearchStrategy f es
+  = MkFileSearchStrategy
+  { unFileSearchStrategy :: SearchFiles -> (Eff es (f (Path Abs File)))
+  }
+
+instance (FromAlt f) => Semigroup (FileSearchStrategy f es) where
+  MkFileSearchStrategy f <> g = MkFileSearchStrategy $ \files -> do
+    l <- f files
+
+    if isNonEmpty l
+      then pure l
+      else g.unFileSearchStrategy files
+
+instance (FromAlt f) => Monoid (FileSearchStrategy f es) where
+  mempty = MkFileSearchStrategy $ \_ -> pure empty
+
 -- | 'findDirectoryPath' specialized to the current directory.
 findCurrentDirectoryPath ::
   forall f es.
@@ -84,12 +109,11 @@ findCurrentDirectoryPath ::
     PathReader :> es,
     State CachedPaths :> es
   ) =>
-  -- | File names.
-  SearchFiles ->
-  Eff es (f (Path Abs File))
-findCurrentDirectoryPath fileNames = addNamespace "findCurrentDirectoryPath" $ do
-  dir <- getCachedCurrentDirectory
-  findDirectoryPath (Just $ toOsPath dir) fileNames
+  FileSearchStrategy f es
+findCurrentDirectoryPath =
+  MkFileSearchStrategy $ \fileNames -> addNamespace "findCurrentDirectoryPath" $ do
+    dir <- getCachedCurrentDirectory
+    ((findDirectoryPath (Just $ toOsPath dir)).unFileSearchStrategy) fileNames
 
 -- | If the parameter is not empty, parses to an absolute file(s).
 findFilePath ::
@@ -100,8 +124,8 @@ findFilePath ::
   ) =>
   -- | Maybe file.
   f OsPath ->
-  Eff es (f (Path Abs File))
-findFilePath mFiles = for mFiles $ \f -> do
+  FileSearchStrategy f es
+findFilePath mFiles = MkFileSearchStrategy $ \_ -> for mFiles $ \f -> do
   absPath <- parseCanonicalAbsFile f
   let absOsPath = toOsPath absPath
   exists <- PR.doesFileExist absOsPath
@@ -126,10 +150,11 @@ findDirectoryPath ::
   -- | Directory to maybe search.
   Maybe OsPath ->
   -- | File names.
-  SearchFiles ->
-  Eff es (f (Path Abs File))
-findDirectoryPath Nothing _ = pure empty
-findDirectoryPath (Just dir) fileNames = addNamespace "findDirectoryPath" $ do
+  -- SearchFiles ->
+  -- Eff es (f (Path Abs File))
+  FileSearchStrategy f es
+findDirectoryPath Nothing = MkFileSearchStrategy $ \_ -> pure empty
+findDirectoryPath (Just dir) = MkFileSearchStrategy $ \fileNames -> addNamespace "findDirectoryPath" $ do
   $(Logger.logDebug) $ "Searching directory: " <> Show.showtOsPath dir
   parseCanonicalAbsDir dir >>= searchFiles fileNames DirNotExistsFail
 
@@ -142,10 +167,8 @@ findXdgPath ::
     PathReader :> es,
     State CachedPaths :> es
   ) =>
-  -- | File names.
-  SearchFiles ->
-  Eff es (f (Path Abs File))
-findXdgPath fileNames = addNamespace "findXdgPath" $ do
+  FileSearchStrategy f es
+findXdgPath = MkFileSearchStrategy $ \fileNames -> addNamespace "findXdgPath" $ do
   -- 3. Fallback to xdg
   xdgDir <- getCachedXdgConfigPath
   $(Logger.logDebug) $ "Searching xdg: " <> Show.showtPath xdgDir

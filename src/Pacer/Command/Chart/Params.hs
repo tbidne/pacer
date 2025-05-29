@@ -57,6 +57,7 @@ import Pacer.Utils.FileSearch
   ( DirNotExistsStrategy (DirNotExistsFail),
     FileAliases (MkFileAliases),
     FileNotFoundE (MkFileNotFoundE),
+    FileSearchStrategy (MkFileSearchStrategy),
     SearchFiles (MkSearchFiles),
   )
 import Pacer.Utils.FileSearch qualified as Utils.FileSearch
@@ -354,7 +355,7 @@ resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
     Utils.FileSearch.resolveFilePath
       desc
       fileNames
-      [ const (Utils.FileSearch.findFilePath mInputOsPath),
+      [ Utils.FileSearch.findFilePath mInputOsPath,
         Utils.FileSearch.findDirectoryPath params.dataDir,
         findConfigPath configSel mConfigWithPath,
         Utils.FileSearch.findCurrentDirectoryPath,
@@ -373,22 +374,20 @@ findConfigPath ::
   AffineTraversal' Config (f OsPath) ->
   -- | Maybe config.
   Maybe ConfigWithPath ->
-  -- | File names.
-  SearchFiles ->
-  Eff es (f (Path Abs File))
+  FileSearchStrategy f es
 -- 1. Config does not exist. Nothing to do, just return empty.
-findConfigPath _ Nothing _ = pure empty
+findConfigPath _ Nothing = mempty
 -- 2. Config exists, check it.
-findConfigPath configSel (Just configWithPath) fileNames =
+findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNames ->
   addNamespace "findConfigPath" $ do
     case preview (#config % configSel) configWithPath of
       -- 2. Config.paths field exists.
       Just mPath ->
         -- 2.1. Config.paths is non-empty, use it.
         -- 2.2. Config.paths exists but is empty, try config data dir.
-        tryConfigPaths mPath <+<|>+> tryConfigDataDir
+        tryConfigPaths mPath <+<|>+> tryConfigDataDir fileNames
       -- 3. Config.paths does not exist, try config data dir.
-      Nothing -> tryConfigDataDir
+      Nothing -> tryConfigDataDir fileNames
   where
     configDataSel :: AffineTraversal' ConfigWithPath OsPath
     configDataSel = #config % #chartConfig %? #dataDir % _Just
@@ -400,7 +399,7 @@ findConfigPath configSel (Just configWithPath) fileNames =
           Path.parseAbsFile
           Path.parseRelFile
 
-    tryConfigDataDir = case preview configDataSel configWithPath of
+    tryConfigDataDir fileNames = case preview configDataSel configWithPath of
       Just dataDir -> do
         configDataDirPath <-
           handleUnknownPath

@@ -247,7 +247,7 @@ getEnv = do
             @Maybe
             "config"
             configSearchFiles
-            [ const (Utils.FileSearch.findFilePath args.configPath),
+            [ Utils.FileSearch.findFilePath args.configPath,
               Utils.FileSearch.findCurrentDirectoryPath,
               Utils.FileSearch.findXdgPath
             ]
