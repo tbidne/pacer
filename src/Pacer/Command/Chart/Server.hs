@@ -77,7 +77,7 @@ launchServer port webDistPath charts = addNamespace "launchServer" $ do
       mconcat
         [ "Serving charts on http://localhost:",
           showt portInt,
-          ". Please open your browser 🙂."
+          ". Please open your browser :-)."
         ]
     portInt = fromIntegral @Word16 @Int port
 

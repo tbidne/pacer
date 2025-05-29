@@ -35,6 +35,7 @@ import Effectful.LoggerNS.Static
       ),
   )
 import Effectful.LoggerNS.Static qualified as LoggerNS
+import Effectful.Terminal.Dynamic (putBinary)
 import FileSystem.Path qualified as Path
 import Pacer.Command
   ( Command (Chart, Convert, Derive, Scale),
@@ -304,8 +305,7 @@ runLogger = interpret_ $ \case
       Just logLevel -> do
         Logger.guardLevel logLevel lvl $ do
           formatted <- LoggerNS.formatLog fmt lvl msg
-          let txt = LoggerNS.logStrToText formatted
-          putText txt
+          putBinary $ LoggerNS.logStrToBs formatted
     where
       fmt =
         MkLogFormatter

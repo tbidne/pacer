@@ -44,10 +44,11 @@ import Effectful.FileSystem.PathReader.Dynamic
       ),
   )
 import Effectful.FileSystem.PathReader.Static qualified as PRS
-import Effectful.Terminal.Dynamic (Terminal (PutStr, PutStrLn))
+import Effectful.Terminal.Dynamic (Terminal (PutBinary, PutStr, PutStrLn))
 import FileSystem.IO (writeBinaryFileIO)
 import FileSystem.OsPath (decodeLenient, unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
+import FileSystem.UTF8 qualified as UTF8
 import Hedgehog as X
   ( Gen,
     Property,
@@ -219,6 +220,9 @@ runTerminalMock = interpret_ $ \case
   PutStrLn s -> do
     logsRef <- asks @FuncEnv (.logsRef)
     modifyIORef' logsRef (<> packText s)
+  PutBinary bs -> do
+    logsRef <- asks @FuncEnv (.logsRef)
+    modifyIORef' logsRef (<> (UTF8.decodeUtf8Lenient bs))
   other -> error $ "runTerminalMock: unimplemented: " ++ showEffectCons other
 
 runMultiArgs :: (a -> List String) -> List (Word8, (a, Text)) -> IO ()
