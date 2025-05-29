@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -59,12 +60,12 @@ import Pacer.Configuration.Env.Types
 import Pacer.Configuration.Logging (LogLevelParam (LogNone, LogSome))
 import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
-import Pacer.Utils
-  ( DirExistsCheck (DirExistsCheckOn),
-    DirNotExistsStrategy (DirNotExistsOk),
-    FileAliases (MkFileAliases),
-  )
 import Pacer.Utils qualified as Utils
+import Pacer.Utils.FileSearch
+  ( FileAliases (MkFileAliases),
+    SearchFiles (MkSearchFiles),
+  )
+import Pacer.Utils.FileSearch qualified as Utils.FileSearch
 import System.OsPath qualified as FP
 
 runApp ::
@@ -227,58 +228,43 @@ getEnv = do
       cfgLogVerbosity = fromMaybe mempty args.logVerbosity
 
   -- Get Config and xdg config dir, if necessary.
-  (mXdgConfig, mConfig) <- case args.command of
+  (cachedPaths, mConfig) <- case args.command of
     -- Because the config (currently) only affects the chart command,
     -- searching for it is pointless for other commands, hence skip it.
     --
     -- 1. Chart command, try to find command.
     Chart {} -> configRunner cfgLogLvl cfgLogVerbosity $ do
-      case args.configPath of
-        -- 1.1. No config path, try xdg
-        Nothing -> do
-          xdgConfig <- getXdgConfigPath
+      let cachedPaths =
+            MkCachedPaths
+              { currentDirectory = Nothing,
+                xdgConfigPath = Nothing
+              }
 
-          let configAliases =
-                MkFileAliases
-                  $ [relfile|config.json|]
-                  :| [[relfile|config.jsonc|]]
+      -- Resolve config path, get cached paths.
+      (mPath, cachedPaths') <-
+        runState cachedPaths
+          $ Utils.FileSearch.resolveFilePath
+            @Maybe
+            "config"
+            configSearchFiles
+            [ const (Utils.FileSearch.findFilePath args.configPath),
+              Utils.FileSearch.findXdgPath
+            ]
 
-          mPath <-
-            Utils.searchFileAliases
-              @Maybe
-              (DirExistsCheckOn DirNotExistsOk)
-              xdgConfig
-              configAliases
-
-          case mPath of
-            Nothing -> pure (Just xdgConfig, Nothing)
-            Just path -> do
-              config <- Utils.readDecodeJson path
-              let configPath = MkConfigWithPath xdgConfig config
-
-              $(Logger.logInfo) $ "Using config: " <> Utils.showtPath path
-
-              pure (Just xdgConfig, Just configPath)
-        -- 1.2. Config path exists, use it.
-        Just configPath -> do
-          absPath <- parseCanonicalAbsFile configPath
-          config <- Utils.readDecodeJson absPath
-
-          absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (toOsPath absPath)
-
+      mConfigWithPath <- case mPath of
+        Just path -> do
+          config <- Utils.readDecodeJson path
+          absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (toOsPath path)
           let configWithPath = MkConfigWithPath absConfigDir config
-          $(Logger.logInfo) $ "Using config: " <> Utils.showtPath absPath
-          pure (Nothing, Just configWithPath)
+          pure $ Just configWithPath
+        Nothing -> pure Nothing
+
+      pure (cachedPaths', mConfigWithPath)
 
     -- 2. Non-chart command, skip config.
-    _ -> pure (Nothing, Nothing)
+    _ -> pure (mempty, Nothing)
 
-  let cachedPaths =
-        MkCachedPaths
-          { currentDirectory = Nothing,
-            xdgConfigPath = mXdgConfig
-          }
-      logEnv = Env.mkLogEnv args (mConfig <&> (.config))
+  let logEnv = Env.mkLogEnv args (mConfig <&> (.config))
 
   pure (args.command, mConfig, cachedPaths, logEnv)
   where
@@ -293,6 +279,11 @@ getEnv = do
           logNamespace = mempty,
           logVerbosity
         }
+
+    configSearchFiles = MkSearchFiles [configAliases]
+    configAliases =
+      MkFileAliases
+        [[relfile|config.json|], [relfile|config.jsonc|]]
 
 runLogger ::
   ( HasCallStack,
@@ -338,8 +329,8 @@ knownExceptions =
     MkExceptionProxy @PacerEx.CommandDeriveE,
     MkExceptionProxy @PacerEx.CommandScaleE,
     MkExceptionProxy @PacerEx.CreateChartE,
-    MkExceptionProxy @Utils.DirNotFoundE,
-    MkExceptionProxy @PacerEx.FileNotFoundE,
+    MkExceptionProxy @Utils.FileSearch.DirNotFoundE,
+    MkExceptionProxy @Utils.FileSearch.FileNotFoundE,
     MkExceptionProxy @PacerEx.GarminE,
     MkExceptionProxy @ActivityDatetimeOverlapE
   ]

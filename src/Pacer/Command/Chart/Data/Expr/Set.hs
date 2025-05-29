@@ -31,7 +31,7 @@ import Pacer.Command.Chart.Data.Expr.Eq
   )
 import Pacer.Command.Chart.Data.Expr.Eq qualified as Eq
 import Pacer.Prelude
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Show qualified as Utils.Show
 import Text.Megaparsec ((<?>))
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
@@ -473,6 +473,6 @@ displaySet s
   | otherwise = showFn s
   where
     showFn xs =
-      Utils.showListLike
-        . Utils.ShowListInline (Utils.ShowListMap displayBuilder xs)
-        $ mempty {Utils.brackets = Utils.ShowListBracketsCurly}
+      Utils.Show.showListLike
+        . Utils.Show.ShowListInline (Utils.Show.ShowListMap displayBuilder xs)
+        $ mempty {Utils.Show.brackets = Utils.Show.ShowListBracketsCurly}

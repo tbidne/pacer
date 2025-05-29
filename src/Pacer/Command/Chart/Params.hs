@@ -25,13 +25,11 @@ where
 import Data.Functor.Identity (Identity (Identity))
 import Data.List.NonEmpty qualified as NE
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
-import Effectful.Logger.Dynamic qualified as Logger
 import FileSystem.Path qualified as Path
 import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
 import Pacer.Class.FromAlt
   ( FromAlt (Alt1, toAlt1),
-    asum1M,
     (<+<|>+>),
   )
 import Pacer.Configuration.Config
@@ -53,15 +51,15 @@ import Pacer.Exception
         expectedFiles,
         xdgDir
       ),
-    FileNotFoundE (MkFileNotFoundE),
   )
 import Pacer.Prelude
-import Pacer.Utils
-  ( DirNotExistsStrategy (DirNotExistsFail, DirNotExistsOk),
+import Pacer.Utils.FileSearch
+  ( DirNotExistsStrategy (DirNotExistsFail),
     FileAliases (MkFileAliases),
+    FileNotFoundE (MkFileNotFoundE),
     SearchFiles (MkSearchFiles),
   )
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.FileSearch qualified as Utils.FileSearch
 import System.OsPath qualified as OsPath
 
 -- | The type of activities file.
@@ -174,6 +172,9 @@ evolvePhase @es params mConfigWithPath = do
   (chartRequestsPath, activityLabelsPath, activityPaths) <-
     getChartInputs params mConfigWithPath
 
+  -- This is _mostly_ unnecessary, as most logic verifies file existence.
+  -- The json config doesn't in all cases though, and we should probably
+  -- keep this out of paranoia, in any case.
   assertExists chartRequestsPath
   for_ activityPaths assertExists
   for_ activityLabelsPath assertExists
@@ -343,52 +344,20 @@ resolveChartInput ::
   Eff es (f (Path Abs File))
 resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
   addNamespace "resolveChartInput" $ addNamespace desc $ do
-    asum1M @List
-      [ searchCli,
-        searchConfig,
-        searchXdg
+    -- When resolving a particular chart path, we try, in order:
+    --
+    -- 1. Cli file paths e.g. --chart-requests.
+    -- 2. Cli dir e.g. --data
+    -- 3. Config path.
+    -- 4. Xdg dir.
+    Utils.FileSearch.resolveFilePath
+      desc
+      fileNames
+      [ const (Utils.FileSearch.findFilePath mInputOsPath),
+        Utils.FileSearch.findDirectoryPath params.dataDir,
+        findConfigPath configSel mConfigWithPath,
+        Utils.FileSearch.findXdgPath
       ]
-  where
-    searchCli = findCliPath params.dataDir fileNames mInputOsPath
-
-    searchConfig = do
-      $(Logger.logDebug) "No cli path(s) found, checking config"
-      -- 2. Try Config next.
-      findConfigPath fileNames configSel mConfigWithPath
-
-    searchXdg = do
-      $(Logger.logDebug) "No config path(s) found, falling back to xdg"
-      (findXdgPath fileNames)
-
-findCliPath ::
-  forall f es.
-  ( FromAlt f,
-    HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
-    PathReader :> es,
-    Traversable f
-  ) =>
-  -- | Maybe data dir.
-  Maybe OsPath ->
-  -- | File names.
-  SearchFiles ->
-  -- Maybe file.
-  f OsPath ->
-  Eff es (f (Path Abs File))
-findCliPath mDataDir fileNames mFiles = addNamespace "findCliPath" $ do
-  -- 1. If mFiles is not empty (i.e. Nothing or empty list), we use it.
-  -- 2. If mFiles is empty, then we search the data directory, if it is,
-  --    given.
-  tryGivenFiles <+<|>+> fallback
-  where
-    tryGivenFiles = for mFiles parseCanonicalAbsFile
-
-    fallback = case mDataDir of
-      Nothing -> pure empty
-      Just dataDir ->
-        parseCanonicalAbsDir dataDir
-          >>= Utils.searchFiles fileNames DirNotExistsFail
 
 findConfigPath ::
   ( FromAlt f,
@@ -398,16 +367,17 @@ findConfigPath ::
     PathReader :> es,
     Traversable f
   ) =>
-  -- | File names.
-  SearchFiles ->
   -- | Config selector.
   AffineTraversal' Config (f OsPath) ->
   -- | Maybe config.
   Maybe ConfigWithPath ->
+  -- | File names.
+  SearchFiles ->
   Eff es (f (Path Abs File))
 -- 1. Config does not exist. Nothing to do, just return empty.
-findConfigPath _ _ Nothing = pure empty
-findConfigPath fileNames configSel (Just configWithPath) =
+findConfigPath _ Nothing _ = pure empty
+-- 2. Config exists, check it.
+findConfigPath configSel (Just configWithPath) fileNames =
   addNamespace "findConfigPath" $ do
     case preview (#config % configSel) configWithPath of
       -- 2. Config.paths field exists.
@@ -436,24 +406,8 @@ findConfigPath fileNames configSel (Just configWithPath) =
             Path.parseAbsDir
             Path.parseRelDir
             dataDir
-        Utils.searchFiles fileNames DirNotExistsFail configDataDirPath
+        Utils.FileSearch.searchFiles fileNames DirNotExistsFail configDataDirPath
       Nothing -> pure empty
-
-findXdgPath ::
-  ( FromAlt f,
-    HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
-    PathReader :> es,
-    State CachedPaths :> es
-  ) =>
-  -- | File names.
-  SearchFiles ->
-  Eff es (f (Path Abs File))
-findXdgPath fileNames = addNamespace "findXdgPath" $ do
-  -- 3. Fallback to xdg
-  xdgDir <- getCachedXdgConfigPath
-  Utils.searchFiles fileNames DirNotExistsOk xdgDir
 
 chartRequestsSearch :: SearchFiles
 chartRequestsSearch =
@@ -542,6 +496,6 @@ throwIfMissing params mConfigWithPath fileNames mVal = case toAlt1 mVal of
           xdgDir
         }
   where
-    fileNames' = Utils.searchFilesToList fileNames
+    fileNames' = Utils.FileSearch.searchFilesToList fileNames
 
 makeFieldLabelsNoPrefix ''ChartParams

@@ -49,7 +49,7 @@ import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Duration (Duration)
 import Pacer.Exception (GarminE (GarminDecode, GarminMeters, GarminOther))
 import Pacer.Prelude hiding ((.:))
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Show qualified as Utils.Show
 import System.OsPath qualified as OsPath
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
@@ -247,9 +247,9 @@ displaySummarizedSequences :: List Natural -> Text
 displaySummarizedSequences = showFn . groupSequential
   where
     showFn xs =
-      Utils.showListLike
-        . Utils.ShowListInline (Utils.ShowListMap showGroup xs)
-        $ mempty {Utils.spaces = False}
+      Utils.Show.showListLike
+        . Utils.Show.ShowListInline (Utils.Show.ShowListMap showGroup xs)
+        $ mempty {Utils.Show.spaces = False}
 
     showGroup :: [Natural] -> Text
     showGroup [] = ""

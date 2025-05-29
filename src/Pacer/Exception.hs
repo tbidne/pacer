@@ -2,7 +2,6 @@ module Pacer.Exception
   ( -- * Exceptions
     ChartFileMissingE (..),
     CreateChartE (..),
-    FileNotFoundE (..),
     GarminE (..),
 
     -- ** Commands
@@ -17,6 +16,7 @@ import FileSystem.OsPath (decodeLenient)
 import GHC.TypeLits (symbolVal)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
+import Pacer.Utils.Show qualified as Utils.Show
 
 -- | Exception for CLI scale command.
 data CommandConvertE
@@ -119,20 +119,6 @@ instance Exception CreateChartE where
         "' is empty due to all activities being filtered out."
       ]
 
--- | General exception for when a file at an expected path does not exist.
--- We would normally use IOException for this, except we want a custom type
--- so that we can ignore callstacks. We do not want to ignore IOException
--- since other errors may throw them, and those we want to know about.
-newtype FileNotFoundE = MkFileNotFoundE OsPath
-  deriving stock (Show)
-
-instance Exception FileNotFoundE where
-  displayException (MkFileNotFoundE p) =
-    mconcat
-      [ "File not found: ",
-        decodeLenient p
-      ]
-
 -- | Exception for when we are expecting a required chart file to exist, but
 -- none was found. This differs from 'FileNotFoundE' in that the latter is
 -- caused by a failure to find an extant file at an exact location. This
@@ -150,7 +136,7 @@ instance Exception ChartFileMissingE where
   displayException e =
     mconcat
       [ "Required chart file not found. Searched for paths(s) ",
-        Utils.showMapListInline Utils.showPath e.expectedFiles,
+        Utils.Show.showMapListInline Utils.Show.showPath e.expectedFiles,
         " in directories:",
         dirsStr
       ]

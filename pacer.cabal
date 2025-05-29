@@ -122,6 +122,8 @@ library
     Pacer.Exception
     Pacer.Prelude
     Pacer.Utils
+    Pacer.Utils.FileSearch
+    Pacer.Utils.Show
     Pacer.Web
     Pacer.Web.Paths
     Pacer.Web.Utils

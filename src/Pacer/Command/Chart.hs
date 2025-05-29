@@ -55,6 +55,7 @@ import Pacer.Data.Distance.Units (DistanceUnit)
 import Pacer.Exception (GarminE (GarminUnitRequired))
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
+import Pacer.Utils.Show qualified as Utils.Show
 import Pacer.Web qualified as Web
 import Pacer.Web.Paths qualified as WPaths
 import System.OsPath qualified as OsPath
@@ -80,7 +81,7 @@ handle params = do
     then do
       $(Logger.logInfo)
         $ "Using build-dir: "
-        <> Utils.showtPath params.buildDir
+        <> Utils.Show.showtPath params.buildDir
 
       -- params.json is active, so stop after json generation
       let jsonPath = params.buildDir <</>> jsonName
@@ -106,14 +107,14 @@ createCharts ::
 createCharts params = addNamespace "createCharts" $ do
   $(Logger.logInfo)
     $ "Using chart-requests: "
-    <> Utils.showtPath params.chartRequestsPath
+    <> Utils.Show.showtPath params.chartRequestsPath
   for params.activityPaths $ \r ->
-    $(Logger.logInfo) $ "Using activities: " <> Utils.showtPath r
+    $(Logger.logInfo) $ "Using activities: " <> Utils.Show.showtPath r
 
   case params.activityLabelsPath of
     Nothing -> $(Logger.logDebug) "No activity-labels given"
     Just p ->
-      $(Logger.logInfo) $ "Using activity-labels: " <> Utils.showtPath p
+      $(Logger.logInfo) $ "Using activity-labels: " <> Utils.Show.showtPath p
 
   createChartSeq chartPaths
   where
@@ -142,7 +143,7 @@ createChartsJsonFile charts outJson =
 
     writeBinaryFile outJsonOsPath (toStrictBS bs)
 
-    let msg = "Wrote json file: " <> Utils.showtOsPath outJsonOsPath
+    let msg = "Wrote json file: " <> Utils.Show.showtOsPath outJsonOsPath
     $(Logger.logInfo) msg
   where
     outJsonOsPath = toOsPath outJson
@@ -205,9 +206,9 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
           let msg =
                 mconcat
                   [ "The following timestamps with labels from '",
-                    Utils.showtPath activityLabelsPath,
+                    Utils.Show.showtPath activityLabelsPath,
                     "' were not found in activities files:",
-                    Utils.showMapListNewlines
+                    Utils.Show.showMapListNewlines
                       displayUnused
                       (MP.toList unusedTimestamps)
                   ]
@@ -223,7 +224,7 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
       mconcat
         [ display ts,
           ": ",
-          Utils.showMapListInline (.unLabel) (toList $ NESet.toList labels)
+          Utils.Show.showMapListInline (.unLabel) (toList $ NESet.toList labels)
         ]
 
     -- DistanceUnit should be set if this is a garmin (csv) file.

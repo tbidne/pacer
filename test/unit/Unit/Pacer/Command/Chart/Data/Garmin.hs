@@ -22,7 +22,7 @@ import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Params
   ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
   )
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Show qualified as Utils.Show
 import Text.Read qualified as TR
 import Unit.Prelude
 
@@ -75,7 +75,7 @@ testNameActivities = testCase "name with 'activities' default" $ do
     mkExpected name =
       [ mconcat
           [ "Unknown file type: '",
-            Utils.showtPath root,
+            Utils.Show.showtPath root,
             name,
             "'. Guessing custom json format."
           ]
