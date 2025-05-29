@@ -31,7 +31,8 @@ import GHC.TypeError qualified as TE
 import GHC.TypeLits (ErrorMessage (ShowType, (:<>:)), TypeError)
 import Pacer.Class.FromAlt
   ( FromAlt (Alt1, toAlt1),
-    isNonEmpty,
+    asum1M,
+    (<+<|>+>),
   )
 import Pacer.Configuration.Config
   ( ChartConfig (dataDir),
@@ -342,21 +343,22 @@ resolveChartInput ::
   Eff es (f (Path Abs File))
 resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
   addNamespace "resolveChartInput" $ addNamespace desc $ do
-    -- 1. Try Cli first.
-    cliResult <- findCliPath params.dataDir fileNames mInputOsPath
-    if isNonEmpty cliResult
-      then pure cliResult
-      else do
-        $(Logger.logDebug) "No cli path(s) found, checking config"
-        -- 2. Try Config next.
-        configResult <- findConfigPath fileNames configSel mConfigWithPath
-        if isNonEmpty configResult
-          then pure configResult
-          else do
-            -- 3. Finally, fall back to xdg.
-            $(Logger.logDebug) "No config path(s) found, falling back to xdg"
-            (findXdgPath fileNames)
+    asum1M @List
+      [ searchCli,
+        searchConfig,
+        searchXdg
+      ]
   where
+    searchCli = findCliPath params.dataDir fileNames mInputOsPath
+
+    searchConfig = do
+      $(Logger.logDebug) "No cli path(s) found, checking config"
+      -- 2. Try Config next.
+      findConfigPath fileNames configSel mConfigWithPath
+
+    searchXdg = do
+      $(Logger.logDebug) "No config path(s) found, falling back to xdg"
+      (findXdgPath fileNames)
 
 findCliPath ::
   forall f es.
@@ -375,13 +377,13 @@ findCliPath ::
   f OsPath ->
   Eff es (f (Path Abs File))
 findCliPath mDataDir fileNames mFiles = addNamespace "findCliPath" $ do
-  if isNonEmpty mFiles
-    -- 1. If mFiles is not empty (i.e. Nothing or empty list), we use it.
-    then for mFiles parseCanonicalAbsFile
-    -- 2. If mFiles is empty, then we search the data directory, if it is
-    --    given.
-    else fallback
+  -- 1. If mFiles is not empty (i.e. Nothing or empty list), we use it.
+  -- 2. If mFiles is empty, then we search the data directory, if it is,
+  --    given.
+  tryGivenFiles <+<|>+> fallback
   where
+    tryGivenFiles = for mFiles parseCanonicalAbsFile
+
     fallback = case mDataDir of
       Nothing -> pure empty
       Just dataDir ->
@@ -411,20 +413,20 @@ findConfigPath fileNames configSel (Just configWithPath) =
       -- 2. Config.paths field exists.
       Just mPath ->
         -- 2.1. Config.paths is non-empty, use it.
-        if isNonEmpty mPath
-          then
-            for mPath
-              $ handleUnknownPath
-                configWithPath.dirPath
-                Path.parseAbsFile
-                Path.parseRelFile
-          -- 2.2. Config.paths exists but is empty, try config data dir.
-          else tryConfigDataDir
+        -- 2.2. Config.paths exists but is empty, try config data dir.
+        tryConfigPaths mPath <+<|>+> tryConfigDataDir
       -- 3. Config.paths does not exist, try config data dir.
       Nothing -> tryConfigDataDir
   where
     configDataSel :: AffineTraversal' ConfigWithPath OsPath
     configDataSel = #config % #chartConfig %? #dataDir % _Just
+
+    tryConfigPaths mPath =
+      for mPath
+        $ handleUnknownPath
+          configWithPath.dirPath
+          Path.parseAbsFile
+          Path.parseRelFile
 
     tryConfigDataDir = case preview configDataSel configWithPath of
       Just dataDir -> do

@@ -1,6 +1,9 @@
 module Pacer.Class.FromAlt
   ( FromAlt (..),
     isNonEmpty,
+    asum1M,
+    alt1M,
+    (<+<|>+>),
   )
 where
 
@@ -36,3 +39,19 @@ instance FromAlt List where
   isEmpty = F.null
   toAlt1 [] = Nothing
   toAlt1 (x : xs) = Just (x :| xs)
+
+asum1M :: forall t m f a. (Foldable t, FromAlt f, Monad m) => t (m (f a)) -> m (f a)
+asum1M = foldr alt1M (pure empty)
+
+-- Like '(<|>)', except utilizes the monad constraint to avoid effects run
+-- in the RHS if the LHS is non-empty.
+alt1M :: forall m f a. (FromAlt f, Monad m) => m (f a) -> m (f a) -> m (f a)
+alt1M mx my = do
+  x <- mx
+  if isNonEmpty x
+    then mx
+    else my
+
+-- | Operator for 'alt1M'.
+(<+<|>+>) :: forall m f a. (FromAlt f, Monad m) => m (f a) -> m (f a) -> m (f a)
+(<+<|>+>) = alt1M
