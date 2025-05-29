@@ -1,0 +1,38 @@
+/*
+The easiest way to associate labels to specific activities -- for the purposes
+of filtering in chart-requests -- is to directly attach them in activities.json.
+However this does not help us if we want to attach a label to a run defined
+in garmin's Activities.csv file.
+
+Hence, this file. The "datetime" field here corresponds to the "Date" in
+Activities.csv. Notice that the datetime formats might look slightly different
+i.e. Garmin seems to want dates formatted as:
+
+    YYYY-MM-DD HH:MM:SS e.g. 2025-01-16 18:04:43
+
+whereas we generally use the standard ISO 8601:
+
+    YYYY-MM-DDTHH:MM:SS e.g. 2025-01-16T18:04:43
+
+That said, pacer accepts dates written in either format.
+
+See https://en.wikipedia.org/wiki/ISO_8601
+*/
+{
+  "activity-labels": [
+    {
+      "datetime": "2024-10-25T12:00:00",
+      "labels": [
+        "official",
+        "marathon"
+      ]
+    },
+    {
+      "datetime": "2024-10-10 12:00:00",
+      "labels": [
+        "official",
+        "half-marathon"
+      ]
+    }
+  ]
+}

@@ -32,6 +32,8 @@ basicTests getTestDir =
       testDuplicateDateError getTestDir,
       testGarminChart getTestDir,
       testDefaultAndGarminExamples getTestDir,
+      testDefaultAndGarmin getTestDir,
+      testDefaultAndGarminSameCase getTestDir,
       testCaseInsensitive getTestDir,
       testGarminChartError getTestDir,
       testBothChartOverlapError getTestDir,
@@ -146,6 +148,29 @@ testDefaultAndGarminExamples getTestDir = testGoldenParams getTestDir params
         }
     buildDir p = unsafeDecode $ p </> [osp|build|]
     dataDir = unsafeDecode [osp|examples|]
+
+-- testDefaultAndGarmin and testDefaultAndGarminSameCase exist to test that
+-- we find both activitities file, even when they share the same case.
+--
+-- That is, testDefaultAndGarmin is the relatively standard
+--
+--   activities.json, Activities.csv
+--
+-- while testDefaultAndGarminSameCase has
+--
+--   activities.json, activities.csv
+--
+-- Both should be the same.
+
+testDefaultAndGarmin :: IO OsPath -> TestTree
+testDefaultAndGarmin = testChart desc [osp|testDefaultAndGarmin|]
+  where
+    desc = "Uses default and garmin activities files"
+
+testDefaultAndGarminSameCase :: IO OsPath -> TestTree
+testDefaultAndGarminSameCase = testChart desc [osp|testDefaultAndGarminSameCase|]
+  where
+    desc = "Uses default and garmin activities files with same case"
 
 testCaseInsensitive :: IO OsPath -> TestTree
 testCaseInsensitive = testChart desc [osp|testCaseInsensitive|]
