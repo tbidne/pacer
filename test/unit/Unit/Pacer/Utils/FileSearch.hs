@@ -24,16 +24,6 @@ tests =
       infixSearchTests
     ]
 
--- tests
---
---   - search aliases
---     - single/multiple
---     - failure/one/many matching
---   - seach infix
---     - single/multiple
---     - failure/one/many matching
---    - search both
-
 aliasSearchTests :: TestTree
 aliasSearchTests =
   testGroup
@@ -92,7 +82,7 @@ testAliasOneSecondMatch = testCase "Finds second match" $ do
 -- - SearchFiles [Aliases a1, Aliases a2]
 -- - SearchFiles [Aliases [a1, a2]]
 --
--- Are equivalent for Maybe (at least for now).
+-- Are equivalent for Maybe.
 testAliasOneMultiMatch :: TestTree
 testAliasOneMultiMatch = testCase "Finds first of multi search" $ do
   -- finds the first.
@@ -192,19 +182,16 @@ testAliasManyMultiMatch = testCase "Finds all for multi search" $ do
       )
   [[osp|TwO|], [osp|OnE|]] @=? result2
 
-  -- Tests that SearchAliases for multi search does _not_ distribute i.e.
+  -- Tests that SearchAliases is distributive i.e.
   --
   -- - SearchFiles [Aliases a1, Aliases a2]
   -- - SearchFiles [Aliases [a1, a2]]
-  --
-  -- Are NOT equivalent, because the former takes matches for both cases,
-  -- where the latter only takes one.
   result3 <-
     runFileSearch
       @List
       [reldir|testAlias|]
       (MkSearchFiles [SearchFileAliases (MkFileAliases [f, g])])
-  [[osp|OnE|]] @=? result3
+  [[osp|OnE|], [osp|TwO|]] @=? result3
   where
     f = [relfile|oNe|]
     g = [relfile|tWo|]

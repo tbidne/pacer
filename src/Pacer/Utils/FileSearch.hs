@@ -405,11 +405,12 @@ searchFileAliases checkExists dataDir aliases = do
         else do
           -- 2. File does not exist, try case insensitive search.
           caseInsensResult <- searchCaseInsens f
-          if isNonEmpty caseInsensResult
-            -- 2.1. Some case-insensitive match, return.
-            then pure caseInsensResult
-            -- 2.2. No matches, try remaining aliases.
-            else go fs
+          (caseInsensResult <|>) <$> go fs
+    -- if isNonEmpty caseInsensResult
+    -- 2.1. Some case-insensitive match, return.
+    --  then pure caseInsensResult
+    -- 2.2. No matches, try remaining aliases.
+    --  else go fs
 
     searchCaseInsens :: (HasCallStack) => Path Rel File -> Eff es (f (Path Abs File))
     searchCaseInsens f = do
