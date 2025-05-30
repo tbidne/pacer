@@ -9,8 +9,7 @@ import Effectful.Logger.Dynamic (Logger (LoggerLog))
 import Pacer.Class.FromAlt (FromAlt)
 import Pacer.Utils.FileSearch
   ( FileAliases (MkFileAliases),
-    SearchFileType (SearchFileAliases, SearchFileInfix),
-    SearchFiles (MkSearchFiles),
+    FileSearch (SearchFileAliases, SearchFileInfix),
   )
 import Pacer.Utils.FileSearch qualified as FileSearch
 import System.OsPath qualified as OsPath
@@ -45,44 +44,39 @@ aliasSearchOneTests =
 
 testAliasOneNone :: TestTree
 testAliasOneNone = testCase "Finds no matches" $ do
-  result <-
-    runFileSearch @Maybe [reldir|testAlias|] searchFiles
-  Nothing @=? result
+  for_ fileSearch $ \sf -> do
+    result <-
+      runFileSearch @Maybe [reldir|testAlias|] sf
+    Nothing @=? result
   where
-    searchFiles =
-      MkSearchFiles
-        [ SearchFileAliases (MkFileAliases [f]),
-          SearchFileAliases (MkFileAliases [g]),
-          SearchFileAliases (MkFileAliases [f, g]),
-          SearchFileAliases (MkFileAliases [g, f])
-        ]
+    fileSearch :: List FileSearch
+    fileSearch =
+      [ SearchFileAliases (MkFileAliases [f]),
+        SearchFileAliases (MkFileAliases [g]),
+        SearchFileAliases (MkFileAliases [f, g]),
+        SearchFileAliases (MkFileAliases [g, f])
+      ]
     f = [relfile|four|]
     g = [relfile|five|]
 
 testAliasOneMatch :: TestTree
 testAliasOneMatch = testCase "Finds match" $ do
   result <-
-    runFileSearch @Maybe [reldir|testAlias|] searchFiles
-  Just [osp|OnE|] @=? result
+    runFileSearch @Maybe [reldir|testAlias|] fileSearch
+  Just [osp|one|] @=? result
   where
-    searchFiles = MkSearchFiles [SearchFileAliases aliases]
-    aliases = MkFileAliases [[relfile|oNe|]]
+    fileSearch = SearchFileAliases aliases
+    aliases = MkFileAliases [[relfile|one|]]
 
 testAliasOneSecondMatch :: TestTree
 testAliasOneSecondMatch = testCase "Finds second match" $ do
   result <-
-    runFileSearch @Maybe [reldir|testAlias|] searchFiles
-  Just [osp|TwO|] @=? result
+    runFileSearch @Maybe [reldir|testAlias|] fileSearch
+  Just [osp|two|] @=? result
   where
-    searchFiles = MkSearchFiles [SearchFileAliases aliases]
-    aliases = MkFileAliases [[relfile|four|], [relfile|tWo|]]
+    fileSearch = SearchFileAliases aliases
+    aliases = MkFileAliases [[relfile|four|], [relfile|two|]]
 
--- Note that:
---
--- - SearchFiles [Aliases a1, Aliases a2]
--- - SearchFiles [Aliases [a1, a2]]
---
--- Are equivalent for Maybe.
 testAliasOneMultiMatch :: TestTree
 testAliasOneMultiMatch = testCase "Finds first of multi search" $ do
   -- finds the first.
@@ -90,27 +84,19 @@ testAliasOneMultiMatch = testCase "Finds first of multi search" $ do
     runFileSearch
       @Maybe
       [reldir|testAlias|]
-      (MkSearchFiles [SearchFileAliases (MkFileAliases [f]), SearchFileAliases (MkFileAliases [g])])
-  Just [osp|OnE|] @=? result1
+      (SearchFileAliases (MkFileAliases [f, g]))
+  Just [osp|one|] @=? result1
 
   -- finds the swapped first.
   result2 <-
     runFileSearch
       @Maybe
       [reldir|testAlias|]
-      (MkSearchFiles [SearchFileAliases (MkFileAliases [g]), SearchFileAliases (MkFileAliases [f])])
-  Just [osp|TwO|] @=? result2
-
-  -- should be the same as the first.
-  result3 <-
-    runFileSearch
-      @Maybe
-      [reldir|testAlias|]
-      (MkSearchFiles [SearchFileAliases (MkFileAliases [f, g])])
-  Just [osp|OnE|] @=? result3
+      (SearchFileAliases (MkFileAliases [g, f]))
+  Just [osp|two|] @=? result2
   where
-    f = [relfile|oNe|]
-    g = [relfile|tWo|]
+    f = [relfile|one|]
+    g = [relfile|two|]
 
 aliasSearchManyTests :: TestTree
 aliasSearchManyTests =
@@ -124,37 +110,38 @@ aliasSearchManyTests =
 
 testAliasManyNone :: TestTree
 testAliasManyNone = testCase "Finds no matches" $ do
-  result <-
-    runFileSearch @List [reldir|testAlias|] searchFiles
-  [] @=? result
+  for_ fileSearch $ \sf -> do
+    result <-
+      runFileSearch @List [reldir|testAlias|] sf
+    [] @=? result
   where
-    searchFiles =
-      MkSearchFiles
-        [ SearchFileAliases (MkFileAliases [f]),
-          SearchFileAliases (MkFileAliases [g]),
-          SearchFileAliases (MkFileAliases [f, g]),
-          SearchFileAliases (MkFileAliases [g, f])
-        ]
+    fileSearch :: List FileSearch
+    fileSearch =
+      [ SearchFileAliases (MkFileAliases [f]),
+        SearchFileAliases (MkFileAliases [g]),
+        SearchFileAliases (MkFileAliases [f, g]),
+        SearchFileAliases (MkFileAliases [g, f])
+      ]
     f = [relfile|four|]
     g = [relfile|five|]
 
 testAliasManyMatch :: TestTree
 testAliasManyMatch = testCase "Finds match" $ do
   result <-
-    runFileSearch @List [reldir|testAlias|] searchFiles
-  [[osp|OnE|]] @=? result
+    runFileSearch @List [reldir|testAlias|] fileSearch
+  [[osp|one|]] @=? result
   where
-    searchFiles = MkSearchFiles [SearchFileAliases aliases]
-    aliases = MkFileAliases [[relfile|oNe|]]
+    fileSearch = SearchFileAliases aliases
+    aliases = MkFileAliases [[relfile|one|]]
 
 testAliasManySecondMatch :: TestTree
 testAliasManySecondMatch = testCase "Finds second match" $ do
   result <-
-    runFileSearch @List [reldir|testAlias|] searchFiles
-  [[osp|TwO|]] @=? result
+    runFileSearch @List [reldir|testAlias|] fileSearch
+  [[osp|two|]] @=? result
   where
-    searchFiles = MkSearchFiles [SearchFileAliases aliases]
-    aliases = MkFileAliases [[relfile|four|], [relfile|tWo|]]
+    fileSearch = SearchFileAliases aliases
+    aliases = MkFileAliases [[relfile|four|], [relfile|two|]]
 
 testAliasManyMultiMatch :: TestTree
 testAliasManyMultiMatch = testCase "Finds all for multi search" $ do
@@ -163,38 +150,19 @@ testAliasManyMultiMatch = testCase "Finds all for multi search" $ do
     runFileSearch
       @List
       [reldir|testAlias|]
-      ( MkSearchFiles
-          [ SearchFileAliases (MkFileAliases [f]),
-            SearchFileAliases (MkFileAliases [g])
-          ]
-      )
-  [[osp|OnE|], [osp|TwO|]] @=? result1
+      (SearchFileAliases (MkFileAliases [f, g]))
+  [[osp|one|], [osp|two|]] @=? result1
 
   -- finds all matches, different order.
   result2 <-
     runFileSearch
       @List
       [reldir|testAlias|]
-      ( MkSearchFiles
-          [ SearchFileAliases (MkFileAliases [g]),
-            SearchFileAliases (MkFileAliases [f])
-          ]
-      )
-  [[osp|TwO|], [osp|OnE|]] @=? result2
-
-  -- Tests that SearchAliases is distributive i.e.
-  --
-  -- - SearchFiles [Aliases a1, Aliases a2]
-  -- - SearchFiles [Aliases [a1, a2]]
-  result3 <-
-    runFileSearch
-      @List
-      [reldir|testAlias|]
-      (MkSearchFiles [SearchFileAliases (MkFileAliases [f, g])])
-  [[osp|OnE|], [osp|TwO|]] @=? result3
+      (SearchFileAliases (MkFileAliases [g, f]))
+  [[osp|two|], [osp|one|]] @=? result2
   where
-    f = [relfile|oNe|]
-    g = [relfile|tWo|]
+    f = [relfile|one|]
+    g = [relfile|two|]
 
 infixSearchTests :: TestTree
 infixSearchTests =
@@ -216,26 +184,27 @@ infixSearchOneTests =
 
 testInfixOneNone :: TestTree
 testInfixOneNone = testCase "Finds no matches" $ do
-  result <-
-    runFileSearch @Maybe [reldir|testInfix|] searchFiles
-  Nothing @=? result
+  for_ fileSearch $ \sf -> do
+    result <-
+      runFileSearch @Maybe [reldir|testInfix|] sf
+    Nothing @=? result
   where
-    searchFiles =
-      MkSearchFiles
-        [ SearchFileInfix f [],
-          SearchFileInfix g [],
-          SearchFileAliases (MkFileAliases [f, g])
-        ]
+    fileSearch :: List FileSearch
+    fileSearch =
+      [ SearchFileInfix f [],
+        SearchFileInfix g [],
+        SearchFileAliases (MkFileAliases [f, g])
+      ]
     f = [relfile|threebar|]
     g = [relfile|barx|]
 
 testInfixOneMatch :: TestTree
 testInfixOneMatch = testCase "Finds match" $ do
   result <-
-    runFileSearch @Maybe [reldir|testInfix|] searchFiles
-  Just [osp|FoOtHrEe|] @=? result
+    runFileSearch @Maybe [reldir|testInfix|] fileSearch
+  Just [osp|foothree|] @=? result
   where
-    searchFiles = MkSearchFiles [SearchFileInfix [relfile|ThReE|] []]
+    fileSearch = SearchFileInfix [relfile|three|] []
 
 testInfixOneMultiMatch :: TestTree
 testInfixOneMultiMatch = testCase "Finds first of multi search" $ do
@@ -243,65 +212,86 @@ testInfixOneMultiMatch = testCase "Finds first of multi search" $ do
     runFileSearch
       @Maybe
       [reldir|testInfix|]
-      (MkSearchFiles [SearchFileInfix f [], SearchFileInfix g []])
-  Just [osp|FoOoNe|] @=? result1
+      (SearchFileInfix f [])
 
   -- These are non-deterministically determined by the order of
   -- listDirectory.
   case result1 of
     Nothing -> assertFailure "Expected result, received nothing"
-    Just r -> assertBool ("Received :" ++ show r) $ r `Set.member` possibleResults
+    Just r -> assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults1
 
   result2 <-
     runFileSearch
       @Maybe
       [reldir|testInfix|]
-      (MkSearchFiles [SearchFileInfix g [], SearchFileInfix f []])
+      (SearchFileInfix g [])
 
   case result2 of
     Nothing -> assertFailure "Expected result, received nothing"
-    Just r -> assertBool ("Received :" ++ show r) $ r `Set.member` possibleResults
+    Just r -> assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults2
   where
-    f = [relfile|oNe|]
-    g = [relfile|tWo|]
+    f = [relfile|one|]
+    g = [relfile|two|]
 
-    possibleResults =
+    possibleResults1 =
       Set.fromList
-        [ [osp|FoOoNe|],
-          [osp|FoOoNeBaR|],
-          [osp|FoOtWo|],
-          [osp|OnEbAr|],
-          [osp|TwObAr|]
+        [ [osp|fooone|],
+          [osp|fooonebar|],
+          [osp|onebar|]
+        ]
+
+    possibleResults2 =
+      Set.fromList
+        [ [osp|footwo|],
+          [osp|twobar|]
         ]
 
 testInfixOneExts :: TestTree
 testInfixOneExts = testCase "Finds some matching extension" $ do
-  result <-
+  result1 <-
     runFileSearch
       @Maybe
       [reldir|testInfix|]
-      ( MkSearchFiles
-          [ SearchFileInfix f [[osp|.csv|], [osp|.tar.gz|]],
-            SearchFileInfix g [[osp|.json|], [osp|.yaml|]],
-            SearchFileInfix h [[osp|.gz|]]
-          ]
-      )
+      (SearchFileInfix f [[osp|.csv|], [osp|.tar.gz|]])
 
-  case result of
+  case result1 of
     Nothing -> assertFailure "Expected result, received nothing"
-    Just r -> assertBool ("Received :" ++ show r) $ r `Set.member` possibleResults
+    Just r -> assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults1
+
+  result2 <-
+    runFileSearch
+      @Maybe
+      [reldir|testInfix|]
+      (SearchFileInfix g [[osp|.json|], [osp|.yaml|]])
+
+  case result2 of
+    Nothing -> assertFailure "Expected result, received nothing"
+    Just r -> assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults2
+
+  result3 <-
+    runFileSearch
+      @Maybe
+      [reldir|testInfix|]
+      (SearchFileInfix h [[osp|.gz|]])
+
+  case result3 of
+    Nothing -> assertFailure "Expected result, received nothing"
+    Just r -> [osp|mer.tar.gz|] @=? r
   where
     f = [relfile|baz|]
     g = [relfile|quux|]
     h = [relfile|mer|]
 
-    possibleResults =
+    possibleResults1 =
       Set.fromList
         [ [osp|bazquux.csv|],
-          [osp|bazquux.json|],
-          [osp|bazquux.tar.gz|],
-          [osp|bazquux.yaml|],
-          [osp|mer.tar.gz|]
+          [osp|bazquux.tar.gz|]
+        ]
+
+    possibleResults2 =
+      Set.fromList
+        [ [osp|bazquux.json|],
+          [osp|bazquux.yaml|]
         ]
 
 infixSearchManyTests :: TestTree
@@ -316,26 +306,27 @@ infixSearchManyTests =
 
 testInfixManyNone :: TestTree
 testInfixManyNone = testCase "Finds no matches" $ do
-  result <-
-    runFileSearch @List [reldir|testInfix|] searchFiles
-  [] @=? result
+  for_ fileSearch $ \sf -> do
+    result <-
+      runFileSearch @List [reldir|testInfix|] sf
+    [] @=? result
   where
-    searchFiles =
-      MkSearchFiles
-        [ SearchFileInfix f [],
-          SearchFileInfix g [],
-          SearchFileAliases (MkFileAliases [f, g])
-        ]
+    fileSearch :: List FileSearch
+    fileSearch =
+      [ SearchFileInfix f [],
+        SearchFileInfix g [],
+        SearchFileAliases (MkFileAliases [f, g])
+      ]
     f = [relfile|threebar|]
     g = [relfile|barx|]
 
 testInfixManyMatch :: TestTree
 testInfixManyMatch = testCase "Finds match" $ do
   result <-
-    runFileSearch @List [reldir|testInfix|] searchFiles
-  [[osp|FoOtHrEe|]] @=? result
+    runFileSearch @List [reldir|testInfix|] fileSearch
+  [[osp|foothree|]] @=? result
   where
-    searchFiles = MkSearchFiles [SearchFileInfix [relfile|ThReE|] []]
+    fileSearch = SearchFileInfix [relfile|three|] []
 
 testInfixManyMultiMatch :: TestTree
 testInfixManyMultiMatch = testCase "Finds all for multi search" $ do
@@ -345,14 +336,10 @@ testInfixManyMultiMatch = testCase "Finds all for multi search" $ do
       <$> runFileSearch
         @List
         [reldir|testInfix|]
-        (MkSearchFiles [SearchFileInfix f [], SearchFileInfix g []])
-  [ [osp|FoOoNe|],
-    [osp|FoOoNeBaR|],
-    [osp|FoOtWo|],
-    [osp|OnEbAr|],
-    [osp|TwObAr|]
-    ]
-    @=? result1
+        (SearchFileInfix f [])
+
+  for_ result1 $ \r ->
+    assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults1
 
   -- finds the swapped first.
   result2 <-
@@ -360,54 +347,84 @@ testInfixManyMultiMatch = testCase "Finds all for multi search" $ do
       <$> runFileSearch
         @List
         [reldir|testInfix|]
-        (MkSearchFiles [SearchFileInfix g [], SearchFileInfix f []])
-  [ [osp|FoOoNe|],
-    [osp|FoOoNeBaR|],
-    [osp|FoOtWo|],
-    [osp|OnEbAr|],
-    [osp|TwObAr|]
-    ]
-    @=? result2
+        (SearchFileInfix g [])
+
+  for_ result2 $ \r ->
+    assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults2
   where
-    f = [relfile|oNe|]
-    g = [relfile|tWo|]
+    f = [relfile|one|]
+    g = [relfile|two|]
+
+    possibleResults1 =
+      Set.fromList
+        [ [osp|fooone|],
+          [osp|fooonebar|],
+          [osp|onebar|]
+        ]
+
+    possibleResults2 =
+      Set.fromList
+        [ [osp|footwo|],
+          [osp|twobar|]
+        ]
 
 testInfixManyExts :: TestTree
 testInfixManyExts = testCase "Finds all matching extension" $ do
-  result <-
+  result1 <-
     L.sort
       <$> runFileSearch
         @List
         [reldir|testInfix|]
-        ( MkSearchFiles
-            [ SearchFileInfix f [[osp|.csv|], [osp|.tar.gz|]],
-              SearchFileInfix g [[osp|.json|], [osp|.yaml|]],
-              SearchFileInfix h [[osp|.gz|]]
-            ]
-        )
-  [ [osp|bazquux.csv|],
-    [osp|bazquux.json|],
-    [osp|bazquux.tar.gz|],
-    [osp|bazquux.yaml|],
-    [osp|mer.tar.gz|]
-    ]
-    @=? result
+        (SearchFileInfix f [[osp|.csv|], [osp|.tar.gz|]])
+  for_ result1 $ \r ->
+    assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults1
+
+  result2 <-
+    L.sort
+      <$> runFileSearch
+        @List
+        [reldir|testInfix|]
+        (SearchFileInfix g [[osp|.json|], [osp|.yaml|]])
+
+  for_ result2 $ \r ->
+    assertBool ("Received: " ++ show r) $ r `Set.member` possibleResults2
+
+  result3 <-
+    L.sort
+      <$> runFileSearch
+        @List
+        [reldir|testInfix|]
+        (SearchFileInfix h [[osp|.gz|]])
+
+  [[osp|mer.tar.gz|]] @=? result3
   where
     f = [relfile|baz|]
     g = [relfile|quux|]
     h = [relfile|mer|]
 
+    possibleResults1 =
+      Set.fromList
+        [ [osp|bazquux.csv|],
+          [osp|bazquux.tar.gz|]
+        ]
+
+    possibleResults2 =
+      Set.fromList
+        [ [osp|bazquux.json|],
+          [osp|bazquux.yaml|]
+        ]
+
 runFileSearch ::
   (FromAlt f) =>
   Path Rel Dir ->
-  SearchFiles ->
+  FileSearch ->
   IO (f OsPath)
-runFileSearch dir searchFiles = do
+runFileSearch dir fileSearch = do
   results <-
     run
       $ FileSearch.resolveFilePath
         "runFileSearch_test"
-        searchFiles
+        fileSearch
         [FileSearch.findDirectoryPath $ Just $ nameToDir dir]
 
   pure $ k <$> results

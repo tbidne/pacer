@@ -64,8 +64,7 @@ import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import Pacer.Utils.FileSearch
   ( FileAliases (MkFileAliases),
-    SearchFileType (SearchFileAliases),
-    SearchFiles (MkSearchFiles),
+    FileSearch (SearchFileAliases),
   )
 import Pacer.Utils.FileSearch qualified as Utils.FileSearch
 import System.OsPath qualified as FP
@@ -283,8 +282,7 @@ getEnv = do
           logVerbosity
         }
 
-    configSearchFiles =
-      MkSearchFiles [SearchFileAliases configAliases]
+    configSearchFiles = SearchFileAliases configAliases
     configAliases =
       MkFileAliases
         [[relfile|config.json|], [relfile|config.jsonc|]]

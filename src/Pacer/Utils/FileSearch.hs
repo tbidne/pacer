@@ -16,10 +16,9 @@ module Pacer.Utils.FileSearch
 
     -- ** File discovery
     DirNotExistsStrategy (..),
-    SearchFiles (..),
-    SearchFileType (..),
+    FileSearch (..),
     FileAliases (..),
-    searchFiles,
+    fileSearch,
     DirExistsCheck (..),
     searchFileAliases,
     searchFilesToList,
@@ -58,7 +57,7 @@ resolveFilePath ::
   -- | Text description of what we are trying to find. Used for logging.
   Text ->
   -- | Expected file_name(s) e.g. activities file(s).
-  SearchFiles ->
+  FileSearch ->
   -- | Search strategies.
   List (FileSearchStrategy f es) ->
   Eff es (f (Path Abs File))
@@ -94,7 +93,7 @@ instance Exception FileNotFoundE where
 type FileSearchStrategy :: (Type -> Type) -> List Effect -> Type
 newtype FileSearchStrategy f es
   = MkFileSearchStrategy
-  { unFileSearchStrategy :: SearchFiles -> (Eff es (f (Path Abs File)))
+  { unFileSearchStrategy :: FileSearch -> (Eff es (f (Path Abs File)))
   }
 
 instance (FromAlt f) => Semigroup (FileSearchStrategy f es) where
@@ -162,7 +161,7 @@ findDirectoryPath ::
 findDirectoryPath Nothing = MkFileSearchStrategy $ \_ -> pure empty
 findDirectoryPath (Just dir) = MkFileSearchStrategy $ \fileNames -> addNamespace "findDirectoryPath" $ do
   $(Logger.logDebug) $ "Searching directory: " <> Show.showtOsPath dir
-  parseCanonicalAbsDir dir >>= searchFiles fileNames DirNotExistsFail
+  parseCanonicalAbsDir dir >>= fileSearch fileNames DirNotExistsFail
 
 -- | Searches for the given file in the xdg directory.
 findXdgPath ::
@@ -179,7 +178,7 @@ findXdgPath = MkFileSearchStrategy $ \fileNames -> addNamespace "findXdgPath" $ 
   xdgDir <- getCachedXdgConfigPath
   $(Logger.logDebug) $ "Searching xdg: " <> Show.showtPath xdgDir
 
-  searchFiles fileNames DirNotExistsOk xdgDir
+  fileSearch fileNames DirNotExistsOk xdgDir
 
 -- | Exception for a directory not existing.
 newtype DirNotFoundE = MkDirNotFoundE OsPath
@@ -199,13 +198,13 @@ data DirNotExistsStrategy
   | -- | Directory required; inexistence should error.
     DirNotExistsFail
 
--- | Attempts to discover files based on 'SearchFiles' i.e.
+-- | Attempts to discover files based on 'FileSearch' i.e.
 -- "expected" filenames. For each search file @s@, produces a search result
 -- @r@ per 'searchFile', and combines the result via '(<|>)'.
 --
 -- In other words, depending on choice of type variable @f@, can return
 -- multiple results ('List') or a single result ('Maybe').
-searchFiles ::
+fileSearch ::
   forall f es.
   ( FromAlt f,
     HasCallStack,
@@ -213,36 +212,28 @@ searchFiles ::
     PathReader :> es
   ) =>
   -- | File names to search.
-  SearchFiles ->
+  FileSearch ->
   -- | How to handle the directory not existing.
   DirNotExistsStrategy ->
   -- | Data dir to search.
   Path Abs Dir ->
   Eff es (f (Path Abs File))
-searchFiles fileNames dner dataDir = do
+fileSearch fileNames dner dataDir = do
   $(Logger.logDebug) msg
 
   dExists <- PR.doesDirectoryExist dataDirOsPath
 
   if dExists
-    then go . NE.toList $ fileNames.unSearchFiles
+    then go fileNames
     else handleEmptyDir dner dataDir
   where
     dataDirOsPath = toOsPath dataDir
 
-    go :: (HasCallStack) => List SearchFileType -> Eff es (f (Path Abs File))
-    go [] = pure empty
-    go (f : fs) = do
-      result <- case f of
-        SearchFileAliases aliases ->
-          searchFileAliases DirExistsCheckOff dataDir aliases
-        SearchFileInfix p exts ->
-          searchFileInfix DirExistsCheckOff dataDir p exts
-
-      -- Notice we do _not_ use (<+<|>+>), since that short circuits on
-      -- non-empty, but here we want to defer to the Alternative instance,
-      -- which may take multiple.
-      (result <|>) <$> go fs
+    go :: (HasCallStack) => FileSearch -> Eff es (f (Path Abs File))
+    go (SearchFileAliases aliases) =
+      searchFileAliases DirExistsCheckOff dataDir aliases
+    go (SearchFileInfix p exts) =
+      searchFileInfix DirExistsCheckOff dataDir p exts
 
     msg =
       mconcat
@@ -300,7 +291,7 @@ searchFileInfix ::
 searchFileInfix checkExists dataDir pat exts = do
   -- Cases:
   --
-  -- 1. searchFiles: dir must exist but already checked
+  -- 1. fileSearch: dir must exist but already checked
   -- 2. config: dir might not exist
   case checkExists of
     DirExistsCheckOn existsHandler -> do
@@ -375,7 +366,7 @@ searchFileAliases ::
 searchFileAliases checkExists dataDir aliases = do
   -- Cases:
   --
-  -- 1. searchFiles: dir must exist but already checked
+  -- 1. fileSearch: dir must exist but already checked
   -- 2. config: dir might not exist
   case checkExists of
     DirExistsCheckOn existsHandler -> do
@@ -401,16 +392,11 @@ searchFileAliases checkExists dataDir aliases = do
       exists <- PR.doesFileExist (toOsPath path)
       if exists
         -- 1. File exists, return single result
-        then pure $ pure path
+        then (pure path <|>) <$> go fs
         else do
           -- 2. File does not exist, try case insensitive search.
           caseInsensResult <- searchCaseInsens f
           (caseInsensResult <|>) <$> go fs
-    -- if isNonEmpty caseInsensResult
-    -- 2.1. Some case-insensitive match, return.
-    --  then pure caseInsensResult
-    -- 2.2. No matches, try remaining aliases.
-    --  else go fs
 
     searchCaseInsens :: (HasCallStack) => Path Rel File -> Eff es (f (Path Abs File))
     searchCaseInsens f = do
@@ -454,23 +440,14 @@ searchFileAliases checkExists dataDir aliases = do
         . packText
         . decodeLenient
 
--- | Represents multiple files for which we search. Unlike 'FileAliases',
--- 'SearchFiles' represents _different_ files (not mere alias differences),
--- hence a 'SearchFiles' search can return multiple results.
-newtype SearchFiles = MkSearchFiles
-  { unSearchFiles :: NonEmpty SearchFileType
-  }
-
-data SearchFileType
+-- | Represents searching for a particular file.
+data FileSearch
   = -- | Search for a file by aliases.
     SearchFileAliases FileAliases
   | -- | Search for a file by infix pattern, optionally filtering
     -- by known extensions. For example, searching for "activities"
     -- and {"json", "csv"} will find all files with (case-insensitive)
     -- infix "activities" and extensions "json" or "csv".
-    --
-    -- Unlike SearchFileAliases, this may find multiple results, per the
-    -- FromAlt instance.
     SearchFileInfix (Path Rel File) (Set OsPath)
 
 -- | Represents a single file for which we want to search. Holds multiple
@@ -482,12 +459,9 @@ newtype FileAliases = MkFileAliases
   { unAliases :: NonEmpty (Path Rel File)
   }
 
-searchFilesToList :: SearchFiles -> List (Path Rel File)
-searchFilesToList =
-  (>>= f)
-    . NE.toList
-    . (.unSearchFiles)
+searchFilesToList :: FileSearch -> List (Path Rel File)
+searchFilesToList = f
   where
-    f :: SearchFileType -> List (Path Rel File)
+    f :: FileSearch -> List (Path Rel File)
     f (SearchFileAliases as) = NE.toList as.unAliases
     f (SearchFileInfix p _) = [p]

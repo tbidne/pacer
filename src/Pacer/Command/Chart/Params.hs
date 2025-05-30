@@ -23,7 +23,6 @@ module Pacer.Command.Chart.Params
 where
 
 import Data.Functor.Identity (Identity (Identity))
-import Data.List.NonEmpty qualified as NE
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import FileSystem.Path qualified as Path
 import GHC.TypeError qualified as TE
@@ -57,9 +56,8 @@ import Pacer.Utils.FileSearch
   ( DirNotExistsStrategy (DirNotExistsFail),
     FileAliases (MkFileAliases),
     FileNotFoundE (MkFileNotFoundE),
+    FileSearch (SearchFileAliases, SearchFileInfix),
     FileSearchStrategy (MkFileSearchStrategy),
-    SearchFileType (SearchFileAliases, SearchFileInfix),
-    SearchFiles (MkSearchFiles),
   )
 import Pacer.Utils.FileSearch qualified as Utils.FileSearch
 import System.OsPath qualified as OsPath
@@ -294,7 +292,7 @@ resolveRequiredChartInput ::
   -- Text description
   Text ->
   -- Expected file_name(s) e.g. activities file
-  SearchFiles ->
+  FileSearch ->
   -- Maybe file.
   f OsPath ->
   -- Config selector.
@@ -337,7 +335,7 @@ resolveChartInput ::
   -- Text description
   Text ->
   -- Expected file_name(s) e.g. activities file(s)
-  SearchFiles ->
+  FileSearch ->
   -- Maybe file.
   f OsPath ->
   -- Config selector.
@@ -408,14 +406,12 @@ findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNam
             Path.parseAbsDir
             Path.parseRelDir
             dataDir
-        Utils.FileSearch.searchFiles fileNames DirNotExistsFail configDataDirPath
+        Utils.FileSearch.fileSearch fileNames DirNotExistsFail configDataDirPath
       Nothing -> pure empty
 
-chartRequestsSearch :: SearchFiles
+chartRequestsSearch :: FileSearch
 chartRequestsSearch =
-  MkSearchFiles
-    $ NE.singleton
-    $ SearchFileAliases
+  SearchFileAliases
     $ MkFileAliases aliases
   where
     aliases =
@@ -425,11 +421,8 @@ chartRequestsSearch =
         [relfile|chart_requests.jsonc|]
       ]
 
-activitiesSearch :: SearchFiles
-activitiesSearch =
-  MkSearchFiles
-    [ SearchFileInfix [relfile|activities|] exts
-    ]
+activitiesSearch :: FileSearch
+activitiesSearch = SearchFileInfix [relfile|activities|] exts
   where
     exts =
       [ [osp|.csv|],
@@ -437,12 +430,8 @@ activitiesSearch =
         [osp|.jsonc|]
       ]
 
-activityLabelsSearch :: SearchFiles
-activityLabelsSearch =
-  MkSearchFiles
-    $ NE.singleton
-    $ SearchFileAliases
-    $ MkFileAliases aliases
+activityLabelsSearch :: FileSearch
+activityLabelsSearch = SearchFileAliases $ MkFileAliases aliases
   where
     aliases =
       [ [relfile|activity-labels.json|],
@@ -487,7 +476,7 @@ throwIfMissing ::
   ) =>
   ChartParamsArgs ->
   Maybe ConfigWithPath ->
-  SearchFiles ->
+  FileSearch ->
   f a ->
   Eff es (Alt1 f a)
 throwIfMissing params mConfigWithPath fileNames mVal = case toAlt1 mVal of

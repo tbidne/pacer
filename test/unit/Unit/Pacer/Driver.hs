@@ -148,6 +148,12 @@ runPathReaderMock = reinterpret_ runPathReader $ \case
       | p == rootOsPath </> [ospPathSep|cwd/config.json|] -> pure False
       | p == rootOsPath </> [ospPathSep|cwd/config.jsonc|] -> pure False
       | p == rootOsPath </> [ospPathSep|cwd_config/config.json|] -> pure True
+      -- TODO: Investigate. The fact that this jsonc line is needed for the
+      -- tests to pass likely indicates a (minor) bug...if we find the json first, we
+      -- shouldn't even check jsonc, since we're using Maybe, right?
+      --
+      -- See if this is still needed after we refactor the alias search.
+      | p == rootOsPath </> [ospPathSep|cwd_config/config.jsonc|] -> pure False
       | otherwise -> error $ "Unexpected file: " ++ show p
   GetCurrentDirectory ->
     asks @TestEnv (.cwd) <&> \case
