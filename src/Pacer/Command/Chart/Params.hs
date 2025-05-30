@@ -58,6 +58,7 @@ import Pacer.Utils.FileSearch
     FileAliases (MkFileAliases),
     FileNotFoundE (MkFileNotFoundE),
     FileSearchStrategy (MkFileSearchStrategy),
+    SearchFileType (SearchFileAliases, SearchFileInfix),
     SearchFiles (MkSearchFiles),
   )
 import Pacer.Utils.FileSearch qualified as Utils.FileSearch
@@ -414,6 +415,7 @@ chartRequestsSearch :: SearchFiles
 chartRequestsSearch =
   MkSearchFiles
     $ NE.singleton
+    $ SearchFileAliases
     $ MkFileAliases aliases
   where
     aliases =
@@ -424,18 +426,22 @@ chartRequestsSearch =
       ]
 
 activitiesSearch :: SearchFiles
-activitiesSearch = MkSearchFiles [activitiesJsonName, activitiesGarminName]
+activitiesSearch =
+  MkSearchFiles
+    [ SearchFileInfix [relfile|activities|] exts
+    ]
   where
-    activitiesJsonName =
-      MkFileAliases
-        [[relfile|activities.json|], [relfile|activities.jsonc|]]
-    activitiesGarminName =
-      MkFileAliases [[relfile|Activities.csv|]]
+    exts =
+      [ [osp|.csv|],
+        [osp|.json|],
+        [osp|.jsonc|]
+      ]
 
 activityLabelsSearch :: SearchFiles
 activityLabelsSearch =
   MkSearchFiles
     $ NE.singleton
+    $ SearchFileAliases
     $ MkFileAliases aliases
   where
     aliases =

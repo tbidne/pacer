@@ -1,7 +1,7 @@
 MkChartParams
   { activityLabelsPath = Just "/cwd_files/activity-labels.json"
   , activityPaths = fromList
-    ( "/cwd_files/activities.json" :| [ "/cwd_files/Activities.csv" ] )
+    ( "/cwd_files/Activities.csv" :| [ "/cwd_files/activities.json" ] )
   , buildDir = "/cwd_files/build/"
   , cleanInstall = False
   , chartRequestsPath = "/cwd_files/chart-requests.json"

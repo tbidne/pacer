@@ -321,9 +321,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
           ]
       knownMissingFiles =
         Set.fromList
-          [ [osp|Activities.csv|],
-            [osp|activities.csv|],
-            [osp|activity-labels.json|],
+          [ [osp|activity-labels.json|],
             [osp|activity-labels.jsonc|],
             [osp|activity_labels.json|],
             [osp|activity_labels.jsonc|],
@@ -342,21 +340,17 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
         $> ([ospPathSep|test/unit/data/xdg/config|] </> p)
     other ->
       error $ "getXdgDirectory: unexpected: " ++ show other
-  ListDirectory p ->
-    if dirName `Set.member` knownDirs
-      then pure []
-      else error $ "listDirectory: unexpected: " ++ show dirName
+  ListDirectory p
+    | dirName == [osp|pacer|] ->
+        pure
+          [ [osp|activities.json|]
+          ]
+    | dirName == [osp|cwd|] -> pure []
+    | otherwise -> error $ "listDirectory: unexpected: " ++ show dirName
     where
       dirName = L.last $ OsPath.splitDirectories p
   PathIsSymbolicLink _ -> pure False
   other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
-  where
-    knownDirs =
-      Set.fromList
-        [ [osp|cwd|],
-          [osp|dist|],
-          [osp|pacer|]
-        ]
 
 runPathWriterMock ::
   ( IORefE :> es,

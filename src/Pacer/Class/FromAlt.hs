@@ -9,6 +9,7 @@ where
 
 import Data.Foldable qualified as F
 import Data.Functor.Identity (Identity (Identity))
+import Data.Maybe qualified as M
 import Data.Sequence qualified as Seq
 import Pacer.Prelude
 
@@ -25,6 +26,8 @@ class (Alternative f) => FromAlt f where
   -- | Map to the non-empty type.
   toAlt1 :: f a -> Maybe (Alt1 f a)
 
+  listToAlt :: List a -> f a
+
 isNonEmpty :: (FromAlt f) => f a -> Bool
 isNonEmpty = not . isEmpty
 
@@ -34,12 +37,16 @@ instance FromAlt Maybe where
   isEmpty = F.null
   toAlt1 = fmap Identity
 
+  listToAlt = M.listToMaybe
+
 instance FromAlt List where
   type Alt1 List = NonEmpty
 
   isEmpty = F.null
   toAlt1 [] = Nothing
   toAlt1 (x : xs) = Just (x :| xs)
+
+  listToAlt = identity
 
 instance FromAlt Seq where
   type Alt1 Seq = NESeq
@@ -48,6 +55,8 @@ instance FromAlt Seq where
 
   toAlt1 Seq.Empty = Nothing
   toAlt1 (x :<| xs) = Just (x :<|| xs)
+
+  listToAlt = Seq.fromList
 
 asum1M :: forall t m f a. (Foldable t, FromAlt f, Monad m) => t (m (f a)) -> m (f a)
 asum1M = foldr alt1M (pure empty)

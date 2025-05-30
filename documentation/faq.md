@@ -122,7 +122,8 @@ The most explicit way to generate charts is to use the `--chart-requests` and `-
 - If json config exists (explicit `--config` or found in `<xdg_config>` location):
   - `<config.path_type>`
   - `<config.data>/<expected_filename(s)>`
-- `<xdg_config>/<expected_filename(s)>` (e.g. `~/.config/pacer/expected_filename(s)`).
+- `<current_directory>/<expected_filenames(s)`
+- `<xdg_config>/<expected_filename(s)>` (e.g. `~/.config/pacer/expected_filename(s)`)
 
 In particular:
 
@@ -135,30 +136,41 @@ The only "expected filename" here is `chart-requests.json`, so this works out to
 - If json config exists:
   - `<config.chart-requests>`.
   - `<config.data>/chart-requests.json`.
+- `<current_directory>/chart-requests.json`
 - `<xdg_config>/chart-requests.json`
 
 #### activities
 
-On the other hand, activities have two possible "expected filenames":
+On the other hand, we search for activities for any file with
 
-- `activities.json` (custom format)
-- `Activities.csv` (garmin)
+- String `activities` (case-insensitive) somewhere in the name.
+- File extensions `csv`, `json`, or `jsonc`.
 
-Therefore this works out to be:
+For instance, `activities.json` or `Some Activities Garmin.csv`.
+
+Discovery works out to be:
 
 - If `--data <dir>` was given:
-  - `<dir>/activities.json`.
-  - `<dir>/Activities.csv`.
+  - `<dir>/<matches>`.
 - If json config exists:
   - `<config.activities>`.
-  - `<config.data>/activities.json`.
-  - `<config.data>/Activities.csv`.
-- `xdg_config/activities.json`
-- `xdg_config/Activities.csv`.
+  - `<config.data>/<matches>`.
+- `<current_directory>/<matches>`
+- `<xdg_config>/<matches>`
+
+#### activity-labels
+
+- If `--data <dir>` was given:
+  - `<dir>/activity-labels.json`.
+- If json config exists:
+  - `<config.activity-labels>`.
+  - `<config.data>/activity-labels.json`.
+- `<current_directory>/activity-labels.json`
+- `<xdg_config>/activity-labels.json`
 
 > [!TIP]
 >
-> - If `activities.json` and `Activities.csv` exist in the same directory then we will combine them.
+> - If multiple activity files exist in the same directory (e.g. `activities.json` and `Activities.csv`), then we will combine them.
 > - File discovery is case-insensitive e.g. we will also find `activities.csv`.
 > - Whenever we search for `<file>.json`, we also search for `<file>.jsonc`.
 > - Hyphens and underscores are interchangeable e.g. we search for `chart-requests` and `chart_requests`.

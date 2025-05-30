@@ -34,6 +34,7 @@ basicTests getTestDir =
       testDefaultAndGarminExamples getTestDir,
       testDefaultAndGarmin getTestDir,
       testDefaultAndGarminSameCase getTestDir,
+      testActivitiesInfix getTestDir,
       testCaseInsensitive getTestDir,
       testGarminChartError getTestDir,
       testBothChartOverlapError getTestDir,
@@ -171,6 +172,11 @@ testDefaultAndGarminSameCase :: IO OsPath -> TestTree
 testDefaultAndGarminSameCase = testChart desc [osp|testDefaultAndGarminSameCase|]
   where
     desc = "Uses default and garmin activities files with same case"
+
+testActivitiesInfix :: IO OsPath -> TestTree
+testActivitiesInfix = testChart desc [osp|testActivitiesInfix|]
+  where
+    desc = "Matches multiple activity files via infix"
 
 testCaseInsensitive :: IO OsPath -> TestTree
 testCaseInsensitive = testChart desc [osp|testCaseInsensitive|]

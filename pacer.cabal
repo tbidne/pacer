@@ -208,6 +208,7 @@ test-suite unit
     Unit.Pacer.Data.Pace
     Unit.Pacer.Driver
     Unit.Pacer.Utils
+    Unit.Pacer.Utils.FileSearch
     Unit.Prelude
     Unit.TestUtils
 

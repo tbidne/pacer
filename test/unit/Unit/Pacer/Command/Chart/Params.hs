@@ -636,6 +636,24 @@ runPathReaderMock = interpret_ $ \case
             [osp|chart-requests.json|],
             [osp|activities.json|]
           ]
+    | dirName == [osp|pacer|] ->
+        pure
+          [ [osp|activities.json|]
+          ]
+    | dirName == [osp|cli-data|] ->
+        pure
+          [ [osp|activities.json|]
+          ]
+    | dirName == [osp|config-data|] ->
+        pure
+          [ [osp|activities.json|]
+          ]
+    | dirName == [osp|cwd_files|] ->
+        pure
+          [ [osp|Activities.csv|],
+            [osp|activities.json|],
+            [osp|activity-labels.json|]
+          ]
     | otherwise -> pure []
     where
       dirName = L.last $ OsPath.splitDirectories p
