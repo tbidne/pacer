@@ -26,7 +26,7 @@ import Pacer.Command.Derive.Params qualified as Derive
 import Pacer.Command.Scale.Args qualified as Scale
 import Pacer.Command.Scale.Params qualified as Scale
 import Pacer.Configuration.Config (ConfigWithPath)
-import Pacer.Configuration.Env.Types (CachedPaths)
+import Pacer.Configuration.Env.Types (CachedPaths, LogEnv)
 import Pacer.Configuration.Phase
   ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
     ConfigPhaseF,
@@ -83,6 +83,7 @@ evolvePhase ::
     Logger :> es,
     LoggerNS :> es,
     PathReader :> es,
+    Reader LogEnv :> es,
     State CachedPaths :> es
   ) =>
   CommandPhaseArgs a ->

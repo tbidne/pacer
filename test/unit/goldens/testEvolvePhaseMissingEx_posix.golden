@@ -1,4 +1,5 @@
-Required chart file not found. Searched for paths(s) [chart-requests.json, chart-requests.jsonc, chart_requests.json, chart_requests.jsonc] in directories:
+Required chart file not found. Searched for paths(s) [chart-requests, chart_requests] with extension(s) [.json, .jsonc] in directories:
  - some-dir
  - some-config-data
+ - /cwd/
  - /root/bad_xdg/config/pacer/

@@ -11,7 +11,9 @@ module Pacer.Exception
   )
 where
 
+import Data.Foldable qualified as F
 import Data.List qualified as L
+import Data.Set (Set)
 import FileSystem.OsPath (decodeLenient)
 import GHC.TypeLits (symbolVal)
 import Pacer.Prelude
@@ -127,7 +129,9 @@ instance Exception CreateChartE where
 data ChartFileMissingE = MkChartFileMissingE
   { cliDataDir :: Maybe OsPath,
     configDataDir :: Maybe OsPath,
+    currentDir :: Path Abs Dir,
     expectedFiles :: List (Path Rel File),
+    expectedExts :: Set OsPath,
     xdgDir :: Path Abs Dir
   }
   deriving stock (Show)
@@ -137,6 +141,7 @@ instance Exception ChartFileMissingE where
     mconcat
       [ "Required chart file not found. Searched for paths(s) ",
         Utils.Show.showMapListInline Utils.Show.showPath e.expectedFiles,
+        extsStr,
         " in directories:",
         dirsStr
       ]
@@ -147,8 +152,17 @@ instance Exception ChartFileMissingE where
             (not . L.null)
             [ displayDir e.cliDataDir,
               displayDir e.configDataDir,
+              displayDir (Just $ toOsPath e.currentDir),
               displayDir (Just $ toOsPath e.xdgDir)
             ]
+
+      extsStr
+        | F.null e.expectedExts = ""
+        | otherwise =
+            mconcat
+              [ " with extension(s) ",
+                Utils.Show.showMapListInline Utils.Show.showOsPath e.expectedExts
+              ]
 
       displayDir Nothing = ""
       displayDir (Just d) = "\n - " <> decodeLenient d

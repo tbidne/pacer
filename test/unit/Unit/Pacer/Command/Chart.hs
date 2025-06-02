@@ -343,7 +343,8 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   ListDirectory p
     | dirName == [osp|pacer|] ->
         pure
-          [ [osp|activities.json|]
+          [ [osp|activities.json|],
+            [osp|chart-requests.json|]
           ]
     | dirName == [osp|cwd|] -> pure []
     | otherwise -> error $ "listDirectory: unexpected: " ++ show dirName

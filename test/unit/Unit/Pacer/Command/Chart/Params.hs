@@ -36,7 +36,7 @@ import Pacer.Configuration.Config
   ( Config,
     ConfigWithPath (MkConfigWithPath, config, dirPath),
   )
-import Pacer.Configuration.Env.Types (CachedPaths)
+import Pacer.Configuration.Env.Types (CachedPaths, LogEnv (MkLogEnv))
 import Pacer.Driver (displayInnerMatchKnown)
 import System.OsPath qualified as OsPath
 import Unit.Prelude
@@ -593,6 +593,9 @@ runEvolvePhase mCwd xdg params mConfig = do
         . runPathReaderMock
         . runLoggerMock
         . runLoggerNS ""
+        . runReader logEnv
+
+    logEnv = MkLogEnv Nothing mempty mempty
 
 runLoggerMock :: Eff (Logger : es) a -> Eff es a
 runLoggerMock = interpret_ $ \case
@@ -636,27 +639,43 @@ runPathReaderMock = interpret_ $ \case
             [osp|chart-requests.json|],
             [osp|activities.json|]
           ]
-    | dirName == [osp|pacer|] ->
+    -- xdg
+    | xdgNormal ->
         pure
-          [ [osp|activities.json|]
+          [ [osp|activities.json|],
+            [osp|chart-requests.json|]
           ]
     | dirName == [osp|cli-data|] ->
         pure
-          [ [osp|activities.json|]
+          [ [osp|activities.json|],
+            [osp|chart-requests.json|]
           ]
     | dirName == [osp|config-data|] ->
         pure
-          [ [osp|activities.json|]
+          [ [osp|activities.json|],
+            [osp|chart-requests.json|]
           ]
     | dirName == [osp|cwd_files|] ->
         pure
           [ [osp|Activities.csv|],
             [osp|activities.json|],
-            [osp|activity-labels.json|]
+            [osp|activity-labels.json|],
+            [osp|chart-requests.json|]
           ]
     | otherwise -> pure []
     where
-      dirName = L.last $ OsPath.splitDirectories p
+      dirsSplit = OsPath.splitDirectories p
+      dirName = L.last dirsSplit
+
+      xdgNormal =
+        [osp|xdg|]
+          `elem` dirsSplit
+          && [osp|bad_xdg|]
+          `nelem` dirsSplit
+          && [osp|missing_xdg|]
+          `nelem` dirsSplit
+
+      nelem x = not . elem x
   other -> error $ "runPathReaderMock: unimplemented: " ++ showEffectCons other
 
 goldenRunner :: ChartParamsArgs -> Config -> IO ByteString

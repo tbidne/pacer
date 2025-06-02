@@ -22,10 +22,11 @@ where
 import Control.Exception (SomeException (SomeException))
 import Control.Exception.Annotation.Utils (ExceptionProxy (MkExceptionProxy))
 import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
+import Data.Set qualified as Set
 import Effectful.Logger.Dynamic (LogLevel (LevelInfo), Logger (LoggerLog))
 import Effectful.Logger.Dynamic qualified as Logger
 import Effectful.LoggerNS.Static
-  ( LocStrategy (LocNone),
+  ( LocStrategy (LocNone, LocPartial),
     LogFormatter
       ( MkLogFormatter,
         locStrategy,
@@ -58,7 +59,10 @@ import Pacer.Configuration.Env.Types
   ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
     LogEnv (MkLogEnv, logLevel, logNamespace, logVerbosity),
   )
-import Pacer.Configuration.Logging (LogLevelParam (LogNone, LogSome))
+import Pacer.Configuration.Logging
+  ( LogLevelParam (LogNone, LogSome),
+    LogVerbosity (LogV0, LogV1),
+  )
 import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
@@ -285,7 +289,13 @@ getEnv = do
     configSearchFiles = SearchFileAliases configAliases
     configAliases =
       MkFileAliases
-        [[relfile|config.json|], [relfile|config.jsonc|]]
+        [[relfile|config|]]
+        exts
+    exts =
+      Set.fromList
+        $ [ [osp|.json|],
+            [osp|.jsonc|]
+          ]
 
 runLogger ::
   ( HasCallStack,
@@ -298,18 +308,23 @@ runLogger ::
   Eff (Logger : es) a ->
   Eff es a
 runLogger = interpret_ $ \case
-  LoggerLog _loc _logSrc lvl msg -> do
+  LoggerLog loc _logSrc lvl msg -> do
+    logEnv <- ask @LogEnv
     mLogLevel <- asks @LogEnv (.logLevel)
     case mLogLevel of
       Nothing -> pure ()
       Just logLevel -> do
         Logger.guardLevel logLevel lvl $ do
-          formatted <- LoggerNS.formatLog fmt lvl msg
+          let locStrategy = case logEnv.logVerbosity of
+                LogV0 -> LocNone
+                LogV1 -> LocPartial loc
+
+          formatted <- LoggerNS.formatLog (fmt locStrategy) lvl msg
           putBinary $ LoggerNS.logStrToBs formatted
     where
-      fmt =
+      fmt locStrategy =
         MkLogFormatter
-          { locStrategy = LocNone,
+          { locStrategy,
             newline = True,
             threadLabel = False,
             timezone = False

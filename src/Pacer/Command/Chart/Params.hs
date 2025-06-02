@@ -23,6 +23,7 @@ module Pacer.Command.Chart.Params
 where
 
 import Data.Functor.Identity (Identity (Identity))
+import Data.Set qualified as Set
 import Effectful.FileSystem.PathReader.Dynamic qualified as PR
 import FileSystem.Path qualified as Path
 import GHC.TypeError qualified as TE
@@ -36,7 +37,7 @@ import Pacer.Configuration.Config
     Config (chartConfig),
     ConfigWithPath (config, dirPath),
   )
-import Pacer.Configuration.Env.Types (CachedPaths, getCachedXdgConfigPath)
+import Pacer.Configuration.Env.Types (CachedPaths, LogEnv, getCachedXdgConfigPath)
 import Pacer.Configuration.Env.Types qualified as Types
 import Pacer.Configuration.Phase
   ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
@@ -47,6 +48,8 @@ import Pacer.Exception
       ( MkChartFileMissingE,
         cliDataDir,
         configDataDir,
+        currentDir,
+        expectedExts,
         expectedFiles,
         xdgDir
       ),
@@ -163,6 +166,7 @@ evolvePhase ::
     Logger :> es,
     LoggerNS :> es,
     PathReader :> es,
+    Reader LogEnv :> es,
     State CachedPaths :> es
   ) =>
   ChartParamsArgs ->
@@ -237,6 +241,7 @@ getChartInputs ::
     Logger :> es,
     LoggerNS :> es,
     PathReader :> es,
+    Reader LogEnv :> es,
     State CachedPaths :> es
   ) =>
   ChartParamsArgs ->
@@ -284,6 +289,7 @@ resolveRequiredChartInput ::
     Logger :> es,
     LoggerNS :> es,
     PathReader :> es,
+    Reader LogEnv :> es,
     State CachedPaths :> es,
     Traversable f
   ) =>
@@ -327,6 +333,7 @@ resolveChartInput ::
     Logger :> es,
     LoggerNS :> es,
     PathReader :> es,
+    Reader LogEnv :> es,
     State CachedPaths :> es,
     Traversable f
   ) =>
@@ -342,24 +349,23 @@ resolveChartInput ::
   AffineTraversal' Config (f OsPath) ->
   -- Path, if we were given one or found an expected one.
   Eff es (f (Path Abs File))
-resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
-  addNamespace "resolveChartInput" $ addNamespace desc $ do
-    -- When resolving a particular chart path, we try, in order:
-    --
-    -- 1. Cli file paths e.g. --chart-requests.
-    -- 2. Cli dir e.g. --data
-    -- 3. Config path.
-    -- 4. Current directory.
-    -- 4. Xdg dir.
-    Utils.FileSearch.resolveFilePath
-      desc
-      fileNames
-      [ Utils.FileSearch.findFilePath mInputOsPath,
-        Utils.FileSearch.findDirectoryPath params.dataDir,
-        findConfigPath configSel mConfigWithPath,
-        Utils.FileSearch.findCurrentDirectoryPath,
-        Utils.FileSearch.findXdgPath
-      ]
+resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel = do
+  -- When resolving a particular chart path, we try, in order:
+  --
+  -- 1. Cli file paths e.g. --chart-requests.
+  -- 2. Cli dir e.g. --data
+  -- 3. Config path.
+  -- 4. Current directory.
+  -- 5. Xdg dir.
+  Utils.FileSearch.resolveFilePath
+    desc
+    fileNames
+    [ Utils.FileSearch.findFilePath mInputOsPath,
+      Utils.FileSearch.findDirectoryPath params.dataDir,
+      findConfigPath configSel mConfigWithPath,
+      Utils.FileSearch.findCurrentDirectoryPath,
+      Utils.FileSearch.findXdgPath
+    ]
 
 findConfigPath ::
   ( FromAlt f,
@@ -367,6 +373,7 @@ findConfigPath ::
     Logger :> es,
     LoggerNS :> es,
     PathReader :> es,
+    Reader LogEnv :> es,
     Traversable f
   ) =>
   -- | Config selector.
@@ -406,20 +413,23 @@ findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNam
             Path.parseAbsDir
             Path.parseRelDir
             dataDir
-        Utils.FileSearch.fileSearch fileNames DirNotExistsFail configDataDirPath
+        Utils.FileSearch.directorySearch fileNames DirNotExistsFail configDataDirPath
       Nothing -> pure empty
 
 chartRequestsSearch :: FileSearch
 chartRequestsSearch =
   SearchFileAliases
-    $ MkFileAliases aliases
+    $ MkFileAliases aliases exts
   where
     aliases =
-      [ [relfile|chart-requests.json|],
-        [relfile|chart-requests.jsonc|],
-        [relfile|chart_requests.json|],
-        [relfile|chart_requests.jsonc|]
+      [ [relfile|chart-requests|],
+        [relfile|chart_requests|]
       ]
+    exts =
+      Set.fromList
+        $ [ [osp|.json|],
+            [osp|.jsonc|]
+          ]
 
 activitiesSearch :: FileSearch
 activitiesSearch = SearchFileInfix [relfile|activities|] exts
@@ -431,14 +441,17 @@ activitiesSearch = SearchFileInfix [relfile|activities|] exts
       ]
 
 activityLabelsSearch :: FileSearch
-activityLabelsSearch = SearchFileAliases $ MkFileAliases aliases
+activityLabelsSearch = SearchFileAliases $ MkFileAliases aliases exts
   where
     aliases =
-      [ [relfile|activity-labels.json|],
-        [relfile|activity-labels.jsonc|],
-        [relfile|activity_labels.json|],
-        [relfile|activity_labels.jsonc|]
+      [ [relfile|activity-labels|],
+        [relfile|activity_labels|]
       ]
+    exts =
+      Set.fromList
+        $ [ [osp|.json|],
+            [osp|.jsonc|]
+          ]
 
 -- Handles an unknown (wrt. absolute/relative) path, resolving any
 -- relative paths. Polymorphic over file/dir path.
@@ -483,15 +496,18 @@ throwIfMissing params mConfigWithPath fileNames mVal = case toAlt1 mVal of
   Just ps -> pure ps
   Nothing -> do
     xdgDir <- getCachedXdgConfigPath
+    currentDir <- Types.getCachedCurrentDirectory
     throwM
       $ MkChartFileMissingE
         { cliDataDir = params.dataDir,
           expectedFiles = fileNames',
+          expectedExts = exts,
           configDataDir =
             mConfigWithPath >>= \t -> t.config.chartConfig >>= (.dataDir),
+          currentDir,
           xdgDir
         }
   where
-    fileNames' = Utils.FileSearch.searchFilesToList fileNames
+    (fileNames', exts) = Utils.FileSearch.searchFilesToList fileNames
 
 makeFieldLabelsNoPrefix ''ChartParams

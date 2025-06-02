@@ -1,5 +1,6 @@
 module Pacer.Utils.Show
   ( -- * Paths
+    showOsPath,
     showtOsPath,
     showPath,
     showtPath,
@@ -18,8 +19,11 @@ where
 import FileSystem.OsPath qualified as OsPath
 import Pacer.Prelude
 
+showOsPath :: OsPath -> String
+showOsPath = OsPath.decodeLenient
+
 showtOsPath :: OsPath -> Text
-showtOsPath = packText . OsPath.decodeLenient
+showtOsPath = packText . showOsPath
 
 showPath :: Path b t -> String
 showPath = OsPath.decodeLenient . toOsPath
