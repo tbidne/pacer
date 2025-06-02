@@ -3,16 +3,23 @@
 
 module Unit.Pacer.Utils.FileSearch (tests) where
 
+import Data.Char qualified as Ch
 import Data.List qualified as L
 import Data.Set qualified as Set
+import Data.Text qualified as T
 import Effectful.Logger.Dynamic (Logger (LoggerLog))
+import FileSystem.OsPath (unsafeEncode)
+import Hedgehog.Gen qualified as G
+import Hedgehog.Range qualified as R
 import Pacer.Class.FromAlt (FromAlt)
 import Pacer.Configuration.Env.Types (LogEnv (MkLogEnv))
 import Pacer.Utils.FileSearch
   ( FileAliases (MkFileAliases),
     FileSearch (SearchFileAliases, SearchFileInfix),
+    MatchResult (extensionResult, patternResult),
   )
 import Pacer.Utils.FileSearch qualified as FileSearch
+import System.OsPath qualified as OsP
 import System.OsPath qualified as OsPath
 import Unit.Prelude
 
@@ -20,6 +27,14 @@ tests :: TestTree
 tests =
   testGroup
     "Pacer.Utils.FileSearch"
+    [ findDirectoryPathTests,
+      miscTests
+    ]
+
+findDirectoryPathTests :: TestTree
+findDirectoryPathTests =
+  testGroup
+    "findDirectoryPath"
     [ aliasSearchTests,
       infixSearchTests
     ]
@@ -458,3 +473,308 @@ runLoggerMock = interpret_ $ \case
 
 fileSearchDir :: OsPath
 fileSearchDir = toOsPath $ [reldirPathSep|test/unit/data/file-search|]
+
+miscTests :: TestTree
+miscTests =
+  testGroup
+    "Misc"
+    [ testAliasSatisfiesPattern,
+      testInfixSatisfiesPattern,
+      testOsPathToNameExtsSpecs,
+      testOsPathToNameExtsProps
+    ]
+
+testAliasSatisfiesPattern :: TestTree
+testAliasSatisfiesPattern = testCase desc $ do
+  -- simple equality
+  let simple1 = satisfies mempty [relfile|foo|] [osp|foo|]
+      simple2 = satisfies mempty [relfile|foo|] [osp|foobar|]
+
+  assertPatSuccessNoExt "simple_1" simple1
+  assertPatFailNoExt "simple_2" simple2
+
+  -- ignoring extensions
+  let ignoreExt1 = satisfies mempty [relfile|foo|] [osp|foo.json|]
+      ignoreExt2 = satisfies mempty [relfile|foo|] [osp|bar.json|]
+
+  assertPatSuccessNoExt "ignore_ext_1" ignoreExt1
+  assertPatFailNoExt "ignore_ext_2" ignoreExt2
+
+  -- extensions
+  let ext1 = satisfies exts [relfile|foo|] [osp|foo.json|]
+      ext2 = satisfies exts [relfile|foo|] [osp|foo.jsonc|]
+      ext3 = satisfies exts [relfile|foo|] [osp|bar.jsonc|]
+      ext4 = satisfies exts [relfile|foo|] [osp|bar.json|]
+
+  assertPatSuccessExtSuccess "ext_1" ext1
+  assertPatSuccessExtFail "ext_2" ext2
+  assertPatFailExtFail "ext_3" ext3
+  assertPatFailExtSuccess "ext_4" ext4
+
+  -- multi-extensions
+  let multiExt1 = satisfies exts2 [relfile|foo|] [osp|foo.tar.gz|]
+      multiExt2 = satisfies exts2 [relfile|foo|] [osp|foo.gz|]
+      multiExt3 = satisfies exts2 [relfile|foo|] [osp|foo.tar.gz|]
+      multiExt4 = satisfies exts3 [relfile|foo|] [osp|foo.tar.gz|]
+
+  assertPatSuccessExtSuccess "multi_ext_1" multiExt1
+  assertPatSuccessExtSuccess "multi_ext_2" multiExt2
+  assertPatSuccessExtSuccess "multi_ext_3" multiExt3
+  assertPatSuccessExtFail "multi_ext_4" multiExt4
+  where
+    desc = "Satisfies alias patterns"
+    satisfies = FileSearch.satisfiesPattern (==)
+
+    exts =
+      Set.fromList
+        [ [osstr|.json|],
+          [osstr|.yaml|]
+        ]
+
+    exts2 = Set.fromList [[osstr|.gz|]]
+
+    exts3 = Set.fromList [[osstr|.tar|]]
+
+testInfixSatisfiesPattern :: TestTree
+testInfixSatisfiesPattern = testCase desc $ do
+  -- simple equality
+  let simple1 = satisfies mempty [relfile|foo|] [osp|foo|]
+      simple2 = satisfies mempty [relfile|foo|] [osp|foobar|]
+      simple3 = satisfies mempty [relfile|foo|] [osp|barfoo|]
+      simple4 = satisfies mempty [relfile|foo|] [osp|barfoobaz|]
+      simple5 = satisfies mempty [relfile|foo|] [osp|foxo|]
+
+  assertPatSuccessNoExt "simple_1" simple1
+  assertPatSuccessNoExt "simple_2" simple2
+  assertPatSuccessNoExt "simple_3" simple3
+  assertPatSuccessNoExt "simple_4" simple4
+  assertPatFailNoExt "simple_5" simple5
+
+  -- ignoring extensions
+  let ignoreExt1 = satisfies mempty [relfile|foo|] [osp|foo.json|]
+      ignoreExt2 = satisfies mempty [relfile|foo|] [osp|foobar.json|]
+      ignoreExt3 = satisfies mempty [relfile|foo|] [osp|barfoo.json|]
+      ignoreExt4 = satisfies mempty [relfile|foo|] [osp|barfoobaz.json|]
+      ignoreExt5 = satisfies mempty [relfile|foo|] [osp|foxo.json|]
+
+  assertPatSuccessNoExt "ignore_ext_1" ignoreExt1
+  assertPatSuccessNoExt "ignore_ext_2" ignoreExt2
+  assertPatSuccessNoExt "ignore_ext_3" ignoreExt3
+  assertPatSuccessNoExt "ignore_ext_4" ignoreExt4
+  assertPatFailNoExt "ignore_ext_5" ignoreExt5
+
+  -- extensions
+  let ext1 = satisfies exts [relfile|foo|] [osp|barfoobaz.json|]
+      ext2 = satisfies exts [relfile|foo|] [osp|barfoobaz.jsonc|]
+      ext3 = satisfies exts [relfile|foo|] [osp|bar.jsonc|]
+      ext4 = satisfies exts [relfile|foo|] [osp|bar.json|]
+
+  assertPatSuccessExtSuccess "ext_1" ext1
+  assertPatSuccessExtFail "ext_2" ext2
+  assertPatFailExtFail "ext_3" ext3
+  assertPatFailExtSuccess "ext_4" ext4
+
+  -- multi-extensions
+  let multiExt1 = satisfies exts2 [relfile|foo|] [osp|foobarbaz.tar.gz|]
+      multiExt2 = satisfies exts2 [relfile|foo|] [osp|foobarbaz.gz|]
+      multiExt3 = satisfies exts2 [relfile|foo|] [osp|foobarbaz.tar.gz|]
+      multiExt4 = satisfies exts3 [relfile|foo|] [osp|foobarbaz.tar.gz|]
+
+  assertPatSuccessExtSuccess "multi_ext_1" multiExt1
+  assertPatSuccessExtSuccess "multi_ext_2" multiExt2
+  assertPatSuccessExtSuccess "multi_ext_3" multiExt3
+  assertPatSuccessExtFail "multi_ext_4" multiExt4
+  where
+    desc = "Satisfies infix patterns"
+    satisfies = FileSearch.satisfiesPattern T.isInfixOf
+
+    exts =
+      Set.fromList
+        [ [osstr|.json|],
+          [osstr|.yaml|]
+        ]
+
+    exts2 = Set.fromList [[osstr|.gz|]]
+
+    exts3 = Set.fromList [[osstr|.tar|]]
+
+assertPatSuccessNoExt :: String -> MatchResult -> Assertion
+assertPatSuccessNoExt str r = do
+  assertBoolMsg str True r.patternResult
+  case r.extensionResult of
+    Nothing -> pure ()
+    other -> assertFailure $ str ++ ": Expected Nothing, received: " ++ show other
+
+assertPatSuccessExtSuccess :: String -> MatchResult -> Assertion
+assertPatSuccessExtSuccess str r = do
+  assertBoolMsg str True r.patternResult
+  case r.extensionResult of
+    Just True -> pure ()
+    other -> assertFailure $ str ++ ": Expected True, received: " ++ show other
+
+assertPatSuccessExtFail :: String -> MatchResult -> Assertion
+assertPatSuccessExtFail str r = do
+  assertBoolMsg str True r.patternResult
+  case r.extensionResult of
+    Just False -> pure ()
+    other -> assertFailure $ str ++ ": Expected False, received: " ++ show other
+
+assertPatFailNoExt :: String -> MatchResult -> Assertion
+assertPatFailNoExt str r = do
+  assertBoolMsg str False r.patternResult
+  case r.extensionResult of
+    Nothing -> pure ()
+    other -> assertFailure $ str ++ ": Expected Nothing, received: " ++ show other
+
+assertPatFailExtSuccess :: String -> MatchResult -> Assertion
+assertPatFailExtSuccess str r = do
+  assertBoolMsg str False r.patternResult
+  case r.extensionResult of
+    Just True -> pure ()
+    other -> assertFailure $ str ++ ": Expected True, received: " ++ show other
+
+assertPatFailExtFail :: String -> MatchResult -> Assertion
+assertPatFailExtFail str r = do
+  assertBoolMsg str False r.patternResult
+  case r.extensionResult of
+    Just False -> pure ()
+    other -> assertFailure $ str ++ ": Expected False, received: " ++ show other
+
+testOsPathToNameExtsSpecs :: TestTree
+testOsPathToNameExtsSpecs = testCase desc $ do
+  ([osstr|foo|], e, e) @=? FileSearch.osPathToNameExts [osp|foo|]
+
+  ( [osstr|foo|],
+    [osstr|.tar|],
+    [osstr|.tar|]
+    )
+    @=? FileSearch.osPathToNameExts [osp|foo.tar|]
+
+  ( [osstr|foo|],
+    [osstr|.gz|],
+    [osstr|.tar.gz|]
+    )
+    @=? FileSearch.osPathToNameExts [osp|foo.tar.gz|]
+
+  ( [osstr|foo|],
+    [osstr|.gz|],
+    [osstr|.tar.gz|]
+    )
+    @=? FileSearch.osPathToNameExts
+      ([osp|bar|] </> [osp|foo.tar.gz|])
+  where
+    desc = "osPathToNameExts specs"
+    e = mempty
+
+testOsPathToNameExtsProps :: TestTree
+testOsPathToNameExtsProps = testProp "testOsPathToNameExtsProps" desc $ do
+  pd <- forAll genPathData
+  let fullPath = toPath pd
+      result@(name, ext, exts) = FileSearch.osPathToNameExts fullPath
+
+  annotateShow fullPath
+  annotateShow result
+
+  -- assert name
+  pd.name === name
+
+  -- assert extension
+  case L.unsnoc pd.exts of
+    Nothing -> do
+      ext === mempty
+      exts === mempty
+    Just (_, last) -> do
+      concatExts pd.exts === exts
+      dot <> last === ext
+
+  -- assert full name (no dirs)
+  pd.name <> concatExts pd.exts === name <> exts
+  where
+    desc = "Parses filepath to specified parts properties"
+
+data PathData = MkPathData
+  { dirs :: List OsPath,
+    name :: OsPath,
+    exts :: List OsPath
+  }
+  deriving stock (Show)
+
+toPath :: PathData -> OsPath
+toPath pd =
+  dirPath
+    </> pd.name
+    <> exts
+  where
+    dirPath = OsP.joinPath pd.dirs
+
+    exts = concatExts pd.exts
+
+concatExts :: List OsString -> OsString
+concatExts [] = mempty
+concatExts xs@(_ : _) =
+  mconcat
+    . (dot :)
+    . L.intersperse dot
+    $ xs
+
+dot :: OsString
+dot = [osstr|.|]
+
+genPathData :: Gen PathData
+genPathData = do
+  dirs <- G.list (R.linearFrom 0 0 5) genPathElem
+  name <- genFileName
+  exts <- G.list (R.linearFrom 0 0 3) genExt
+  pure
+    $ MkPathData
+      { dirs,
+        name,
+        exts
+      }
+  where
+
+genPathElem :: Gen OsPath
+genPathElem = unsafeEncode . unpackText <$> (G.text r g)
+  where
+    r = R.linearFrom 1 1 5
+    g = G.filterT goodChar G.ascii
+
+genFileName :: Gen OsPath
+genFileName = unsafeEncode . unpackText <$> (G.text r g)
+  where
+    r = R.linearFrom 1 1 5
+    g = G.filterT goodChar' G.ascii
+
+    goodChar' c = goodChar c && c /= '.'
+
+genExt :: Gen OsPath
+genExt = unsafeEncode . unpackText <$> (G.text r g)
+  where
+    r = R.linearFrom 1 1 5
+    g = G.filterT goodChar' G.ascii
+
+    goodChar' c = goodChar c && c /= '.'
+
+goodChar :: Char -> Bool
+goodChar c = not (Ch.isControl c) && Set.notMember c badChars
+  where
+    badChars =
+      Set.fromList
+        [ '/',
+          ':',
+          '\\'
+        ]
+
+assertBoolMsg :: String -> Bool -> Bool -> Assertion
+assertBoolMsg _ True True = pure ()
+assertBoolMsg _ False False = pure ()
+assertBoolMsg prefix expected result = assertFailure str
+  where
+    str =
+      mconcat
+        [ prefix,
+          ": Expected ",
+          show expected,
+          ", received ",
+          show result
+        ]

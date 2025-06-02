@@ -24,6 +24,11 @@ module Pacer.Utils.FileSearch
     -- ** Errors
     DirNotFoundE (..),
     FileNotFoundE (..),
+
+    -- ** Misc
+    MatchResult (..),
+    satisfiesPattern,
+    osPathToNameExts,
   )
 where
 
@@ -279,10 +284,8 @@ searchFileInfix ::
   Set OsPath ->
   Eff es (f (Path Abs File))
 searchFileInfix dataDir pat exts = addNamespace "searchFileInfix" $ do
-  runSearch compFn dataDir pat exts
+  runSearch T.isInfixOf dataDir pat exts
   where
-    compFn filePat p =
-      toLowerTxt (toOsPath filePat) `T.isInfixOf` toLowerTxt p
 
 -- | Searches for a single file with potentially multiple aliases. Returns
 -- at most one result.
@@ -307,16 +310,7 @@ searchFileAliases dataDir (MkFileAliases aliases exts) = addNamespace "searchFil
     go [] = pure empty
     go (a : as) = (<|>) <$> runSearch' a <*> go as
 
-    runSearch' a = runSearch compFn dataDir a exts
-
-    compFn alias p =
-      -- Extensions are considered separately, so we want to compare just
-      -- the 'base' name e.g. foo in /bar/baz/foo.tar.gz.
-      toLowerTxt (toBaseFileName . toOsPath $ alias)
-        == toLowerTxt (toBaseFileName p)
-
-    toBaseFileName :: OsPath -> OsPath
-    toBaseFileName = OsP.dropExtensions . OsP.takeFileName
+    runSearch' a = runSearch (==) dataDir a exts
 
 runSearch ::
   forall f es.
@@ -330,7 +324,7 @@ runSearch ::
   -- | File name comparison e.g. equality or infix. The LHS is the
   -- alias/pattern we are given, and the RHS is the potential candidates
   -- (directory contents).
-  (Path Rel File -> OsPath -> Bool) ->
+  (Text -> Text -> Bool) ->
   -- | Directory to search.
   Path Abs Dir ->
   -- | File name.
@@ -359,51 +353,119 @@ runSearch compFn dataDir pat exts = addNamespace "runSearch" $ do
   where
     dataDirOsPath = toOsPath dataDir
 
+    satisfiesPattern' = satisfiesPattern compFn exts pat
+
     isMatch :: OsPath -> Eff es Bool
     isMatch p = do
-      let -- takeExtension for _last_ extension (e.g. .gz in foo.tar.gz)
-          -- and takeExtension for full extension (.tar.gz). No other
-          -- variants are supported.
-          pExt = OsP.takeExtension p
-          pExts = OsP.takeExtensions p
-          isComp = pat `compFn` p
-          hasExt = hasExtFn pExt || hasExtFn pExts
-
-          compMsg =
-            mconcat
-              [ "File ",
-                Show.showtOsPath p,
-                " compared with pattern ",
-                Show.showtPath pat,
-                " is: ",
-                showt isComp
-              ]
-
-          extMsg =
-            mconcat
-              [ "File ",
-                Show.showtOsPath p,
-                " compared against extensions ",
-                Show.showtOsPath pExt,
-                " and ",
-                Show.showtOsPath pExts,
-                " is: ",
-                showt hasExt
-              ]
+      let matchResult = satisfiesPattern' p
 
       logEnv <- ask @LogEnv
       case (logEnv.logLevel, logEnv.logVerbosity) of
         (Just LevelDebug, LogV1) -> do
-          $(Logger.logDebug) compMsg
-          $(Logger.logDebug) extMsg
+          $(Logger.logDebug) matchResult.patternLog
+          $(Logger.logDebug) matchResult.extensionLog
         _ -> pure ()
 
-      pure $ isComp && hasExt
+      pure
+        $ matchResult.patternResult
+        && fromMaybe True matchResult.extensionResult
+
+-- | File match comparison.
+data MatchResult = MkMatchResult
+  { -- | The result for pattern comparisons i.e. file names.
+    patternResult :: Bool,
+    -- | The result for file extension comparisons.
+    extensionResult :: Maybe Bool,
+    -- | Log message for pattern result.
+    patternLog :: Text,
+    -- | Log message for extension result.
+    extensionLog :: Text
+  }
+  deriving stock (Eq, Show)
+
+-- | Returns the result of comparing a discovered file against a given
+-- pattern and possible extension set. For extension comparisons, we
+-- consider the "final" extension and the "full" extension e.g. ".gz" and
+-- ".tar.gz" in "foo.tar.gz", respectively. Parameters extensions should
+-- include the initial dot.
+satisfiesPattern ::
+  -- | Pattern comparison function. The LHS is for the pattern whereas the RHS
+  -- is the discovered file i.e. Pattern -> File -> Bool. The comparison
+  -- should be for file _names_ only i.e. ignore directories and
+  -- extensions.
+  (Text -> Text -> Bool) ->
+  -- | Extension set. If empty, we ignore the discovered file's extension.
+  Set OsString ->
+  -- | Pattern i.e. alias or infix.
+  Path Rel File ->
+  -- | Discovered file.
+  OsPath ->
+  MatchResult
+satisfiesPattern compFn exts pat p
+  | F.null exts =
+      let patResult = patTxt `compFn` pNameTxt
+       in MkMatchResult
+            { patternResult = patResult,
+              extensionResult = Nothing,
+              patternLog = mkPatternLog (showt patResult),
+              extensionLog = mkExtensionLog "<not compared>"
+            }
+  | otherwise =
+      let patResult = patTxt `compFn` pNameTxt
+          extResult = hasExtFn pExt || hasExtFn pExts
+       in MkMatchResult
+            { patternResult = patResult,
+              extensionResult = Just extResult,
+              patternLog = mkPatternLog (showt patResult),
+              extensionLog = mkExtensionLog (showt extResult)
+            }
+  where
+    -- Split the discovered file to its name and extensions, throw away its
+    -- directories.
+    (pName, pExt, pExts) = osPathToNameExts p
+
+    patTxt = toLowerTxt $ toOsPath pat
+    pNameTxt = toLowerTxt pName
 
     hasExtFn :: OsPath -> Bool
-    hasExtFn
-      | F.null exts = const True
-      | otherwise = (flip Set.member) exts
+    hasExtFn = flip Set.member exts
+
+    mkPatternLog b =
+      mconcat
+        [ "File ",
+          Show.showtOsPath p,
+          " compared with pattern ",
+          Show.showtPath pat,
+          " is: ",
+          b
+        ]
+
+    mkExtensionLog b =
+      mconcat
+        [ "File ",
+          Show.showtOsPath p,
+          " compared against extensions ",
+          Show.showtOsPath pExt,
+          " and ",
+          Show.showtOsPath pExts,
+          " is: ",
+          b
+        ]
+
+-- | Transforms a path to (name, final_extension, full_extension).
+--
+-- @
+--   pathToNameExts /path/to/foo.tar.gz === (foo, .gz, .tar.gz)
+-- @
+osPathToNameExts :: OsPath -> (OsPath, OsString, OsString)
+osPathToNameExts p = (name, ext, exts)
+  where
+    name = toBaseFileName p
+    ext = OsP.takeExtension p
+    exts = OsP.takeExtensions p
+
+toBaseFileName :: OsPath -> OsPath
+toBaseFileName = OsP.dropExtensions . OsP.takeFileName
 
 toLowerTxt :: OsPath -> Text
 toLowerTxt =
