@@ -216,10 +216,10 @@ jobs:
             script: ".github/scripts/release_windows.sh"
             script_args: "2025"
 
-          - name: "windows-2019"
-            os: "windows-2019"
+          - name: "windows-2022"
+            os: "windows-2022"
             script: ".github/scripts/release_windows.sh"
-            script_args: "2019"
+            script_args: "2022"
 
     runs-on: ${{ matrix.platform.os }}
     steps:
