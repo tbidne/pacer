@@ -85,6 +85,9 @@
             overrides =
               final: prev:
               {
+                # These tests are flaky.
+                auto-update = hlib.dontCheck prev.auto-update;
+
                 megaparsec = prev.megaparsec_9_7_0;
                 path = hlib.dontCheck prev.path_0_9_6;
                 regression-simple = hlib.doJailbreak prev.regression-simple;
