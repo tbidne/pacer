@@ -5,7 +5,6 @@ LABEL stage=build-stage
 ARG CABAL_PROJ
 ARG CABAL_VERS
 ARG GHC_VERS
-ARG suffix
 
 RUN mkdir -p /opt/pacer
 ADD . /opt/pacer
@@ -62,7 +61,7 @@ echo "*** Building pacer ***"
 cd /opt/pacer
 
 cabal update
-export PACER_HOME=$(pwd); cabal install exe:pacer --installdir bin/ --program-suffix $suffix --enable-executable-static --enable-executable-stripping --project-file $CABAL_PROJ --ghc-options -Werror
+export PACER_HOME=$(pwd); cabal install exe:pacer --installdir bin/ --enable-executable-static --enable-executable-stripping --project-file $CABAL_PROJ --ghc-options -Werror
 
 echo "*** Copy binary ***"
 

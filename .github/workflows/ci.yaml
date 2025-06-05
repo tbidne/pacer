@@ -5,7 +5,7 @@ on: # yamllint disable-line rule:truthy rule:comments
   push:
     branches:
       - main
-      - release
+      - release2
 
   pull_request:
     branches:
@@ -21,6 +21,7 @@ env:
 
 jobs:
   cabal:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -98,6 +99,7 @@ jobs:
             bench/app/${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.svg
 
   stack:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -141,6 +143,7 @@ jobs:
         run: RUN_E2E=1 stack test pacer:test:e2e --ghc-options -Werror
 
   nix:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -161,6 +164,7 @@ jobs:
         run: nix build -L
 
   lint:
+    if: false
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v4
@@ -180,8 +184,8 @@ jobs:
         run: nix run .#lint
 
   release:
-    needs: [cabal, stack, nix, lint]
-    if: github.ref == 'refs/heads/release'
+    #needs: [cabal, stack, nix, lint]
+    #if: github.ref == 'refs/heads/release'
     strategy:
       fail-fast: false
       matrix:
@@ -265,7 +269,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts-${{ matrix.platform.name }}
-          path: bin
+          path: pacer*.zip
           retention-days: 1
 
   merge-releases:

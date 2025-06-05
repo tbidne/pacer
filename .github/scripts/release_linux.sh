@@ -8,7 +8,7 @@ dir=$1
 
 mkdir -p bin
 
-suffix="_$PACER_VERS-$arch-linux"
+suffix="$PACER_VERS-$arch-linux"
 
 docker build \
   -t pacer_build:latest \
@@ -17,17 +17,19 @@ docker build \
   --build-arg CABAL_VERS=$CABAL_VERS \
   --build-arg CABAL_PROJ=$CABAL_PROJ \
   --build-arg GHC_VERS=$GHC_VERS \
-  --build-arg suffix=$suffix \
   .
 
-cp docker_out/pacer_* bin/
+cp docker_out/pacer bin/
 
 echo "*** Testing exe ***"
-./bin/pacer$suffix --help
+./bin/pacer --help
 
 echo "*** Printing version ***"
-./bin/pacer$suffix --version
+./bin/pacer --version
 
 echo "*** Computing sha256 ***"
-sha256sum ./bin/pacer$suffix > ./bin/pacer$suffix.sha256
-cat ./bin/pacer$suffix.sha256
+sha256sum ./bin/pacer > ./bin/pacer.sha256
+cat ./bin/pacer.sha256
+
+# -j needed to keep structure flat
+zip "pacer_$suffix.zip" -j ./bin/*
