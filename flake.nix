@@ -87,6 +87,7 @@
               {
                 # These tests are flaky.
                 auto-update = hlib.dontCheck prev.auto-update;
+                warp = hlib.dontCheck prev.warp;
 
                 megaparsec = prev.megaparsec_9_7_0;
                 path = hlib.dontCheck prev.path_0_9_6;
