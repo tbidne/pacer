@@ -14,21 +14,21 @@ if [[ $arch == 'arm64' ]]; then
   arch="aarch64"
 fi
 
-# x86_64-osx on macos-12/13, aarch64-osx on macos-14/15
-cabal_build_dir="$arch-osx"
-
 mkdir -p bin
 
-suffix="_$PACER_VERS-$arch-macos_$apple_vers"
+suffix="$PACER_VERS-$arch-macos_$apple_vers"
 
-export PACER_HOME=$(pwd); cabal install exe:pacer --installdir bin/ --program-suffix $suffix --project-file $CABAL_PROJ --ghc-options -Werror
+export PACER_HOME=$(pwd); cabal install exe:pacer --installdir bin/ --project-file $CABAL_PROJ --ghc-options -Werror
 
 echo "*** Testing exe ***"
-./bin/pacer$suffix --help
+./bin/pacer --help
 
 echo "*** Printing version ***"
-./bin/pacer$suffix --version
+./bin/pacer --version
 
 echo "*** Computing sha256 ***"
-sha256sum ./bin/pacer$suffix > ./bin/pacer$suffix.sha256
-cat ./bin/pacer$suffix.sha256
+sha256sum ./bin/pacer > ./bin/pacer.sha256
+cat ./bin/pacer.sha256
+
+# -j needed to keep structure flat
+zip "pacer_$suffix.zip" -j ./bin/*
