@@ -21,6 +21,10 @@ module Pacer.Utils
     seqGroupBy,
     neSeqGroupBy,
 
+    -- * Optics
+    SomeSetter (..),
+    setMany',
+
     -- * Misc
     PaceMetersErrMsg,
   )
@@ -190,3 +194,22 @@ encodePretty = AsnPretty.encodePretty' cfg
         { confIndent = Spaces 2,
           confTrailingNewline = True
         }
+
+-- | Existential wrapper for an optic setter with new object.
+data SomeSetter p where
+  MkSomeSetter ::
+    forall p x k ix.
+    (Is k A_Setter) =>
+    Optic k ix p p x x ->
+    x ->
+    SomeSetter p
+
+-- | Targets some object using a list of optics and the new values.
+-- Equivalent to calling set' multiple times.
+setMany' ::
+  forall f p.
+  (Foldable f) =>
+  f (SomeSetter p) ->
+  p ->
+  p
+setMany' ls s = foldl' (\s' (MkSomeSetter l x) -> set' l x s') s ls

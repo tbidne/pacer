@@ -2,4 +2,4 @@ Required chart file not found. Searched for paths(s) [chart-requests, chart_requ
  - some-dir
  - some-config-data
  - /cwd/
- - /root/bad_xdg/config/pacer/
+ - /xdg/config/pacer/

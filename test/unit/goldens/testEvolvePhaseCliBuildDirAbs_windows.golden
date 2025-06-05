@@ -1,10 +1,10 @@
 MkChartParams
   { activityLabelsPath = Nothing
   , activityPaths = fromList
-    ( "C:\root\xdg\config\pacer\activities.json" :| [] )
+    ( "C:\xdg\config\pacer\activities.json" :| [] )
   , buildDir = "C:\abs\build-dir\"
   , cleanInstall = False
-  , chartRequestsPath = "C:\root\xdg\config\pacer\chart-requests.json"
+  , chartRequestsPath = "C:\xdg\config\pacer\chart-requests.json"
   , dataDir = ()
   , json = False
   , port = 3000

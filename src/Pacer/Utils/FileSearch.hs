@@ -512,6 +512,7 @@ data FileSearch
     -- and {"json", "csv"} will find all files with (case-insensitive)
     -- infix "activities" and extensions "json" or "csv".
     SearchFileInfix (Path Rel File) (Set OsPath)
+  deriving stock (Eq, Show)
 
 -- | Represents a single file for which we want to search. Holds multiple
 -- aliases for the case where the file can have multiple names.
@@ -522,6 +523,7 @@ data FileAliases = MkFileAliases
   { aliases :: NonEmpty (Path Rel File),
     extensions :: Set OsPath
   }
+  deriving stock (Eq, Show)
 
 searchFilesToList :: FileSearch -> Tuple2 (List (Path Rel File)) (Set OsPath)
 searchFilesToList = f

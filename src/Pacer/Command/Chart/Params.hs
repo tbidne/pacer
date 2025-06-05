@@ -57,6 +57,7 @@ import Pacer.Exception
 import Pacer.Prelude
 import Pacer.Utils.FileSearch
   ( DirNotExistsStrategy (DirNotExistsFail),
+    DirNotFoundE (MkDirNotFoundE),
     FileAliases (MkFileAliases),
     FileNotFoundE (MkFileNotFoundE),
     FileSearch (SearchFileAliases, SearchFileInfix),
@@ -221,6 +222,8 @@ evolvePhase @es params mConfigWithPath = do
     customBuildDir :: Path Abs Dir -> OsPath -> Eff es (Path Abs Dir)
     customBuildDir absDir unknownDir =
       handleUnknownPath
+        @DirNotFoundE
+        Nothing
         absDir
         Path.parseAbsDir
         Path.parseRelDir
@@ -368,6 +371,7 @@ resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
     ]
 
 findConfigPath ::
+  forall f es.
   ( FromAlt f,
     HasCallStack,
     Logger :> es,
@@ -398,9 +402,11 @@ findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNam
     configDataSel :: AffineTraversal' ConfigWithPath OsPath
     configDataSel = #config % #chartConfig %? #dataDir % _Just
 
+    tryConfigPaths :: f OsPath -> Eff es (f (Path Abs File))
     tryConfigPaths mPath =
       for mPath
         $ handleUnknownPath
+          (Just (MkFileNotFoundE, PR.doesFileExist))
           configWithPath.dirPath
           Path.parseAbsFile
           Path.parseRelFile
@@ -409,6 +415,7 @@ findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNam
       Just dataDir -> do
         configDataDirPath <-
           handleUnknownPath
+            (Just (MkDirNotFoundE, PR.doesDirectoryExist))
             configWithPath.dirPath
             Path.parseAbsDir
             Path.parseRelDir
@@ -456,7 +463,14 @@ activityLabelsSearch = SearchFileAliases $ MkFileAliases aliases exts
 -- Handles an unknown (wrt. absolute/relative) path, resolving any
 -- relative paths. Polymorphic over file/dir path.
 handleUnknownPath ::
-  (HasCallStack) =>
+  forall e t es.
+  ( Exception e,
+    HasCallStack
+  ) =>
+  -- | Lifts to an exception. If Nothing, we do not test for existence e.g.
+  -- the build dir does not have to already exist. For other parts, though,
+  -- the paths must exist, hence we throw the exception.
+  (Maybe (Tuple2 (OsPath -> e) (OsPath -> Eff es Bool))) ->
   -- Containing dir for relative paths.
   Path Abs Dir ->
   -- Absolute parser.
@@ -466,14 +480,22 @@ handleUnknownPath ::
   -- Path to resolve
   OsPath ->
   Eff es (Path Abs t)
-handleUnknownPath parentDir absParser relParser otherPath =
-  if OsPath.isAbsolute otherPath
-    -- Path is absolute, just parse it.
-    then absParser otherPath
-    -- Path is relative, parse and combine with parentDir.
-    else do
-      relFile <- relParser otherPath
-      pure $ parentDir <</>> relFile
+handleUnknownPath mToEx parentDir absParser relParser otherPath = do
+  p <-
+    if OsPath.isAbsolute otherPath
+      -- Path is absolute, just parse it.
+      then absParser otherPath
+      -- Path is relative, parse and combine with parentDir.
+      else do
+        relFile <- relParser otherPath
+        pure $ parentDir <</>> relFile
+
+  for_ mToEx $ \(toEx, existsFn) -> do
+    let osPath = toOsPath p
+    exists <- existsFn osPath
+    unless exists $ throwM $ toEx osPath
+
+  pure p
 
 assertExists :: (HasCallStack, PathReader :> es) => Path b t -> Eff es ()
 assertExists p = do

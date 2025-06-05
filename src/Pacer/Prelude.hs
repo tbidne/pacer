@@ -428,7 +428,8 @@ import Numeric.Data.Positive.Internal as X
       ),
   )
 import Optics.Core as X
-  ( AffineTraversal',
+  ( A_Setter,
+    AffineTraversal',
     An_AffineTraversal,
     Getter,
     Is,
@@ -438,6 +439,7 @@ import Optics.Core as X
     Lens,
     Lens',
     NoIx,
+    Optic,
     Optic',
     Prism,
     Prism',

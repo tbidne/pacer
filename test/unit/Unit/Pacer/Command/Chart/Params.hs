@@ -1,10 +1,13 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Unit.Pacer.Command.Chart.Params (tests) where
 
-import Data.List qualified as L
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Effectful.FileSystem.PathReader.Dynamic
@@ -29,17 +32,45 @@ import Pacer.Command.Chart.Params
         json
       ),
     ChartParamsArgs,
-    ChartParamsFinal,
   )
 import Pacer.Command.Chart.Params qualified as Params
 import Pacer.Configuration.Config
-  ( Config,
+  ( ChartConfig,
+    Config,
     ConfigWithPath (MkConfigWithPath, config, dirPath),
   )
 import Pacer.Configuration.Env.Types (CachedPaths, LogEnv (MkLogEnv))
 import Pacer.Driver (displayInnerMatchKnown)
-import System.OsPath qualified as OsPath
+import Pacer.Utils (SomeSetter (MkSomeSetter))
+import Pacer.Utils qualified as Utils
+import System.OsPath qualified as OsP
 import Unit.Prelude
+
+data MockEnv = MkMockEnv
+  { -- | Directories that should exist. The value is their contents.
+    knownDirectories :: Map OsPath (Set OsPath),
+    -- | Directories that should not exist. We include this so we can strict
+    -- i.e. we should distinguish "known failures" (i.e. the test expects a
+    -- path to _not_ exist) vs. "unknown failures" i.e. test test is
+    -- called with an expected path, due to a bug. The latter should cause
+    -- the test to fail.
+    knownDirectoriesFalse :: Set OsPath,
+    -- | Files that should exist. We need this because we do not always
+    -- test files via the directory contents e.g. if we receive a direct path
+    -- --chart-requests /path/to/foo.json, we test foo.json directly.
+    knownFiles :: Set OsPath
+  }
+  deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''MockEnv
+
+baseMockEnv :: MockEnv
+baseMockEnv =
+  MkMockEnv
+    { knownDirectories = Map.empty,
+      knownDirectoriesFalse = Set.empty,
+      knownFiles = Set.empty
+    }
 
 tests :: TestTree
 tests =
@@ -48,6 +79,26 @@ tests =
     [ successTests,
       failureTests
     ]
+
+-- NOTE: [Unnecessary test values]
+--
+-- Some of these tests are "overfitted", in the sense that they have more
+-- data set than is needed to pass. For instance, a test may set the
+-- config directory, even though the directory ultimately does not get used,
+-- because it is "empty".
+--
+-- This lets us test that the empty directory does not throw an error.
+--
+-- For another example, a directory may have data (per mocked knownDirectories
+-- or knownFiles), but still might not get used because something higher
+-- priority was found first. This lets us test the priority.
+--
+-- While this is useful, it can be somewhat confusing, hence we try to mark
+-- such cases where applicable.
+--
+-- Also note that most tests need to at least set xdg and current working
+-- directory, since activity-labels isn't usually tested and it will
+-- hence try everything.
 
 successTests :: TestTree
 successTests =
@@ -83,15 +134,26 @@ testEvolvePhaseCliBuildDirAbs =
     $ MkGoldenParams
       { testDesc = "Uses CLI absolute build-dir",
         testName = [osp|testEvolvePhaseCliBuildDirAbs|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params Nothing
       }
   where
-    params =
-      set'
-        #buildDir
-        (Just (toOsPath absBuildDir))
-        baseChartParams
-    config = baseConfig
+    params = baseChartParams {buildDir = Just (toOsPath absBuildDir)}
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          goodDir
+        ]
+
+    goodDir =
+      ( toOsPath xdgConfigPacer,
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseCliBuildDirRel :: TestTree
 testEvolvePhaseCliBuildDirRel =
@@ -99,15 +161,26 @@ testEvolvePhaseCliBuildDirRel =
     $ MkGoldenParams
       { testDesc = "Uses CLI relative build-dir",
         testName = [osp|testEvolvePhaseCliBuildDirRel|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params Nothing
       }
   where
-    params =
-      set'
-        #buildDir
-        (Just [osp|build-dir|])
-        baseChartParams
-    config = baseConfig
+    params = baseChartParams {buildDir = Just [osp|build-dir|]}
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          goodDir
+        ]
+
+    goodDir =
+      ( toOsPath xdgConfigPacer,
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseConfigBuildDirAbs :: TestTree
 testEvolvePhaseConfigBuildDirAbs =
@@ -115,15 +188,30 @@ testEvolvePhaseConfigBuildDirAbs =
     $ MkGoldenParams
       { testDesc = "Uses config absolute build-dir",
         testName = [osp|testEvolvePhaseConfigBuildDirAbs|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv baseChartParams (Just config)
       }
   where
-    params = baseChartParams
     config =
       set'
-        (#chartConfig %? #buildDir)
+        (#config % #chartConfig %? #buildDir)
         (Just (toOsPath absBuildDir))
-        baseConfig
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          goodDir
+        ]
+
+    goodDir =
+      ( toOsPath xdgConfigPacer,
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseConfigBuildDirRel :: TestTree
 testEvolvePhaseConfigBuildDirRel =
@@ -131,15 +219,30 @@ testEvolvePhaseConfigBuildDirRel =
     $ MkGoldenParams
       { testDesc = "Uses config relative build-dir",
         testName = [osp|testEvolvePhaseConfigBuildDirRel|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv baseChartParams (Just config)
       }
   where
-    params = baseChartParams
     config =
       set'
-        (#chartConfig %? #buildDir)
+        (#config % #chartConfig %? #buildDir)
         (Just [osp|build-dir|])
-        baseConfig
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          goodDir
+        ]
+
+    goodDir =
+      ( toOsPath xdgConfigPacer,
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseCliPaths :: TestTree
 testEvolvePhaseCliPaths =
@@ -147,30 +250,57 @@ testEvolvePhaseCliPaths =
     $ MkGoldenParams
       { testDesc = "Uses CLI paths",
         testName = [osp|testEvolvePhaseCliPaths|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
     params =
-      set' #chartRequestsPath (Just [osp|cli-cr.json|])
-        $ set'
-          #dataDir
-          (Just [osp|cli-data|])
-        $ set'
-          #activityPaths
-          [[osp|cli-activities.json|]]
-          baseChartParams
+      baseChartParams
+        { activityPaths = [[osp|cli-activities.json|]],
+          chartRequestsPath = Just [osp|cli-cr.json|],
+          dataDir = Just [osp|cli-data|]
+        }
 
+    -- Even though config is set, we use the CLI paths, since the latter have
+    -- higher priority.
     config =
-      set'
-        (#chartConfig %? #activityPaths)
-        [[osp|config-activities.json|]]
-        $ set'
-          (#chartConfig %? #dataDir)
-          (Just [osp|config-data|])
-        $ set'
-          (#chartConfig %? #chartRequestsPath)
-          (Just [osp|config-cr.json|])
-          baseConfig
+      over'
+        (#config % #chartConfig % _Just)
+        ( Utils.setMany' @List @ChartConfig
+            [ MkSomeSetter #activityPaths [[osp|config-activities.json|]],
+              MkSomeSetter #chartRequestsPath (Just [osp|config-cr.json|]),
+              -- NOTE: [Config directory]
+              --
+              -- Note that this config's dataDir is relative to the config's
+              -- path, which is hardcoded to /config-dir.
+              -- See NOTE: [Config directory].
+              --
+              -- Hence if dataDir d is given then the directory
+              -- /config-dir/d needs to exist. Since it is merely the current
+              -- path here, the directory is /config-data below.
+              MkSomeSetter #dataDir (Just [osp|./|])
+            ]
+        )
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          (toOsPath $ rootPath <</>> [reldirPathSep|config-data|], Set.empty),
+          (toOsPath $ rootPath <</>> [reldir|cli-data|], Set.empty)
+        ]
+
+    knownFiles =
+      Set.fromList
+        [ toOsPath $ rootPath <</>> [relfile|cli-cr.json|],
+          toOsPath $ rootPath <</>> [relfile|cli-activities.json|]
+        ]
+
+    mockEnv =
+      baseMockEnv
+        { knownDirectories,
+          knownFiles
+        }
 
 testEvolvePhaseCliData :: TestTree
 testEvolvePhaseCliData =
@@ -178,26 +308,41 @@ testEvolvePhaseCliData =
     $ MkGoldenParams
       { testDesc = "Uses CLI data",
         testName = [osp|testEvolvePhaseCliData|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
-    params =
-      set'
-        #dataDir
-        (Just [osp|cli-data|])
-        baseChartParams
+    params = baseChartParams {dataDir = Just [osp|cli-data|]}
 
+    -- Even though config is set, we use the CLI paths, since the latter have
+    -- higher priority.
     config =
-      set'
-        (#chartConfig %? #activityPaths)
-        [[osp|config-activities.json|]]
-        $ set'
-          (#chartConfig %? #dataDir)
-          (Just [osp|config-data|])
-        $ set'
-          (#chartConfig %? #chartRequestsPath)
-          (Just [osp|config-cr.json|])
-          baseConfig
+      over'
+        (#config % #chartConfig % _Just)
+        ( Utils.setMany' @List @ChartConfig
+            [ MkSomeSetter #activityPaths [[osp|config-activities.json|]],
+              MkSomeSetter #chartRequestsPath (Just [osp|config-cr.json|]),
+              MkSomeSetter #dataDir (Just [osp|./|])
+            ]
+        )
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          (toOsPath $ rootPath <</>> [reldirPathSep|config-data|], Set.empty),
+          goodDir
+        ]
+
+    goodDir =
+      ( toOsPath $ rootPath <</>> [reldir|cli-data|],
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseConfigAbsPaths :: TestTree
 testEvolvePhaseConfigAbsPaths =
@@ -205,28 +350,46 @@ testEvolvePhaseConfigAbsPaths =
     $ MkGoldenParams
       { testDesc = "Uses config absolute paths",
         testName = [osp|testEvolvePhaseConfigAbsPaths|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
-    params =
-      -- Even with --data specified, we will skip to config since the
-      -- former contains no paths.
-      set'
-        #dataDir
-        (Just [osp|no-data|])
-        baseChartParams
+    -- NOTE: [Unused data dir]
+    --
+    -- Even with --data specified, we will skip to config since the
+    -- former contains no paths.
+    params = baseChartParams {dataDir = Just [osp|no-data|]}
 
     config =
-      set'
-        (#chartConfig %? #activityPaths)
-        [rootOsPath </> [osp|config-activities.json|]]
-        $ set'
-          (#chartConfig %? #dataDir)
-          (Just [osp|config-data|])
-        $ set'
-          (#chartConfig %? #chartRequestsPath)
-          (Just $ rootOsPath </> [osp|config-cr.json|])
-          baseConfig
+      over'
+        (#config % #chartConfig % _Just)
+        ( Utils.setMany' @List @ChartConfig
+            [ MkSomeSetter #activityPaths [rootOsPath </> [osp|config-activities.json|]],
+              MkSomeSetter #chartRequestsPath (Just $ rootOsPath </> [osp|config-cr.json|]),
+              MkSomeSetter #dataDir (Just [osp|./|])
+            ]
+        )
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          (toOsPath $ rootPath <</>> [reldirPathSep|config-data|], Set.empty),
+          -- see NOTE: [Unnecessary test values]
+          (toOsPath $ rootPath <</>> [reldir|no-data|], Set.empty)
+        ]
+
+    knownFiles =
+      Set.fromList
+        [ toOsPath $ rootPath <</>> [relfile|config-cr.json|],
+          toOsPath $ rootPath <</>> [relfile|config-activities.json|]
+        ]
+
+    mockEnv =
+      baseMockEnv
+        { knownDirectories,
+          knownFiles
+        }
 
 testEvolvePhaseConfigRelPaths :: TestTree
 testEvolvePhaseConfigRelPaths =
@@ -234,28 +397,53 @@ testEvolvePhaseConfigRelPaths =
     $ MkGoldenParams
       { testDesc = "Uses config relative paths",
         testName = [osp|testEvolvePhaseConfigRelPaths|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
-    params =
-      -- Even with --data specified, we will skip to config since the
-      -- former contains no paths.
-      set'
-        #dataDir
-        (Just [osp|no-data|])
-        baseChartParams
+    -- see NOTE: [Unused data dir]
+    params = baseChartParams {dataDir = Just [osp|no-data|]}
 
     config =
-      set'
-        (#chartConfig %? #activityPaths)
-        [[osp|rel-activities.json|]]
-        $ set'
-          (#chartConfig %? #dataDir)
-          (Just [osp|config-data|])
-        $ set'
-          (#chartConfig %? #chartRequestsPath)
-          (Just [osp|rel-cr.json|])
-          baseConfig
+      over'
+        (#config % #chartConfig % _Just)
+        ( Utils.setMany' @List @ChartConfig
+            [ MkSomeSetter #activityPaths [[osp|rel-activities.json|]],
+              MkSomeSetter #chartRequestsPath (Just [osp|rel-cr.json|]),
+              MkSomeSetter #dataDir (Just [osp|./|])
+            ]
+        )
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          goodDir,
+          -- see NOTE: [Unnecessary test values]
+          (toOsPath $ rootPath <</>> [reldir|no-data|], Set.empty)
+        ]
+
+    -- NOTE: Need to set this since we expect the paths to be relative to the
+    -- config's directory, and the DoesFileExist handler uses the directory's
+    -- contents when the former is part of knownDirectories. It only defers
+    -- to knownFiles if the directory does _not_ exist. Hence, because the
+    -- config-data exists per knownDirectories, we need to add the files here.
+    --
+    -- Alternatively, we could change the handler to check the contents ||
+    -- knownFiles, but this is the only affected test at the moment, so we keep
+    -- it simpler for now.
+    goodDir =
+      ( toOsPath $ rootPath <</>> [reldirPathSep|config-data|],
+        Set.fromList
+          [ [osp|rel-cr.json|],
+            [osp|rel-activities.json|]
+          ]
+      )
+
+    mockEnv =
+      baseMockEnv
+        { knownDirectories
+        }
 
 testEvolvePhaseConfigAbsData :: TestTree
 testEvolvePhaseConfigAbsData =
@@ -263,22 +451,36 @@ testEvolvePhaseConfigAbsData =
     $ MkGoldenParams
       { testDesc = "Uses config absolute data",
         testName = [osp|testEvolvePhaseConfigAbsData|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
-    params =
-      -- Even with --data specified, we will skip to config since the
-      -- former contains no paths.
-      set'
-        #dataDir
-        (Just [osp|no-data|])
-        baseChartParams
+    -- see NOTE: [Unused data dir]
+    params = baseChartParams {dataDir = Just [osp|no-data|]}
 
     config =
       set'
-        (#chartConfig %? #dataDir)
+        (#config % #chartConfig %? #dataDir)
         (Just $ rootOsPath </> [osp|config-data|])
-        baseConfig
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          goodDir,
+          -- see NOTE: [Unnecessary test values]
+          (toOsPath $ rootPath <</>> [reldir|no-data|], Set.empty)
+        ]
+
+    goodDir =
+      ( toOsPath $ rootPath <</>> [reldir|config-data|],
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseConfigRelData :: TestTree
 testEvolvePhaseConfigRelData =
@@ -286,22 +488,36 @@ testEvolvePhaseConfigRelData =
     $ MkGoldenParams
       { testDesc = "Uses config relative data",
         testName = [osp|testEvolvePhaseConfigRelData|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
-    params =
-      -- Even with --data specified, we will skip to config since the
-      -- former contains no paths.
-      set'
-        #dataDir
-        (Just [osp|no-data|])
-        baseChartParams
+    -- see NOTE: [Unused data dir]
+    params = baseChartParams {dataDir = Just [osp|no-data|]}
 
     config =
       set'
-        (#chartConfig %? #dataDir)
+        (#config % #chartConfig %? #dataDir)
         (Just [osp|./|])
-        baseConfig
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          goodDir,
+          -- see NOTE: [Unnecessary test values]
+          (toOsPath $ rootPath <</>> [reldir|no-data|], Set.empty)
+        ]
+
+    goodDir =
+      ( toOsPath $ rootPath <</>> [reldir|config-data|],
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseCwd :: TestTree
 testEvolvePhaseCwd =
@@ -309,13 +525,22 @@ testEvolvePhaseCwd =
     $ MkGoldenParams
       { testDesc = "Uses current directory",
         testName = [osp|testEvolvePhaseCwd|],
-        runner = goldenRunnerCwd (toOsPath cwd) params config
+        runner = goldenRunner mockEnv baseChartParams Nothing
       }
   where
-    params = baseChartParams
-    config = baseConfig
+    knownDirectories = Map.fromList [goodDir]
 
-    cwd = baseRoot <</>> [reldir|cwd_files|]
+    goodDir =
+      ( toOsPath cwdPath,
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|Activities.csv|],
+            [osp|activities.json|],
+            [osp|activity-labels.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseXdgPaths :: TestTree
 testEvolvePhaseXdgPaths =
@@ -323,24 +548,38 @@ testEvolvePhaseXdgPaths =
     $ MkGoldenParams
       { testDesc = "Uses xdg paths",
         testName = [osp|testEvolvePhaseXdgPaths|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
-    params =
-      -- Even with --data specified, we will skip to config since the
-      -- former contains no paths.
-      set'
-        #dataDir
-        (Just [osp|no-data|])
-        baseChartParams
+    -- see NOTE: [Unused data dir]
+    params = baseChartParams {dataDir = Just [osp|no-data|]}
 
     config =
       -- Even with config.data specified, we will skip to config since the
       -- former contains no paths.
       set'
-        (#chartConfig %? #dataDir)
+        (#config % #chartConfig %? #dataDir)
         (Just [osp|no-data|])
-        baseConfig
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          goodDir,
+          (toOsPath $ rootPath <</>> [reldir|no-data|], Set.empty),
+          -- see NOTE: [Unnecessary test values]
+          (toOsPath $ rootPath <</>> [reldirPathSep|config-data/no-data|], Set.empty)
+        ]
+
+    goodDir =
+      ( toOsPath xdgConfigPacer,
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseNoXdgSucceeds :: TestTree
 testEvolvePhaseNoXdgSucceeds =
@@ -348,7 +587,7 @@ testEvolvePhaseNoXdgSucceeds =
     $ MkGoldenParams
       { testDesc = "Xdg is not required",
         testName = [osp|testEvolvePhaseNoXdgSucceeds|],
-        runner = goldenRunnerXdg XdgMissing params config
+        runner = goldenRunner mockEnv params Nothing
       }
   where
     -- Tests that the xdg directory is not required by ensuring that we
@@ -361,13 +600,30 @@ testEvolvePhaseNoXdgSucceeds =
     -- (eventually) required, hence will error if nothing is found
     -- (this is separate from a hypothetical xdg error).
     params =
-      set' #chartRequestsPath (Just [osp|cli-cr.json|])
-        $ set'
-          #activityPaths
-          [[osp|cli-activities.json|]]
-          baseChartParams
+      baseChartParams
+        { activityPaths = [[osp|cli-activities.json|]],
+          chartRequestsPath = Just [osp|cli-cr.json|]
+        }
 
-    config = baseConfig
+    knownDirectories = Map.fromList [(toOsPath cwdPath, Set.empty)]
+
+    knownDirectoriesFalse =
+      Set.fromList
+        [ toOsPath $ rootPath <</>> [reldirPathSep|xdg/config/pacer|]
+        ]
+
+    knownFiles =
+      Set.fromList
+        [ toOsPath $ rootPath <</>> [relfile|cli-cr.json|],
+          toOsPath $ rootPath <</>> [relfile|cli-activities.json|]
+        ]
+
+    mockEnv =
+      baseMockEnv
+        { knownDirectories,
+          knownDirectoriesFalse,
+          knownFiles
+        }
 
 testEvolvePhaseGarmin :: TestTree
 testEvolvePhaseGarmin =
@@ -375,15 +631,27 @@ testEvolvePhaseGarmin =
     $ MkGoldenParams
       { testDesc = "Uses garmin path",
         testName = [osp|testEvolvePhaseCliGarmin|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params Nothing
       }
   where
-    params =
-      set'
-        #dataDir
-        (Just [osp|cli-garmin|])
-        baseChartParams
-    config = baseConfig
+    params = baseChartParams {dataDir = Just [osp|cli-garmin|]}
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          goodDir
+        ]
+
+    goodDir =
+      ( toOsPath $ rootPath <</>> [reldir|cli-garmin|],
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.csv|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseBoth :: TestTree
 testEvolvePhaseBoth =
@@ -391,15 +659,28 @@ testEvolvePhaseBoth =
     $ MkGoldenParams
       { testDesc = "Uses Json and Garmin when both activities types exist",
         testName = [osp|testEvolvePhaseBoth|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params Nothing
       }
   where
-    params =
-      set'
-        #dataDir
-        (Just [osp|cli-both|])
-        baseChartParams
-    config = baseConfig
+    params = baseChartParams {dataDir = Just [osp|cli-both|]}
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          goodDir
+        ]
+
+    goodDir =
+      ( toOsPath $ rootPath <</>> [reldir|cli-both|],
+        Set.fromList
+          [ [osp|chart-requests.json|],
+            [osp|activities.csv|],
+            [osp|activities.json|]
+          ]
+      )
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 failureTests :: TestTree
 failureTests =
@@ -417,29 +698,26 @@ testEvolvePhaseCliPathsEx =
     $ MkGoldenParams
       { testDesc = "Exception for unknown CLI paths",
         testName = [osp|testEvolvePhaseCliPathsEx|],
-        runner = goldenRunner params config
+        runner = goldenRunner baseMockEnv params (Just config)
       }
   where
     params =
-      set' #chartRequestsPath (Just [osp|bad_cr.json|])
-        $ set'
-          #dataDir
-          (Just [osp|cli-data|])
-        $ set'
-          #activityPaths
-          [[osp|bad_activities.json|]]
-          baseChartParams
+      baseChartParams
+        { activityPaths = [[osp|bad_activities.json|]],
+          chartRequestsPath = Just [osp|bad_cr.json|],
+          dataDir = Just [osp|cli-data|]
+        }
+
     config =
-      set'
-        (#chartConfig %? #activityPaths)
-        [[osp|rel-activities.json|]]
-        $ set'
-          (#chartConfig %? #dataDir)
-          (Just [osp|config-data|])
-        $ set'
-          (#chartConfig %? #chartRequestsPath)
-          (Just [osp|rel-cr.json|])
-          baseConfig
+      over'
+        (#config % #chartConfig % _Just)
+        ( Utils.setMany' @List @ChartConfig
+            [ MkSomeSetter #activityPaths [[osp|rel-activities.json|]],
+              MkSomeSetter #chartRequestsPath (Just [osp|rel-cr.json|]),
+              MkSomeSetter #dataDir (Just [osp|config-data|])
+            ]
+        )
+        baseConfigWithPath
 
 testEvolvePhaseCliDataDirEx :: TestTree
 testEvolvePhaseCliDataDirEx =
@@ -447,15 +725,17 @@ testEvolvePhaseCliDataDirEx =
     $ MkGoldenParams
       { testDesc = "Exception for unknown CLI data dir",
         testName = [osp|testEvolvePhaseCliDataDirEx|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv params Nothing
       }
   where
-    params =
-      set'
-        #dataDir
-        (Just $ rootOsPath </> [osp|bad_dir|])
-        baseChartParams
-    config = baseConfig
+    params = baseChartParams {dataDir = Just $ rootOsPath </> [osp|bad_dir|]}
+
+    knownDirectoriesFalse =
+      Set.fromList
+        [ toOsPath $ rootPath <</>> [reldir|bad_dir|]
+        ]
+
+    mockEnv = baseMockEnv {knownDirectoriesFalse}
 
 testEvolvePhaseConfigPathsEx :: TestTree
 testEvolvePhaseConfigPathsEx =
@@ -463,21 +743,28 @@ testEvolvePhaseConfigPathsEx =
     $ MkGoldenParams
       { testDesc = "Exception for unknown config paths",
         testName = [osp|testEvolvePhaseConfigPathsEx|],
-        runner = goldenRunner params config
+        runner = goldenRunner mockEnv baseChartParams (Just config)
       }
   where
-    params = baseChartParams
     config =
-      set'
-        (#chartConfig %? #activityPaths)
-        [[osp|bad-activities.json|]]
-        $ set'
-          (#chartConfig %? #dataDir)
-          (Just [osp|config-data|])
-        $ set'
-          (#chartConfig %? #chartRequestsPath)
-          (Just [osp|bad-cr.json|])
-          baseConfig
+      over'
+        (#config % #chartConfig % _Just)
+        ( Utils.setMany' @List @ChartConfig
+            [ MkSomeSetter #activityPaths [[osp|bad-activities.json|]],
+              MkSomeSetter #chartRequestsPath (Just [osp|bad-cr.json|]),
+              MkSomeSetter #dataDir (Just [osp|./|])
+            ]
+        )
+        baseConfigWithPath
+
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath xdgConfigPacer, Set.empty),
+          (toOsPath $ rootPath <</>> [reldirPathSep|config-data|], Set.empty)
+        ]
+
+    mockEnv = baseMockEnv {knownDirectories}
 
 testEvolvePhaseMissingEx :: TestTree
 testEvolvePhaseMissingEx =
@@ -485,117 +772,26 @@ testEvolvePhaseMissingEx =
     $ MkGoldenParams
       { testDesc = "Exception for missing paths",
         testName = [osp|testEvolvePhaseMissingEx|],
-        runner = goldenRunnerXdg XdgEmpty params config
+        runner = goldenRunner mockEnv params (Just config)
       }
   where
-    params =
-      set'
-        #dataDir
-        (Just [osp|some-dir|])
-        baseChartParams
+    params = baseChartParams {dataDir = Just [osp|some-dir|]}
+
     config =
       set'
-        (#chartConfig %? #dataDir)
+        (#config % #chartConfig %? #dataDir)
         (Just [osp|some-config-data|])
-        baseConfig
+        baseConfigWithPath
 
--- | How to handle xdg directory.
-data XdgHandler
-  = -- | Xdg directory has pacer files.
-    XdgGood
-  | -- | Xdg directory does not have pacer files.
-    XdgEmpty
-  | -- | Xdg directory does not exist.
-    XdgMissing
-  deriving stock (Eq, Show)
+    knownDirectories =
+      Map.fromList
+        [ (toOsPath cwdPath, Set.empty),
+          (toOsPath $ rootPath <</>> [reldirPathSep|xdg/config/pacer|], Set.empty),
+          (toOsPath $ rootPath <</>> [reldir|some-dir|], Set.empty),
+          (toOsPath $ rootPath <</>> [reldirPathSep|config-data/some-config-data|], Set.empty)
+        ]
 
-data MockEnv = MkMockEnv
-  { cachedPaths :: CachedPaths,
-    cwd :: Maybe OsPath,
-    knownDirectories :: Set OsPath,
-    knownDirectoriesFalse :: Set OsPath,
-    knownFiles :: Set OsPath,
-    -- Returns xdg dir w/ expected files iff xdg is true
-    xdg :: XdgHandler
-  }
-  deriving stock (Eq, Show)
-
-runEvolvePhase ::
-  -- | Current directory override.
-  Maybe OsPath ->
-  -- | Xdg override.
-  XdgHandler ->
-  ChartParamsArgs ->
-  Maybe ConfigWithPath ->
-  IO ChartParamsFinal
-runEvolvePhase mCwd xdg params mConfig = do
-  runner $ Params.evolvePhase params mConfig
-  where
-    env =
-      MkMockEnv
-        { cachedPaths = mempty,
-          cwd = mCwd,
-          knownDirectories =
-            Set.fromList
-              $ (rootOsPath </>)
-              <$> [ [ospPathSep|bad_xdg/config/pacer/|],
-                    [ospPathSep|cli-both/|],
-                    [ospPathSep|cli-data/|],
-                    [ospPathSep|cli-garmin/|],
-                    [ospPathSep|config-data/|],
-                    [ospPathSep|config-data/config-data/|],
-                    [ospPathSep|config-data/no-data/|],
-                    [ospPathSep|config-data/some-config-data/|],
-                    (toOsPath cwdPath),
-                    (toOsPath $ baseRoot <</>> [reldir|cwd_files|]),
-                    [ospPathSep|no-data/|],
-                    [ospPathSep|some-dir/|],
-                    [ospPathSep|xdg/config/pacer/|]
-                  ],
-          knownDirectoriesFalse =
-            Set.fromList
-              $ (rootOsPath </>)
-              <$> [ [ospPathSep|missing_xdg/config/pacer/|],
-                    [ospPathSep|bad_dir/|]
-                  ],
-          knownFiles =
-            Set.fromList
-              $ (rootOsPath </>)
-              <$> [ [ospPathSep|cli-cr.json|],
-                    [ospPathSep|cli-activities.json|],
-                    [ospPathSep|cli-data/chart-requests.json|],
-                    [ospPathSep|cli-data/activities.json|],
-                    [ospPathSep|cli-garmin/activities.csv|],
-                    [ospPathSep|cli-garmin/chart-requests.json|],
-                    [ospPathSep|cli-both/activities.json|],
-                    [ospPathSep|cli-both/activities.csv|],
-                    [ospPathSep|cli-both/chart-requests.json|],
-                    [ospPathSep|config-cr.json|],
-                    [ospPathSep|config-activities.json|],
-                    [ospPathSep|config-data/chart-requests.json|],
-                    [ospPathSep|config-data/activities.json|],
-                    [ospPathSep|config-data/rel-cr.json|],
-                    [ospPathSep|config-data/rel-activities.json|],
-                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/activities.json|]),
-                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/Activities.csv|]),
-                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/chart-requests.json|]),
-                    (toOsPath $ baseRoot <</>> [relfilePathSep|cwd_files/activity-labels.json|]),
-                    [ospPathSep|xdg/config/pacer/chart-requests.json|],
-                    [ospPathSep|xdg/config/pacer/activities.json|]
-                  ],
-          xdg
-        }
-
-    runner =
-      runEff
-        . evalState env.cachedPaths
-        . runReader @MockEnv env
-        . runPathReaderMock
-        . runLoggerMock
-        . runLoggerNS ""
-        . runReader logEnv
-
-    logEnv = MkLogEnv Nothing mempty mempty
+    mockEnv = baseMockEnv {knownDirectories}
 
 runLoggerMock :: Eff (Logger : es) a -> Eff es a
 runLoggerMock = interpret_ $ \case
@@ -611,102 +807,61 @@ runPathReaderMock = interpret_ $ \case
     knownDirs <- asks @MockEnv (.knownDirectories)
     knownDirsFalse <- asks @MockEnv (.knownDirectoriesFalse)
     if
-      | p `Set.member` knownDirs -> pure True
+      | p `Map.member` knownDirs -> pure True
       | p `Set.member` knownDirsFalse -> pure False
       | otherwise -> error $ "doesDirectoryExist: unexpected dir: " ++ show p
   DoesFileExist p -> do
-    knownFiles <- asks @MockEnv (.knownFiles)
-    pure $ p `Set.member` knownFiles
-  GetCurrentDirectory ->
-    asks @MockEnv (.cwd) <&> \case
-      Nothing -> (toOsPath cwdPath)
-      Just cwd -> cwd
+    knownDirs <- asks @MockEnv (.knownDirectories)
+    let (d, fn) = OsP.splitFileName p
+
+    case Map.lookup d knownDirs of
+      -- Check to see if this is path is part of a directory known to the
+      -- test, in which case existence should be based on the directory's
+      -- contents.
+      Just contents -> pure $ fn `Set.member` contents
+      -- The path does not belong to a known directory i.e. it is was
+      -- explicitly given (e.g. --chart-requests). Check if it is a known
+      -- explicit path.
+      Nothing -> do
+        knownFiles <- asks @MockEnv (.knownFiles)
+        pure $ p `Set.member` knownFiles
+  GetCurrentDirectory -> pure $ toOsPath cwdPath
   GetXdgDirectory d p ->
     case d of
-      XdgConfig -> do
-        xdg <- asks @MockEnv (.xdg)
-        pure $ case xdg of
-          XdgGood -> rootOsPath </> [ospPathSep|xdg/config|] </> p
-          XdgEmpty -> rootOsPath </> [ospPathSep|bad_xdg/config|] </> p
-          XdgMissing -> rootOsPath </> [ospPathSep|missing_xdg/config|] </> p
+      XdgConfig -> pure $ toOsPath xdgConfig </> p
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
-  ListDirectory p
-    | dirName == [osp|cli-garmin|] ->
-        pure [[osp|activities.csv|], [osp|chart-requests.json|]]
-    | dirName == [osp|cli-both|] ->
-        pure
-          [ [osp|activities.csv|],
-            [osp|chart-requests.json|],
-            [osp|activities.json|]
-          ]
-    -- xdg
-    | xdgNormal ->
-        pure
-          [ [osp|activities.json|],
-            [osp|chart-requests.json|]
-          ]
-    | dirName == [osp|cli-data|] ->
-        pure
-          [ [osp|activities.json|],
-            [osp|chart-requests.json|]
-          ]
-    | dirName == [osp|config-data|] ->
-        pure
-          [ [osp|activities.json|],
-            [osp|chart-requests.json|]
-          ]
-    | dirName == [osp|cwd_files|] ->
-        pure
-          [ [osp|Activities.csv|],
-            [osp|activities.json|],
-            [osp|activity-labels.json|],
-            [osp|chart-requests.json|]
-          ]
-    | otherwise -> pure []
-    where
-      dirsSplit = OsPath.splitDirectories p
-      dirName = L.last dirsSplit
-
-      xdgNormal =
-        [osp|xdg|]
-          `elem` dirsSplit
-          && [osp|bad_xdg|]
-          `nelem` dirsSplit
-          && [osp|missing_xdg|]
-          `nelem` dirsSplit
-
-      nelem x = not . elem x
+  ListDirectory p -> do
+    knownDirs <- asks @MockEnv (.knownDirectories)
+    case Map.lookup p knownDirs of
+      Nothing -> error $ "ListDirectory: unexpected dir: " ++ show p
+      Just contents -> pure $ Set.toList contents
   other -> error $ "runPathReaderMock: unimplemented: " ++ showEffectCons other
 
-goldenRunner :: ChartParamsArgs -> Config -> IO ByteString
-goldenRunner = goldenRunnerXdg XdgGood
-
-goldenRunnerCwd :: OsPath -> ChartParamsArgs -> Config -> IO ByteString
-goldenRunnerCwd cwd = goldenRunnerGeneral (Just cwd) XdgGood
-
-goldenRunnerXdg :: XdgHandler -> ChartParamsArgs -> Config -> IO ByteString
-goldenRunnerXdg = goldenRunnerGeneral Nothing
-
-goldenRunnerGeneral ::
-  Maybe OsPath ->
-  XdgHandler ->
+goldenRunner ::
+  -- | MockEnv, used so that tests can determine which paths should exist.
+  MockEnv ->
+  -- | Evolve args.
   ChartParamsArgs ->
-  Config ->
+  -- | Optional config.
+  Maybe ConfigWithPath ->
   IO ByteString
-goldenRunnerGeneral mCwd xdg params config = do
-  let configPath =
-        MkConfigWithPath
-          { dirPath = rootPath <</>> [reldir|config-data|],
-            config
-          }
-  trySync (runEvolvePhase mCwd xdg params (Just configPath)) <&> \case
+goldenRunner mockEnv params mConfigPath = do
+  trySync (runner $ Params.evolvePhase params mConfigPath) <&> \case
     Right x -> pShowBS x
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
     Left ex -> encodeUtf8 $ packText $ displayInnerMatchKnown ex
+  where
+    runner =
+      runEff
+        . evalState @CachedPaths mempty
+        . runReader @MockEnv mockEnv
+        . runPathReaderMock
+        . runLoggerMock
+        . runLoggerNS ""
+        . runReader logEnv
 
-rootOsPath :: OsPath
-rootOsPath = toOsPath rootPath
+    logEnv = MkLogEnv Nothing mempty mempty
 
 baseChartParams :: ChartParamsArgs
 baseChartParams =
@@ -721,22 +876,40 @@ baseChartParams =
       port = Nothing
     }
 
+baseConfigWithPath :: ConfigWithPath
+baseConfigWithPath =
+  MkConfigWithPath
+    { -- NOTE: [Config directory]
+      dirPath = rootPath <</>> [reldir|config-data|],
+      config = baseConfig
+    }
+
+rootOsPath :: OsPath
+rootOsPath = toOsPath rootPath
+
 baseConfig :: Config
 baseConfig = set' #chartConfig (Just mempty) mempty
 
-{- ORMOLU_DISABLE -}
-
 absBuildDir :: Path Abs Dir
-absBuildDir = baseRoot <</>> [reldirPathSep|abs/build-dir|]
+absBuildDir = rootPath <</>> [reldirPathSep|abs/build-dir|]
+
+-- NOTE: xdg and cwd can be defined globally here as there is no reason for
+-- a particular test to need a different one. Tests can vary by changing
+-- the behavior wrt knownDirectories.
+
+xdgConfigPacer :: Path Abs Dir
+xdgConfigPacer = xdgConfig <</>> [reldirPathSep|pacer|]
+
+xdgConfig :: Path Abs Dir
+xdgConfig = rootPath <</>> [reldirPathSep|xdg/config|]
 
 cwdPath :: Path Abs Dir
-cwdPath = baseRoot <</>> [reldir|cwd|]
+cwdPath = rootPath <</>> [reldir|cwd|]
+
+{- ORMOLU_DISABLE -}
 
 rootPath :: Path Abs Dir
-rootPath = baseRoot <</>> [reldir|root|]
-
-baseRoot :: Path Abs Dir
-baseRoot =
+rootPath =
 #if POSIX
   [absdir|/|]
 #else
