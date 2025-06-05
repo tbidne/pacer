@@ -19,7 +19,7 @@ cabal_build_dir="$arch-osx"
 
 mkdir -p bin
 
-suffix="_$PACER_VERS-$arch-macos_$apple_vers-darwin"
+suffix="_$PACER_VERS-$arch-macos_$apple_vers"
 
 export PACER_HOME=$(pwd); cabal install exe:pacer --installdir bin/ --program-suffix $suffix --project-file $CABAL_PROJ --ghc-options -Werror
 

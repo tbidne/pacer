@@ -8,7 +8,7 @@ arch="x86_64"
 
 mkdir -p bin
 
-suffix="_$PACER_VERS-$arch-windows_$windows_vers-mingw64"
+suffix="_$PACER_VERS-$arch-windows_$windows_vers"
 
 export PACER_HOME=$(pwd); cabal install exe:pacer --installdir bin/ --program-suffix $suffix --project-file $CABAL_PROJ --ghc-options -Werror
 
