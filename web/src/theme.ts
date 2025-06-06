@@ -14,7 +14,7 @@ type Theme = {
   background: Color;
   grid: Color;
   name: "Light" | "Dark";
-  selectorBorderColor: Color;
+  selectorBorder: Color;
   text: Color;
   tooltipBackground: Color;
   tooltip: Color;
@@ -31,7 +31,7 @@ const themeMap: ThemeMap = new Map([
       background: "#191b1c",
       grid: "#3d3d3d",
       name: "Dark",
-      selectorBorderColor: "#495057",
+      selectorBorder: "#495057",
       text: "#c3c3c3",
       tooltipBackground: "rgba(204, 204, 204, 0.75)",
       tooltip: "#393939",
@@ -43,7 +43,7 @@ const themeMap: ThemeMap = new Map([
       background: "#e6e7ed",
       grid: "#828aad",
       name: "Light",
-      selectorBorderColor: "#343b59",
+      selectorBorder: "#343b59",
       text: "#343b59",
       tooltipBackground: "rgba(0, 0, 0, 0.75)",
       tooltip: "#c3c3c3",
@@ -70,7 +70,7 @@ function setGlobalStyleProp(value: string, color: Color): void {
 
 function setGlobalStyleProps(theme: Theme): void {
   setGlobalStyleProp("--global-background-color", theme.background);
-  setGlobalStyleProp("--selector-border-color", theme.selectorBorderColor);
+  setGlobalStyleProp("--selector-border-color", theme.selectorBorder);
   setGlobalStyleProp("--text-color", theme.text);
 }
 

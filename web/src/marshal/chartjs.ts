@@ -106,6 +106,36 @@ function makeChartOpts(
         bodyColor: theme.tooltip,
         titleColor: theme.tooltip,
       },
+      zoom: {
+        // Disable pan for now. While panning would be nice, I cannot get it
+        // to play nicely with drag. Moreover, pan doesn't work too well
+        // with our axes, even by itself.
+        //
+        // Therefore we give up on it for now. "Panning" can be substituted
+        // by drag + zoom.
+        pan: {
+          enabled: false,
+          mode: "x",
+          modifier: "ctrl",
+        },
+        zoom: {
+          drag: {
+            // Colors not configurable because I cannot figure out a way to
+            // make it dynamic i.e. this is all set once at load time.
+            backgroundColor: "rgba(121, 155, 228, 0.25)",
+            borderColor: "rgba(75, 127, 240, 0.50)",
+            borderWidth: 3,
+            enabled: true,
+          },
+          pinch: {
+            enabled: true,
+          },
+          wheel: {
+            enabled: true,
+          },
+          mode: "x",
+        },
+      },
     },
     pointHitRadius: POINT_RADIUS,
     responsive: true,

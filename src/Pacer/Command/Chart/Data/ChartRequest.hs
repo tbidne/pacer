@@ -192,7 +192,7 @@ data ChartTheme = MkChartTheme
   { background :: Text,
     grid :: Text,
     name :: Text,
-    selectorBorderColor :: Text,
+    selectorBorder :: Text,
     text :: Text,
     tooltipBackground :: Text,
     tooltip :: Text
@@ -206,7 +206,7 @@ instance ToJSON ChartTheme where
       [ "background" .= ct.background,
         "grid" .= ct.grid,
         "name" .= ct.name,
-        "selectorBackgroundColor" .= ct.selectorBorderColor,
+        "selectorBackground" .= ct.selectorBorder,
         "text" .= ct.text,
         "tooltipBackground" .= ct.tooltipBackground,
         "tooltip" .= ct.tooltip
@@ -217,7 +217,7 @@ instance FromJSON ChartTheme where
     background <- v .: "background"
     grid <- v .: "grid"
     name <- v .: "name"
-    selectorBorderColor <- v .: "selectorBorderColor"
+    selectorBorder <- v .: "selectorBorder"
     text <- v .: "text"
     tooltipBackground <- v .: "tooltipBackground"
     tooltip <- v .: "tooltip"
@@ -227,7 +227,7 @@ instance FromJSON ChartTheme where
       [ "background",
         "grid",
         "name",
-        "selectorBorderColor",
+        "selectorBorder",
         "text",
         "tooltipBackground",
         "tooltip"
@@ -239,7 +239,7 @@ instance FromJSON ChartTheme where
         { background,
           grid,
           name,
-          selectorBorderColor,
+          selectorBorder,
           text,
           tooltipBackground,
           tooltip

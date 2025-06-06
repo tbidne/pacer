@@ -17,7 +17,7 @@
         "name": "Pink",
         "background": "#320054",
         "grid": "#ff49dc",
-        "selectorBorderColor": "#ff49dc",
+        "selectorBorder": "#ff49dc",
         "text": "#ff49dc",
         "tooltipBackground": "#320054",
         "tooltip": "#ff49dc"

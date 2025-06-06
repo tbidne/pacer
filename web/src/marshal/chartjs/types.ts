@@ -30,6 +30,29 @@ type CChartOpts = {
       bodyColor: string;
       titleColor: string;
     };
+    zoom: {
+      pan: {
+        enabled: boolean;
+        mode: "x" | "y" | "xy";
+        modifier?: "ctrl" | "alt" | "shift" | "meta";
+      };
+      zoom: {
+        drag: {
+          backgroundColor: string;
+          borderColor: string;
+          borderWidth: number;
+          enabled: boolean;
+          modifier?: "ctrl" | "alt" | "shift" | "meta";
+        };
+        pinch: {
+          enabled: true;
+        };
+        wheel: {
+          enabled: true;
+        };
+        mode: "x" | "y" | "xy";
+      };
+    };
   };
   pointHitRadius: number;
   responsive: boolean;
