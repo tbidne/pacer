@@ -168,7 +168,7 @@ $ npm run build
 
 ## Backend
 
-If you have never built a haskell program before, [Cabal](#cabal) is probably the best choice.
+If you have never built a haskell program before, [`cabal`](#cabal) is probably the best choice.
 
 > [!WARNING]
 >
@@ -189,6 +189,16 @@ The current "blessed" version is `ghc-9.10.1`.
 #### Build Pacer
 
 Once you have `cabal` and `ghc`, `pacer` can be built locally with `cabal build` or installed globally (e.g. `~/.local/bin/pacer`) with `cabal install`.
+
+> [!IMPORTANT]
+>
+> Pacer requires git information to be available at build time, for the purposes of including some data in the binary (e.g. commit hash). Cabal's vanilla install method interfers with this, though we have a workaround that relies on passing the current directory as an environment variable:
+>
+> ```sh
+> $ export PACER_HOME=$(pwd); cabal install exe:pacer
+> ```
+>
+> Nix does not require such a workaround, and stack does not seem to require it either.
 
 For further reproducibility, an optional freeze file can be used for the "blessed" compiler.
 
