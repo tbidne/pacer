@@ -139,7 +139,7 @@
           frontend = buildNpmPackage {
             name = "frontend";
             src = ./web;
-            npmDepsHash = "sha256-YnxX/dwzsOLIb1o34yRawSfVFzMDbXZ45REQiFit05I=";
+            npmDepsHash = "sha256-Bcyl4cOM3lpJWPdCAk0kczC7d9NFMM9UQvqUjGga6co=";
           };
 
           mkPkg =
