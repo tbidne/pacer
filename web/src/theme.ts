@@ -7,6 +7,26 @@ type ThemeConfig = {
 
 type Color = string;
 
+const colorLiteralMap: Map<Color, ColorRgb> = new Map([
+  ["white", { r: 255, g: 255, b: 255 }],
+  ["silver", { r: 192, g: 192, b: 192 }],
+  ["gray", { r: 128, g: 128, b: 128 }],
+  ["grey", { r: 128, g: 128, b: 128 }],
+  ["black", { r: 0, g: 0, b: 0 }],
+  ["red", { r: 255, g: 0, b: 0 }],
+  ["maroon", { r: 128, g: 0, b: 0 }],
+  ["yellow", { r: 255, g: 255, b: 0 }],
+  ["olive", { r: 128, g: 128, b: 0 }],
+  ["lime", { r: 0, g: 255, b: 0 }],
+  ["green", { r: 0, g: 128, b: 0 }],
+  ["aqua", { r: 0, g: 255, b: 255 }],
+  ["teal", { r: 0, g: 128, b: 128 }],
+  ["blue", { r: 0, g: 0, b: 255 }],
+  ["navy", { r: 0, g: 0, b: 128 }],
+  ["fuscia", { r: 255, g: 0, b: 255 }],
+  ["purple", { r: 128, g: 0, b: 128 }],
+]);
+
 // This should probably just be a function that takes an enum themeName
 // and returns the theme.
 
@@ -18,6 +38,9 @@ type Theme = {
   text: Color;
   tooltipBackground: Color;
   tooltip: Color;
+  yBackground: Color;
+  y1Background: Color;
+  zoomDragBackground: Color;
 };
 
 type ThemeKey = string;
@@ -35,6 +58,11 @@ const themeMap: ThemeMap = new Map([
       text: "#c3c3c3",
       tooltipBackground: "rgba(204, 204, 204, 0.75)",
       tooltip: "#393939",
+      // NOTE: These are the default chartjs line colors, determined by
+      // examining the values at runtime in setThemeKey.
+      yBackground: "#36a2eb",
+      y1Background: "#ff6384",
+      zoomDragBackground: "#436dd0",
     },
   ],
   [
@@ -47,6 +75,9 @@ const themeMap: ThemeMap = new Map([
       text: "#343b59",
       tooltipBackground: "rgba(0, 0, 0, 0.75)",
       tooltip: "#c3c3c3",
+      yBackground: "#36a2eb",
+      y1Background: "#ff6384",
+      zoomDragBackground: "#436dd0",
     },
   ],
 ]);
@@ -72,6 +103,91 @@ function setGlobalStyleProps(theme: Theme): void {
   setGlobalStyleProp("--global-background-color", theme.background);
   setGlobalStyleProp("--selector-border-color", theme.selectorBorder);
   setGlobalStyleProp("--text-color", theme.text);
+}
+
+type ColorRgb = { r: number; g: number; b: number };
+function mkColorRgb(r: number, g: number, b: number): ColorRgb {
+  return { r: r, g: g, b: b};
+}
+
+// The result of parsing a color string.
+type ColorParse = { result: true; rgb: ColorRgb } | { result: false };
+
+// Parses an rgb(a) string e.g. rgba(120, 30, 10, 0.4). Throws away the
+// apha, if it exists
+const rgbRegex =
+  /rgba?\(([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*(?:,\s*([0-9.]+))?\)/;
+function parseColorRgb(color: Color): ColorParse {
+  const matches = color.match(rgbRegex);
+  if (matches == null || matches.length < 4) {
+    return { result: false };
+  }
+  const r = parseInt(matches[1], 10);
+  const g = parseInt(matches[2], 10);
+  const b = parseInt(matches[3], 10);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) {
+    return { result: false };
+  }
+
+  return { result: true, rgb: mkColorRgb(r, g, b) };
+}
+
+// Parses a hex string.
+const hexRegex = /#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/;
+function parseColorHex(color: Color): ColorParse {
+  const matches = color.match(hexRegex);
+  if (matches == null || matches.length < 4) {
+    return { result: false };
+  }
+  const r = parseInt(matches[1], 16);
+  const g = parseInt(matches[2], 16);
+  const b = parseInt(matches[3], 16);
+
+  if (isNaN(r) || isNaN(g) || isNaN(b)) {
+    return { result: false };
+  }
+
+  return { result: true, rgb: mkColorRgb(r, g, b) };
+}
+
+function parseColorLiteral(color: Color): ColorParse {
+  const lower = color.toLowerCase();
+
+  const v = colorLiteralMap.get(color);
+  if (!v) {
+    return { result: false };
+  }
+  return { result: true, rgb: v };
+}
+
+// Parses a hex or rgb(a) string.
+function parseColor(color: Color): ColorParse {
+  const hexResult = parseColorHex(color);
+  if (hexResult.result) {
+    return hexResult;
+  }
+  return parseColorRgb(color);
+}
+
+// Given a color, returns a new rgba color with the desired alpha.
+function newAlpha(color: Color, alpha: number): Color {
+  if (alpha < 0 || alpha > 1) {
+    throw new Error(`Invalid color alpha value: ${alpha}`);
+  }
+
+  const rgbResult = parseColor(color);
+  if (!rgbResult.result) {
+    console.warn(
+      `newAlpha: color did not match expected hex, rgb(a), or literal format: ${color}`,
+    );
+    return color;
+  }
+  const rgbv = rgbResult.rgb;
+  return `rgba(${rgbv.r}, ${rgbv.g}, ${rgbv.b}, ${alpha})`;
+}
+
+function alpha50(color: Color): Color {
+  return newAlpha(color, 0.5);
 }
 
 function setThemeKey(
@@ -103,6 +219,7 @@ function setThemeKey(
     plugins.tooltip.bodyColor = theme.tooltip;
     plugins.tooltip.titleColor = theme.tooltip;
 
+    // update scales
     const scales = chart.options.scales;
     updateScale(scales.x);
     updateScale(scales.y);
@@ -110,6 +227,22 @@ function setThemeKey(
     if (scales.y1 != null) {
       updateScale(scales.y1);
     }
+
+    // update line colors
+    const datasets = chart.data.datasets;
+    const y0 = datasets[0];
+    y0.backgroundColor = alpha50(theme.yBackground);
+    y0.borderColor = theme.yBackground;
+
+    if (datasets.length > 1) {
+      const y1 = datasets[1];
+      y1.backgroundColor = alpha50(theme.y1Background);
+      y1.borderColor = theme.y1Background;
+    }
+
+    // update drag
+    plugins.zoom.zoom.drag.backgroundColor = alpha50(theme.zoomDragBackground);
+    plugins.zoom.zoom.drag.borderColor = theme.zoomDragBackground;
 
     (<any>plugins).customCanvasBackgroundColor.color = theme.background;
     chart.update();
@@ -203,6 +336,7 @@ export {
   ThemeMap,
   addThemeBtnOnClick,
   addThemesToUI,
+  alpha50,
   getThemeSelector,
   setTheme,
   setThemeKey,

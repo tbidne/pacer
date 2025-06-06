@@ -293,7 +293,10 @@ build/charts.json
         "selectorBackground": "#ff49dc",
         "text": "#ff49dc",
         "tooltip": "#ff49dc",
-        "tooltipBackground": "#320054"
+        "tooltipBackground": "#320054",
+        "y1Background": "#ff6384",
+        "yBackground": "#36a2eb",
+        "zoomDragBackground": "#436dd0"
       }
     ]
   }

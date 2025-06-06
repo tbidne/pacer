@@ -3,7 +3,7 @@ import { PYAxis } from "./pacer";
 import { CChartOpts, CDataSets, CTicks, CYAxis, CYOptT } from "./chartjs/types";
 import { YAxesT, YAxisLabel, mapYAxes } from "./common";
 import { formatOptsSeconds, formatSeconds } from "../utils";
-import { Theme } from "../theme";
+import { alpha50, Theme } from "../theme";
 
 const POINT_RADIUS = 20;
 const AXIS_FONT_SIZE = 16;
@@ -14,8 +14,17 @@ function getYTimePrefix(s: YAxisLabel): "duration" | "pace" | null {
   else return null;
 }
 
-function makeYAxis(pYAxis: PYAxis): CYAxis {
+function makeYAxis(theme: Theme, pYAxis: PYAxis): CYAxis {
+  let backgroundColor = alpha50(theme.yBackground);
+  let borderColor = theme.yBackground;
+  if (pYAxis.id == "y1") {
+    backgroundColor = alpha50(theme.y1Background);
+    borderColor = theme.y1Background;
+  }
+
   const cYAxis: CYAxis = {
+    backgroundColor: backgroundColor,
+    borderColor: borderColor,
     data: pYAxis.data,
     fill: false,
     label: pYAxis.type,
@@ -40,8 +49,8 @@ function makeYAxis(pYAxis: PYAxis): CYAxis {
   return cYAxis;
 }
 
-function makeYAxes(yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
-  return mapYAxes(makeYAxis, yAxes);
+function makeYAxes(theme: Theme, yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
+  return mapYAxes((y) => makeYAxis(theme, y), yAxes);
 }
 
 function makeChartOpts(
@@ -60,7 +69,7 @@ function makeChartOpts(
     return ticks;
   }
 
-  function makeYAxis<A>(position: A, title: YAxisLabel): CYOptT<A> {
+  function makeYAxisOpts<A>(position: A, title: YAxisLabel): CYOptT<A> {
     return {
       grid: {
         color: theme.grid,
@@ -120,11 +129,9 @@ function makeChartOpts(
         },
         zoom: {
           drag: {
-            // Colors not configurable because I cannot figure out a way to
-            // make it dynamic i.e. this is all set once at load time.
-            backgroundColor: "rgba(121, 155, 228, 0.25)",
-            borderColor: "rgba(75, 127, 240, 0.50)",
-            borderWidth: 3,
+            backgroundColor: alpha50(theme.zoomDragBackground),
+            borderColor: theme.zoomDragBackground,
+            borderWidth: 1,
             enabled: true,
           },
           pinch: {
@@ -163,13 +170,13 @@ function makeChartOpts(
         },
         type: "timeseries",
       },
-      y: makeYAxis("left", yAxes.y.label),
+      y: makeYAxisOpts("left", yAxes.y.label),
     },
   };
 
   const y1 = yAxes.y1;
   if (y1 != null) {
-    copts.scales.y1 = makeYAxis("right", y1.label);
+    copts.scales.y1 = makeYAxisOpts("right", y1.label);
   }
   return copts;
 }
@@ -207,7 +214,7 @@ function createChart(
   yAxes: YAxesT<PYAxis>,
 ): Chart<"line"> {
   const chartOpts = makeChartOpts(theme, title, yAxes);
-  const cYAxes = makeYAxes(yAxes);
+  const cYAxes = makeYAxes(theme, yAxes);
 
   const datasets: CDataSets = [cYAxes.y];
   if (cYAxes.y1 != null) {

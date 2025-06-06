@@ -82,6 +82,8 @@ type CChartOpts = {
  * Chart.js Y-axis.
  */
 type CYAxis = {
+  backgroundColor: string;
+  borderColor: string;
   data: number[];
   fill: boolean;
   label: string;

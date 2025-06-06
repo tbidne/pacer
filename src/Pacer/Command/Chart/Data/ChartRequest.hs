@@ -195,7 +195,10 @@ data ChartTheme = MkChartTheme
     selectorBorder :: Text,
     text :: Text,
     tooltipBackground :: Text,
-    tooltip :: Text
+    tooltip :: Text,
+    yBackground :: Text,
+    y1Background :: Text,
+    zoomDragBackground :: Text
   }
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
@@ -209,7 +212,10 @@ instance ToJSON ChartTheme where
         "selectorBackground" .= ct.selectorBorder,
         "text" .= ct.text,
         "tooltipBackground" .= ct.tooltipBackground,
-        "tooltip" .= ct.tooltip
+        "tooltip" .= ct.tooltip,
+        "yBackground" .= ct.yBackground,
+        "y1Background" .= ct.y1Background,
+        "zoomDragBackground" .= ct.zoomDragBackground
       ]
 
 instance FromJSON ChartTheme where
@@ -221,6 +227,9 @@ instance FromJSON ChartTheme where
     text <- v .: "text"
     tooltipBackground <- v .: "tooltipBackground"
     tooltip <- v .: "tooltip"
+    yBackground <- v .: "yBackground"
+    y1Background <- v .: "y1Background"
+    zoomDragBackground <- v .: "zoomDragBackground"
 
     Utils.failUnknownFields
       "ChartTheme"
@@ -230,7 +239,10 @@ instance FromJSON ChartTheme where
         "selectorBorder",
         "text",
         "tooltipBackground",
-        "tooltip"
+        "tooltip",
+        "yBackground",
+        "y1Background",
+        "zoomDragBackground"
       ]
       v
 
@@ -242,7 +254,10 @@ instance FromJSON ChartTheme where
           selectorBorder,
           text,
           tooltipBackground,
-          tooltip
+          tooltip,
+          yBackground,
+          y1Background,
+          zoomDragBackground
         }
 
 data ChartThemeConfig = MkChartThemeConfig

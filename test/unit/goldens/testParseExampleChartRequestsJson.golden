@@ -194,6 +194,9 @@ MkChartRequests
           , text = "#ff49dc"
           , tooltipBackground = "#320054"
           , tooltip = "#ff49dc"
+          , yBackground = "#36a2eb"
+          , y1Background = "#ff6384"
+          , zoomDragBackground = "#436dd0"
           }
         ]
       }
