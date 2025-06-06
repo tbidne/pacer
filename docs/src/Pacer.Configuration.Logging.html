@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html"><span class="hs-identifier">Pacer.Configuration.Logging</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Levels</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogLevelParam"><span class="hs-identifier">LogLevelParam</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Logging.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Logging.html#parseLogLevel"><span class="hs-identifier">parseLogLevel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Verbosity</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier">LogVerbosity</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Logging.html#verbosityParser"><span class="hs-identifier">verbosityParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Logging.html#parseLogVerbosity"><span class="hs-identifier">parseLogVerbosity</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html"><span class="hs-identifier">Effectful.Logger.Dynamic</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LogLevel"><span class="hs-identifier">LogLevel</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelDebug"><span class="hs-identifier">LevelDebug</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelError"><span class="hs-identifier">LevelError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelInfo"><span class="hs-identifier">LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelWarn"><span class="hs-identifier">LevelWarn</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OA</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Configuration.Utils.html"><span class="hs-identifier">Pacer.Configuration.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="LogLevelParam"><span class="annot"><a href="Pacer.Configuration.Logging.html#LogLevelParam"><span class="hs-identifier hs-var">LogLevelParam</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LogNone"><span class="annot"><a href="Pacer.Configuration.Logging.html#LogNone"><span class="hs-identifier hs-var">LogNone</span></a></span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LogSome"><span class="annot"><a href="Pacer.Configuration.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679714184"><span id="local-6989586621679714191"><span class="annot"><span class="annottext">LogLevelParam -&gt; LogLevelParam -&gt; Bool
+(LogLevelParam -&gt; LogLevelParam -&gt; Bool)
+-&gt; (LogLevelParam -&gt; LogLevelParam -&gt; Bool) -&gt; Eq LogLevelParam
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+== :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+$c/= :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+/= :: LogLevelParam -&gt; LogLevelParam -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679714196"><span id="local-6989586621679714202"><span id="local-6989586621679714206"><span class="annot"><span class="annottext">Int -&gt; LogLevelParam -&gt; ShowS
+[LogLevelParam] -&gt; ShowS
+LogLevelParam -&gt; String
+(Int -&gt; LogLevelParam -&gt; ShowS)
+-&gt; (LogLevelParam -&gt; String)
+-&gt; ([LogLevelParam] -&gt; ShowS)
+-&gt; Show LogLevelParam
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; LogLevelParam -&gt; ShowS
+showsPrec :: Int -&gt; LogLevelParam -&gt; ShowS
+$cshow :: LogLevelParam -&gt; String
+show :: LogLevelParam -&gt; String
+$cshowList :: [LogLevelParam] -&gt; ShowS
+showList :: [LogLevelParam] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714212"><span id="local-6989586621679714216"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679714221"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser LogLevelParam
+</span><a href="#local-6989586621679714221"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Text -&gt; Parser LogLevelParam) -&gt; Value -&gt; Parser LogLevelParam
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithText"><span class="hs-identifier hs-var">asnWithText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;LogLevelParam&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser LogLevelParam
+forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#parseLogLevel"><span class="hs-identifier hs-var">parseLogLevel</span></a></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="annot"><a href="Pacer.Configuration.Logging.html#parser"><span class="hs-identifier hs-type">parser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span><span>
+</span><span id="line-31"></span><span id="parser"><span class="annot"><span class="annottext">parser :: Parser LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#parser"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><span class="annottext">ReadM LogLevelParam
+-&gt; Mod OptionFields LogLevelParam -&gt; Parser LogLevelParam
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ReadM Text
+forall s. IsString s =&gt; ReadM s
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#str"><span class="hs-identifier hs-var">OA.str</span></a></span><span> </span><span class="annot"><span class="annottext">ReadM Text -&gt; (Text -&gt; ReadM LogLevelParam) -&gt; ReadM LogLevelParam
+forall a b. ReadM a -&gt; (a -&gt; ReadM b) -&gt; ReadM b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ReadM LogLevelParam
+forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#parseLogLevel"><span class="hs-identifier hs-var">parseLogLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><span class="annottext">(Mod OptionFields LogLevelParam -&gt; Parser LogLevelParam)
+-&gt; Mod OptionFields LogLevelParam -&gt; Parser LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields LogLevelParam] -&gt; Mod OptionFields LogLevelParam
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-35"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogLevelParam
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;log-level&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogLevelParam
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+forall a. IsString a =&gt; a
+</span><a href="Pacer.Configuration.Logging.html#logLvlStr"><span class="hs-identifier hs-var">logLvlStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogLevelParam
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var">Utils.mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Optional log level. Defaults to 'info'.&quot;</span></span><span>
+</span><span id="line-38"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span id="local-6989586621679714119"><span class="annot"><a href="Pacer.Configuration.Logging.html#parseLogLevel"><span class="hs-identifier hs-type">parseLogLevel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679714119"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679714119"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span></span><span>
+</span><span id="line-41"></span><span id="parseLogLevel"><span class="annot"><span class="annottext">parseLogLevel :: forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#parseLogLevel"><span class="hs-identifier hs-var hs-var">parseLogLevel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;none&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#LogNone"><span class="hs-identifier hs-var">LogNone</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;debug&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelDebug"><span class="hs-identifier hs-var">LevelDebug</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;info&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;warn&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelWarn"><span class="hs-identifier hs-var">LevelWarn</span></a></span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLevelParam -&gt; m LogLevelParam
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(LogLevelParam -&gt; m LogLevelParam)
+-&gt; LogLevelParam -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevelParam
+</span><a href="Pacer.Configuration.Logging.html#LogSome"><span class="hs-identifier hs-var">LogSome</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621679714257"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679714257"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">String -&gt; m LogLevelParam
+forall a. String -&gt; m a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">(String -&gt; m LogLevelParam) -&gt; String -&gt; m LogLevelParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-51"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Expected one of &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>          </span><span class="annot"><span class="annottext">Text
+forall a. IsString a =&gt; a
+</span><a href="Pacer.Configuration.Logging.html#logLvlStr"><span class="hs-identifier hs-var">logLvlStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;, received: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679714257"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><span id="line-55"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span id="local-6989586621679714135"><span class="annot"><a href="Pacer.Configuration.Logging.html#logLvlStr"><span class="hs-identifier hs-type">logLvlStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621679714135"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679714135"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-58"></span><span id="logLvlStr"><span class="annot"><span class="annottext">logLvlStr :: forall a. IsString a =&gt; a
+</span><a href="Pacer.Configuration.Logging.html#logLvlStr"><span class="hs-identifier hs-var hs-var">logLvlStr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;(none | debug | info | warn | error)&quot;</span></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">data</span><span> </span><span id="LogVerbosity"><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier hs-var">LogVerbosity</span></a></span></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LogV0"><span class="annot"><a href="Pacer.Configuration.Logging.html#LogV0"><span class="hs-identifier hs-var">LogV0</span></a></span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LogV1"><span class="annot"><a href="Pacer.Configuration.Logging.html#LogV1"><span class="hs-identifier hs-var">LogV1</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679714264"><span id="local-6989586621679714268"><span class="annot"><span class="annottext">LogVerbosity -&gt; LogVerbosity -&gt; Bool
+(LogVerbosity -&gt; LogVerbosity -&gt; Bool)
+-&gt; (LogVerbosity -&gt; LogVerbosity -&gt; Bool) -&gt; Eq LogVerbosity
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: LogVerbosity -&gt; LogVerbosity -&gt; Bool
+== :: LogVerbosity -&gt; LogVerbosity -&gt; Bool
+$c/= :: LogVerbosity -&gt; LogVerbosity -&gt; Bool
+/= :: LogVerbosity -&gt; LogVerbosity -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679714272"><span id="local-6989586621679714274"><span id="local-6989586621679714278"><span class="annot"><span class="annottext">Int -&gt; LogVerbosity -&gt; ShowS
+[LogVerbosity] -&gt; ShowS
+LogVerbosity -&gt; String
+(Int -&gt; LogVerbosity -&gt; ShowS)
+-&gt; (LogVerbosity -&gt; String)
+-&gt; ([LogVerbosity] -&gt; ShowS)
+-&gt; Show LogVerbosity
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; LogVerbosity -&gt; ShowS
+showsPrec :: Int -&gt; LogVerbosity -&gt; ShowS
+$cshow :: LogVerbosity -&gt; String
+show :: LogVerbosity -&gt; String
+$cshowList :: [LogVerbosity] -&gt; ShowS
+showList :: [LogVerbosity] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714282"><span id="local-6989586621679714286"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier hs-type">LogVerbosity</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><span class="annottext">LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#LogV1"><span class="hs-identifier hs-var">LogV1</span></a></span><span> </span><span id="local-6989586621679714291"><span class="annot"><span class="annottext">&lt;&gt; :: LogVerbosity -&gt; LogVerbosity -&gt; LogVerbosity
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><span class="annottext">LogVerbosity
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#LogV1"><span class="hs-identifier hs-var">LogV1</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">LogVerbosity
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span id="local-6989586621679714292"><span class="annot"><span class="annottext">LogVerbosity
+</span><a href="#local-6989586621679714292"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogVerbosity
+</span><a href="#local-6989586621679714292"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714297"><span id="local-6989586621679714301"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier hs-type">LogVerbosity</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621679714304"><span class="annot"><span class="annottext">mempty :: LogVerbosity
+</span><span class="hs-identifier hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#LogV0"><span class="hs-identifier hs-var">LogV0</span></a></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714307"><span id="local-6989586621679714311"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier hs-type">LogVerbosity</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621679714314"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser LogVerbosity
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Text -&gt; Parser LogVerbosity) -&gt; Value -&gt; Parser LogVerbosity
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithText"><span class="hs-identifier hs-var">asnWithText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;LogVerbosity&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser LogVerbosity
+forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#parseLogVerbosity"><span class="hs-identifier hs-var">parseLogVerbosity</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="annot"><a href="Pacer.Configuration.Logging.html#verbosityParser"><span class="hs-identifier hs-type">verbosityParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier hs-type">LogVerbosity</span></a></span><span>
+</span><span id="line-76"></span><span id="verbosityParser"><span class="annot"><span class="annottext">verbosityParser :: Parser LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#verbosityParser"><span class="hs-identifier hs-var hs-var">verbosityParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><span class="annottext">ReadM LogVerbosity
+-&gt; Mod OptionFields LogVerbosity -&gt; Parser LogVerbosity
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ReadM Text
+forall s. IsString s =&gt; ReadM s
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#str"><span class="hs-identifier hs-var">OA.str</span></a></span><span> </span><span class="annot"><span class="annottext">ReadM Text -&gt; (Text -&gt; ReadM LogVerbosity) -&gt; ReadM LogVerbosity
+forall a b. ReadM a -&gt; (a -&gt; ReadM b) -&gt; ReadM b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ReadM LogVerbosity
+forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#parseLogVerbosity"><span class="hs-identifier hs-var">parseLogVerbosity</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">(Mod OptionFields LogVerbosity -&gt; Parser LogVerbosity)
+-&gt; Mod OptionFields LogVerbosity -&gt; Parser LogVerbosity
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields LogVerbosity] -&gt; Mod OptionFields LogVerbosity
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-80"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogVerbosity
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;log-verbosity&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogVerbosity
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+forall a. IsString a =&gt; a
+</span><a href="Pacer.Configuration.Logging.html#logVerbosityStr"><span class="hs-identifier hs-var">logVerbosityStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields LogVerbosity
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var">Utils.mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Optional log verbosity. Defaults to 0.&quot;</span></span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span id="local-6989586621679714148"><span class="annot"><a href="Pacer.Configuration.Logging.html#parseLogVerbosity"><span class="hs-identifier hs-type">parseLogVerbosity</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679714148"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679714148"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier hs-type">LogVerbosity</span></a></span></span><span>
+</span><span id="line-86"></span><span id="parseLogVerbosity"><span class="annot"><span class="annottext">parseLogVerbosity :: forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#parseLogVerbosity"><span class="hs-identifier hs-var hs-var">parseLogVerbosity</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;0&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogVerbosity -&gt; m LogVerbosity
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#LogV0"><span class="hs-identifier hs-var">LogV0</span></a></span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;1&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogVerbosity -&gt; m LogVerbosity
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">LogVerbosity
+</span><a href="Pacer.Configuration.Logging.html#LogV1"><span class="hs-identifier hs-var">LogV1</span></a></span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621679714330"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679714330"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="annottext">String -&gt; m LogVerbosity
+forall a. String -&gt; m a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">(String -&gt; m LogVerbosity) -&gt; String -&gt; m LogVerbosity
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-93"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Expected one of &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>          </span><span class="annot"><span class="annottext">Text
+forall a. IsString a =&gt; a
+</span><a href="Pacer.Configuration.Logging.html#logLvlStr"><span class="hs-identifier hs-var">logLvlStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;, received: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679714330"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><span id="line-97"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621679714331"><span class="annot"><a href="Pacer.Configuration.Logging.html#logVerbosityStr"><span class="hs-identifier hs-type">logVerbosityStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621679714331"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679714331"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-100"></span><span id="logVerbosityStr"><span class="annot"><span class="annottext">logVerbosityStr :: forall a. IsString a =&gt; a
+</span><a href="Pacer.Configuration.Logging.html#logVerbosityStr"><span class="hs-identifier hs-var hs-var">logVerbosityStr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;(0 | 1)&quot;</span></span><span>
+</span><span id="line-101"></span></pre></body></html>

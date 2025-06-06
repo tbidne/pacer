@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Provides filters over generic equals.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr.Ord</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier">FilterOpOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toFun"><span class="hs-identifier">toFun</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toIFun"><span class="hs-identifier">toIFun</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html"><span class="hs-identifier">Pacer.Class.IOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.IOrd.html#IOrd"><span class="hs-identifier">IOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator">(&lt;~)</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C."><span class="hs-operator">(&lt;.)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3E."><span class="hs-operator">(&gt;.)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3E~"><span class="hs-operator">(&gt;~)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Eq.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr.Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Eq.html#FilterOpEq"><span class="hs-identifier">FilterOpEq</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Eq.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr.Eq</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Eq</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="annot"><span class="hs-comment">-- | Operator for ord comparisons.</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">data</span><span> </span><span id="FilterOpOrd"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-var">FilterOpOrd</span></a></span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FilterOpOrdEq"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdEq"><span class="hs-identifier hs-var">FilterOpOrdEq</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Eq.html#FilterOpEq"><span class="hs-identifier hs-type">FilterOpEq</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FilterOpOrdLte"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLte"><span class="hs-identifier hs-var">FilterOpOrdLte</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FilterOpOrdLt"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLt"><span class="hs-identifier hs-var">FilterOpOrdLt</span></a></span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FilterOpOrdGte"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGte"><span class="hs-identifier hs-var">FilterOpOrdGte</span></a></span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FilterOpOrdGt"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGt"><span class="hs-identifier hs-var">FilterOpOrdGt</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679712001"><span id="local-6989586621679712008"><span class="annot"><span class="annottext">FilterOpOrd -&gt; FilterOpOrd -&gt; Bool
+(FilterOpOrd -&gt; FilterOpOrd -&gt; Bool)
+-&gt; (FilterOpOrd -&gt; FilterOpOrd -&gt; Bool) -&gt; Eq FilterOpOrd
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: FilterOpOrd -&gt; FilterOpOrd -&gt; Bool
+== :: FilterOpOrd -&gt; FilterOpOrd -&gt; Bool
+$c/= :: FilterOpOrd -&gt; FilterOpOrd -&gt; Bool
+/= :: FilterOpOrd -&gt; FilterOpOrd -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679712013"><span id="local-6989586621679712015"><span class="annot"><span class="annottext">(forall x. FilterOpOrd -&gt; Rep FilterOpOrd x)
+-&gt; (forall x. Rep FilterOpOrd x -&gt; FilterOpOrd)
+-&gt; Generic FilterOpOrd
+forall x. Rep FilterOpOrd x -&gt; FilterOpOrd
+forall x. FilterOpOrd -&gt; Rep FilterOpOrd x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. FilterOpOrd -&gt; Rep FilterOpOrd x
+from :: forall x. FilterOpOrd -&gt; Rep FilterOpOrd x
+$cto :: forall x. Rep FilterOpOrd x -&gt; FilterOpOrd
+to :: forall x. Rep FilterOpOrd x -&gt; FilterOpOrd
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679712021"><span id="local-6989586621679712027"><span id="local-6989586621679712031"><span class="annot"><span class="annottext">Int -&gt; FilterOpOrd -&gt; ShowS
+[FilterOpOrd] -&gt; ShowS
+FilterOpOrd -&gt; String
+(Int -&gt; FilterOpOrd -&gt; ShowS)
+-&gt; (FilterOpOrd -&gt; String)
+-&gt; ([FilterOpOrd] -&gt; ShowS)
+-&gt; Show FilterOpOrd
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; FilterOpOrd -&gt; ShowS
+showsPrec :: Int -&gt; FilterOpOrd -&gt; ShowS
+$cshow :: FilterOpOrd -&gt; String
+show :: FilterOpOrd -&gt; String
+$cshowList :: [FilterOpOrd] -&gt; ShowS
+showList :: [FilterOpOrd] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679712036"><span class="annot"><span class="annottext">FilterOpOrd -&gt; ()
+(FilterOpOrd -&gt; ()) -&gt; NFData FilterOpOrd
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: FilterOpOrd -&gt; ()
+rnf :: FilterOpOrd -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679712063"><span id="local-6989586621679712067"><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621679712077"><span class="annot"><span class="annottext">displayBuilder :: FilterOpOrd -&gt; Builder
+</span><a href="#local-6989586621679712077"><span class="hs-identifier hs-var hs-var hs-var">displayBuilder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdEq"><span class="hs-identifier hs-type">FilterOpOrdEq</span></a></span><span> </span><span id="local-6989586621679712079"><span class="annot"><span class="annottext">FilterOpEq
+</span><a href="#local-6989586621679712079"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilterOpEq -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpEq
+</span><a href="#local-6989586621679712079"><span class="hs-identifier hs-var">op</span></a></span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLte"><span class="hs-identifier hs-var">FilterOpOrdLte</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;&#8804;&quot;</span></span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLt"><span class="hs-identifier hs-var">FilterOpOrdLt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;&lt;&quot;</span></span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGte"><span class="hs-identifier hs-var">FilterOpOrdGte</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;&#8805;&quot;</span></span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGt"><span class="hs-identifier hs-var">FilterOpOrdGt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;&gt;&quot;</span></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621679712104"><span class="annot"><span class="annottext">parser :: MParser FilterOpOrd
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><span class="annottext">[MParser FilterOpOrd] -&gt; MParser FilterOpOrd
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t (f a) -&gt; f a
+</span><span class="hs-identifier hs-var">asum</span></span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MParser FilterOpEq
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">MParser FilterOpEq
+-&gt; (FilterOpEq -&gt; FilterOpOrd) -&gt; MParser FilterOpOrd
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpEq -&gt; FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdEq"><span class="hs-identifier hs-var">FilterOpOrdEq</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">Char -&gt; MParser Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&#8804;'</span></span><span> </span><span class="annot"><span class="annottext">MParser Char -&gt; FilterOpOrd -&gt; MParser FilterOpOrd
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLte"><span class="hs-identifier hs-var">FilterOpOrdLte</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; MParser Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&lt;=&quot;</span></span><span> </span><span class="annot"><span class="annottext">MParser Text -&gt; FilterOpOrd -&gt; MParser FilterOpOrd
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLte"><span class="hs-identifier hs-var">FilterOpOrdLte</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">Char -&gt; MParser Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&lt;'</span></span><span> </span><span class="annot"><span class="annottext">MParser Char -&gt; FilterOpOrd -&gt; MParser FilterOpOrd
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLt"><span class="hs-identifier hs-var">FilterOpOrdLt</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">Char -&gt; MParser Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&#8805;'</span></span><span> </span><span class="annot"><span class="annottext">MParser Char -&gt; FilterOpOrd -&gt; MParser FilterOpOrd
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGte"><span class="hs-identifier hs-var">FilterOpOrdGte</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; MParser Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&gt;=&quot;</span></span><span> </span><span class="annot"><span class="annottext">MParser Text -&gt; FilterOpOrd -&gt; MParser FilterOpOrd
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGte"><span class="hs-identifier hs-var">FilterOpOrdGte</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">Char -&gt; MParser Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&gt;'</span></span><span> </span><span class="annot"><span class="annottext">MParser Char -&gt; FilterOpOrd -&gt; MParser FilterOpOrd
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGt"><span class="hs-identifier hs-var">FilterOpOrdGt</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toFun"><span class="hs-identifier hs-type">toFun</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679711978"><span class="annot"><a href="#local-6989586621679711978"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679711978"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679711978"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679711978"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span id="toFun"><span class="annot"><span class="annottext">toFun :: forall b. Ord b =&gt; FilterOpOrd -&gt; b -&gt; b -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toFun"><span class="hs-identifier hs-var hs-var">toFun</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdEq"><span class="hs-identifier hs-type">FilterOpOrdEq</span></a></span><span> </span><span id="local-6989586621679712118"><span class="annot"><span class="annottext">FilterOpEq
+</span><a href="#local-6989586621679712118"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilterOpEq -&gt; b -&gt; b -&gt; Bool
+forall b. Eq b =&gt; FilterOpEq -&gt; b -&gt; b -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.Eq.html#toFun"><span class="hs-identifier hs-var">Eq.toFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpEq
+</span><a href="#local-6989586621679712118"><span class="hs-identifier hs-var">op</span></a></span><span>
+</span><span id="line-48"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toFun"><span class="hs-identifier hs-var">toFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLte"><span class="hs-identifier hs-var">FilterOpOrdLte</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(&lt;=)</span></span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toFun"><span class="hs-identifier hs-var">toFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLt"><span class="hs-identifier hs-var">FilterOpOrdLt</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(&lt;)</span></span><span>
+</span><span id="line-50"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toFun"><span class="hs-identifier hs-var">toFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGte"><span class="hs-identifier hs-var">FilterOpOrdGte</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(&gt;=)</span></span><span>
+</span><span id="line-51"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toFun"><span class="hs-identifier hs-var">toFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGt"><span class="hs-identifier hs-var">FilterOpOrdGt</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(&gt;)</span></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span id="local-6989586621679711982"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toIFun"><span class="hs-identifier hs-type">toIFun</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.IOrd.html#IOrd"><span class="hs-identifier hs-type">IOrd</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679711982"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679711982"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679711982"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-54"></span><span id="toIFun"><span class="annot"><span class="annottext">toIFun :: forall b. IOrd b =&gt; FilterOpOrd -&gt; b -&gt; b -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toIFun"><span class="hs-identifier hs-var hs-var">toIFun</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdEq"><span class="hs-identifier hs-type">FilterOpOrdEq</span></a></span><span> </span><span id="local-6989586621679712131"><span class="annot"><span class="annottext">FilterOpEq
+</span><a href="#local-6989586621679712131"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilterOpEq -&gt; b -&gt; b -&gt; Bool
+forall b. IEq b =&gt; FilterOpEq -&gt; b -&gt; b -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.Eq.html#toIFun"><span class="hs-identifier hs-var">Eq.toIFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpEq
+</span><a href="#local-6989586621679712131"><span class="hs-identifier hs-var">op</span></a></span><span>
+</span><span id="line-55"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toIFun"><span class="hs-identifier hs-var">toIFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLte"><span class="hs-identifier hs-var">FilterOpOrdLte</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. IOrd a =&gt; a -&gt; a -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">(&lt;~)</span></a></span><span>
+</span><span id="line-56"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toIFun"><span class="hs-identifier hs-var">toIFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdLt"><span class="hs-identifier hs-var">FilterOpOrdLt</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. IOrd a =&gt; a -&gt; a -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#%3C."><span class="hs-operator hs-var">(&lt;.)</span></a></span><span>
+</span><span id="line-57"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toIFun"><span class="hs-identifier hs-var">toIFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGte"><span class="hs-identifier hs-var">FilterOpOrdGte</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. IOrd a =&gt; a -&gt; a -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#%3E~"><span class="hs-operator hs-var">(&gt;~)</span></a></span><span>
+</span><span id="line-58"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#toIFun"><span class="hs-identifier hs-var">toIFun</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrdGt"><span class="hs-identifier hs-var">FilterOpOrdGt</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. IOrd a =&gt; a -&gt; a -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#%3E."><span class="hs-operator hs-var">(&gt;.)</span></a></span><span>
+</span><span id="line-59"></span></pre></body></html>

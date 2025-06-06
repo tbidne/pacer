@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartExtra</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#ChartExtra"><span class="hs-identifier">ChartExtra</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#mkChartExtra"><span class="hs-identifier">mkChartExtra</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Asn</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier">ChartRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#description"><span class="hs-identifier">description</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="annot"><span class="hs-comment">-- | Extra chart data.</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">newtype</span><span> </span><span id="ChartExtra"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#ChartExtra"><span class="hs-identifier hs-var">ChartExtra</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkChartExtra"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#MkChartExtra"><span class="hs-identifier hs-var">MkChartExtra</span></a></span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="description"><span class="annot"><span class="annottext">ChartExtra -&gt; Maybe Text
+</span><a href="Pacer.Command.Chart.Data.ChartExtra.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679727078"><span id="local-6989586621679727083"><span class="annot"><span class="annottext">ChartExtra -&gt; ChartExtra -&gt; Bool
+(ChartExtra -&gt; ChartExtra -&gt; Bool)
+-&gt; (ChartExtra -&gt; ChartExtra -&gt; Bool) -&gt; Eq ChartExtra
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ChartExtra -&gt; ChartExtra -&gt; Bool
+== :: ChartExtra -&gt; ChartExtra -&gt; Bool
+$c/= :: ChartExtra -&gt; ChartExtra -&gt; Bool
+/= :: ChartExtra -&gt; ChartExtra -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679727089"><span id="local-6989586621679727096"><span id="local-6989586621679727100"><span class="annot"><span class="annottext">Int -&gt; ChartExtra -&gt; ShowS
+[ChartExtra] -&gt; ShowS
+ChartExtra -&gt; String
+(Int -&gt; ChartExtra -&gt; ShowS)
+-&gt; (ChartExtra -&gt; String)
+-&gt; ([ChartExtra] -&gt; ShowS)
+-&gt; Show ChartExtra
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ChartExtra -&gt; ShowS
+showsPrec :: Int -&gt; ChartExtra -&gt; ShowS
+$cshow :: ChartExtra -&gt; String
+show :: ChartExtra -&gt; String
+$cshowList :: [ChartExtra] -&gt; ShowS
+showList :: [ChartExtra] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679727107"><span id="local-6989586621679727111"><span id="local-6989586621679727114"><span id="local-6989586621679727117"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#ChartExtra"><span class="hs-identifier hs-type">ChartExtra</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621679727125"><span class="annot"><span class="annottext">toJSON :: ChartExtra -&gt; Value
+</span><a href="#local-6989586621679727125"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621679727127"><span class="annot"><span class="annottext">ChartExtra
+</span><a href="#local-6989586621679727127"><span class="hs-identifier hs-var">ce</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">Asn.object</span></a></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Key, Maybe Text) -&gt; [Pair]
+forall v. ToJSON v =&gt; (Key, Maybe v) -&gt; [Pair]
+</span><a href="Pacer.Utils.html#encodeMaybe"><span class="hs-identifier hs-var">Utils.encodeMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;description&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ChartExtra
+</span><a href="#local-6989586621679727127"><span class="hs-identifier hs-var">ce</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">description</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span id="local-6989586621679727070"><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#mkChartExtra"><span class="hs-identifier hs-type">mkChartExtra</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequest"><span class="hs-identifier hs-type">ChartRequest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679727070"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#ChartExtra"><span class="hs-identifier hs-type">ChartExtra</span></a></span></span><span>
+</span><span id="line-22"></span><span id="mkChartExtra"><span class="annot"><span class="annottext">mkChartExtra :: forall a. ChartRequest a -&gt; ChartExtra
+</span><a href="Pacer.Command.Chart.Data.ChartExtra.html#mkChartExtra"><span class="hs-identifier hs-var hs-var">mkChartExtra</span></a></span></span><span> </span><span id="local-6989586621679727131"><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679727131"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartExtra.html#MkChartExtra"><span class="hs-identifier hs-type">MkChartExtra</span></a></span><span>
+</span><span id="line-24"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">description :: Maybe Text
+</span><a href="Pacer.Command.Chart.Data.ChartExtra.html#description"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChartRequest a
+</span><a href="#local-6989586621679727131"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">description</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-26"></span></pre></body></html>

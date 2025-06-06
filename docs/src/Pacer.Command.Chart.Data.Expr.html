@@ -1,0 +1,1238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Expressions</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier">Expr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#FilterExpr"><span class="hs-identifier">FilterExpr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#eval"><span class="hs-identifier">eval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Parsing</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier">ExprToken</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#exprLexer"><span class="hs-identifier">exprLexer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#exprParser"><span class="hs-identifier">exprParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Misc</span></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#lexParse"><span class="hs-identifier">lexParse</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/fflb6psj73i3csn9mm5hn671bpfpv7rf-parser-combinators-1.3.0-doc/share/doc/parser-combinators-1.3.0/html/src/Control.Monad.Combinators.Expr.html/Control.Monad.Combinators.Expr.html"><span class="hs-identifier">Control.Monad.Combinators.Expr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/fflb6psj73i3csn9mm5hn671bpfpv7rf-parser-combinators-1.3.0-doc/share/doc/parser-combinators-1.3.0/html/src/Control.Monad.Combinators.Expr.html/Control.Monad.Combinators.Expr.html#Operator"><span class="hs-identifier">Operator</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/fflb6psj73i3csn9mm5hn671bpfpv7rf-parser-combinators-1.3.0-doc/share/doc/parser-combinators-1.3.0/html/src/Control.Monad.Combinators.Expr.html/Control.Monad.Combinators.Expr.html"><span class="hs-identifier">Control.Monad.Combinators.Expr</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Combs</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor.Identity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Identity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Identity</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">runIdentity</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#MParser"><span class="hs-identifier">MParser</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr.Filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier">FilterType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html"><span class="hs-identifier">Text.Megaparsec</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#Parsec"><span class="hs-identifier">Parsec</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.State.html/Text.Megaparsec.State.html#PosState"><span class="hs-identifier">PosState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.State.html/Text.Megaparsec.State.html#PosState"><span class="hs-identifier">PosState</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Stream.html/Text.Megaparsec.Stream.html#TraversableStream"><span class="hs-identifier">TraversableStream</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Stream.html/Text.Megaparsec.Stream.html#reachOffset"><span class="hs-identifier">reachOffset</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Stream.html/Text.Megaparsec.Stream.html#VisualStream"><span class="hs-identifier">VisualStream</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator">(&lt;?&gt;)</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html"><span class="hs-identifier">Text.Megaparsec</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MP</span></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-36"></span><span class="hs-comment">--                                    Expr                                   --</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="annot"><span class="hs-comment">-- | Expressions upon which we can filter</span></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">data</span><span> </span><span id="Expr"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-var">Expr</span></a></span></span><span> </span><span id="local-6989586621679724618"><span class="annot"><a href="#local-6989586621679724618"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | &quot;expr&quot;</span></span><span>
+</span><span id="line-42"></span><span>    </span><span id="Atom"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Atom"><span class="hs-identifier hs-var">Atom</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679724618"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | &quot;not (expr)&quot;</span></span><span>
+</span><span id="line-44"></span><span>    </span><span id="Not"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Not"><span class="hs-identifier hs-var">Not</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724618"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | &quot;or (expr) (expr)&quot;</span></span><span>
+</span><span id="line-46"></span><span>    </span><span id="Or"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Or"><span class="hs-identifier hs-var">Or</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724618"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724618"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | &quot;and (expr) (expr)&quot;</span></span><span>
+</span><span id="line-48"></span><span>    </span><span id="And"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#And"><span class="hs-identifier hs-var">And</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724618"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724618"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679724718"><span id="local-6989586621679724730"><span class="annot"><span class="annottext">Expr a -&gt; Expr a -&gt; Bool
+(Expr a -&gt; Expr a -&gt; Bool)
+-&gt; (Expr a -&gt; Expr a -&gt; Bool) -&gt; Eq (Expr a)
+forall a. Eq a =&gt; Expr a -&gt; Expr a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a. Eq a =&gt; Expr a -&gt; Expr a -&gt; Bool
+== :: Expr a -&gt; Expr a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; Expr a -&gt; Expr a -&gt; Bool
+/= :: Expr a -&gt; Expr a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724734"><span id="local-6989586621679724740"><span id="local-6989586621679724755"><span id="local-6989586621679724760"><span id="local-6989586621679724767"><span id="local-6989586621679724770"><span id="local-6989586621679724773"><span id="local-6989586621679724776"><span id="local-6989586621679724779"><span id="local-6989586621679724782"><span id="local-6989586621679724785"><span id="local-6989586621679724792"><span id="local-6989586621679724795"><span id="local-6989586621679724800"><span id="local-6989586621679724805"><span id="local-6989586621679724810"><span id="local-6989586621679724815"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; Expr m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Expr a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Expr a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Expr a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Expr a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Expr a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Expr a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; Expr a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; Expr a -&gt; a)
+-&gt; (forall a. Expr a -&gt; [a])
+-&gt; (forall a. Expr a -&gt; Bool)
+-&gt; (forall a. Expr a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; Expr a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; Expr a -&gt; a)
+-&gt; (forall a. Ord a =&gt; Expr a -&gt; a)
+-&gt; (forall a. Num a =&gt; Expr a -&gt; a)
+-&gt; (forall a. Num a =&gt; Expr a -&gt; a)
+-&gt; Foldable Expr
+forall a. Eq a =&gt; a -&gt; Expr a -&gt; Bool
+forall a. Num a =&gt; Expr a -&gt; a
+forall a. Ord a =&gt; Expr a -&gt; a
+forall m. Monoid m =&gt; Expr m -&gt; m
+forall a. Expr a -&gt; Bool
+forall a. Expr a -&gt; Int
+forall a. Expr a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; Expr a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Expr a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall m. Monoid m =&gt; Expr m -&gt; m
+fold :: forall m. Monoid m =&gt; Expr m -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Expr a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Expr a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Expr a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Expr a -&gt; m
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Expr a -&gt; b
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; Expr a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; Expr a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; Expr a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; Expr a -&gt; a
+$ctoList :: forall a. Expr a -&gt; [a]
+toList :: forall a. Expr a -&gt; [a]
+$cnull :: forall a. Expr a -&gt; Bool
+null :: forall a. Expr a -&gt; Bool
+$clength :: forall a. Expr a -&gt; Int
+length :: forall a. Expr a -&gt; Int
+$celem :: forall a. Eq a =&gt; a -&gt; Expr a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; Expr a -&gt; Bool
+$cmaximum :: forall a. Ord a =&gt; Expr a -&gt; a
+maximum :: forall a. Ord a =&gt; Expr a -&gt; a
+$cminimum :: forall a. Ord a =&gt; Expr a -&gt; a
+minimum :: forall a. Ord a =&gt; Expr a -&gt; a
+$csum :: forall a. Num a =&gt; Expr a -&gt; a
+sum :: forall a. Num a =&gt; Expr a -&gt; a
+$cproduct :: forall a. Num a =&gt; Expr a -&gt; a
+product :: forall a. Num a =&gt; Expr a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724824"><span id="local-6989586621679724832"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; Expr a -&gt; Expr b)
+-&gt; (forall a b. a -&gt; Expr b -&gt; Expr a) -&gt; Functor Expr
+forall a b. a -&gt; Expr b -&gt; Expr a
+forall a b. (a -&gt; b) -&gt; Expr a -&gt; Expr b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall a b. (a -&gt; b) -&gt; Expr a -&gt; Expr b
+fmap :: forall a b. (a -&gt; b) -&gt; Expr a -&gt; Expr b
+$c&lt;$ :: forall a b. a -&gt; Expr b -&gt; Expr a
+&lt;$ :: forall a b. a -&gt; Expr b -&gt; Expr a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724841"><span id="local-6989586621679724843"><span class="annot"><span class="annottext">(forall x. Expr a -&gt; Rep (Expr a) x)
+-&gt; (forall x. Rep (Expr a) x -&gt; Expr a) -&gt; Generic (Expr a)
+forall x. Rep (Expr a) x -&gt; Expr a
+forall x. Expr a -&gt; Rep (Expr a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (Expr a) x -&gt; Expr a
+forall a x. Expr a -&gt; Rep (Expr a) x
+$cfrom :: forall a x. Expr a -&gt; Rep (Expr a) x
+from :: forall x. Expr a -&gt; Rep (Expr a) x
+$cto :: forall a x. Rep (Expr a) x -&gt; Expr a
+to :: forall x. Rep (Expr a) x -&gt; Expr a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724853"><span id="local-6989586621679724862"><span id="local-6989586621679724865"><span id="local-6989586621679724868"><span id="local-6989586621679724871"><span id="local-6989586621679724874"><span id="local-6989586621679724877"><span class="annot"><span class="annottext">Eq (Expr a)
+Eq (Expr a) =&gt;
+(Expr a -&gt; Expr a -&gt; Ordering)
+-&gt; (Expr a -&gt; Expr a -&gt; Bool)
+-&gt; (Expr a -&gt; Expr a -&gt; Bool)
+-&gt; (Expr a -&gt; Expr a -&gt; Bool)
+-&gt; (Expr a -&gt; Expr a -&gt; Bool)
+-&gt; (Expr a -&gt; Expr a -&gt; Expr a)
+-&gt; (Expr a -&gt; Expr a -&gt; Expr a)
+-&gt; Ord (Expr a)
+Expr a -&gt; Expr a -&gt; Bool
+Expr a -&gt; Expr a -&gt; Ordering
+Expr a -&gt; Expr a -&gt; Expr a
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a. Ord a =&gt; Eq (Expr a)
+forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Bool
+forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Ordering
+forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Expr a
+$ccompare :: forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Ordering
+compare :: Expr a -&gt; Expr a -&gt; Ordering
+$c&lt; :: forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Bool
+&lt; :: Expr a -&gt; Expr a -&gt; Bool
+$c&lt;= :: forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Bool
+&lt;= :: Expr a -&gt; Expr a -&gt; Bool
+$c&gt; :: forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Bool
+&gt; :: Expr a -&gt; Expr a -&gt; Bool
+$c&gt;= :: forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Bool
+&gt;= :: Expr a -&gt; Expr a -&gt; Bool
+$cmax :: forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Expr a
+max :: Expr a -&gt; Expr a -&gt; Expr a
+$cmin :: forall a. Ord a =&gt; Expr a -&gt; Expr a -&gt; Expr a
+min :: Expr a -&gt; Expr a -&gt; Expr a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724884"><span id="local-6989586621679724898"><span id="local-6989586621679724901"><span class="annot"><span class="annottext">Int -&gt; Expr a -&gt; ShowS
+[Expr a] -&gt; ShowS
+Expr a -&gt; String
+(Int -&gt; Expr a -&gt; ShowS)
+-&gt; (Expr a -&gt; String) -&gt; ([Expr a] -&gt; ShowS) -&gt; Show (Expr a)
+forall a. Show a =&gt; Int -&gt; Expr a -&gt; ShowS
+forall a. Show a =&gt; [Expr a] -&gt; ShowS
+forall a. Show a =&gt; Expr a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; Expr a -&gt; ShowS
+showsPrec :: Int -&gt; Expr a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; Expr a -&gt; String
+show :: Expr a -&gt; String
+$cshowList :: forall a. Show a =&gt; [Expr a] -&gt; ShowS
+showList :: [Expr a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724910"><span id="local-6989586621679724929"><span id="local-6989586621679724934"><span id="local-6989586621679724939"><span class="annot"><span class="annottext">Functor Expr
+Foldable Expr
+(Functor Expr, Foldable Expr) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; Expr a -&gt; f (Expr b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    Expr (f a) -&gt; f (Expr a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; Expr a -&gt; m (Expr b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; Expr (m a) -&gt; m (Expr a))
+-&gt; Traversable Expr
+forall (t :: * -&gt; *).
+(Functor t, Foldable t) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a. Monad m =&gt; Expr (m a) -&gt; m (Expr a)
+forall (f :: * -&gt; *) a. Applicative f =&gt; Expr (f a) -&gt; f (Expr a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; Expr a -&gt; m (Expr b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Expr a -&gt; f (Expr b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Expr a -&gt; f (Expr b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Expr a -&gt; f (Expr b)
+$csequenceA :: forall (f :: * -&gt; *) a. Applicative f =&gt; Expr (f a) -&gt; f (Expr a)
+sequenceA :: forall (f :: * -&gt; *) a. Applicative f =&gt; Expr (f a) -&gt; f (Expr a)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; Expr a -&gt; m (Expr b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; Expr a -&gt; m (Expr b)
+$csequence :: forall (m :: * -&gt; *) a. Monad m =&gt; Expr (m a) -&gt; m (Expr a)
+sequence :: forall (m :: * -&gt; *) a. Monad m =&gt; Expr (m a) -&gt; m (Expr a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679724948"><span class="annot"><span class="annottext">Expr a -&gt; ()
+(Expr a -&gt; ()) -&gt; NFData (Expr a)
+forall a. NFData a =&gt; Expr a -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: forall a. NFData a =&gt; Expr a -&gt; ()
+rnf :: Expr a -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679724537"><span id="local-6989586621679724974"><span id="local-6989586621679724978"><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724537"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724537"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679724981"><span class="annot"><span class="annottext">displayBuilder :: Expr a -&gt; Builder
+</span><a href="#local-6989586621679724981"><span class="hs-identifier hs-var hs-var hs-var">displayBuilder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679724983"><span class="hs-identifier hs-var">go</span></a></span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621679724983"><span class="annot"><span class="annottext">go :: Expr a -&gt; Builder
+</span><a href="#local-6989586621679724983"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-56"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Atom"><span class="hs-identifier hs-type">Atom</span></a></span><span> </span><span id="local-6989586621679724998"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679724998"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679724998"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Not"><span class="hs-identifier hs-type">Not</span></a></span><span> </span><span id="local-6989586621679724999"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679724999"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;not &quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679725000"><span class="hs-identifier hs-var">goP</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679724999"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-58"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Or"><span class="hs-identifier hs-type">Or</span></a></span><span> </span><span id="local-6989586621679725001"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725001"><span class="hs-identifier hs-var">e1</span></a></span></span><span> </span><span id="local-6989586621679725002"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725002"><span class="hs-identifier hs-var">e2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-59"></span><span>          </span><span class="annot"><span class="annottext">[Builder] -&gt; Builder
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-60"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679725000"><span class="hs-identifier hs-var">goP</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725001"><span class="hs-identifier hs-var">e1</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>              </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot; or &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>              </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679725000"><span class="hs-identifier hs-var">goP</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725002"><span class="hs-identifier hs-var">e2</span></a></span><span>
+</span><span id="line-63"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-64"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#And"><span class="hs-identifier hs-type">And</span></a></span><span> </span><span id="local-6989586621679725003"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725003"><span class="hs-identifier hs-var">e1</span></a></span></span><span> </span><span id="local-6989586621679725004"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725004"><span class="hs-identifier hs-var">e2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">[Builder] -&gt; Builder
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-66"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679725000"><span class="hs-identifier hs-var">goP</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725003"><span class="hs-identifier hs-var">e1</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>              </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot; and &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>              </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679725000"><span class="hs-identifier hs-var">goP</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725004"><span class="hs-identifier hs-var">e2</span></a></span><span>
+</span><span id="line-69"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-70"></span><span>      </span><span id="local-6989586621679725000"><span class="annot"><span class="annottext">goP :: Expr a -&gt; Builder
+</span><a href="#local-6989586621679725000"><span class="hs-identifier hs-var hs-var">goP</span></a></span></span><span> </span><span id="local-6989586621679725005"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725005"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; Bool
+forall a. Expr a -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.html#isAtom"><span class="hs-identifier hs-var">isAtom</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725005"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-72"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679724983"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725005"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-73"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; Builder
+</span><a href="#local-6989586621679724983"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725005"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="annot"><span class="hs-comment">-- | Alias for a filter expression.</span></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">type</span><span> </span><span id="FilterExpr"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#FilterExpr"><span class="hs-identifier hs-var">FilterExpr</span></a></span></span><span> </span><span id="local-6989586621679725007"><span class="annot"><a href="#local-6989586621679725007"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier hs-type">FilterType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679725007"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679724547"><span id="local-6989586621679725011"><span id="local-6989586621679725015"><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724547"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724547"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621679725023"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (Expr a)
+</span><a href="#local-6989586621679725023"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser (Expr a)) -&gt; Value -&gt; Parser (Expr a)
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithText"><span class="hs-identifier hs-var">asnWithText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Expr&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResultDefault (Expr a) -&gt; Parser (Expr a)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Expr a) -&gt; Parser (Expr a))
+-&gt; (Text -&gt; ResultDefault (Expr a)) -&gt; Text -&gt; Parser (Expr a)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault (Expr a)
+forall a. Parser a =&gt; Text -&gt; ResultDefault (Expr a)
+</span><a href="Pacer.Command.Chart.Data.Expr.html#lexParse"><span class="hs-identifier hs-var">lexParse</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span id="local-6989586621679724559"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#eval"><span class="hs-identifier hs-type">eval</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679724559"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724559"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-82"></span><span id="eval"><span class="annot"><span class="annottext">eval :: forall a. (a -&gt; Bool) -&gt; Expr a -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.html#eval"><span class="hs-identifier hs-var hs-var">eval</span></a></span></span><span> </span><span id="local-6989586621679725032"><span class="annot"><span class="annottext">a -&gt; Bool
+</span><a href="#local-6989586621679725032"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identity Bool -&gt; Bool
+forall a. Identity a -&gt; a
+</span><span class="hs-identifier hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity Bool -&gt; Bool)
+-&gt; (Expr a -&gt; Identity Bool) -&gt; Expr a -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Identity Bool) -&gt; Expr a -&gt; Identity Bool
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+(a -&gt; f Bool) -&gt; Expr a -&gt; f Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.html#evalA"><span class="hs-identifier hs-var">evalA</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Identity Bool
+forall a. a -&gt; Identity a
+</span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Identity Bool) -&gt; (a -&gt; Bool) -&gt; a -&gt; Identity Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Bool
+</span><a href="#local-6989586621679725032"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span id="local-6989586621679724562"><span id="local-6989586621679724563"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#evalA"><span class="hs-identifier hs-type">evalA</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="annot"><a href="#local-6989586621679724562"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679724563"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679724562"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724563"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679724562"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span></span><span>
+</span><span id="line-85"></span><span id="evalA"><span class="annot"><span class="annottext">evalA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+(a -&gt; f Bool) -&gt; Expr a -&gt; f Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.html#evalA"><span class="hs-identifier hs-var hs-var">evalA</span></a></span></span><span> </span><span id="local-6989586621679725039"><span class="annot"><span class="annottext">a -&gt; f Bool
+</span><a href="#local-6989586621679725039"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; f Bool
+</span><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>    </span><span id="local-6989586621679725040"><span class="annot"><span class="annottext">go :: Expr a -&gt; f Bool
+</span><a href="#local-6989586621679725040"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Atom"><span class="hs-identifier hs-type">Atom</span></a></span><span> </span><span id="local-6989586621679725041"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679725041"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; f Bool
+</span><a href="#local-6989586621679725039"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679725041"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Not"><span class="hs-identifier hs-type">Not</span></a></span><span> </span><span id="local-6989586621679725042"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725042"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; f Bool -&gt; f Bool
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Expr a -&gt; f Bool
+</span><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725042"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Or"><span class="hs-identifier hs-type">Or</span></a></span><span> </span><span id="local-6989586621679725045"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725045"><span class="hs-identifier hs-var">e1</span></a></span></span><span> </span><span id="local-6989586621679725046"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725046"><span class="hs-identifier hs-var">e2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool -&gt; Bool) -&gt; f Bool -&gt; f Bool -&gt; f Bool
+forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c
+forall (f :: * -&gt; *) a b c.
+Applicative f =&gt;
+(a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c
+</span><span class="hs-identifier hs-var">liftA2</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">(||)</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr a -&gt; f Bool
+</span><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725045"><span class="hs-identifier hs-var">e1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr a -&gt; f Bool
+</span><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725046"><span class="hs-identifier hs-var">e2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#And"><span class="hs-identifier hs-type">And</span></a></span><span> </span><span id="local-6989586621679725049"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725049"><span class="hs-identifier hs-var">e1</span></a></span></span><span> </span><span id="local-6989586621679725050"><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725050"><span class="hs-identifier hs-var">e2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool -&gt; Bool) -&gt; f Bool -&gt; f Bool -&gt; f Bool
+forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c
+forall (f :: * -&gt; *) a b c.
+Applicative f =&gt;
+(a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c
+</span><span class="hs-identifier hs-var">liftA2</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">(&amp;&amp;)</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr a -&gt; f Bool
+</span><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725049"><span class="hs-identifier hs-var">e1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr a -&gt; f Bool
+</span><a href="#local-6989586621679725040"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><a href="#local-6989586621679725050"><span class="hs-identifier hs-var">e2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span id="local-6989586621679725052"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#isAtom"><span class="hs-identifier hs-type">isAtom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679725052"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-93"></span><span id="isAtom"><span class="annot"><span class="annottext">isAtom :: forall a. Expr a -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Expr.html#isAtom"><span class="hs-identifier hs-var hs-var">isAtom</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Atom"><span class="hs-identifier hs-type">Atom</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-94"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#isAtom"><span class="hs-identifier hs-var">isAtom</span></a></span><span> </span><span class="annot"><span class="annottext">Expr a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-97"></span><span class="hs-comment">--                                   Lexing                                  --</span><span>
+</span><span id="line-98"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">data</span><span> </span><span id="ExprToken"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-var">ExprToken</span></a></span></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- Values</span><span>
+</span><span id="line-102"></span><span>    </span><span id="TokenString"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenString"><span class="hs-identifier hs-var">TokenString</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- Exprs</span><span>
+</span><span id="line-104"></span><span>    </span><span id="TokenExprAnd"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprAnd"><span class="hs-identifier hs-var">TokenExprAnd</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TokenExprNot"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprNot"><span class="hs-identifier hs-var">TokenExprNot</span></a></span></span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TokenExprOr"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprOr"><span class="hs-identifier hs-var">TokenExprOr</span></a></span></span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TokenExprXor"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprXor"><span class="hs-identifier hs-var">TokenExprXor</span></a></span></span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- Parens</span><span>
+</span><span id="line-109"></span><span>    </span><span id="TokenParenL"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenL"><span class="hs-identifier hs-var">TokenParenL</span></a></span></span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TokenParenR"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenR"><span class="hs-identifier hs-var">TokenParenR</span></a></span></span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679725061"><span id="local-6989586621679725067"><span class="annot"><span class="annottext">ExprToken -&gt; ExprToken -&gt; Bool
+(ExprToken -&gt; ExprToken -&gt; Bool)
+-&gt; (ExprToken -&gt; ExprToken -&gt; Bool) -&gt; Eq ExprToken
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ExprToken -&gt; ExprToken -&gt; Bool
+== :: ExprToken -&gt; ExprToken -&gt; Bool
+$c/= :: ExprToken -&gt; ExprToken -&gt; Bool
+/= :: ExprToken -&gt; ExprToken -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679725073"><span id="local-6989586621679725079"><span id="local-6989586621679725082"><span id="local-6989586621679725085"><span id="local-6989586621679725088"><span id="local-6989586621679725091"><span id="local-6989586621679725094"><span class="annot"><span class="annottext">Eq ExprToken
+Eq ExprToken =&gt;
+(ExprToken -&gt; ExprToken -&gt; Ordering)
+-&gt; (ExprToken -&gt; ExprToken -&gt; Bool)
+-&gt; (ExprToken -&gt; ExprToken -&gt; Bool)
+-&gt; (ExprToken -&gt; ExprToken -&gt; Bool)
+-&gt; (ExprToken -&gt; ExprToken -&gt; Bool)
+-&gt; (ExprToken -&gt; ExprToken -&gt; ExprToken)
+-&gt; (ExprToken -&gt; ExprToken -&gt; ExprToken)
+-&gt; Ord ExprToken
+ExprToken -&gt; ExprToken -&gt; Bool
+ExprToken -&gt; ExprToken -&gt; Ordering
+ExprToken -&gt; ExprToken -&gt; ExprToken
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: ExprToken -&gt; ExprToken -&gt; Ordering
+compare :: ExprToken -&gt; ExprToken -&gt; Ordering
+$c&lt; :: ExprToken -&gt; ExprToken -&gt; Bool
+&lt; :: ExprToken -&gt; ExprToken -&gt; Bool
+$c&lt;= :: ExprToken -&gt; ExprToken -&gt; Bool
+&lt;= :: ExprToken -&gt; ExprToken -&gt; Bool
+$c&gt; :: ExprToken -&gt; ExprToken -&gt; Bool
+&gt; :: ExprToken -&gt; ExprToken -&gt; Bool
+$c&gt;= :: ExprToken -&gt; ExprToken -&gt; Bool
+&gt;= :: ExprToken -&gt; ExprToken -&gt; Bool
+$cmax :: ExprToken -&gt; ExprToken -&gt; ExprToken
+max :: ExprToken -&gt; ExprToken -&gt; ExprToken
+$cmin :: ExprToken -&gt; ExprToken -&gt; ExprToken
+min :: ExprToken -&gt; ExprToken -&gt; ExprToken
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679725097"><span id="local-6989586621679725102"><span id="local-6989586621679725106"><span class="annot"><span class="annottext">Int -&gt; ExprToken -&gt; ShowS
+[ExprToken] -&gt; ShowS
+ExprToken -&gt; String
+(Int -&gt; ExprToken -&gt; ShowS)
+-&gt; (ExprToken -&gt; String)
+-&gt; ([ExprToken] -&gt; ShowS)
+-&gt; Show ExprToken
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ExprToken -&gt; ShowS
+showsPrec :: Int -&gt; ExprToken -&gt; ShowS
+$cshow :: ExprToken -&gt; String
+show :: ExprToken -&gt; String
+$cshowList :: [ExprToken] -&gt; ShowS
+showList :: [ExprToken] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- See NOTE: [Operators]</span><span>
+</span><span id="line-114"></span><span class="hs-comment">--</span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- Notice that instead of unicode output, we have plain language.</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- This is arguably clearer because not everyone is familiar with logical</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- operators.</span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679725110"><span id="local-6989586621679725114"><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621679725124"><span class="annot"><span class="annottext">displayBuilder :: ExprToken -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var hs-var hs-var">displayBuilder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenString"><span class="hs-identifier hs-type">TokenString</span></a></span><span> </span><span id="local-6989586621679725125"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725125"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725125"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprAnd"><span class="hs-identifier hs-var">TokenExprAnd</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;and&quot;</span></span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprNot"><span class="hs-identifier hs-var">TokenExprNot</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;not&quot;</span></span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprOr"><span class="hs-identifier hs-var">TokenExprOr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;or&quot;</span></span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprXor"><span class="hs-identifier hs-var">TokenExprXor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;xor&quot;</span></span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenL"><span class="hs-identifier hs-var">TokenParenL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;(&quot;</span></span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenR"><span class="hs-identifier hs-var">TokenParenR</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-comment">-- NOTE: In order to use megaparsec's great errorBundlePretty, we need our</span><span>
+</span><span id="line-130"></span><span class="hs-comment">-- token to implement the following two classes. Our implementation is quite</span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- basic, essentially copying the upstream strategy from the source, making</span><span>
+</span><span id="line-132"></span><span class="hs-comment">-- changes where needed to satisfy the types.</span><span>
+</span><span id="line-133"></span><span class="hs-comment">--</span><span>
+</span><span id="line-134"></span><span class="hs-comment">-- It is thus quite possible that the current implementation could look</span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- weird in some scenarios, and would benefit from a more sophisticated</span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- approach. If so, consider implementing the example from the tutorial:</span><span>
+</span><span id="line-137"></span><span class="hs-comment">--</span><span>
+</span><span id="line-138"></span><span class="hs-comment">-- https://markkarpov.com/tutorial/megaparsec.html#parse-errors</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679725130"><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Stream.html/Text.Megaparsec.Stream.html#TraversableStream"><span class="hs-identifier hs-type">TraversableStream</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-141"></span><span>  </span><span id="local-6989586621679725147"><span class="annot"><span class="annottext">reachOffset :: Int -&gt; PosState [ExprToken] -&gt; (Maybe String, PosState [ExprToken])
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Stream.html/Text.Megaparsec.Stream.html#reachOffset"><span class="hs-identifier hs-var hs-var hs-var">reachOffset</span></a></span></span><span> </span><span id="local-6989586621679725148"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679725148"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679725149"><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725149"><span class="hs-identifier hs-var">pst</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679725150"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725151"><span class="hs-identifier hs-var">pst'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-143"></span><span>      </span><span class="annot"><a href="#local-6989586621679725151"><span class="hs-identifier hs-type">pst'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.State.html/Text.Megaparsec.State.html#PosState"><span class="hs-identifier hs-type">PosState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>      </span><span id="local-6989586621679725151"><span class="annot"><span class="annottext">pst' :: PosState [ExprToken]
+</span><a href="#local-6989586621679725151"><span class="hs-identifier hs-var hs-var">pst'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-145"></span><span>        </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.State.html/Text.Megaparsec.State.html#PosState"><span class="hs-identifier hs-type">PosState</span></a></span><span>
+</span><span id="line-146"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">pstateInput :: [ExprToken]
+</span><a href="#local-6989586621679725152"><span class="hs-identifier hs-var">pstateInput</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725153"><span class="hs-identifier hs-var">post</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>            </span><span class="annot"><span class="annottext">pstateOffset :: Int
+</span><a href="#local-6989586621679725154"><span class="hs-identifier hs-var">pstateOffset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Ord a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">max</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679725148"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725149"><span class="hs-identifier hs-var">pst</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">pstateOffset</span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>            </span><span class="annot"><span class="annottext">pstateSourcePos :: SourcePos
+</span><a href="#local-6989586621679725156"><span class="hs-identifier hs-var">pstateSourcePos</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725149"><span class="hs-identifier hs-var">pst</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">pstateSourcePos</span><span class="hs-special">,</span><span>
+</span><span id="line-149"></span><span>            </span><span class="annot"><span class="annottext">pstateTabWidth :: Pos
+</span><a href="#local-6989586621679725157"><span class="hs-identifier hs-var">pstateTabWidth</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725149"><span class="hs-identifier hs-var">pst</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">pstateTabWidth</span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>            </span><span class="annot"><span class="annottext">pstateLinePrefix :: String
+</span><a href="#local-6989586621679725158"><span class="hs-identifier hs-var">pstateLinePrefix</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725149"><span class="hs-identifier hs-var">pst</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">pstateLinePrefix</span><span>
+</span><span id="line-151"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span>      </span><span id="local-6989586621679725150"><span class="annot"><span class="annottext">str :: String
+</span><a href="#local-6989586621679725150"><span class="hs-identifier hs-var hs-var">str</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-154"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-155"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; ([Text] -&gt; Text) -&gt; [Text] -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.intercalate</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; &quot;</span></span><span>
+</span><span id="line-156"></span><span>          </span><span class="annot"><span class="annottext">([Text] -&gt; String) -&gt; [Text] -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ExprToken -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span>
+</span><span id="line-157"></span><span>          </span><span class="annot"><span class="annottext">(ExprToken -&gt; Text) -&gt; [ExprToken] -&gt; [Text]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725153"><span class="hs-identifier hs-var">post</span></a></span><span>
+</span><span id="line-158"></span><span>
+</span><span id="line-159"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ExprToken]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679725153"><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725153"><span class="hs-identifier hs-var">post</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [ExprToken] -&gt; ([ExprToken], [ExprToken])
+forall a. Int -&gt; [a] -&gt; ([a], [a])
+</span><span class="hs-identifier hs-var">L.splitAt</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679725148"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725149"><span class="hs-identifier hs-var">pst</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">pstateOffset</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PosState [ExprToken]
+</span><a href="#local-6989586621679725149"><span class="hs-identifier hs-var">pst</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">pstateInput</span><span>
+</span><span id="line-160"></span><span>
+</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Stream.html/Text.Megaparsec.Stream.html#VisualStream"><span class="hs-identifier hs-type">VisualStream</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-162"></span><span>  </span><span id="local-6989586621679725175"><span class="annot"><span class="annottext">showTokens :: Proxy [ExprToken] -&gt; NonEmpty (Token [ExprToken]) -&gt; String
+</span><a href="#local-6989586621679725175"><span class="hs-identifier hs-var hs-var hs-var">showTokens</span></a></span></span><span> </span><span class="annot"><span class="annottext">Proxy [ExprToken]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+</span><span class="hs-identifier hs-var">L.unwords</span></span><span> </span><span class="annot"><span class="annottext">([String] -&gt; String)
+-&gt; (NonEmpty ExprToken -&gt; [String]) -&gt; NonEmpty ExprToken -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty String -&gt; [String]
+forall a. NonEmpty a -&gt; [a]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty String -&gt; [String])
+-&gt; (NonEmpty ExprToken -&gt; NonEmpty String)
+-&gt; NonEmpty ExprToken
+-&gt; [String]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(ExprToken -&gt; String) -&gt; NonEmpty ExprToken -&gt; NonEmpty String
+forall a b. (a -&gt; b) -&gt; NonEmpty a -&gt; NonEmpty b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ExprToken -&gt; String
+</span><a href="#local-6989586621679725179"><span class="hs-identifier hs-var">showTok</span></a></span><span>
+</span><span id="line-163"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-164"></span><span>      </span><span id="local-6989586621679725179"><span class="annot"><span class="annottext">showTok :: ExprToken -&gt; String
+</span><a href="#local-6989586621679725179"><span class="hs-identifier hs-var hs-var">showTok</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-165"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-166"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; (ExprToken -&gt; Text) -&gt; ExprToken -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679725188"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725188"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;'&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725188"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;'&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-167"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; (ExprToken -&gt; Text) -&gt; ExprToken -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExprToken -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span>
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-comment">-- Controls the number of carrots e.g.</span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-comment">--     1 | or distance &gt; 4 or date &lt; 2024</span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-comment">--       | ^^</span><span>
+</span><span id="line-173"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-comment">-- Need to account for the fact that our lengths are custom i.e. based on</span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-comment">-- the string (display) encoding. We cannot reuse the showTokens function</span><span>
+</span><span id="line-176"></span><span>  </span><span class="hs-comment">-- above since it adds single quotes, which are not part of the rendering</span><span>
+</span><span id="line-177"></span><span>  </span><span class="hs-comment">-- here.</span><span>
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621679725197"><span class="annot"><span class="annottext">tokensLength :: Proxy [ExprToken] -&gt; NonEmpty (Token [ExprToken]) -&gt; Int
+</span><a href="#local-6989586621679725197"><span class="hs-identifier hs-var hs-var hs-var">tokensLength</span></a></span></span><span> </span><span class="annot"><span class="annottext">Proxy [ExprToken]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-179"></span><span>    </span><span class="annot"><span class="annottext">String -&gt; Int
+forall a. [a] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span>
+</span><span id="line-180"></span><span>      </span><span class="annot"><span class="annottext">(String -&gt; Int)
+-&gt; (NonEmpty ExprToken -&gt; String) -&gt; NonEmpty ExprToken -&gt; Int
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+</span><span class="hs-identifier hs-var">L.unwords</span></span><span>
+</span><span id="line-181"></span><span>      </span><span class="annot"><span class="annottext">([String] -&gt; String)
+-&gt; (NonEmpty ExprToken -&gt; [String]) -&gt; NonEmpty ExprToken -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty String -&gt; [String]
+forall a. NonEmpty a -&gt; [a]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span>
+</span><span id="line-182"></span><span>      </span><span class="annot"><span class="annottext">(NonEmpty String -&gt; [String])
+-&gt; (NonEmpty ExprToken -&gt; NonEmpty String)
+-&gt; NonEmpty ExprToken
+-&gt; [String]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(ExprToken -&gt; String) -&gt; NonEmpty ExprToken -&gt; NonEmpty String
+forall a b. (a -&gt; b) -&gt; NonEmpty a -&gt; NonEmpty b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; (ExprToken -&gt; Text) -&gt; ExprToken -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExprToken -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span class="hs-comment">-- See NOTE: [Operators]</span><span>
+</span><span id="line-185"></span><span class="hs-comment">--</span><span>
+</span><span id="line-186"></span><span class="hs-comment">-- Notice the expressions are a bit of an exception wrt 3, because we have e.g.</span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- 'and', '&amp;&amp;', '&#8743;'. We have our two ascii/unicode operators, but also a</span><span>
+</span><span id="line-188"></span><span class="hs-comment">-- plain-language variant.</span><span>
+</span><span id="line-189"></span><span>
+</span><span id="line-190"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#exprLexer"><span class="hs-identifier hs-type">exprLexer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html#MParser"><span class="hs-identifier hs-type">MParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-191"></span><span id="exprLexer"><span class="annot"><span class="annottext">exprLexer :: MParser [ExprToken]
+</span><a href="Pacer.Command.Chart.Data.Expr.html#exprLexer"><span class="hs-identifier hs-var hs-var">exprLexer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-192"></span><span>  </span><span class="annot"><span class="annottext">ParsecT Void Text Identity ExprToken -&gt; MParser [ExprToken]
+forall a.
+ParsecT Void Text Identity a -&gt; ParsecT Void Text Identity [a]
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
+</span><span class="hs-identifier hs-var">some</span></span><span>
+</span><span id="line-193"></span><span>    </span><span class="annot"><span class="annottext">(ParsecT Void Text Identity ExprToken -&gt; MParser [ExprToken])
+-&gt; ParsecT Void Text Identity ExprToken -&gt; MParser [ExprToken]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ParsecT Void Text Identity ExprToken]
+-&gt; ParsecT Void Text Identity ExprToken
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t (f a) -&gt; f a
+</span><span class="hs-identifier hs-var">asum</span></span><span>
+</span><span id="line-194"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprAnd"><span class="hs-identifier hs-var">TokenExprAnd</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;and&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-195"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprAnd"><span class="hs-identifier hs-var">TokenExprAnd</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&amp;&amp;&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-196"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprAnd"><span class="hs-identifier hs-var">TokenExprAnd</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Char
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Void Text Identity Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&#8743;'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-197"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprNot"><span class="hs-identifier hs-var">TokenExprNot</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;not&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-198"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprNot"><span class="hs-identifier hs-var">TokenExprNot</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Char
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Void Text Identity Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'!'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-199"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprNot"><span class="hs-identifier hs-var">TokenExprNot</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Char
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Void Text Identity Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&#172;'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-200"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprOr"><span class="hs-identifier hs-var">TokenExprOr</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;or&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-201"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprOr"><span class="hs-identifier hs-var">TokenExprOr</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;||&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-202"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprOr"><span class="hs-identifier hs-var">TokenExprOr</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Char
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Void Text Identity Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&#8744;'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-203"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprXor"><span class="hs-identifier hs-var">TokenExprXor</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;xor&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-204"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprXor"><span class="hs-identifier hs-var">TokenExprXor</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Char
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Void Text Identity Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'&#8853;'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-205"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenL"><span class="hs-identifier hs-var">TokenParenL</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#symbol"><span class="hs-identifier hs-var">P.symbol</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;(&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-206"></span><span>        </span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenR"><span class="hs-identifier hs-var">TokenParenR</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall a b.
+a -&gt; ParsecT Void Text Identity b -&gt; ParsecT Void Text Identity a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#symbol"><span class="hs-identifier hs-var">P.symbol</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;)&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-207"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenString"><span class="hs-identifier hs-var">TokenString</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ExprToken)
+-&gt; ParsecT Void Text Identity Text
+-&gt; ParsecT Void Text Identity ExprToken
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ParsecT Void Text Identity Text
+</span><a href="Pacer.Class.Parser.html#allExcept"><span class="hs-identifier hs-var">P.allExcept</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;()&quot;</span></span><span>
+</span><span id="line-208"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-209"></span><span>
+</span><span id="line-210"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-211"></span><span class="hs-comment">--                                  Parsing                                  --</span><span>
+</span><span id="line-212"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-213"></span><span>
+</span><span id="line-214"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#exprParser"><span class="hs-identifier hs-type">exprParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#Parsec"><span class="hs-identifier hs-type">Parsec</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-215"></span><span id="exprParser"><span class="annot"><span class="annottext">exprParser :: Parsec Void [ExprToken] (Expr Text)
+</span><a href="Pacer.Command.Chart.Data.Expr.html#exprParser"><span class="hs-identifier hs-var hs-var">exprParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+-&gt; [[Operator (Parsec Void [ExprToken]) (Expr Text)]]
+-&gt; Parsec Void [ExprToken] (Expr Text)
+forall (m :: * -&gt; *) a.
+MonadPlus m =&gt;
+m a -&gt; [[Operator m a]] -&gt; m a
+</span><a href="file:///nix/store/fflb6psj73i3csn9mm5hn671bpfpv7rf-parser-combinators-1.3.0-doc/share/doc/parser-combinators-1.3.0/html/src/Control.Monad.Combinators.Expr.html/Control.Monad.Combinators.Expr.html#makeExprParser"><span class="hs-identifier hs-var">Combs.makeExprParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+</span><a href="Pacer.Command.Chart.Data.Expr.html#term"><span class="hs-identifier hs-var">term</span></a></span><span> </span><span class="annot"><span class="annottext">[[Operator (Parsec Void [ExprToken]) (Expr Text)]]
+</span><a href="Pacer.Command.Chart.Data.Expr.html#table"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+-&gt; String -&gt; Parsec Void [ExprToken] (Expr Text)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+m a -&gt; String -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;expression&quot;</span></span><span>
+</span><span id="line-216"></span><span>
+</span><span id="line-217"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#term"><span class="hs-identifier hs-type">term</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#Parsec"><span class="hs-identifier hs-type">Parsec</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span id="term"><span class="annot"><span class="annottext">term :: Parsec Void [ExprToken] (Expr Text)
+</span><a href="Pacer.Command.Chart.Data.Expr.html#term"><span class="hs-identifier hs-var hs-var">term</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+</span><a href="#local-6989586621679725209"><span class="hs-identifier hs-var">parens</span></a></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+-&gt; Parsec Void [ExprToken] (Expr Text)
+-&gt; Parsec Void [ExprToken] (Expr Text)
+forall a.
+ParsecT Void [ExprToken] Identity a
+-&gt; ParsecT Void [ExprToken] Identity a
+-&gt; ParsecT Void [ExprToken] Identity a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+</span><a href="#local-6989586621679725211"><span class="hs-identifier hs-var">parseAtom</span></a></span><span>
+</span><span id="line-219"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-220"></span><span>    </span><span id="local-6989586621679725209"><span class="annot"><span class="annottext">parens :: Parsec Void [ExprToken] (Expr Text)
+</span><a href="#local-6989586621679725209"><span class="hs-identifier hs-var hs-var">parens</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Token [ExprToken]
+-&gt; ParsecT Void [ExprToken] Identity (Token [ExprToken])
+forall e s (m :: * -&gt; *).
+MonadParsec e s m =&gt;
+Token s -&gt; m (Token s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#single"><span class="hs-identifier hs-var">MP.single</span></a></span><span> </span><span class="annot"><span class="annottext">Token [ExprToken]
+ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenL"><span class="hs-identifier hs-var">TokenParenL</span></a></span><span> </span><span class="annot"><span class="annottext">ParsecT Void [ExprToken] Identity (Token [ExprToken])
+-&gt; Parsec Void [ExprToken] (Expr Text)
+-&gt; Parsec Void [ExprToken] (Expr Text)
+forall a b.
+ParsecT Void [ExprToken] Identity a
+-&gt; ParsecT Void [ExprToken] Identity b
+-&gt; ParsecT Void [ExprToken] Identity b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+</span><a href="Pacer.Command.Chart.Data.Expr.html#exprParser"><span class="hs-identifier hs-var">exprParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+-&gt; ParsecT Void [ExprToken] Identity (Token [ExprToken])
+-&gt; Parsec Void [ExprToken] (Expr Text)
+forall a b.
+ParsecT Void [ExprToken] Identity a
+-&gt; ParsecT Void [ExprToken] Identity b
+-&gt; ParsecT Void [ExprToken] Identity a
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Token [ExprToken]
+-&gt; ParsecT Void [ExprToken] Identity (Token [ExprToken])
+forall e s (m :: * -&gt; *).
+MonadParsec e s m =&gt;
+Token s -&gt; m (Token s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#single"><span class="hs-identifier hs-var">MP.single</span></a></span><span> </span><span class="annot"><span class="annottext">Token [ExprToken]
+ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenParenR"><span class="hs-identifier hs-var">TokenParenR</span></a></span><span>
+</span><span id="line-221"></span><span>
+</span><span id="line-222"></span><span>    </span><span class="annot"><a href="#local-6989586621679725211"><span class="hs-identifier hs-type">parseAtom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#Parsec"><span class="hs-identifier hs-type">Parsec</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-223"></span><span>    </span><span id="local-6989586621679725211"><span class="annot"><span class="annottext">parseAtom :: Parsec Void [ExprToken] (Expr Text)
+</span><a href="#local-6989586621679725211"><span class="hs-identifier hs-var hs-var">parseAtom</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-224"></span><span>      </span><span class="hs-comment">-- Because our lexer breaks up whitespace, we may end up with</span><span>
+</span><span id="line-225"></span><span>      </span><span class="hs-comment">-- several TokenString tokens between keywords e.g.</span><span>
+</span><span id="line-226"></span><span>      </span><span class="hs-comment">--</span><span>
+</span><span id="line-227"></span><span>      </span><span class="hs-comment">--     &quot;label = foo and distance &gt;= 5 km&quot;</span><span>
+</span><span id="line-228"></span><span>      </span><span class="hs-comment">--</span><span>
+</span><span id="line-229"></span><span>      </span><span class="hs-comment">-- will be lexed as</span><span>
+</span><span id="line-230"></span><span>      </span><span class="hs-comment">--</span><span>
+</span><span id="line-231"></span><span>      </span><span class="hs-comment">--     [ TokenString &quot;label&quot;,</span><span>
+</span><span id="line-232"></span><span>      </span><span class="hs-comment">--       TokenString &quot;=&quot;,</span><span>
+</span><span id="line-233"></span><span>      </span><span class="hs-comment">--       TokenString &quot;foo&quot;,</span><span>
+</span><span id="line-234"></span><span>      </span><span class="hs-comment">--       TokenExprAnd,</span><span>
+</span><span id="line-235"></span><span>      </span><span class="hs-comment">--       TokenString &quot;distance&quot;,</span><span>
+</span><span id="line-236"></span><span>      </span><span class="hs-comment">--       TokenString &quot;&gt;=&quot;,</span><span>
+</span><span id="line-237"></span><span>      </span><span class="hs-comment">--       TokenString &quot;5&quot;,</span><span>
+</span><span id="line-238"></span><span>      </span><span class="hs-comment">--       TokenString &quot;km&quot;</span><span>
+</span><span id="line-239"></span><span>      </span><span class="hs-comment">--     ]</span><span>
+</span><span id="line-240"></span><span>      </span><span class="hs-comment">--</span><span>
+</span><span id="line-241"></span><span>      </span><span class="hs-comment">-- Our second stage of parsing requires these &quot;broken&quot; strings to be</span><span>
+</span><span id="line-242"></span><span>      </span><span class="hs-comment">-- intact, i.e. we want &quot;label = foo&quot; and &quot;distance &gt;= 5 km&quot;.</span><span>
+</span><span id="line-243"></span><span>      </span><span class="hs-comment">-- Hence when parsing an atom we take all consecutive TokenStrings and</span><span>
+</span><span id="line-244"></span><span>      </span><span class="hs-comment">-- concat them back together, separating by a single whitespace.</span><span>
+</span><span id="line-245"></span><span>      </span><span id="local-6989586621679725222"><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725222"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-246"></span><span>        </span><span class="annot"><span class="annottext">Maybe String
+-&gt; (Token [ExprToken] -&gt; Bool)
+-&gt; ParsecT Void [ExprToken] Identity (Tokens [ExprToken])
+forall e s (m :: * -&gt; *).
+MonadParsec e s m =&gt;
+Maybe String -&gt; (Token s -&gt; Bool) -&gt; m (Tokens s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Class.html/Text.Megaparsec.Class.html#takeWhile1P"><span class="hs-identifier hs-var">MP.takeWhile1P</span></a></span><span>
+</span><span id="line-247"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;atom&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-248"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenString"><span class="hs-identifier hs-type">TokenString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">;</span><span> </span><span class="annot"><span class="annottext">Token [ExprToken]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span>
+</span><span id="line-249"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Expr Text
+forall a. a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#Atom"><span class="hs-identifier hs-var">Atom</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Expr Text) -&gt; Text -&gt; Expr Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.intercalate</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; &quot;</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; [Text] -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ExprToken -&gt; Text) -&gt; [ExprToken] -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ExprToken -&gt; Text
+</span><a href="#local-6989586621679725224"><span class="hs-identifier hs-var">concatStrs</span></a></span><span> </span><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725222"><span class="hs-identifier hs-var">ts</span></a></span><span>
+</span><span id="line-250"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-251"></span><span>        </span><span id="local-6989586621679725224"><span class="annot"><span class="annottext">concatStrs :: ExprToken -&gt; Text
+</span><a href="#local-6989586621679725224"><span class="hs-identifier hs-var hs-var">concatStrs</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#TokenString"><span class="hs-identifier hs-type">TokenString</span></a></span><span> </span><span id="local-6989586621679725226"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725226"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725226"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-252"></span><span>        </span><span class="annot"><a href="#local-6989586621679725224"><span class="hs-identifier hs-var">concatStrs</span></a></span><span> </span><span class="annot"><span class="annottext">ExprToken
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-253"></span><span>
+</span><span id="line-254"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#table"><span class="hs-identifier hs-type">table</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/fflb6psj73i3csn9mm5hn671bpfpv7rf-parser-combinators-1.3.0-doc/share/doc/parser-combinators-1.3.0/html/src/Control.Monad.Combinators.Expr.html/Control.Monad.Combinators.Expr.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#Parsec"><span class="hs-identifier hs-type">Parsec</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-255"></span><span id="table"><span class="annot"><span class="annottext">table :: [[Operator (Parsec Void [ExprToken]) (Expr Text)]]
+</span><a href="Pacer.Command.Chart.Data.Expr.html#table"><span class="hs-identifier hs-var hs-var">table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-256"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Tokens [ExprToken]
+-&gt; (Expr Text -&gt; Expr Text)
+-&gt; Operator (Parsec Void [ExprToken]) (Expr Text)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+Tokens s -&gt; (a -&gt; a) -&gt; Operator m a
+</span><a href="Pacer.Class.Parser.html#prefix"><span class="hs-identifier hs-var">P.prefix</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprNot"><span class="hs-identifier hs-var">TokenExprNot</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#Not"><span class="hs-identifier hs-var">Not</span></a></span><span>
+</span><span id="line-257"></span><span>    </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-258"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Tokens [ExprToken]
+-&gt; (Expr Text -&gt; Expr Text -&gt; Expr Text)
+-&gt; Operator (Parsec Void [ExprToken]) (Expr Text)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+Tokens s -&gt; (a -&gt; a -&gt; a) -&gt; Operator m a
+</span><a href="Pacer.Class.Parser.html#binary"><span class="hs-identifier hs-var">P.binary</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprAnd"><span class="hs-identifier hs-var">TokenExprAnd</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#And"><span class="hs-identifier hs-var">And</span></a></span><span>
+</span><span id="line-259"></span><span>    </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-260"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Tokens [ExprToken]
+-&gt; (Expr Text -&gt; Expr Text -&gt; Expr Text)
+-&gt; Operator (Parsec Void [ExprToken]) (Expr Text)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+Tokens s -&gt; (a -&gt; a -&gt; a) -&gt; Operator m a
+</span><a href="Pacer.Class.Parser.html#binary"><span class="hs-identifier hs-var">P.binary</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprOr"><span class="hs-identifier hs-var">TokenExprOr</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#Or"><span class="hs-identifier hs-var">Or</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-261"></span><span>      </span><span class="annot"><span class="annottext">Tokens [ExprToken]
+-&gt; (Expr Text -&gt; Expr Text -&gt; Expr Text)
+-&gt; Operator (Parsec Void [ExprToken]) (Expr Text)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+Tokens s -&gt; (a -&gt; a -&gt; a) -&gt; Operator m a
+</span><a href="Pacer.Class.Parser.html#binary"><span class="hs-identifier hs-var">P.binary</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ExprToken
+</span><a href="Pacer.Command.Chart.Data.Expr.html#TokenExprXor"><span class="hs-identifier hs-var">TokenExprXor</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679725229"><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725229"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679725230"><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725230"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#Or"><span class="hs-identifier hs-var">Or</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#And"><span class="hs-identifier hs-var">And</span></a></span><span> </span><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725229"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#Not"><span class="hs-identifier hs-var">Not</span></a></span><span> </span><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725230"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#And"><span class="hs-identifier hs-var">And</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr Text -&gt; Expr Text
+forall a. Expr a -&gt; Expr a
+</span><a href="Pacer.Command.Chart.Data.Expr.html#Not"><span class="hs-identifier hs-var">Not</span></a></span><span> </span><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725229"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725230"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-262"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-263"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-264"></span><span>
+</span><span id="line-265"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#lexParse"><span class="hs-identifier hs-type">lexParse</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-266"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679724558"><span class="annot"><a href="#local-6989586621679724558"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-267"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724558"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-268"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-269"></span><span>  </span><span class="annot"><a href="Pacer.Data.Result.html#ResultDefault"><span class="hs-identifier hs-type">ResultDefault</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724558"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-270"></span><span id="lexParse"><span class="annot"><span class="annottext">lexParse :: forall a. Parser a =&gt; Text -&gt; ResultDefault (Expr a)
+</span><a href="Pacer.Command.Chart.Data.Expr.html#lexParse"><span class="hs-identifier hs-var hs-var">lexParse</span></a></span></span><span> </span><span id="local-6989586621679725259"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725259"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-271"></span><span>  </span><span id="local-6989586621679725260"><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725260"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; Result String [ExprToken] -&gt; Result String [ExprToken]
+forall a b c. (a -&gt; b) -&gt; Result a c -&gt; Result b c
+forall (p :: * -&gt; * -&gt; *) a b c.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; p a c -&gt; p b c
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe [ExprToken] -&gt; Maybe (Expr Text) -&gt; ShowS
+</span><a href="#local-6989586621679725262"><span class="hs-identifier hs-var">fmtErr</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [ExprToken]
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Expr Text)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Result String [ExprToken] -&gt; Result String [ExprToken])
+-&gt; Result String [ExprToken] -&gt; Result String [ExprToken]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MParser [ExprToken] -&gt; Text -&gt; Result String [ExprToken]
+forall a. MParser a -&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAllWith"><span class="hs-identifier hs-var">P.parseAllWith</span></a></span><span> </span><span class="annot"><span class="annottext">MParser [ExprToken]
+</span><a href="Pacer.Command.Chart.Data.Expr.html#exprLexer"><span class="hs-identifier hs-var">exprLexer</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725259"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-272"></span><span>  </span><span id="local-6989586621679725264"><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725264"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; Result String (Expr Text) -&gt; Result String (Expr Text)
+forall a b c. (a -&gt; b) -&gt; Result a c -&gt; Result b c
+forall (p :: * -&gt; * -&gt; *) a b c.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; p a c -&gt; p b c
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe [ExprToken] -&gt; Maybe (Expr Text) -&gt; ShowS
+</span><a href="#local-6989586621679725262"><span class="hs-identifier hs-var">fmtErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ExprToken] -&gt; Maybe [ExprToken]
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725260"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (Expr Text)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Result String (Expr Text) -&gt; Result String (Expr Text))
+-&gt; Result String (Expr Text) -&gt; Result String (Expr Text)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+-&gt; [ExprToken] -&gt; Result String (Expr Text)
+forall e s a.
+(ShowErrorComponent e, TraversableStream s, VisualStream s) =&gt;
+Parsec e s a -&gt; s -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseWith"><span class="hs-identifier hs-var">P.parseWith</span></a></span><span> </span><span class="annot"><span class="annottext">Parsec Void [ExprToken] (Expr Text)
+</span><a href="Pacer.Command.Chart.Data.Expr.html#exprParser"><span class="hs-identifier hs-var">exprParser</span></a></span><span> </span><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725260"><span class="hs-identifier hs-var">ts</span></a></span><span>
+</span><span id="line-273"></span><span>  </span><span class="annot"><span class="annottext">ShowS -&gt; ResultDefault (Expr a) -&gt; ResultDefault (Expr a)
+forall a b c. (a -&gt; b) -&gt; Result a c -&gt; Result b c
+forall (p :: * -&gt; * -&gt; *) a b c.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; p a c -&gt; p b c
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe [ExprToken] -&gt; Maybe (Expr Text) -&gt; ShowS
+</span><a href="#local-6989586621679725262"><span class="hs-identifier hs-var">fmtErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ExprToken] -&gt; Maybe [ExprToken]
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">[ExprToken]
+</span><a href="#local-6989586621679725260"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expr Text -&gt; Maybe (Expr Text)
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725264"><span class="hs-identifier hs-var">expr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Expr a) -&gt; ResultDefault (Expr a))
+-&gt; ResultDefault (Expr a) -&gt; ResultDefault (Expr a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Result String a) -&gt; Expr Text -&gt; ResultDefault (Expr a)
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Expr a -&gt; f (Expr b)
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Result String a
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span> </span><span class="annot"><span class="annottext">Expr Text
+</span><a href="#local-6989586621679725264"><span class="hs-identifier hs-var">expr</span></a></span><span>
+</span><span id="line-274"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-275"></span><span>    </span><span class="annot"><a href="#local-6989586621679725262"><span class="hs-identifier hs-type">fmtErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#ExprToken"><span class="hs-identifier hs-type">ExprToken</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.html#Expr"><span class="hs-identifier hs-type">Expr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-276"></span><span>    </span><span id="local-6989586621679725262"><span class="annot"><span class="annottext">fmtErr :: Maybe [ExprToken] -&gt; Maybe (Expr Text) -&gt; ShowS
+</span><a href="#local-6989586621679725262"><span class="hs-identifier hs-var hs-var">fmtErr</span></a></span></span><span> </span><span id="local-6989586621679725267"><span class="annot"><span class="annottext">Maybe [ExprToken]
+</span><a href="#local-6989586621679725267"><span class="hs-identifier hs-var">mTokens</span></a></span></span><span> </span><span id="local-6989586621679725268"><span class="annot"><span class="annottext">Maybe (Expr Text)
+</span><a href="#local-6989586621679725268"><span class="hs-identifier hs-var">mExprText</span></a></span></span><span> </span><span id="local-6989586621679725269"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679725269"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-277"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-278"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-279"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Text: '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-280"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725259"><span class="hs-identifier hs-var">txt</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-281"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;'&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-282"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Maybe [ExprToken] -&gt; Text
+forall {a}. Display a =&gt; Text -&gt; Maybe a -&gt; Text
+</span><a href="#local-6989586621679725270"><span class="hs-identifier hs-var">mFmt</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Tokens&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe [ExprToken]
+</span><a href="#local-6989586621679725267"><span class="hs-identifier hs-var">mTokens</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-283"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Maybe (Expr Text) -&gt; Text
+forall {a}. Display a =&gt; Text -&gt; Maybe a -&gt; Text
+</span><a href="#local-6989586621679725270"><span class="hs-identifier hs-var">mFmt</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Expr Text&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Expr Text)
+</span><a href="#local-6989586621679725268"><span class="hs-identifier hs-var">mExprText</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-284"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;\n\nError: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-285"></span><span>            </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Pacer.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679725269"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-286"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-287"></span><span>
+</span><span id="line-288"></span><span>    </span><span id="local-6989586621679725270"><span class="annot"><span class="annottext">mFmt :: Text -&gt; Maybe a -&gt; Text
+</span><a href="#local-6989586621679725270"><span class="hs-identifier hs-var hs-var">mFmt</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-289"></span><span>    </span><span class="annot"><a href="#local-6989586621679725270"><span class="hs-identifier hs-var">mFmt</span></a></span><span> </span><span id="local-6989586621679725280"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725280"><span class="hs-identifier hs-var">hdr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679725281"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679725281"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;\n\n&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679725280"><span class="hs-identifier hs-var">hdr</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679725281"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-290"></span></pre></body></html>

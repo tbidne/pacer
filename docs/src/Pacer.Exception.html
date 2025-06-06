@@ -1,0 +1,485 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Exception.html"><span class="hs-identifier">Pacer.Exception</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Exceptions</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#ChartFileMissingE"><span class="hs-identifier">ChartFileMissingE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#CreateChartE"><span class="hs-identifier">CreateChartE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#GarminE"><span class="hs-identifier">GarminE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Commands</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#CommandConvertE"><span class="hs-identifier">CommandConvertE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#CommandDeriveE"><span class="hs-identifier">CommandDeriveE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#CommandScaleE"><span class="hs-identifier">CommandScaleE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Foldable</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">F</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Set</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html"><span class="hs-identifier">FileSystem.OsPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier">decodeLenient</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.TypeLits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">symbolVal</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.Show.html"><span class="hs-identifier">Pacer.Utils.Show</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Utils.Show</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="annot"><span class="hs-comment">-- | Exception for CLI scale command.</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="CommandConvertE"><span class="annot"><a href="Pacer.Exception.html#CommandConvertE"><span class="hs-identifier hs-var">CommandConvertE</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 1 quantity, received 0.</span></span><span>
+</span><span id="line-26"></span><span>    </span><span id="CommandConvertArgs0"><span class="annot"><a href="Pacer.Exception.html#CommandConvertArgs0"><span class="hs-identifier hs-var">CommandConvertArgs0</span></a></span></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 1 quantity, received 2.</span></span><span>
+</span><span id="line-28"></span><span>    </span><span id="CommandConvertArgs2"><span class="annot"><a href="Pacer.Exception.html#CommandConvertArgs2"><span class="hs-identifier hs-var">CommandConvertArgs2</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Error for converting pace with out unit in meters, not allowed.</span></span><span>
+</span><span id="line-30"></span><span>    </span><span id="CommandConvertPaceMeters"><span class="annot"><a href="Pacer.Exception.html#CommandConvertPaceMeters"><span class="hs-identifier hs-var">CommandConvertPaceMeters</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679716469"><span id="local-6989586621679716471"><span id="local-6989586621679716475"><span class="annot"><span class="annottext">Int -&gt; CommandConvertE -&gt; ShowS
+[CommandConvertE] -&gt; ShowS
+CommandConvertE -&gt; String
+(Int -&gt; CommandConvertE -&gt; ShowS)
+-&gt; (CommandConvertE -&gt; String)
+-&gt; ([CommandConvertE] -&gt; ShowS)
+-&gt; Show CommandConvertE
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CommandConvertE -&gt; ShowS
+showsPrec :: Int -&gt; CommandConvertE -&gt; ShowS
+$cshow :: CommandConvertE -&gt; String
+show :: CommandConvertE -&gt; String
+$cshowList :: [CommandConvertE] -&gt; ShowS
+showList :: [CommandConvertE] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679716484"><span id="local-6989586621679716488"><span id="local-6989586621679716492"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#CommandConvertE"><span class="hs-identifier hs-type">CommandConvertE</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621679716496"><span class="annot"><span class="annottext">displayException :: CommandConvertE -&gt; String
+</span><a href="#local-6989586621679716496"><span class="hs-identifier hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">CommandConvertE
+</span><a href="Pacer.Exception.html#CommandConvertArgs0"><span class="hs-identifier hs-var">CommandConvertArgs0</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716498"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;0&quot;</span></span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><span class="annottext">CommandConvertE
+</span><a href="Pacer.Exception.html#CommandConvertArgs2"><span class="hs-identifier hs-var">CommandConvertArgs2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716498"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;2&quot;</span></span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="annottext">CommandConvertE
+</span><a href="Pacer.Exception.html#CommandConvertPaceMeters"><span class="hs-identifier hs-var">CommandConvertPaceMeters</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Proxy PaceMetersErrMsg -&gt; String
+forall (n :: Symbol) (proxy :: Symbol -&gt; *).
+KnownSymbol n =&gt;
+proxy n -&gt; String
+</span><span class="hs-identifier hs-var">symbolVal</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+forall (t :: Symbol). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Pacer.Utils.html#PaceMetersErrMsg"><span class="hs-identifier hs-type">Utils.PaceMetersErrMsg</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>      </span><span id="local-6989586621679716498"><span class="annot"><span class="annottext">argsErr :: ShowS
+</span><a href="#local-6989586621679716498"><span class="hs-identifier hs-var hs-var">argsErr</span></a></span></span><span> </span><span id="local-6989586621679716505"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716505"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Convert requires exactly 1 quantity, received &quot;</span></span><span>
+</span><span id="line-41"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716505"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-42"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="annot"><span class="hs-comment">-- | Exception for CLI derive command.</span></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="CommandDeriveE"><span class="annot"><a href="Pacer.Exception.html#CommandDeriveE"><span class="hs-identifier hs-var">CommandDeriveE</span></a></span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 2 quantities, received 0.</span></span><span>
+</span><span id="line-47"></span><span>    </span><span id="CommandDeriveArgs0"><span class="annot"><a href="Pacer.Exception.html#CommandDeriveArgs0"><span class="hs-identifier hs-var">CommandDeriveArgs0</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 2 quantities, received 1.</span></span><span>
+</span><span id="line-49"></span><span>    </span><span id="CommandDeriveArgs1"><span class="annot"><a href="Pacer.Exception.html#CommandDeriveArgs1"><span class="hs-identifier hs-var">CommandDeriveArgs1</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 2 quantities, received 3.</span></span><span>
+</span><span id="line-51"></span><span>    </span><span id="CommandDeriveArgs3"><span class="annot"><a href="Pacer.Exception.html#CommandDeriveArgs3"><span class="hs-identifier hs-var">CommandDeriveArgs3</span></a></span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Output units are not used with derive duration.</span></span><span>
+</span><span id="line-53"></span><span>    </span><span id="CommandDeriveDurationUnit"><span class="annot"><a href="Pacer.Exception.html#CommandDeriveDurationUnit"><span class="hs-identifier hs-var">CommandDeriveDurationUnit</span></a></span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Deriving distance requires pace with units.</span></span><span>
+</span><span id="line-55"></span><span>    </span><span id="CommandDeriveNoPaceUnit"><span class="annot"><a href="Pacer.Exception.html#CommandDeriveNoPaceUnit"><span class="hs-identifier hs-var">CommandDeriveNoPaceUnit</span></a></span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Error for deriving pace with out unit in meters, not allowed.</span></span><span>
+</span><span id="line-57"></span><span>    </span><span id="CommandDerivePaceMeters"><span class="annot"><a href="Pacer.Exception.html#CommandDerivePaceMeters"><span class="hs-identifier hs-var">CommandDerivePaceMeters</span></a></span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679716513"><span id="local-6989586621679716515"><span id="local-6989586621679716519"><span class="annot"><span class="annottext">Int -&gt; CommandDeriveE -&gt; ShowS
+[CommandDeriveE] -&gt; ShowS
+CommandDeriveE -&gt; String
+(Int -&gt; CommandDeriveE -&gt; ShowS)
+-&gt; (CommandDeriveE -&gt; String)
+-&gt; ([CommandDeriveE] -&gt; ShowS)
+-&gt; Show CommandDeriveE
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CommandDeriveE -&gt; ShowS
+showsPrec :: Int -&gt; CommandDeriveE -&gt; ShowS
+$cshow :: CommandDeriveE -&gt; String
+show :: CommandDeriveE -&gt; String
+$cshowList :: [CommandDeriveE] -&gt; ShowS
+showList :: [CommandDeriveE] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679716526"><span id="local-6989586621679716530"><span id="local-6989586621679716534"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#CommandDeriveE"><span class="hs-identifier hs-type">CommandDeriveE</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679716537"><span class="annot"><span class="annottext">displayException :: CommandDeriveE -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var">displayException</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDeriveArgs0"><span class="hs-identifier hs-var">CommandDeriveArgs0</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716538"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;0&quot;</span></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDeriveArgs1"><span class="hs-identifier hs-var">CommandDeriveArgs1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716538"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;1&quot;</span></span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDeriveArgs3"><span class="hs-identifier hs-var">CommandDeriveArgs3</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716538"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;3&quot;</span></span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDeriveDurationUnit"><span class="hs-identifier hs-var">CommandDeriveDurationUnit</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;--unit is not used when deriving duration.&quot;</span></span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDeriveNoPaceUnit"><span class="hs-identifier hs-var">CommandDeriveNoPaceUnit</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Deriving distance requires that pace has units.&quot;</span></span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDerivePaceMeters"><span class="hs-identifier hs-var">CommandDerivePaceMeters</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Proxy PaceMetersErrMsg -&gt; String
+forall (n :: Symbol) (proxy :: Symbol -&gt; *).
+KnownSymbol n =&gt;
+proxy n -&gt; String
+</span><span class="hs-identifier hs-var">symbolVal</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+forall (t :: Symbol). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Pacer.Utils.html#PaceMetersErrMsg"><span class="hs-identifier hs-type">Utils.PaceMetersErrMsg</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>      </span><span id="local-6989586621679716538"><span class="annot"><span class="annottext">argsErr :: ShowS
+</span><a href="#local-6989586621679716538"><span class="hs-identifier hs-var hs-var">argsErr</span></a></span></span><span> </span><span id="local-6989586621679716543"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716543"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Derive requires exactly 2 quantities, received &quot;</span></span><span>
+</span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716543"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-72"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="annot"><span class="hs-comment">-- | Exception for CLI scale command.</span></span><span>
+</span><span id="line-75"></span><span class="hs-keyword">data</span><span> </span><span id="CommandScaleE"><span class="annot"><a href="Pacer.Exception.html#CommandScaleE"><span class="hs-identifier hs-var">CommandScaleE</span></a></span></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 1 quantity, received 0.</span></span><span>
+</span><span id="line-77"></span><span>    </span><span id="CommandScaleArgs0"><span class="annot"><a href="Pacer.Exception.html#CommandScaleArgs0"><span class="hs-identifier hs-var">CommandScaleArgs0</span></a></span></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 1 quantity, received 2.</span></span><span>
+</span><span id="line-79"></span><span>    </span><span id="CommandScaleArgs2"><span class="annot"><a href="Pacer.Exception.html#CommandScaleArgs2"><span class="hs-identifier hs-var">CommandScaleArgs2</span></a></span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Wanted 1 quantity, received 3.</span></span><span>
+</span><span id="line-81"></span><span>    </span><span id="CommandScaleArgs3"><span class="annot"><a href="Pacer.Exception.html#CommandScaleArgs3"><span class="hs-identifier hs-var">CommandScaleArgs3</span></a></span></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Output units are not used with scale duration.</span></span><span>
+</span><span id="line-83"></span><span>    </span><span id="CommandScaleDurationUnit"><span class="annot"><a href="Pacer.Exception.html#CommandScaleDurationUnit"><span class="hs-identifier hs-var">CommandScaleDurationUnit</span></a></span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Error for scaling pace with out unit in meters, not allowed.</span></span><span>
+</span><span id="line-85"></span><span>    </span><span id="CommandScalePaceMeters"><span class="annot"><a href="Pacer.Exception.html#CommandScalePaceMeters"><span class="hs-identifier hs-var">CommandScalePaceMeters</span></a></span></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Error for scaling pace with out unit when original unit not given,</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-comment">-- nonsensical. The text arg is the original pace without units, so we</span><span>
+</span><span id="line-88"></span><span>    </span><span class="hs-comment">-- can produce an example of correct usage.</span><span>
+</span><span id="line-89"></span><span>    </span><span id="CommandScalePaceUnitNoUnit"><span class="annot"><a href="Pacer.Exception.html#CommandScalePaceUnitNoUnit"><span class="hs-identifier hs-var">CommandScalePaceUnitNoUnit</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679716551"><span id="local-6989586621679716557"><span id="local-6989586621679716561"><span class="annot"><span class="annottext">Int -&gt; CommandScaleE -&gt; ShowS
+[CommandScaleE] -&gt; ShowS
+CommandScaleE -&gt; String
+(Int -&gt; CommandScaleE -&gt; ShowS)
+-&gt; (CommandScaleE -&gt; String)
+-&gt; ([CommandScaleE] -&gt; ShowS)
+-&gt; Show CommandScaleE
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CommandScaleE -&gt; ShowS
+showsPrec :: Int -&gt; CommandScaleE -&gt; ShowS
+$cshow :: CommandScaleE -&gt; String
+show :: CommandScaleE -&gt; String
+$cshowList :: [CommandScaleE] -&gt; ShowS
+showList :: [CommandScaleE] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679716568"><span id="local-6989586621679716572"><span id="local-6989586621679716576"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#CommandScaleE"><span class="hs-identifier hs-type">CommandScaleE</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621679716585"><span class="annot"><span class="annottext">displayException :: CommandScaleE -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var">displayException</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><span class="annottext">CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScaleArgs0"><span class="hs-identifier hs-var">CommandScaleArgs0</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716586"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;0&quot;</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScaleArgs2"><span class="hs-identifier hs-var">CommandScaleArgs2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716586"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;2&quot;</span></span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScaleArgs3"><span class="hs-identifier hs-var">CommandScaleArgs3</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679716586"><span class="hs-identifier hs-var">argsErr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;3&quot;</span></span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScaleDurationUnit"><span class="hs-identifier hs-var">CommandScaleDurationUnit</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;--unit is not used when scaling duration.&quot;</span></span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScalePaceMeters"><span class="hs-identifier hs-var">CommandScalePaceMeters</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Proxy PaceMetersErrMsg -&gt; String
+forall (n :: Symbol) (proxy :: Symbol -&gt; *).
+KnownSymbol n =&gt;
+proxy n -&gt; String
+</span><span class="hs-identifier hs-var">symbolVal</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+forall (t :: Symbol). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Pacer.Utils.html#PaceMetersErrMsg"><span class="hs-identifier hs-type">Utils.PaceMetersErrMsg</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#CommandScalePaceUnitNoUnit"><span class="hs-identifier hs-type">CommandScalePaceUnitNoUnit</span></a></span><span> </span><span id="local-6989586621679716587"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679716587"><span class="hs-identifier hs-var">example</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-101"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Scaling pace with --unit requires that the original units are &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;given e.g. --pace '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679716587"><span class="hs-identifier hs-var">example</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;'.&quot;</span></span><span>
+</span><span id="line-105"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-107"></span><span>      </span><span id="local-6989586621679716586"><span class="annot"><span class="annottext">argsErr :: ShowS
+</span><a href="#local-6989586621679716586"><span class="hs-identifier hs-var hs-var">argsErr</span></a></span></span><span> </span><span id="local-6989586621679716593"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716593"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Scale requires exactly 1 quantity, received &quot;</span></span><span>
+</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716593"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-110"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span class="annot"><span class="hs-comment">-- | Exception during chart creation.</span></span><span>
+</span><span id="line-113"></span><span class="hs-keyword">newtype</span><span> </span><span id="CreateChartE"><span class="annot"><a href="Pacer.Exception.html#CreateChartE"><span class="hs-identifier hs-var">CreateChartE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CreateChartFilterEmpty"><span class="annot"><a href="Pacer.Exception.html#CreateChartFilterEmpty"><span class="hs-identifier hs-var">CreateChartFilterEmpty</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679716596"><span id="local-6989586621679716600"><span id="local-6989586621679716604"><span class="annot"><span class="annottext">Int -&gt; CreateChartE -&gt; ShowS
+[CreateChartE] -&gt; ShowS
+CreateChartE -&gt; String
+(Int -&gt; CreateChartE -&gt; ShowS)
+-&gt; (CreateChartE -&gt; String)
+-&gt; ([CreateChartE] -&gt; ShowS)
+-&gt; Show CreateChartE
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CreateChartE -&gt; ShowS
+showsPrec :: Int -&gt; CreateChartE -&gt; ShowS
+$cshow :: CreateChartE -&gt; String
+show :: CreateChartE -&gt; String
+$cshowList :: [CreateChartE] -&gt; ShowS
+showList :: [CreateChartE] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679716611"><span id="local-6989586621679716615"><span id="local-6989586621679716619"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#CreateChartE"><span class="hs-identifier hs-type">CreateChartE</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621679716625"><span class="annot"><span class="annottext">displayException :: CreateChartE -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var">displayException</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Exception.html#CreateChartFilterEmpty"><span class="hs-identifier hs-type">CreateChartFilterEmpty</span></a></span><span> </span><span id="local-6989586621679716626"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679716626"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-119"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Chart with title '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-120"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Pacer.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679716626"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;' is empty due to all activities being filtered out.&quot;</span></span><span>
+</span><span id="line-122"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="hs-comment">-- | Exception for when we are expecting a required chart file to exist, but</span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- none was found. This differs from 'FileNotFoundE' in that the latter is</span><span>
+</span><span id="line-126"></span><span class="hs-comment">-- caused by a failure to find an extant file at an exact location. This</span><span>
+</span><span id="line-127"></span><span class="hs-comment">-- exception, on the other hand, is caused by looking for a desired file in</span><span>
+</span><span id="line-128"></span><span class="hs-comment">-- several locations, but none was found.</span><span>
+</span><span id="line-129"></span><span class="hs-keyword">data</span><span> </span><span id="ChartFileMissingE"><span class="annot"><a href="Pacer.Exception.html#ChartFileMissingE"><span class="hs-identifier hs-var">ChartFileMissingE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkChartFileMissingE"><span class="annot"><a href="Pacer.Exception.html#MkChartFileMissingE"><span class="hs-identifier hs-var">MkChartFileMissingE</span></a></span></span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="cliDataDir"><span class="annot"><span class="annottext">ChartFileMissingE -&gt; Maybe OsPath
+</span><a href="Pacer.Exception.html#cliDataDir"><span class="hs-identifier hs-var hs-var">cliDataDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span id="configDataDir"><span class="annot"><span class="annottext">ChartFileMissingE -&gt; Maybe OsPath
+</span><a href="Pacer.Exception.html#configDataDir"><span class="hs-identifier hs-var hs-var">configDataDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span id="currentDir"><span class="annot"><span class="annottext">ChartFileMissingE -&gt; Path Abs Dir
+</span><a href="Pacer.Exception.html#currentDir"><span class="hs-identifier hs-var hs-var">currentDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span id="expectedFiles"><span class="annot"><span class="annottext">ChartFileMissingE -&gt; [Path Rel File]
+</span><a href="Pacer.Exception.html#expectedFiles"><span class="hs-identifier hs-var hs-var">expectedFiles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>    </span><span id="expectedExts"><span class="annot"><span class="annottext">ChartFileMissingE -&gt; Set OsPath
+</span><a href="Pacer.Exception.html#expectedExts"><span class="hs-identifier hs-var hs-var">expectedExts</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span id="xdgDir"><span class="annot"><span class="annottext">ChartFileMissingE -&gt; Path Abs Dir
+</span><a href="Pacer.Exception.html#xdgDir"><span class="hs-identifier hs-var hs-var">xdgDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-136"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679716635"><span id="local-6989586621679716650"><span id="local-6989586621679716654"><span class="annot"><span class="annottext">Int -&gt; ChartFileMissingE -&gt; ShowS
+[ChartFileMissingE] -&gt; ShowS
+ChartFileMissingE -&gt; String
+(Int -&gt; ChartFileMissingE -&gt; ShowS)
+-&gt; (ChartFileMissingE -&gt; String)
+-&gt; ([ChartFileMissingE] -&gt; ShowS)
+-&gt; Show ChartFileMissingE
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ChartFileMissingE -&gt; ShowS
+showsPrec :: Int -&gt; ChartFileMissingE -&gt; ShowS
+$cshow :: ChartFileMissingE -&gt; String
+show :: ChartFileMissingE -&gt; String
+$cshowList :: [ChartFileMissingE] -&gt; ShowS
+showList :: [ChartFileMissingE] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679716662"><span id="local-6989586621679716666"><span id="local-6989586621679716670"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#ChartFileMissingE"><span class="hs-identifier hs-type">ChartFileMissingE</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-140"></span><span>  </span><span id="local-6989586621679716700"><span class="annot"><span class="annottext">displayException :: ChartFileMissingE -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var">displayException</span></span></span><span> </span><span id="local-6989586621679716701"><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-141"></span><span>    </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-142"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Required chart file not found. Searched for paths(s) &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">(Path Rel File -&gt; String) -&gt; [Path Rel File] -&gt; String
+forall (f :: * -&gt; *) c a.
+(Foldable f, IsString c, Semigroup c) =&gt;
+(a -&gt; c) -&gt; f a -&gt; c
+</span><a href="Pacer.Utils.Show.html#showMapListInline"><span class="hs-identifier hs-var">Utils.Show.showMapListInline</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File -&gt; String
+forall b t. Path b t -&gt; String
+</span><a href="Pacer.Utils.Show.html#showPath"><span class="hs-identifier hs-var">Utils.Show.showPath</span></a></span><span> </span><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">expectedFiles</span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716704"><span class="hs-identifier hs-var">extsStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-145"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; in directories:&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716705"><span class="hs-identifier hs-var">dirsStr</span></a></span><span>
+</span><span id="line-147"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-149"></span><span>      </span><span id="local-6989586621679716705"><span class="annot"><span class="annottext">dirsStr :: String
+</span><a href="#local-6989586621679716705"><span class="hs-identifier hs-var hs-var">dirsStr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-150"></span><span>        </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-151"></span><span>          </span><span class="annot"><span class="annottext">([String] -&gt; String) -&gt; [String] -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Bool) -&gt; [String] -&gt; [String]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span>
+</span><span id="line-152"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; (String -&gt; Bool) -&gt; String -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Bool
+forall a. [a] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">L.null</span></span><span class="hs-special">)</span><span>
+</span><span id="line-153"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; String
+</span><a href="#local-6989586621679716709"><span class="hs-identifier hs-var">displayDir</span></a></span><span> </span><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">cliDataDir</span><span class="hs-special">,</span><span>
+</span><span id="line-154"></span><span>              </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; String
+</span><a href="#local-6989586621679716709"><span class="hs-identifier hs-var">displayDir</span></a></span><span> </span><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">configDataDir</span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>              </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; String
+</span><a href="#local-6989586621679716709"><span class="hs-identifier hs-var">displayDir</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OsPath -&gt; Maybe OsPath
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(OsPath -&gt; Maybe OsPath) -&gt; OsPath -&gt; Maybe OsPath
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">currentDir</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>              </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; String
+</span><a href="#local-6989586621679716709"><span class="hs-identifier hs-var">displayDir</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OsPath -&gt; Maybe OsPath
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(OsPath -&gt; Maybe OsPath) -&gt; OsPath -&gt; Maybe OsPath
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">xdgDir</span><span class="hs-special">)</span><span>
+</span><span id="line-157"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-158"></span><span>
+</span><span id="line-159"></span><span>      </span><span id="local-6989586621679716704"><span class="annot"><span class="annottext">extsStr :: String
+</span><a href="#local-6989586621679716704"><span class="hs-identifier hs-var hs-var">extsStr</span></a></span></span><span>
+</span><span id="line-160"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set OsPath -&gt; Bool
+forall a. Set a -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">F.null</span></span><span> </span><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">expectedExts</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-161"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-162"></span><span>            </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-163"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; with extension(s) &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>                </span><span class="annot"><span class="annottext">(OsPath -&gt; String) -&gt; Set OsPath -&gt; String
+forall (f :: * -&gt; *) c a.
+(Foldable f, IsString c, Semigroup c) =&gt;
+(a -&gt; c) -&gt; f a -&gt; c
+</span><a href="Pacer.Utils.Show.html#showMapListInline"><span class="hs-identifier hs-var">Utils.Show.showMapListInline</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="Pacer.Utils.Show.html#showOsPath"><span class="hs-identifier hs-var">Utils.Show.showOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">ChartFileMissingE
+</span><a href="#local-6989586621679716701"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">expectedExts</span><span>
+</span><span id="line-165"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span>      </span><span id="local-6989586621679716709"><span class="annot"><span class="annottext">displayDir :: Maybe OsPath -&gt; String
+</span><a href="#local-6989586621679716709"><span class="hs-identifier hs-var hs-var">displayDir</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-168"></span><span>      </span><span class="annot"><a href="#local-6989586621679716709"><span class="hs-identifier hs-var">displayDir</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679716716"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679716716"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;\n - &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier hs-var">decodeLenient</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679716716"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span class="annot"><span class="hs-comment">-- | Garmin exceptions.</span></span><span>
+</span><span id="line-171"></span><span class="hs-keyword">data</span><span> </span><span id="GarminE"><span class="annot"><a href="Pacer.Exception.html#GarminE"><span class="hs-identifier hs-var">GarminE</span></a></span></span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Error decoding a garmin file.</span></span><span>
+</span><span id="line-173"></span><span>    </span><span id="GarminDecode"><span class="annot"><a href="Pacer.Exception.html#GarminDecode"><span class="hs-identifier hs-var">GarminDecode</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Error for specifing garmin unit as meters.</span></span><span>
+</span><span id="line-175"></span><span>    </span><span id="GarminMeters"><span class="annot"><a href="Pacer.Exception.html#GarminMeters"><span class="hs-identifier hs-var">GarminMeters</span></a></span></span><span>
+</span><span id="line-176"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Generic garmin error.</span></span><span>
+</span><span id="line-177"></span><span>    </span><span id="GarminOther"><span class="annot"><a href="Pacer.Exception.html#GarminOther"><span class="hs-identifier hs-var">GarminOther</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-178"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Error for unspecified garmin distance unit.</span></span><span>
+</span><span id="line-179"></span><span>    </span><span id="GarminUnitRequired"><span class="annot"><a href="Pacer.Exception.html#GarminUnitRequired"><span class="hs-identifier hs-var">GarminUnitRequired</span></a></span></span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679716722"><span id="local-6989586621679716731"><span class="annot"><span class="annottext">GarminE -&gt; GarminE -&gt; Bool
+(GarminE -&gt; GarminE -&gt; Bool)
+-&gt; (GarminE -&gt; GarminE -&gt; Bool) -&gt; Eq GarminE
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: GarminE -&gt; GarminE -&gt; Bool
+== :: GarminE -&gt; GarminE -&gt; Bool
+$c/= :: GarminE -&gt; GarminE -&gt; Bool
+/= :: GarminE -&gt; GarminE -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679716737"><span id="local-6989586621679716744"><span id="local-6989586621679716748"><span class="annot"><span class="annottext">Int -&gt; GarminE -&gt; ShowS
+[GarminE] -&gt; ShowS
+GarminE -&gt; String
+(Int -&gt; GarminE -&gt; ShowS)
+-&gt; (GarminE -&gt; String) -&gt; ([GarminE] -&gt; ShowS) -&gt; Show GarminE
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; GarminE -&gt; ShowS
+showsPrec :: Int -&gt; GarminE -&gt; ShowS
+$cshow :: GarminE -&gt; String
+show :: GarminE -&gt; String
+$cshowList :: [GarminE] -&gt; ShowS
+showList :: [GarminE] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>
+</span><span id="line-182"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679716756"><span id="local-6989586621679716760"><span id="local-6989586621679716764"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Pacer.Exception.html#GarminE"><span class="hs-identifier hs-type">GarminE</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-183"></span><span>  </span><span id="local-6989586621679716772"><span class="annot"><span class="annottext">displayException :: GarminE -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var">displayException</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-184"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#GarminDecode"><span class="hs-identifier hs-type">GarminDecode</span></a></span><span> </span><span id="local-6989586621679716773"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716773"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Error decoding garmin file: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716773"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-185"></span><span>    </span><span class="annot"><span class="annottext">GarminE
+</span><a href="Pacer.Exception.html#GarminMeters"><span class="hs-identifier hs-var">GarminMeters</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Meters are invalid for Garmin; use km or mi.&quot;</span></span><span>
+</span><span id="line-186"></span><span>    </span><span class="annot"><a href="Pacer.Exception.html#GarminOther"><span class="hs-identifier hs-type">GarminOther</span></a></span><span> </span><span id="local-6989586621679716774"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716774"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Garmin error: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679716774"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-187"></span><span>    </span><span class="annot"><span class="annottext">GarminE
+</span><a href="Pacer.Exception.html#GarminUnitRequired"><span class="hs-identifier hs-var">GarminUnitRequired</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-188"></span><span>      </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-189"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;The 'garmin.unit' setting is required in chart-requests json &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-190"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;when used with a garmin activities file.&quot;</span></span><span>
+</span><span id="line-191"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-192"></span></pre></body></html>

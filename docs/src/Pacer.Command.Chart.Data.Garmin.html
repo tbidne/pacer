@@ -1,0 +1,971 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Garmin</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Types</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAct"><span class="hs-identifier">GarminAct</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Functions</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#readActivitiesCsv"><span class="hs-identifier">readActivitiesCsv</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Misc</span></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#getActivitiesType"><span class="hs-identifier">getActivitiesType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#displaySummarizedSequences"><span class="hs-identifier">displaySummarizedSequences</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BSL</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.html/Data.Csv.html"><span class="hs-identifier">Data.Csv</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#FromNamedRecord"><span class="hs-identifier">FromNamedRecord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#parseNamedRecord"><span class="hs-identifier">parseNamedRecord</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Types.html/Data.Csv.Types.html#NamedRecord"><span class="hs-identifier">NamedRecord</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#.%3A"><span class="hs-operator">(.:)</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html"><span class="hs-identifier">Data.Csv.Streaming</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#Records"><span class="hs-identifier">Records</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#Cons"><span class="hs-identifier">Cons</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#Nil"><span class="hs-identifier">Nil</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html"><span class="hs-identifier">Data.Csv.Streaming</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Csv</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Format</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Format</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html"><span class="hs-identifier">Effectful.Logger.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Logger</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html"><span class="hs-identifier">FileSystem.OsPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier">decodeLenient</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.UTF8.html/FileSystem.UTF8.html"><span class="hs-identifier">FileSystem.UTF8</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.UTF8.html/FileSystem.UTF8.html#decodeUtf8Lenient"><span class="hs-identifier">decodeUtf8Lenient</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Activity</span></a></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Activity"><span class="hs-identifier">Activity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#MkActivity"><span class="hs-identifier">MkActivity</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#ActivityType"><span class="hs-identifier">ActivityType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#MkActivityType"><span class="hs-identifier">MkActivityType</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier">SomeActivities</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivity"><span class="hs-identifier">SomeActivity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#MkSomeActivity"><span class="hs-identifier">MkSomeActivity</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Activity</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Activity</span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier">Timestamp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TS</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html"><span class="hs-identifier">Pacer.Command.Chart.Params</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ActivitiesType"><span class="hs-identifier">ActivitiesType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ActivitiesDefault"><span class="hs-identifier">ActivitiesDefault</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ActivitiesGarmin"><span class="hs-identifier">ActivitiesGarmin</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#Distance"><span class="hs-identifier">Distance</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Distance</span></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html"><span class="hs-identifier">Pacer.Data.Distance.Units</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier">Kilometer</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier">Meter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier">Mile</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html"><span class="hs-identifier">Pacer.Data.Duration</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier">Duration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Exception.html"><span class="hs-identifier">Pacer.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Exception.html#GarminE"><span class="hs-identifier">GarminE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Exception.html#GarminDecode"><span class="hs-identifier">GarminDecode</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Exception.html#GarminMeters"><span class="hs-identifier">GarminMeters</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Exception.html#GarminOther"><span class="hs-identifier">GarminOther</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator">(.:)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.Show.html"><span class="hs-identifier">Pacer.Utils.Show</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Utils.Show</span></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.OsPath</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OsPath</span></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html"><span class="hs-identifier">Text.Megaparsec</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MP</span></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html"><span class="hs-identifier">Text.Megaparsec.Char</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MPC</span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">data</span><span> </span><span id="GarminAct"><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAct"><span class="hs-identifier hs-var">GarminAct</span></a></span></span><span> </span><span id="local-6989586621679722162"><span class="annot"><a href="#local-6989586621679722162"><span class="hs-identifier hs-type">d</span></a></span></span><span> </span><span id="local-6989586621679722163"><span class="annot"><a href="#local-6989586621679722163"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkGarminAct"><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#MkGarminAct"><span class="hs-identifier hs-var">MkGarminAct</span></a></span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="atype"><span class="annot"><span class="annottext">forall (d :: DistanceUnit) a. GarminAct d a -&gt; ActivityType
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#atype"><span class="hs-identifier hs-var hs-var">atype</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#ActivityType"><span class="hs-identifier hs-type">ActivityType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span id="datetime"><span class="annot"><span class="annottext">forall (d :: DistanceUnit) a. GarminAct d a -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#datetime"><span class="hs-identifier hs-var hs-var">datetime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span id="distance"><span class="annot"><span class="annottext">forall (d :: DistanceUnit) a. GarminAct d a -&gt; Distance d a
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#distance"><span class="hs-identifier hs-var hs-var">distance</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html#Distance"><span class="hs-identifier hs-type">Distance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722162"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722163"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span id="duration"><span class="annot"><span class="annottext">forall (d :: DistanceUnit) a. GarminAct d a -&gt; Duration a
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#duration"><span class="hs-identifier hs-var hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722163"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span id="title"><span class="annot"><span class="annottext">forall (d :: DistanceUnit) a. GarminAct d a -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#title"><span class="hs-identifier hs-var hs-var">title</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679722438"><span id="local-6989586621679722450"><span class="annot"><span class="annottext">GarminAct d a -&gt; GarminAct d a -&gt; Bool
+(GarminAct d a -&gt; GarminAct d a -&gt; Bool)
+-&gt; (GarminAct d a -&gt; GarminAct d a -&gt; Bool) -&gt; Eq (GarminAct d a)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (d :: DistanceUnit) a.
+(MetricSpace a, SingI d) =&gt;
+GarminAct d a -&gt; GarminAct d a -&gt; Bool
+$c== :: forall (d :: DistanceUnit) a.
+(MetricSpace a, SingI d) =&gt;
+GarminAct d a -&gt; GarminAct d a -&gt; Bool
+== :: GarminAct d a -&gt; GarminAct d a -&gt; Bool
+$c/= :: forall (d :: DistanceUnit) a.
+(MetricSpace a, SingI d) =&gt;
+GarminAct d a -&gt; GarminAct d a -&gt; Bool
+/= :: GarminAct d a -&gt; GarminAct d a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722457"><span id="local-6989586621679722471"><span id="local-6989586621679722475"><span class="annot"><span class="annottext">Int -&gt; GarminAct d a -&gt; ShowS
+[GarminAct d a] -&gt; ShowS
+GarminAct d a -&gt; String
+(Int -&gt; GarminAct d a -&gt; ShowS)
+-&gt; (GarminAct d a -&gt; String)
+-&gt; ([GarminAct d a] -&gt; ShowS)
+-&gt; Show (GarminAct d a)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (d :: DistanceUnit) a.
+(Show a, SingI d) =&gt;
+Int -&gt; GarminAct d a -&gt; ShowS
+forall (d :: DistanceUnit) a.
+(Show a, SingI d) =&gt;
+[GarminAct d a] -&gt; ShowS
+forall (d :: DistanceUnit) a.
+(Show a, SingI d) =&gt;
+GarminAct d a -&gt; String
+$cshowsPrec :: forall (d :: DistanceUnit) a.
+(Show a, SingI d) =&gt;
+Int -&gt; GarminAct d a -&gt; ShowS
+showsPrec :: Int -&gt; GarminAct d a -&gt; ShowS
+$cshow :: forall (d :: DistanceUnit) a.
+(Show a, SingI d) =&gt;
+GarminAct d a -&gt; String
+show :: GarminAct d a -&gt; String
+$cshowList :: forall (d :: DistanceUnit) a.
+(Show a, SingI d) =&gt;
+[GarminAct d a] -&gt; ShowS
+showList :: [GarminAct d a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621679722207"><span id="local-6989586621679722208"><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Additive.AMonoid.html/Numeric.Algebra.Additive.AMonoid.html#AMonoid"><span class="hs-identifier hs-type">AMonoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722207"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722207"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679722207"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722207"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679722207"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722208"><span class="hs-identifier hs-type">d</span></a></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#FromNamedRecord"><span class="hs-identifier hs-type">FromNamedRecord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAct"><span class="hs-identifier hs-type">GarminAct</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722208"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722207"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621679722494"><span class="annot"><span class="annottext">parseNamedRecord :: NamedRecord -&gt; Parser (GarminAct d a)
+</span><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#parseNamedRecord"><span class="hs-identifier hs-var hs-var hs-var">parseNamedRecord</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamedRecord -&gt; Parser (GarminAct d a)
+forall a (d :: DistanceUnit).
+(AMonoid a, From&#8474; a, Ord a, Parser a, Show a, SingI d) =&gt;
+NamedRecord -&gt; Parser (GarminAct d a)
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#parseGarminRow"><span class="hs-identifier hs-var">parseGarminRow</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- Example format:</span><span>
+</span><span id="line-79"></span><span class="hs-comment">--</span><span>
+</span><span id="line-80"></span><span class="hs-comment">-- Activity Type,Date,Favorite,Title,Distance,Calories,Time,Avg HR,Max HR,Aerobic TE,Avg Run Cadence,Max Run Cadence,Avg Pace,Best Pace,Total Ascent,Total Descent,Avg Stride Length,Avg Vertical Ratio,Avg Vertical Oscillation,Avg Ground Contact Time,Avg GAP,Normalized Power&#174; (NP&#174;),Training Stress Score&#174;,Avg Power,Max Power,Steps,Total Reps,Total Sets,Decompression,Best Lap Time,Number of Laps,Moving Time,Elapsed Time,Min Elevation,Max Elevation</span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- Running,2025-02-06 17:06:03,false,&quot;Wellington Running&quot;,&quot;5.48&quot;,&quot;447&quot;,&quot;00:31:24&quot;,&quot;153&quot;,&quot;176&quot;,&quot;3.6&quot;,&quot;153&quot;,&quot;173&quot;,&quot;5:44&quot;,&quot;4:06&quot;,&quot;215&quot;,&quot;200&quot;,&quot;1.15&quot;,&quot;8.6&quot;,&quot;9.5&quot;,&quot;281&quot;,&quot;5:01&quot;,&quot;371&quot;,&quot;0.0&quot;,&quot;343&quot;,&quot;641&quot;,&quot;4,808&quot;,&quot;--&quot;,&quot;--&quot;,&quot;No&quot;,&quot;00:02:15.3&quot;,&quot;6&quot;,&quot;00:31:08&quot;,&quot;00:32:57&quot;,&quot;-4&quot;,&quot;190&quot;</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#parseGarminRow"><span class="hs-identifier hs-type">parseGarminRow</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679722496"><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621679722497"><span class="annot"><a href="#local-6989586621679722497"><span class="hs-identifier hs-type">d</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Additive.AMonoid.html/Numeric.Algebra.Additive.AMonoid.html#AMonoid"><span class="hs-identifier hs-type">AMonoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-86"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722497"><span class="hs-identifier hs-type">d</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Types.html/Data.Csv.Types.html#NamedRecord"><span class="hs-identifier hs-type">NamedRecord</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAct"><span class="hs-identifier hs-type">GarminAct</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722497"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span id="parseGarminRow"><span class="annot"><span class="annottext">parseGarminRow :: forall a (d :: DistanceUnit).
+(AMonoid a, From&#8474; a, Ord a, Parser a, Show a, SingI d) =&gt;
+NamedRecord -&gt; Parser (GarminAct d a)
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#parseGarminRow"><span class="hs-identifier hs-var hs-var">parseGarminRow</span></a></span></span><span> </span><span id="local-6989586621679722589"><span class="annot"><span class="annottext">NamedRecord
+</span><a href="#local-6989586621679722589"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621679722590"><span class="annot"><span class="annottext">ActivityType
+</span><a href="#local-6989586621679722590"><span class="hs-identifier hs-var">activityType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ActivityType
+</span><a href="Pacer.Command.Chart.Data.Activity.html#MkActivityType"><span class="hs-identifier hs-var">MkActivityType</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ActivityType) -&gt; Parser Text -&gt; Parser ActivityType
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">NamedRecord
+</span><a href="#local-6989586621679722589"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">NamedRecord -&gt; ByteString -&gt; Parser Text
+forall a. FromField a =&gt; NamedRecord -&gt; ByteString -&gt; Parser a
+</span><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;Activity Type&quot;</span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621679722592"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722592"><span class="hs-identifier hs-var">title</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NamedRecord
+</span><a href="#local-6989586621679722589"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">NamedRecord -&gt; ByteString -&gt; Parser Text
+forall a. FromField a =&gt; NamedRecord -&gt; ByteString -&gt; Parser a
+</span><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;Title&quot;</span></span><span>
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621679722593"><span class="annot"><span class="annottext">LocalTime
+</span><a href="#local-6989586621679722593"><span class="hs-identifier hs-var">datetime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser LocalTime
+</span><a href="#local-6989586621679722594"><span class="hs-identifier hs-var">parseDatetime</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser LocalTime) -&gt; Parser String -&gt; Parser LocalTime
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">NamedRecord
+</span><a href="#local-6989586621679722589"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">NamedRecord -&gt; ByteString -&gt; Parser String
+forall a. FromField a =&gt; NamedRecord -&gt; ByteString -&gt; Parser a
+</span><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;Date&quot;</span></span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621679722596"><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679722596"><span class="hs-identifier hs-var">distance</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser (Distance d a)
+forall x. Parser x =&gt; Text -&gt; Parser x
+</span><a href="#local-6989586621679722597"><span class="hs-identifier hs-var">parseX</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parser (Distance d a))
+-&gt; Parser Text -&gt; Parser (Distance d a)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">NamedRecord
+</span><a href="#local-6989586621679722589"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">NamedRecord -&gt; ByteString -&gt; Parser Text
+forall a. FromField a =&gt; NamedRecord -&gt; ByteString -&gt; Parser a
+</span><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;Distance&quot;</span></span><span>
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621679722598"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679722598"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser (Duration a)
+</span><a href="#local-6989586621679722599"><span class="hs-identifier hs-var">parseDuration</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parser (Duration a)) -&gt; Parser Text -&gt; Parser (Duration a)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">NamedRecord
+</span><a href="#local-6989586621679722589"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">NamedRecord -&gt; ByteString -&gt; Parser Text
+forall a. FromField a =&gt; NamedRecord -&gt; ByteString -&gt; Parser a
+</span><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;Moving Time&quot;</span></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621679722600"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679722600"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">LocalTime -&gt; Parser Timestamp
+forall (m :: * -&gt; *). MonadFail m =&gt; LocalTime -&gt; m Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#fromLocalTime"><span class="hs-identifier hs-var">TS.fromLocalTime</span></a></span><span> </span><span class="annot"><span class="annottext">LocalTime
+</span><a href="#local-6989586621679722593"><span class="hs-identifier hs-var">datetime</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-105"></span><span>    </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#MkGarminAct"><span class="hs-identifier hs-type">MkGarminAct</span></a></span><span>
+</span><span id="line-106"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">atype :: ActivityType
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#atype"><span class="hs-identifier hs-var">atype</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActivityType
+</span><a href="#local-6989586621679722590"><span class="hs-identifier hs-var">activityType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>        </span><span class="annot"><span class="annottext">datetime :: Timestamp
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#datetime"><span class="hs-identifier hs-var">datetime</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679722600"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">Distance d a
+distance :: Distance d a
+distance :: Distance d a
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#distance"><span class="hs-identifier hs-var hs-var">distance</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">Duration a
+duration :: Duration a
+duration :: Duration a
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#duration"><span class="hs-identifier hs-var hs-var">duration</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>        </span><span class="annot"><span class="annottext">Text
+title :: Text
+title :: Text
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#title"><span class="hs-identifier hs-var hs-var">title</span></a></span><span>
+</span><span id="line-111"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><a href="#local-6989586621679722594"><span class="hs-identifier hs-type">parseDatetime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span>
+</span><span id="line-114"></span><span>    </span><span id="local-6989586621679722594"><span class="annot"><span class="annottext">parseDatetime :: String -&gt; Parser LocalTime
+</span><a href="#local-6989586621679722594"><span class="hs-identifier hs-var hs-var">parseDatetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; TimeLocale -&gt; String -&gt; String -&gt; Parser LocalTime
+forall (m :: * -&gt; *) t.
+(MonadFail m, ParseTime t) =&gt;
+Bool -&gt; TimeLocale -&gt; String -&gt; String -&gt; m t
+</span><span class="hs-identifier hs-var">Format.parseTimeM</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">TimeLocale
+</span><span class="hs-identifier hs-var">Format.defaultTimeLocale</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722604"><span class="hs-identifier hs-var">timeFmt</span></a></span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><a href="#local-6989586621679722599"><span class="hs-identifier hs-type">parseDuration</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>    </span><span id="local-6989586621679722599"><span class="annot"><span class="annottext">parseDuration :: Text -&gt; Parser (Duration a)
+</span><a href="#local-6989586621679722599"><span class="hs-identifier hs-var hs-var">parseDuration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault (Duration a) -&gt; Parser (Duration a)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Duration a) -&gt; Parser (Duration a))
+-&gt; (Text -&gt; ResultDefault (Duration a))
+-&gt; Text
+-&gt; Parser (Duration a)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MParser (Duration a) -&gt; Text -&gt; ResultDefault (Duration a)
+forall a. MParser a -&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAllWith"><span class="hs-identifier hs-var">P.parseAllWith</span></a></span><span> </span><span class="annot"><span class="annottext">MParser (Duration a)
+</span><a href="#local-6989586621679722608"><span class="hs-identifier hs-var">movingTimeParser</span></a></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><a href="#local-6989586621679722608"><span class="hs-identifier hs-type">movingTimeParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html#MParser"><span class="hs-identifier hs-type">P.MParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722496"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621679722608"><span class="annot"><span class="annottext">movingTimeParser :: MParser (Duration a)
+</span><a href="#local-6989586621679722608"><span class="hs-identifier hs-var hs-var">movingTimeParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-121"></span><span>      </span><span id="local-6989586621679722609"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722609"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; Int -&gt; ParsecT Void Text Identity (Tokens Text)
+forall e s (m :: * -&gt; *).
+MonadParsec e s m =&gt;
+Maybe String -&gt; Int -&gt; m (Tokens s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Class.html/Text.Megaparsec.Class.html#takeP"><span class="hs-identifier hs-var">MP.takeP</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;digits&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-122"></span><span>      </span><span class="annot"><span class="annottext">Token Text -&gt; ParsecT Void Text Identity (Token Text)
+forall e s (m :: * -&gt; *).
+(MonadParsec e s m, Token s ~ Char) =&gt;
+Token s -&gt; m (Token s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html#char"><span class="hs-identifier hs-var">MPC.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+Token Text
+</span><span class="hs-char">':'</span></span><span>
+</span><span id="line-123"></span><span>      </span><span id="local-6989586621679722612"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722612"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; Int -&gt; ParsecT Void Text Identity (Tokens Text)
+forall e s (m :: * -&gt; *).
+MonadParsec e s m =&gt;
+Maybe String -&gt; Int -&gt; m (Tokens s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Class.html/Text.Megaparsec.Class.html#takeP"><span class="hs-identifier hs-var">MP.takeP</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;digits&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-124"></span><span>      </span><span class="annot"><span class="annottext">Token Text -&gt; ParsecT Void Text Identity (Token Text)
+forall e s (m :: * -&gt; *).
+(MonadParsec e s m, Token s ~ Char) =&gt;
+Token s -&gt; m (Token s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html#char"><span class="hs-identifier hs-var">MPC.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+Token Text
+</span><span class="hs-char">':'</span></span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span>      </span><span class="hs-comment">-- The last bit might not be an integer e.g. 00:23:40.5 (40.5), so we</span><span>
+</span><span id="line-127"></span><span>      </span><span class="hs-comment">-- take all, round it, then convert back to text for final parsing.</span><span>
+</span><span id="line-128"></span><span>      </span><span class="hs-comment">--</span><span>
+</span><span id="line-129"></span><span>      </span><span class="hs-comment">-- Kind of clumsy, but the alternative would be to give up rounding,</span><span>
+</span><span id="line-130"></span><span>      </span><span class="hs-comment">-- so we do it this way.</span><span>
+</span><span id="line-131"></span><span>      </span><span id="local-6989586621679722613"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679722613"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall n. Read n =&gt; Parsec Void Text n
+</span><a href="Pacer.Class.Parser.html#parseDigits"><span class="hs-identifier hs-var">P.parseDigits</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-132"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679722615"><span class="annot"><span class="annottext">sTxt :: Text
+</span><a href="#local-6989586621679722615"><span class="hs-identifier hs-var hs-var">sTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Pacer.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Text) -&gt; Int -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679722613"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">ResultDefault (Duration a) -&gt; MParser (Duration a)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Duration a) -&gt; MParser (Duration a))
+-&gt; ResultDefault (Duration a) -&gt; MParser (Duration a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault (Duration a)
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722609"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;h&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722612"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;m&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722615"><span class="hs-identifier hs-var">sTxt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;s&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span>    </span><span class="annot"><a href="#local-6989586621679722597"><span class="hs-identifier hs-type">parseX</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679722260"><span class="annot"><a href="#local-6989586621679722260"><span class="hs-identifier hs-type">x</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722260"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Conversion.html/Data.Csv.Conversion.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722260"><span class="hs-identifier hs-type">x</span></a></span><span>
+</span><span id="line-137"></span><span>    </span><span id="local-6989586621679722597"><span class="annot"><span class="annottext">parseX :: forall x. Parser x =&gt; Text -&gt; Parser x
+</span><a href="#local-6989586621679722597"><span class="hs-identifier hs-var hs-var">parseX</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault x
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ResultDefault x)
+-&gt; (ResultDefault x -&gt; Parser x) -&gt; Text -&gt; Parser x
+forall {k} (cat :: k -&gt; k -&gt; *) (a :: k) (b :: k) (c :: k).
+Category cat =&gt;
+cat a b -&gt; cat b c -&gt; cat a c
+</span><span class="hs-operator hs-var">&gt;&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ResultDefault x -&gt; Parser x
+forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span>    </span><span id="local-6989586621679722604"><span class="annot"><span class="annottext">timeFmt :: String
+</span><a href="#local-6989586621679722604"><span class="hs-identifier hs-var hs-var">timeFmt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;%Y-%m-%d %H:%M:%S&quot;</span></span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span id="local-6989586621679722305"><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#readActivitiesCsv"><span class="hs-identifier hs-type">readActivitiesCsv</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722305"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722305"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-146"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-147"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-148"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722305"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-149"></span><span id="readActivitiesCsv"><span class="annot"><span class="annottext">readActivitiesCsv :: forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es) =&gt;
+DistanceUnit -&gt; Path Abs File -&gt; Eff es (SomeActivities Double)
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#readActivitiesCsv"><span class="hs-identifier hs-var hs-var">readActivitiesCsv</span></a></span></span><span> </span><span class="hs-glyph">@</span><span id="local-6989586621679722669"><span class="annot"><a href="#local-6989586621679722669"><span class="hs-identifier hs-type hs-type">es</span></a></span></span><span> </span><span id="local-6989586621679722670"><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679722670"><span class="hs-identifier hs-var">inputDistUnit</span></a></span></span><span> </span><span id="local-6989586621679722671"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679722671"><span class="hs-identifier hs-var">csvPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-comment">-- 1. Read csv into bytestring.</span><span>
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621679722672"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679722672"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff es ByteString
+forall (es :: [Effect]).
+(FileReader :&gt; es, HasCallStack) =&gt;
+OsPath -&gt; Eff es ByteString
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#readBinaryFile"><span class="hs-identifier hs-var">readBinaryFile</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722674"><span class="hs-identifier hs-var">csvOsPath</span></a></span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span>  </span><span id="local-6989586621679722675"><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722675"><span class="hs-identifier hs-var">someActivitiesList</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679722670"><span class="hs-identifier hs-var">inputDistUnit</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GarminE -&gt; Eff es [SomeActivity Double]
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">GarminE
+</span><a href="Pacer.Exception.html#GarminMeters"><span class="hs-identifier hs-var">GarminMeters</span></a></span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Eff es [SomeActivity Double]
+SingI 'Kilometer =&gt; ByteString -&gt; Eff es [SomeActivity Double]
+forall (d :: DistanceUnit) -&gt;
+SingI d =&gt; ByteString -&gt; Eff es [SomeActivity Double]
+</span><a href="#local-6989586621679722677"><span class="hs-identifier hs-var">bsToActivities</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679722672"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Eff es [SomeActivity Double]
+SingI 'Mile =&gt; ByteString -&gt; Eff es [SomeActivity Double]
+forall (d :: DistanceUnit) -&gt;
+SingI d =&gt; ByteString -&gt; Eff es [SomeActivity Double]
+</span><a href="#local-6989586621679722677"><span class="hs-identifier hs-var">bsToActivities</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-type">Mile</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679722672"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-157"></span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[SomeActivity Double] -&gt; Result String (SomeActivities Double)
+forall (m :: * -&gt; *) a.
+MonadFail m =&gt;
+[SomeActivity a] -&gt; m (SomeActivities a)
+</span><a href="Pacer.Command.Chart.Data.Activity.html#mkSomeActivitiesFail"><span class="hs-identifier hs-var">Activity.mkSomeActivitiesFail</span></a></span><span> </span><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722675"><span class="hs-identifier hs-var">someActivitiesList</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679722680"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722680"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GarminE -&gt; Eff es (SomeActivities Double)
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">(GarminE -&gt; Eff es (SomeActivities Double))
+-&gt; GarminE -&gt; Eff es (SomeActivities Double)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; GarminE
+</span><a href="Pacer.Exception.html#GarminOther"><span class="hs-identifier hs-var">GarminOther</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722680"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-160"></span><span>    </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679722682"><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679722682"><span class="hs-identifier hs-var">someActivities</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SomeActivities Double -&gt; Eff es (SomeActivities Double)
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679722682"><span class="hs-identifier hs-var">someActivities</span></a></span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-162"></span><span>    </span><span id="local-6989586621679722674"><span class="annot"><span class="annottext">csvOsPath :: OsPath
+</span><a href="#local-6989586621679722674"><span class="hs-identifier hs-var hs-var">csvOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679722671"><span class="hs-identifier hs-var">csvPath</span></a></span><span>
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621679722685"><span class="annot"><span class="annottext">bsToTxt :: LazyByteString -&gt; Text
+</span><a href="#local-6989586621679722685"><span class="hs-identifier hs-var hs-var">bsToTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.UTF8.html/FileSystem.UTF8.html#decodeUtf8Lenient"><span class="hs-identifier hs-var">decodeUtf8Lenient</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text)
+-&gt; (LazyByteString -&gt; ByteString) -&gt; LazyByteString -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LazyByteString -&gt; ByteString
+</span><a href="Pacer.Prelude.html#toStrictBS"><span class="hs-identifier hs-var">toStrictBS</span></a></span><span>
+</span><span id="line-164"></span><span>
+</span><span id="line-165"></span><span>    </span><span class="annot"><a href="#local-6989586621679722677"><span class="hs-identifier hs-type">bsToActivities</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-166"></span><span>      </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679722332"><span class="annot"><a href="#local-6989586621679722332"><span class="hs-identifier hs-type">d</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-167"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722332"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-168"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-169"></span><span>      </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722669"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivity"><span class="hs-identifier hs-type">SomeActivity</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-170"></span><span>    </span><span id="local-6989586621679722677"><span class="annot"><span class="annottext">bsToActivities :: forall (d :: DistanceUnit) -&gt;
+SingI d =&gt; ByteString -&gt; Eff es [SomeActivity Double]
+</span><a href="#local-6989586621679722677"><span class="hs-identifier hs-var hs-var">bsToActivities</span></a></span></span><span> </span><span id="local-6989586621679722718"><span class="annot"><a href="#local-6989586621679722718"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679722719"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679722719"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-171"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a.
+FromNamedRecord a =&gt;
+LazyByteString -&gt; Either String (Header, Records a)
+</span><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#decodeByName"><span class="hs-identifier hs-var">Csv.decodeByName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAct"><span class="hs-identifier hs-type">GarminAct</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722718"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; LazyByteString
+</span><a href="Pacer.Prelude.html#fromStrictBS"><span class="hs-identifier hs-var">fromStrictBS</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679722719"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-172"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679722722"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722722"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GarminE -&gt; Eff es [SomeActivity Double]
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">(GarminE -&gt; Eff es [SomeActivity Double])
+-&gt; GarminE -&gt; Eff es [SomeActivity Double]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; GarminE
+</span><a href="Pacer.Exception.html#GarminDecode"><span class="hs-identifier hs-var">GarminDecode</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722722"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-173"></span><span>        </span><span class="hs-comment">-- idx starts at 2 because of the header</span><span>
+</span><span id="line-174"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Header
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722723"><span class="annot"><span class="annottext">Records (GarminAct d Double)
+</span><a href="#local-6989586621679722723"><span class="hs-identifier hs-var">rs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-175"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722724"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722724"><span class="hs-identifier hs-var">posErrs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722725"><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722725"><span class="hs-identifier hs-var">acts</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GarminAcc -&gt; Records (GarminAct d Double) -&gt; Eff es GarminAcc
+forall (d :: DistanceUnit).
+SingI d =&gt;
+GarminAcc -&gt; Records (GarminAct d Double) -&gt; Eff es GarminAcc
+</span><a href="#local-6989586621679722726"><span class="hs-identifier hs-var">foldGarmin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Records (GarminAct d Double)
+</span><a href="#local-6989586621679722723"><span class="hs-identifier hs-var">rs</span></a></span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722724"><span class="hs-identifier hs-var">posErrs</span></a></span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; [Natural] -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-178"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679722728"><span class="annot"><span class="annottext">errsList :: Text
+</span><a href="#local-6989586621679722728"><span class="hs-identifier hs-var hs-var">errsList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#displaySummarizedSequences"><span class="hs-identifier hs-var">displaySummarizedSequences</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Natural] -&gt; [Natural]
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">L.reverse</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722724"><span class="hs-identifier hs-var">posErrs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-179"></span><span>
+</span><span id="line-180"></span><span>            </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logWarn"><span class="hs-identifier hs-type">Logger.logWarn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>              </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Skipping non-positive values found on line(s): &quot;</span></span><span>
+</span><span id="line-182"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722728"><span class="hs-identifier hs-var">errsList</span></a></span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722725"><span class="hs-identifier hs-var">acts</span></a></span><span>
+</span><span id="line-185"></span><span>
+</span><span id="line-186"></span><span>    </span><span id="local-6989586621679722357"><span class="annot"><a href="#local-6989586621679722737"><span class="hs-identifier hs-type">toSomeActivity</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722357"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAct"><span class="hs-identifier hs-type">GarminAct</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722357"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivity"><span class="hs-identifier hs-type">SomeActivity</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span></span><span>
+</span><span id="line-187"></span><span>    </span><span id="local-6989586621679722737"><span class="annot"><span class="annottext">toSomeActivity :: forall (d :: DistanceUnit).
+SingI d =&gt;
+GarminAct d Double -&gt; SomeActivity Double
+</span><a href="#local-6989586621679722737"><span class="hs-identifier hs-var hs-var">toSomeActivity</span></a></span></span><span> </span><span class="hs-glyph">@</span><span id="local-6989586621679722747"><span class="annot"><a href="#local-6989586621679722747"><span class="hs-identifier hs-type hs-type">d</span></a></span></span><span> </span><span id="local-6989586621679722748"><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722748"><span class="hs-identifier hs-var">gr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-188"></span><span>      </span><span class="annot"><span class="annottext">Sing d -&gt; Activity d Double -&gt; SomeActivity Double
+forall (d :: DistanceUnit) a.
+Sing d -&gt; Activity d a -&gt; SomeActivity a
+</span><a href="Pacer.Command.Chart.Data.Activity.html#MkSomeActivity"><span class="hs-identifier hs-var">MkSomeActivity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (a :: k). SingI a =&gt; Sing a
+forall (a :: DistanceUnit). SingI a =&gt; Sing a
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#sing"><span class="hs-identifier hs-var">sing</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679722747"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-189"></span><span>        </span><span class="annot"><span class="annottext">(Activity d Double -&gt; SomeActivity Double)
+-&gt; Activity d Double -&gt; SomeActivity Double
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#MkActivity"><span class="hs-identifier hs-type">MkActivity</span></a></span><span>
+</span><span id="line-190"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">atype :: Maybe ActivityType
+</span><a href="Pacer.Command.Chart.Data.Activity.html#atype"><span class="hs-identifier hs-var">atype</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActivityType -&gt; Maybe ActivityType
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722748"><span class="hs-identifier hs-var">gr</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">atype</span><span class="hs-special">,</span><span>
+</span><span id="line-191"></span><span>            </span><span class="annot"><span class="annottext">datetime :: Timestamp
+</span><a href="Pacer.Command.Chart.Data.Activity.html#datetime"><span class="hs-identifier hs-var">datetime</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722748"><span class="hs-identifier hs-var">gr</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">datetime</span><span class="hs-special">,</span><span>
+</span><span id="line-192"></span><span>            </span><span class="annot"><span class="annottext">distance :: Distance d Double
+</span><a href="Pacer.Command.Chart.Data.Activity.html#distance"><span class="hs-identifier hs-var">distance</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Distance d Double -&gt; Distance d Double
+forall (d :: DistanceUnit) a (e :: DistanceUnit).
+Distance d a -&gt; Distance e a
+</span><a href="Pacer.Data.Distance.html#forceUnit"><span class="hs-identifier hs-var">Distance.forceUnit</span></a></span><span> </span><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722748"><span class="hs-identifier hs-var">gr</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">distance</span><span class="hs-special">,</span><span>
+</span><span id="line-193"></span><span>            </span><span class="annot"><span class="annottext">duration :: Duration Double
+</span><a href="Pacer.Command.Chart.Data.Activity.html#duration"><span class="hs-identifier hs-var">duration</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722748"><span class="hs-identifier hs-var">gr</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">duration</span><span class="hs-special">,</span><span>
+</span><span id="line-194"></span><span>            </span><span class="annot"><span class="annottext">labels :: Set Label
+</span><a href="Pacer.Command.Chart.Data.Activity.html#labels"><span class="hs-identifier hs-var">labels</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Label] -&gt; Set Label
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-195"></span><span>            </span><span class="annot"><span class="annottext">title :: Maybe Text
+</span><a href="Pacer.Command.Chart.Data.Activity.html#title"><span class="hs-identifier hs-var">title</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722748"><span class="hs-identifier hs-var">gr</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">title</span><span>
+</span><span id="line-196"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-197"></span><span>
+</span><span id="line-198"></span><span>    </span><span class="annot"><a href="#local-6989586621679722726"><span class="hs-identifier hs-type">foldGarmin</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-199"></span><span>      </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679722346"><span class="annot"><a href="#local-6989586621679722346"><span class="hs-identifier hs-type">d</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-200"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722346"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-201"></span><span>      </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAcc"><span class="hs-identifier hs-type">GarminAcc</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-202"></span><span>      </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#Records"><span class="hs-identifier hs-type">Records</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAct"><span class="hs-identifier hs-type">GarminAct</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722346"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-203"></span><span>      </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722669"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAcc"><span class="hs-identifier hs-type">GarminAcc</span></a></span><span>
+</span><span id="line-204"></span><span>    </span><span id="local-6989586621679722726"><span class="annot"><span class="annottext">foldGarmin :: forall (d :: DistanceUnit).
+SingI d =&gt;
+GarminAcc -&gt; Records (GarminAct d Double) -&gt; Eff es GarminAcc
+</span><a href="#local-6989586621679722726"><span class="hs-identifier hs-var hs-var">foldGarmin</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621679722783"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722783"><span class="hs-identifier hs-var">idx</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722784"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722784"><span class="hs-identifier hs-var">posErrs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722785"><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722785"><span class="hs-identifier hs-var">activitiesList</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-205"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span id="local-6989586621679722786"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621679722786"><span class="hs-identifier hs-var">mErr</span></a></span></span><span> </span><span id="local-6989586621679722787"><span class="annot"><span class="annottext">LazyByteString
+</span><a href="#local-6989586621679722787"><span class="hs-identifier hs-var">leftover</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-206"></span><span>        </span><span class="hs-comment">-- log leftover data</span><span>
+</span><span id="line-207"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LazyByteString -&gt; Bool
+</span><span class="hs-identifier hs-var">BSL.null</span></span><span> </span><span class="annot"><span class="annottext">LazyByteString
+</span><a href="#local-6989586621679722787"><span class="hs-identifier hs-var">leftover</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-208"></span><span>          </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logWarn"><span class="hs-identifier hs-type">Logger.logWarn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-209"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Csv bytes leftover on line &quot;</span></span><span>
+</span><span id="line-210"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Pacer.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722783"><span class="hs-identifier hs-var">idx</span></a></span><span>
+</span><span id="line-211"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;: &quot;</span></span><span>
+</span><span id="line-212"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LazyByteString -&gt; Text
+</span><a href="#local-6989586621679722685"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(LazyByteString -&gt; Text) -&gt; LazyByteString -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LazyByteString
+</span><a href="#local-6989586621679722787"><span class="hs-identifier hs-var">leftover</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-213"></span><span>
+</span><span id="line-214"></span><span>        </span><span id="local-6989586621679722789"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722789"><span class="hs-identifier hs-var">posErrs'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621679722786"><span class="hs-identifier hs-var">mErr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-215"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679722790"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722790"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; Natural -&gt; String -&gt; Eff es [Natural]
+</span><a href="#local-6989586621679722791"><span class="hs-identifier hs-var">handleErr</span></a></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722784"><span class="hs-identifier hs-var">posErrs</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722783"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722790"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-216"></span><span>          </span><span class="annot"><span class="annottext">Maybe String
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; Eff es [Natural]
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722784"><span class="hs-identifier hs-var">posErrs</span></a></span><span>
+</span><span id="line-217"></span><span>
+</span><span id="line-218"></span><span>        </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722783"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Natural
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722789"><span class="hs-identifier hs-var">posErrs'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722785"><span class="hs-identifier hs-var">activitiesList</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-219"></span><span>      </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#Cons"><span class="hs-identifier hs-type">Cons</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679722793"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722793"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679722794"><span class="annot"><span class="annottext">Records (GarminAct d Double)
+</span><a href="#local-6989586621679722794"><span class="hs-identifier hs-var">rs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-220"></span><span>        </span><span id="local-6989586621679722795"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722795"><span class="hs-identifier hs-var">posErrs'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; Natural -&gt; String -&gt; Eff es [Natural]
+</span><a href="#local-6989586621679722791"><span class="hs-identifier hs-var">handleErr</span></a></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722784"><span class="hs-identifier hs-var">posErrs</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722783"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722793"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-221"></span><span>
+</span><span id="line-222"></span><span>        </span><span class="annot"><span class="annottext">GarminAcc -&gt; Records (GarminAct d Double) -&gt; Eff es GarminAcc
+forall (d :: DistanceUnit).
+SingI d =&gt;
+GarminAcc -&gt; Records (GarminAct d Double) -&gt; Eff es GarminAcc
+</span><a href="#local-6989586621679722726"><span class="hs-identifier hs-var">foldGarmin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722783"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Natural
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722795"><span class="hs-identifier hs-var">posErrs'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722785"><span class="hs-identifier hs-var">activitiesList</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Records (GarminAct d Double)
+</span><a href="#local-6989586621679722794"><span class="hs-identifier hs-var">rs</span></a></span><span>
+</span><span id="line-223"></span><span>      </span><span class="annot"><a href="file:///nix/store/qhx3pf95yimacksb49609samqvp32kzs-cassava-0.5.3.2-doc/share/doc/cassava-0.5.3.2/html/src/Data.Csv.Streaming.html/Data.Csv.Streaming.html#Cons"><span class="hs-identifier hs-type">Cons</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679722796"><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722796"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679722797"><span class="annot"><span class="annottext">Records (GarminAct d Double)
+</span><a href="#local-6989586621679722797"><span class="hs-identifier hs-var">rs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-224"></span><span>        </span><span class="annot"><span class="annottext">GarminAcc -&gt; Records (GarminAct d Double) -&gt; Eff es GarminAcc
+forall (d :: DistanceUnit).
+SingI d =&gt;
+GarminAcc -&gt; Records (GarminAct d Double) -&gt; Eff es GarminAcc
+</span><a href="#local-6989586621679722726"><span class="hs-identifier hs-var">foldGarmin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722783"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Natural
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722784"><span class="hs-identifier hs-var">posErrs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall (d :: DistanceUnit).
+SingI d =&gt;
+GarminAct d Double -&gt; SomeActivity Double
+</span><a href="#local-6989586621679722737"><span class="hs-identifier hs-var">toSomeActivity</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679722346"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><span class="annottext">GarminAct d Double
+</span><a href="#local-6989586621679722796"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">SomeActivity Double
+-&gt; [SomeActivity Double] -&gt; [SomeActivity Double]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[SomeActivity Double]
+</span><a href="#local-6989586621679722785"><span class="hs-identifier hs-var">activitiesList</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Records (GarminAct d Double)
+</span><a href="#local-6989586621679722797"><span class="hs-identifier hs-var">rs</span></a></span><span>
+</span><span id="line-225"></span><span>
+</span><span id="line-226"></span><span>    </span><span class="hs-comment">-- Basically, handle known errors better than always printing out each</span><span>
+</span><span id="line-227"></span><span>    </span><span class="hs-comment">-- one individually. At least for zero errors this is way too verbose.</span><span>
+</span><span id="line-228"></span><span>    </span><span class="annot"><a href="#local-6989586621679722791"><span class="hs-identifier hs-type">handleErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722669"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-229"></span><span>    </span><span id="local-6989586621679722791"><span class="annot"><span class="annottext">handleErr :: [Natural] -&gt; Natural -&gt; String -&gt; Eff es [Natural]
+</span><a href="#local-6989586621679722791"><span class="hs-identifier hs-var hs-var">handleErr</span></a></span></span><span> </span><span id="local-6989586621679722798"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722798"><span class="hs-identifier hs-var">nonPosErrs</span></a></span></span><span> </span><span id="local-6989586621679722799"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722799"><span class="hs-identifier hs-var">idx</span></a></span></span><span> </span><span id="local-6989586621679722800"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722800"><span class="hs-identifier hs-var">err</span></a></span></span><span>
+</span><span id="line-230"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679722801"><span class="hs-identifier hs-var">isNonPosErr</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; Eff es [Natural]
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">([Natural] -&gt; Eff es [Natural]) -&gt; [Natural] -&gt; Eff es [Natural]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722799"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; [Natural] -&gt; [Natural]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722798"><span class="hs-identifier hs-var">nonPosErrs</span></a></span><span>
+</span><span id="line-231"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-232"></span><span>          </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logError"><span class="hs-identifier hs-type">Logger.logError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-233"></span><span>            </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Csv parse error on line &quot;</span></span><span>
+</span><span id="line-234"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Pacer.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722799"><span class="hs-identifier hs-var">idx</span></a></span><span>
+</span><span id="line-235"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;: &quot;</span></span><span>
+</span><span id="line-236"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722804"><span class="hs-identifier hs-var">errTxt</span></a></span><span>
+</span><span id="line-237"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722798"><span class="hs-identifier hs-var">nonPosErrs</span></a></span><span>
+</span><span id="line-238"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-239"></span><span>        </span><span id="local-6989586621679722804"><span class="annot"><span class="annottext">errTxt :: Text
+</span><a href="#local-6989586621679722804"><span class="hs-identifier hs-var hs-var">errTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Pacer.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679722800"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-240"></span><span>        </span><span id="local-6989586621679722801"><span class="annot"><span class="annottext">isNonPosErr :: Bool
+</span><a href="#local-6989586621679722801"><span class="hs-identifier hs-var hs-var">isNonPosErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;non-positive&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><span class="hs-operator hs-var">`T.isInfixOf`</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722804"><span class="hs-identifier hs-var">errTxt</span></a></span><span>
+</span><span id="line-241"></span><span>
+</span><span id="line-242"></span><span class="hs-comment">-- Summarizes list of natural e.g.</span><span>
+</span><span id="line-243"></span><span class="hs-comment">--</span><span>
+</span><span id="line-244"></span><span class="hs-comment">-- &#955;. displaySummarizedSequences [1,2,3,5,8,10,11,14,15,16]</span><span>
+</span><span id="line-245"></span><span class="hs-comment">-- &quot;[1-3,5,8,10-11,14-16]&quot;</span><span>
+</span><span id="line-246"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#displaySummarizedSequences"><span class="hs-identifier hs-type">displaySummarizedSequences</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-247"></span><span id="displaySummarizedSequences"><span class="annot"><span class="annottext">displaySummarizedSequences :: [Natural] -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#displaySummarizedSequences"><span class="hs-identifier hs-var hs-var">displaySummarizedSequences</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[Natural]] -&gt; Text
+forall {f :: * -&gt; *}. Foldable f =&gt; f [Natural] -&gt; Text
+</span><a href="#local-6989586621679722807"><span class="hs-identifier hs-var">showFn</span></a></span><span> </span><span class="annot"><span class="annottext">([[Natural]] -&gt; Text)
+-&gt; ([Natural] -&gt; [[Natural]]) -&gt; [Natural] -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; [[Natural]]
+</span><a href="#local-6989586621679722808"><span class="hs-identifier hs-var">groupSequential</span></a></span><span>
+</span><span id="line-248"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-249"></span><span>    </span><span id="local-6989586621679722807"><span class="annot"><span class="annottext">showFn :: f [Natural] -&gt; Text
+</span><a href="#local-6989586621679722807"><span class="hs-identifier hs-var hs-var">showFn</span></a></span></span><span> </span><span id="local-6989586621679722816"><span class="annot"><span class="annottext">f [Natural]
+</span><a href="#local-6989586621679722816"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-250"></span><span>      </span><span class="annot"><span class="annottext">ShowListStyle f Text -&gt; Text
+forall (f :: * -&gt; *) r.
+(Foldable f, IsString r, Semigroup r) =&gt;
+ShowListStyle f r -&gt; r
+</span><a href="Pacer.Utils.Show.html#showListLike"><span class="hs-identifier hs-var">Utils.Show.showListLike</span></a></span><span>
+</span><span id="line-251"></span><span>        </span><span class="annot"><span class="annottext">(ShowListStyle f Text -&gt; Text)
+-&gt; (ShowListInlineConfig -&gt; ShowListStyle f Text)
+-&gt; ShowListInlineConfig
+-&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ShowListTarget f Text
+-&gt; ShowListInlineConfig -&gt; ShowListStyle f Text
+forall (f :: * -&gt; *) r.
+ShowListTarget f r -&gt; ShowListInlineConfig -&gt; ShowListStyle f r
+</span><a href="Pacer.Utils.Show.html#ShowListInline"><span class="hs-identifier hs-var">Utils.Show.ShowListInline</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">([Natural] -&gt; Text) -&gt; f [Natural] -&gt; ShowListTarget f Text
+forall a r (f :: * -&gt; *). (a -&gt; r) -&gt; f a -&gt; ShowListTarget f r
+</span><a href="Pacer.Utils.Show.html#ShowListMap"><span class="hs-identifier hs-var">Utils.Show.ShowListMap</span></a></span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; Text
+</span><a href="#local-6989586621679722820"><span class="hs-identifier hs-var">showGroup</span></a></span><span> </span><span class="annot"><span class="annottext">f [Natural]
+</span><a href="#local-6989586621679722816"><span class="hs-identifier hs-var">xs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-252"></span><span>        </span><span class="annot"><span class="annottext">(ShowListInlineConfig -&gt; Text) -&gt; ShowListInlineConfig -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ShowListInlineConfig
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="Pacer.Utils.Show.html#spaces"><span class="hs-identifier hs-var">Utils.Show.spaces</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">False</span></span><span class="hs-special">}</span><span>
+</span><span id="line-253"></span><span>
+</span><span id="line-254"></span><span>    </span><span class="annot"><a href="#local-6989586621679722820"><span class="hs-identifier hs-type">showGroup</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-255"></span><span>    </span><span id="local-6989586621679722820"><span class="annot"><span class="annottext">showGroup :: [Natural] -&gt; Text
+</span><a href="#local-6989586621679722820"><span class="hs-identifier hs-var hs-var">showGroup</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-256"></span><span>    </span><span class="annot"><a href="#local-6989586621679722820"><span class="hs-identifier hs-var">showGroup</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679722822"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722822"><span class="hs-identifier hs-var">start</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621679722823"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722823"><span class="hs-identifier hs-var">es</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; Maybe ([Natural], Natural)
+forall a. [a] -&gt; Maybe ([a], a)
+</span><span class="hs-identifier hs-var">L.unsnoc</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722823"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-257"></span><span>      </span><span class="annot"><span class="annottext">Maybe ([Natural], Natural)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Pacer.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722822"><span class="hs-identifier hs-var">start</span></a></span><span>
+</span><span id="line-258"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Natural]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722825"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722825"><span class="hs-identifier hs-var">end</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Pacer.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722822"><span class="hs-identifier hs-var">start</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;-&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Pacer.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722825"><span class="hs-identifier hs-var">end</span></a></span><span>
+</span><span id="line-259"></span><span>
+</span><span id="line-260"></span><span>    </span><span class="annot"><a href="#local-6989586621679722808"><span class="hs-identifier hs-type">groupSequential</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-261"></span><span>    </span><span id="local-6989586621679722808"><span class="annot"><span class="annottext">groupSequential :: [Natural] -&gt; [[Natural]]
+</span><a href="#local-6989586621679722808"><span class="hs-identifier hs-var hs-var">groupSequential</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-262"></span><span>    </span><span class="annot"><a href="#local-6989586621679722808"><span class="hs-identifier hs-var">groupSequential</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679722826"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722826"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621679722827"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722827"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; [Natural] -&gt; [Natural] -&gt; ([Natural], [Natural])
+</span><a href="#local-6989586621679722828"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722826"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722827"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-263"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621679722829"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722829"><span class="hs-identifier hs-var">grp</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[Natural] -&gt; [Natural]
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">L.reverse</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722829"><span class="hs-identifier hs-var">grp</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-264"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621679722830"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722830"><span class="hs-identifier hs-var">grp</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679722831"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722831"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; [Natural]
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">L.reverse</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722830"><span class="hs-identifier hs-var">grp</span></a></span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; [[Natural]] -&gt; [[Natural]]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Natural] -&gt; [[Natural]]
+</span><a href="#local-6989586621679722808"><span class="hs-identifier hs-var">groupSequential</span></a></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722831"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-265"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-266"></span><span>        </span><span id="local-6989586621679722828"><span class="annot"><span class="annottext">go :: Natural -&gt; [Natural] -&gt; [Natural] -&gt; ([Natural], [Natural])
+</span><a href="#local-6989586621679722828"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679722832"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722832"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722832"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-267"></span><span>        </span><span class="annot"><a href="#local-6989586621679722828"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679722833"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722833"><span class="hs-identifier hs-var">cnt</span></a></span></span><span> </span><span id="local-6989586621679722834"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722834"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679722835"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722835"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621679722836"><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722836"><span class="hs-identifier hs-var">ys</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-268"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722835"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Natural
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722826"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722833"><span class="hs-identifier hs-var">cnt</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; [Natural] -&gt; [Natural] -&gt; ([Natural], [Natural])
+</span><a href="#local-6989586621679722828"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722833"><span class="hs-identifier hs-var">cnt</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Natural
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722835"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; [Natural] -&gt; [Natural]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722834"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722836"><span class="hs-identifier hs-var">ys</span></a></span><span>
+</span><span id="line-269"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722834"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679722835"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; [Natural] -&gt; [Natural]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Natural]
+</span><a href="#local-6989586621679722836"><span class="hs-identifier hs-var">ys</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-270"></span><span>
+</span><span id="line-271"></span><span class="hs-comment">-- Index and parsed activities</span><span>
+</span><span id="line-272"></span><span class="hs-keyword">type</span><span> </span><span id="GarminAcc"><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#GarminAcc"><span class="hs-identifier hs-var">GarminAcc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-273"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Tuple3</span></span><span>
+</span><span id="line-274"></span><span>    </span><span class="hs-comment">-- index</span><span>
+</span><span id="line-275"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span>
+</span><span id="line-276"></span><span>    </span><span class="hs-comment">-- non-positive errors</span><span>
+</span><span id="line-277"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-278"></span><span>    </span><span class="hs-comment">-- result</span><span>
+</span><span id="line-279"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivity"><span class="hs-identifier hs-type">SomeActivity</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-280"></span><span>
+</span><span id="line-281"></span><span class="hs-comment">-- heuristics to decide if we should decode csv or json.</span><span>
+</span><span id="line-282"></span><span id="local-6989586621679722384"><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html#getActivitiesType"><span class="hs-identifier hs-type">getActivitiesType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-283"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722384"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-284"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Activities path.</span></span><span>
+</span><span id="line-285"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-286"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679722384"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ActivitiesType"><span class="hs-identifier hs-type">ActivitiesType</span></a></span></span><span>
+</span><span id="line-287"></span><span id="getActivitiesType"><span class="annot"><span class="annottext">getActivitiesType :: forall (es :: [Effect]).
+(Logger :&gt; es) =&gt;
+Path Abs File -&gt; Eff es ActivitiesType
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#getActivitiesType"><span class="hs-identifier hs-var hs-var">getActivitiesType</span></a></span></span><span> </span><span id="local-6989586621679722872"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679722872"><span class="hs-identifier hs-var">activitiesPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-288"></span><span>  </span><span class="hs-keyword">if</span><span>
+</span><span id="line-289"></span><span>    </span><span class="hs-comment">-- 1. Ends w/ .csv -&gt; read garmin csv</span><span>
+</span><span id="line-290"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722873"><span class="hs-identifier hs-var">activitiesExt</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; OsPath -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="">[osp|.csv|]</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ActivitiesType -&gt; Eff es ActivitiesType
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ActivitiesType
+</span><a href="Pacer.Command.Chart.Params.html#ActivitiesGarmin"><span class="hs-identifier hs-var">ActivitiesGarmin</span></a></span><span>
+</span><span id="line-291"></span><span>    </span><span class="hs-comment">-- 2. Ends w/ .json -&gt; read custom json</span><span>
+</span><span id="line-292"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722873"><span class="hs-identifier hs-var">activitiesExt</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; OsPath -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="">[osp|.json|]</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ActivitiesType -&gt; Eff es ActivitiesType
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ActivitiesType
+</span><a href="Pacer.Command.Chart.Params.html#ActivitiesDefault"><span class="hs-identifier hs-var">ActivitiesDefault</span></a></span><span>
+</span><span id="line-293"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722873"><span class="hs-identifier hs-var">activitiesExt</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; OsPath -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="">[osp|.jsonc|]</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ActivitiesType -&gt; Eff es ActivitiesType
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ActivitiesType
+</span><a href="Pacer.Command.Chart.Params.html#ActivitiesDefault"><span class="hs-identifier hs-var">ActivitiesDefault</span></a></span><span>
+</span><span id="line-294"></span><span>    </span><span class="hs-comment">-- 3. Name contains the strings 'garmin', assume csv</span><span>
+</span><span id="line-295"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;garmin&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><span class="hs-operator hs-var">`T.isInfixOf`</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722878"><span class="hs-identifier hs-var">activitiesBaseNameTxt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ActivitiesType -&gt; Eff es ActivitiesType
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ActivitiesType
+</span><a href="Pacer.Command.Chart.Params.html#ActivitiesGarmin"><span class="hs-identifier hs-var">ActivitiesGarmin</span></a></span><span>
+</span><span id="line-296"></span><span>    </span><span class="hs-comment">-- 4. Otherwise default to json</span><span>
+</span><span id="line-297"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-298"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679722879"><span class="annot"><span class="annottext">msg :: Text
+</span><a href="#local-6989586621679722879"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-299"></span><span>              </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-300"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unknown file type: '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-301"></span><span>                  </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Pacer.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier hs-var">decodeLenient</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722880"><span class="hs-identifier hs-var">activitiesOsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-302"></span><span>                  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;'. Guessing custom json format.&quot;</span></span><span>
+</span><span id="line-303"></span><span>                </span><span class="hs-special">]</span><span>
+</span><span id="line-304"></span><span>        </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logWarn"><span class="hs-identifier hs-type">Logger.logWarn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679722879"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-305"></span><span>        </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">ActivitiesType
+</span><a href="Pacer.Command.Chart.Params.html#ActivitiesDefault"><span class="hs-identifier hs-var">ActivitiesDefault</span></a></span><span>
+</span><span id="line-306"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-307"></span><span>    </span><span id="local-6989586621679722880"><span class="annot"><span class="annottext">activitiesOsPath :: OsPath
+</span><a href="#local-6989586621679722880"><span class="hs-identifier hs-var hs-var">activitiesOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679722872"><span class="hs-identifier hs-var">activitiesPath</span></a></span><span>
+</span><span id="line-308"></span><span>    </span><span id="local-6989586621679722881"><span class="annot"><span class="annottext">activitiesBaseName :: OsPath
+</span><a href="#local-6989586621679722881"><span class="hs-identifier hs-var hs-var">activitiesBaseName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; OsPath
+</span><span class="hs-identifier hs-var">OsPath.takeBaseName</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722880"><span class="hs-identifier hs-var">activitiesOsPath</span></a></span><span>
+</span><span id="line-309"></span><span>    </span><span id="local-6989586621679722878"><span class="annot"><span class="annottext">activitiesBaseNameTxt :: Text
+</span><a href="#local-6989586621679722878"><span class="hs-identifier hs-var hs-var">activitiesBaseNameTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.toCaseFold</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Pacer.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier hs-var">decodeLenient</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722881"><span class="hs-identifier hs-var">activitiesBaseName</span></a></span><span>
+</span><span id="line-310"></span><span>    </span><span id="local-6989586621679722873"><span class="annot"><span class="annottext">activitiesExt :: OsPath
+</span><a href="#local-6989586621679722873"><span class="hs-identifier hs-var hs-var">activitiesExt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; OsPath
+</span><span class="hs-identifier hs-var">OsPath.takeExtension</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679722880"><span class="hs-identifier hs-var">activitiesOsPath</span></a></span><span>
+</span><span id="line-311"></span></pre></body></html>

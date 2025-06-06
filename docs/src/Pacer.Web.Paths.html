@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Web.Paths.html"><span class="hs-identifier">Pacer.Web.Paths</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Internal paths</span></span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalPaths"><span class="hs-identifier">webInternalPaths</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier">webInternalDirs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier">webInternalFiles</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Paths</span></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier">webDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#distDir"><span class="hs-identifier">distDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#getWebPath"><span class="hs-identifier">getWebPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Functions</span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Pacer.Web.Paths.html#readWebDirTH"><span class="hs-identifier">readWebDirTH</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html"><span class="hs-identifier">Effectful.FileSystem.PathReader.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PR</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html"><span class="hs-identifier">FileSystem.OsPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier">decodeLenient</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Code</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Web.Utils.html"><span class="hs-identifier">Pacer.Web.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WUtils</span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="annot"><span class="hs-comment">-- | Reads the web directory at compile-time.</span></span><span>
+</span><span id="line-26"></span><span class="annot"><a href="Pacer.Web.Paths.html#readWebDirTH"><span class="hs-identifier hs-type">readWebDirTH</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Code</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span id="readWebDirTH"><span class="annot"><span class="annottext">readWebDirTH :: Code Q [(Path Rel File, ByteString)]
+</span><a href="Pacer.Web.Paths.html#readWebDirTH"><span class="hs-identifier hs-var hs-var">readWebDirTH</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO [(Path Rel File, ByteString)]
+-&gt; Code Q [(Path Rel File, ByteString)]
+forall a. (HasCallStack, Lift a) =&gt; IO a -&gt; Code Q a
+</span><a href="Pacer.Web.Utils.html#liftIOToTH"><span class="hs-identifier hs-var">WUtils.liftIOToTH</span></a></span><span> </span><span class="annot"><span class="annottext">IO [(Path Rel File, ByteString)]
+</span><a href="Pacer.Web.Paths.html#readWebDirIO"><span class="hs-identifier hs-var">readWebDirIO</span></a></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="annot"><a href="Pacer.Web.Paths.html#readWebDirIO"><span class="hs-identifier hs-type">readWebDirIO</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span id="readWebDirIO"><span class="annot"><span class="annottext">readWebDirIO :: IO [(Path Rel File, ByteString)]
+</span><a href="Pacer.Web.Paths.html#readWebDirIO"><span class="hs-identifier hs-var hs-var">readWebDirIO</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Eff '[PathReader, FileReader, IOE] [(Path Rel File, ByteString)]
+-&gt; IO [(Path Rel File, ByteString)]
+forall {a}. Eff '[PathReader, FileReader, IOE] a -&gt; IO a
+</span><a href="#local-6989586621679728960"><span class="hs-identifier hs-var">runner</span></a></span><span> </span><span class="annot"><span class="annottext">(Eff '[PathReader, FileReader, IOE] [(Path Rel File, ByteString)]
+ -&gt; IO [(Path Rel File, ByteString)])
+-&gt; Eff '[PathReader, FileReader, IOE] [(Path Rel File, ByteString)]
+-&gt; IO [(Path Rel File, ByteString)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><span class="annottext">[Path Rel File]
+-&gt; (Path Rel File
+    -&gt; Eff '[PathReader, FileReader, IOE] (Path Rel File, ByteString))
+-&gt; Eff '[PathReader, FileReader, IOE] [(Path Rel File, ByteString)]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f (t b)
+</span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">[Path Rel File]
+</span><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-var">webInternalFiles</span></a></span><span> </span><span class="annot"><span class="annottext">((Path Rel File
+  -&gt; Eff '[PathReader, FileReader, IOE] (Path Rel File, ByteString))
+ -&gt; Eff
+      '[PathReader, FileReader, IOE] [(Path Rel File, ByteString)])
+-&gt; (Path Rel File
+    -&gt; Eff '[PathReader, FileReader, IOE] (Path Rel File, ByteString))
+-&gt; Eff '[PathReader, FileReader, IOE] [(Path Rel File, ByteString)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679728962"><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679728962"><span class="hs-identifier hs-var">fileName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679728963"><span class="annot"><span class="annottext">path :: Path Rel File
+</span><a href="#local-6989586621679728963"><span class="hs-identifier hs-var hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-var">webDir</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel Dir -&gt; Path Rel File -&gt; Path Rel File
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679728962"><span class="hs-identifier hs-var">fileName</span></a></span><span>
+</span><span id="line-33"></span><span>        </span><span id="local-6989586621679728965"><span class="annot"><span class="annottext">osPath :: OsPath
+</span><a href="#local-6989586621679728965"><span class="hs-identifier hs-var hs-var">osPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Rel File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679728963"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><span id="line-34"></span><span>    </span><span id="local-6989586621679728967"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679728967"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff '[PathReader, FileReader, IOE] Bool
+forall (es :: [(* -&gt; *) -&gt; * -&gt; *]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+OsPath -&gt; Eff es Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#doesFileExist"><span class="hs-identifier hs-var">PR.doesFileExist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Rel File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679728963"><span class="hs-identifier hs-var">path</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><span class="annottext">Bool
+-&gt; Eff '[PathReader, FileReader, IOE] ()
+-&gt; Eff '[PathReader, FileReader, IOE] ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679728967"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">(Eff '[PathReader, FileReader, IOE] ()
+ -&gt; Eff '[PathReader, FileReader, IOE] ())
+-&gt; Eff '[PathReader, FileReader, IOE] ()
+-&gt; Eff '[PathReader, FileReader, IOE] ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679728970"><span class="annot"><span class="annottext">msg :: Text
+</span><a href="#local-6989586621679728970"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-38"></span><span>            </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-39"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Required build file '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>                </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Pacer.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier hs-var">decodeLenient</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679728965"><span class="hs-identifier hs-var">osPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;' does not exist. Has the nodejs frontend been built first? &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Run 'npm install --save &amp;&amp; npm run build' from the web/ &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;directory.&quot;</span></span><span>
+</span><span id="line-44"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Eff '[PathReader, FileReader, IOE] ()
+forall (m :: * -&gt; *) a. (HasCallStack, MonadThrow m) =&gt; Text -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/exception-utils-0.1-39c74f75731d99cbf7b28a31cd5290755ea767b7bab24db8933efe020ecba0e3/share/doc/html/src/Control.Exception.Utils.html/Control.Exception.Utils.html#throwText"><span class="hs-identifier hs-var">throwText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679728970"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span>    </span><span id="local-6989586621679728973"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679728973"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff '[PathReader, FileReader, IOE] ByteString
+forall (es :: [(* -&gt; *) -&gt; * -&gt; *]).
+(FileReader :&gt; es, HasCallStack) =&gt;
+OsPath -&gt; Eff es ByteString
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#readBinaryFile"><span class="hs-identifier hs-var">readBinaryFile</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Rel File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679728963"><span class="hs-identifier hs-var">path</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679728962"><span class="hs-identifier hs-var">fileName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679728973"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>    </span><span id="local-6989586621679728960"><span class="annot"><span class="annottext">runner :: Eff '[PathReader, FileReader, IOE] a -&gt; IO a
+</span><a href="#local-6989586621679728960"><span class="hs-identifier hs-var hs-var">runner</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">Eff '[IOE] a -&gt; IO a
+forall a. HasCallStack =&gt; Eff '[IOE] a -&gt; IO a
+</span><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#runEff"><span class="hs-identifier hs-var">runEff</span></a></span><span>
+</span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">(Eff '[IOE] a -&gt; IO a)
+-&gt; (Eff '[PathReader, FileReader, IOE] a -&gt; Eff '[IOE] a)
+-&gt; Eff '[PathReader, FileReader, IOE] a
+-&gt; IO a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Eff '[FileReader, IOE] a -&gt; Eff '[IOE] a
+forall (es :: [(* -&gt; *) -&gt; * -&gt; *]) a.
+(HasCallStack, IOE :&gt; es) =&gt;
+Eff (FileReader : es) a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#runFileReader"><span class="hs-identifier hs-var">runFileReader</span></a></span><span>
+</span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">(Eff '[FileReader, IOE] a -&gt; Eff '[IOE] a)
+-&gt; (Eff '[PathReader, FileReader, IOE] a
+    -&gt; Eff '[FileReader, IOE] a)
+-&gt; Eff '[PathReader, FileReader, IOE] a
+-&gt; Eff '[IOE] a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Eff '[PathReader, FileReader, IOE] a -&gt; Eff '[FileReader, IOE] a
+forall (es :: [(* -&gt; *) -&gt; * -&gt; *]) a.
+(HasCallStack, IOE :&gt; es) =&gt;
+Eff (PathReader : es) a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#runPathReader"><span class="hs-identifier hs-var">runPathReader</span></a></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="annot"><span class="hs-comment">-- | List of all paths used in frontend build.</span></span><span>
+</span><span id="line-56"></span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalPaths"><span class="hs-identifier hs-type">webInternalPaths</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span id="webInternalPaths"><span class="annot"><span class="annottext">webInternalPaths :: ([Path Rel Dir], [Path Rel File])
+</span><a href="Pacer.Web.Paths.html#webInternalPaths"><span class="hs-identifier hs-var hs-var">webInternalPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Path Rel Dir]
+</span><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier hs-var">webInternalDirs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Path Rel File]
+</span><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-var">webInternalFiles</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | List of all dirs used in frontend build. Nested dirs are only included</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- once e.g. @a/b@ instead of @[a, a/b]@.</span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier hs-type">webInternalDirs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span id="webInternalDirs"><span class="annot"><span class="annottext">webInternalDirs :: [Path Rel Dir]
+</span><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier hs-var hs-var">webInternalDirs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="">[reldirPathSep|dist|]</span></span><span class="hs-special">]</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="annot"><span class="hs-comment">-- | List of all files used in frontend build.</span></span><span>
+</span><span id="line-65"></span><span class="annot"><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-type">webInternalFiles</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span id="webInternalFiles"><span class="annot"><span class="annottext">webInternalFiles :: [Path Rel File]
+</span><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-var hs-var">webInternalFiles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="">[relfilePathSep|dist/index.html|]</span></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="">[relfilePathSep|dist/bundle.js|]</span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="annot"><span class="hs-comment">-- | Web dir name.</span></span><span>
+</span><span id="line-72"></span><span class="annot"><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-type">webDir</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-73"></span><span id="webDir"><span class="annot"><span class="annottext">webDir :: Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-var hs-var">webDir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[reldir|web|]</span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="annot"><span class="hs-comment">-- | Web output dir relative to 'webDir'.</span></span><span>
+</span><span id="line-76"></span><span class="annot"><a href="Pacer.Web.Paths.html#distDir"><span class="hs-identifier hs-type">distDir</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-77"></span><span id="distDir"><span class="annot"><span class="annottext">distDir :: Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#distDir"><span class="hs-identifier hs-var hs-var">distDir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[reldir|dist|]</span></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="annot"><span class="hs-comment">-- | Web destination dir.</span></span><span>
+</span><span id="line-80"></span><span id="local-6989586621679728857"><span class="annot"><a href="Pacer.Web.Paths.html#getWebPath"><span class="hs-identifier hs-type">getWebPath</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679728857"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679728857"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-85"></span><span id="getWebPath"><span class="annot"><span class="annottext">getWebPath :: forall (es :: [(* -&gt; *) -&gt; * -&gt; *]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Eff es (Path Abs Dir)
+</span><a href="Pacer.Web.Paths.html#getWebPath"><span class="hs-identifier hs-var hs-var">getWebPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel Dir -&gt; Path Abs Dir
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel Dir
+</span><a href="Pacer.Web.Paths.html#webDir"><span class="hs-identifier hs-var">webDir</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Path Abs Dir -&gt; Path Abs Dir)
+-&gt; Eff es (Path Abs Dir) -&gt; Eff es (Path Abs Dir)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Eff es (Path Abs Dir)
+forall (es :: [(* -&gt; *) -&gt; * -&gt; *]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Eff es (Path Abs Dir)
+</span><a href="Pacer.Prelude.html#getXdgCachePath"><span class="hs-identifier hs-var">getXdgCachePath</span></a></span><span>
+</span><span id="line-86"></span></pre></body></html>

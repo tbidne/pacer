@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ActivityLabel</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#ActivityLabel"><span class="hs-identifier">ActivityLabel</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#ActivityLabels"><span class="hs-identifier">ActivityLabels</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Map</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MP</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Activity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier">Label</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier">Timestamp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">data</span><span> </span><span id="ActivityLabel"><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#ActivityLabel"><span class="hs-identifier hs-var">ActivityLabel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkActivityLabel"><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#MkActivityLabel"><span class="hs-identifier hs-var">MkActivityLabel</span></a></span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="datetime"><span class="annot"><span class="annottext">ActivityLabel -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.ActivityLabel.html#datetime"><span class="hs-identifier hs-var hs-var">datetime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span id="labels"><span class="annot"><span class="annottext">ActivityLabel -&gt; NESet Label
+</span><a href="Pacer.Command.Chart.Data.ActivityLabel.html#labels"><span class="hs-identifier hs-var hs-var">labels</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Set.NonEmpty.Internal.html/Data.Set.NonEmpty.Internal.html#NESet"><span class="hs-identifier hs-type">NESet</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier hs-type">Label</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679719795"><span id="local-6989586621679719802"><span class="annot"><span class="annottext">ActivityLabel -&gt; ActivityLabel -&gt; Bool
+(ActivityLabel -&gt; ActivityLabel -&gt; Bool)
+-&gt; (ActivityLabel -&gt; ActivityLabel -&gt; Bool) -&gt; Eq ActivityLabel
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ActivityLabel -&gt; ActivityLabel -&gt; Bool
+== :: ActivityLabel -&gt; ActivityLabel -&gt; Bool
+$c/= :: ActivityLabel -&gt; ActivityLabel -&gt; Bool
+/= :: ActivityLabel -&gt; ActivityLabel -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679719808"><span id="local-6989586621679719817"><span id="local-6989586621679719821"><span class="annot"><span class="annottext">Int -&gt; ActivityLabel -&gt; ShowS
+[ActivityLabel] -&gt; ShowS
+ActivityLabel -&gt; String
+(Int -&gt; ActivityLabel -&gt; ShowS)
+-&gt; (ActivityLabel -&gt; String)
+-&gt; ([ActivityLabel] -&gt; ShowS)
+-&gt; Show ActivityLabel
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ActivityLabel -&gt; ShowS
+showsPrec :: Int -&gt; ActivityLabel -&gt; ShowS
+$cshow :: ActivityLabel -&gt; String
+show :: ActivityLabel -&gt; String
+$cshowList :: [ActivityLabel] -&gt; ShowS
+showList :: [ActivityLabel] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679719828"><span id="local-6989586621679719832"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#ActivityLabel"><span class="hs-identifier hs-type">ActivityLabel</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621679719854"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ActivityLabel
+</span><a href="#local-6989586621679719854"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser ActivityLabel)
+-&gt; Value
+-&gt; Parser ActivityLabel
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithObject"><span class="hs-identifier hs-var">asnWithObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;ActivityLabel&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser ActivityLabel) -&gt; Value -&gt; Parser ActivityLabel)
+-&gt; (Object -&gt; Parser ActivityLabel)
+-&gt; Value
+-&gt; Parser ActivityLabel
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679719857"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679719857"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-25"></span><span>    </span><span id="local-6989586621679719858"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679719858"><span class="hs-identifier hs-var">datetime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679719857"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Timestamp
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;datetime&quot;</span></span><span>
+</span><span id="line-26"></span><span>    </span><span id="local-6989586621679719860"><span class="annot"><span class="annottext">NESet Label
+</span><a href="#local-6989586621679719860"><span class="hs-identifier hs-var">labels</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679719857"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (NESet Label)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;labels&quot;</span></span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">Key -&gt; [Key] -&gt; Object -&gt; Parser ()
+</span><a href="Pacer.Utils.html#failUnknownFields"><span class="hs-identifier hs-var">Utils.failUnknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;ActivityLabel&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;datetime&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;labels&quot;</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679719857"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-29"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#MkActivityLabel"><span class="hs-identifier hs-type">MkActivityLabel</span></a></span><span>
+</span><span id="line-30"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Timestamp
+datetime :: Timestamp
+datetime :: Timestamp
+</span><a href="Pacer.Command.Chart.Data.ActivityLabel.html#datetime"><span class="hs-identifier hs-var hs-var">datetime</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>          </span><span class="annot"><span class="annottext">NESet Label
+labels :: NESet Label
+labels :: NESet Label
+</span><a href="Pacer.Command.Chart.Data.ActivityLabel.html#labels"><span class="hs-identifier hs-var hs-var">labels</span></a></span><span>
+</span><span id="line-32"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">newtype</span><span> </span><span id="ActivityLabels"><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#ActivityLabels"><span class="hs-identifier hs-var">ActivityLabels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkActivityLabels"><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#MkActivityLabels"><span class="hs-identifier hs-var">MkActivityLabels</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">{</span><span id="unActivityLabels"><span class="annot"><span class="annottext">ActivityLabels -&gt; Map Timestamp (NESet Label)
+</span><a href="Pacer.Command.Chart.Data.ActivityLabel.html#unActivityLabels"><span class="hs-identifier hs-var hs-var">unActivityLabels</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Set.NonEmpty.Internal.html/Data.Set.NonEmpty.Internal.html#NESet"><span class="hs-identifier hs-type">NESet</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier hs-type">Label</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679719865"><span id="local-6989586621679719871"><span class="annot"><span class="annottext">ActivityLabels -&gt; ActivityLabels -&gt; Bool
+(ActivityLabels -&gt; ActivityLabels -&gt; Bool)
+-&gt; (ActivityLabels -&gt; ActivityLabels -&gt; Bool) -&gt; Eq ActivityLabels
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ActivityLabels -&gt; ActivityLabels -&gt; Bool
+== :: ActivityLabels -&gt; ActivityLabels -&gt; Bool
+$c/= :: ActivityLabels -&gt; ActivityLabels -&gt; Bool
+/= :: ActivityLabels -&gt; ActivityLabels -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679719876"><span id="local-6989586621679719883"><span id="local-6989586621679719887"><span class="annot"><span class="annottext">Int -&gt; ActivityLabels -&gt; ShowS
+[ActivityLabels] -&gt; ShowS
+ActivityLabels -&gt; String
+(Int -&gt; ActivityLabels -&gt; ShowS)
+-&gt; (ActivityLabels -&gt; String)
+-&gt; ([ActivityLabels] -&gt; ShowS)
+-&gt; Show ActivityLabels
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ActivityLabels -&gt; ShowS
+showsPrec :: Int -&gt; ActivityLabels -&gt; ShowS
+$cshow :: ActivityLabels -&gt; String
+show :: ActivityLabels -&gt; String
+$cshowList :: [ActivityLabels] -&gt; ShowS
+showList :: [ActivityLabels] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679719892"><span id="local-6989586621679719896"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#ActivityLabels"><span class="hs-identifier hs-type">ActivityLabels</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621679719910"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ActivityLabels
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser ActivityLabels)
+-&gt; Value
+-&gt; Parser ActivityLabels
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithObject"><span class="hs-identifier hs-var">asnWithObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;ActivityLabels&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser ActivityLabels)
+ -&gt; Value -&gt; Parser ActivityLabels)
+-&gt; (Object -&gt; Parser ActivityLabels)
+-&gt; Value
+-&gt; Parser ActivityLabels
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679719911"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679719911"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621679719912"><span class="annot"><span class="annottext">[ActivityLabel]
+</span><a href="#local-6989586621679719912"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679719911"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser [ActivityLabel]
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;activity-labels&quot;</span></span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">Key -&gt; [Key] -&gt; Object -&gt; Parser ()
+</span><a href="Pacer.Utils.html#failUnknownFields"><span class="hs-identifier hs-var">Utils.failUnknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;ActivityLabels&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;activity-labels&quot;</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679719911"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-43"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#MkActivityLabels"><span class="hs-identifier hs-type">MkActivityLabels</span></a></span><span>
+</span><span id="line-44"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">unActivityLabels :: Map Timestamp (NESet Label)
+</span><a href="Pacer.Command.Chart.Data.ActivityLabel.html#unActivityLabels"><span class="hs-identifier hs-var">unActivityLabels</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-45"></span><span>            </span><span class="annot"><span class="annottext">[(Timestamp, NESet Label)] -&gt; Map Timestamp (NESet Label)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">MP.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Timestamp, NESet Label)] -&gt; Map Timestamp (NESet Label))
+-&gt; [(Timestamp, NESet Label)] -&gt; Map Timestamp (NESet Label)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ActivityLabel -&gt; (Timestamp, NESet Label))
+-&gt; [ActivityLabel] -&gt; [(Timestamp, NESet Label)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#MkActivityLabel"><span class="hs-identifier hs-type">MkActivityLabel</span></a></span><span> </span><span id="local-6989586621679719914"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679719914"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span id="local-6989586621679719915"><span class="annot"><span class="annottext">NESet Label
+</span><a href="#local-6989586621679719915"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679719914"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NESet Label
+</span><a href="#local-6989586621679719915"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ActivityLabel]
+</span><a href="#local-6989586621679719912"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-46"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span id="local-6989586621679719765"><span id="local-6989586621679719766"><span id="local-6989586621679719767"><span id="local-6989586621679719768"><span id="local-6989586621679719769"><span id="local-6989586621679719770"><span id="local-6989586621679719920"><span id="local-6989586621679719925"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActivityLabel</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-49"></span><span id="local-6989586621679719783"><span id="local-6989586621679719784"><span id="local-6989586621679719785"><span id="local-6989586621679719955"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActivityLabels</span></span></span></span></span><span>
+</span><span id="line-50"></span></pre></body></html>

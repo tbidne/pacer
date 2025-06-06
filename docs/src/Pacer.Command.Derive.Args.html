@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Derive CLI parsing.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Args.html"><span class="hs-identifier">Pacer.Command.Derive.Args</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Args.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OA</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html"><span class="hs-identifier">Pacer.Command.Derive.Params</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveParams"><span class="hs-identifier">DeriveParams</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Derive.Params.html#MkDeriveParams"><span class="hs-identifier">MkDeriveParams</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#quantity"><span class="hs-identifier">quantity</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#unit"><span class="hs-keyword">unit</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveParamsArgs"><span class="hs-identifier">DeriveParamsArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Configuration.Utils.html"><span class="hs-identifier">Pacer.Configuration.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="annot"><span class="hs-comment">-- | Parses derive params.</span></span><span>
+</span><span id="line-18"></span><span class="annot"><a href="Pacer.Command.Derive.Args.html#parser"><span class="hs-identifier hs-type">parser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717415"><span class="annot"><a href="#local-6989586621679717415"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717415"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679717415"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717415"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717415"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679717415"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveParamsArgs"><span class="hs-identifier hs-type">DeriveParamsArgs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717415"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span id="parser"><span class="annot"><span class="annottext">parser :: forall a.
+(From&#8474; a, Ord a, Parser a, Semifield a, Show a) =&gt;
+Parser (DeriveParamsArgs a)
+</span><a href="Pacer.Command.Derive.Args.html#parser"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679717465"><span class="annot"><span class="annottext">DistanceDurationPaceArgs a
+</span><a href="#local-6989586621679717465"><span class="hs-identifier hs-var">quantity</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (DistanceDurationPaceArgs a)
+forall a.
+(From&#8474; a, Ord a, Parser a, Semifield a, Show a) =&gt;
+String -&gt; Parser (DistanceDurationPaceArgs a)
+</span><a href="Pacer.Configuration.Utils.html#ddpArgsParser"><span class="hs-identifier hs-var">Utils.ddpArgsParser</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679717467"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621679717468"><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><a href="#local-6989586621679717468"><span class="hs-keyword hs-var">unit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser DistanceUnit -&gt; Parser (Maybe DistanceUnit)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span> </span><span class="annot"><span class="annottext">Parser DistanceUnit
+</span><a href="Pacer.Configuration.Utils.html#distanceUnitParser"><span class="hs-identifier hs-var">Utils.distanceUnitParser</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#MkDeriveParams"><span class="hs-identifier hs-type">MkDeriveParams</span></a></span><span>
+</span><span id="line-32"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">DistanceDurationPaceArgs a
+DeriveQuantityF 'ConfigPhaseArgs a
+quantity :: DeriveQuantityF 'ConfigPhaseArgs a
+quantity :: DistanceDurationPaceArgs a
+</span><a href="Pacer.Command.Derive.Params.html#quantity"><span class="hs-identifier hs-var hs-var">quantity</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+unit :: Maybe DistanceUnit
+unit :: Maybe DistanceUnit
+</span><a href="Pacer.Command.Derive.Params.html#unit"><span class="hs-keyword hs-var hs-var">unit</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>    </span><span id="local-6989586621679717467"><span class="annot"><span class="annottext">helpTxt :: String
+</span><a href="#local-6989586621679717467"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-38"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;A pace e.g. '4m30s /km', '1h5m /mi', '4m30'. If the units are not &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;given, we use the distance's units. Only kilometers and miles are &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;allowed.&quot;</span></span><span>
+</span><span id="line-41"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-42"></span></pre></body></html>

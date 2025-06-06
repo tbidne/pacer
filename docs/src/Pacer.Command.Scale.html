@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Scale functionality.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Scale.html"><span class="hs-identifier">Pacer.Command.Scale</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Scale.html#handle"><span class="hs-identifier">handle</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Scale.Params.html"><span class="hs-identifier">Pacer.Command.Scale.Params</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html"><span class="hs-identifier">Pacer.Data.Distance.Units</span></a></span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier">Kilometer</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier">Meter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier">Mile</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier">SDistanceUnit</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html"><span class="hs-identifier">Pacer.Data.Distance.Units</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DistU</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html"><span class="hs-identifier">Pacer.Data.Duration</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Dur</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Exception.html"><span class="hs-identifier">Pacer.Exception</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PEx</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="annot"><span class="hs-comment">-- | Handles scale command.</span></span><span>
+</span><span id="line-18"></span><span class="annot"><a href="Pacer.Command.Scale.html#handle"><span class="hs-identifier hs-type">handle</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717033"><span class="annot"><a href="#local-6989586621679717033"><span class="hs-identifier hs-type">es</span></a></span></span><span> </span><span id="local-6989586621679717027"><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#From%2124"><span class="hs-identifier hs-type">From&#8484;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#Terminal"><span class="hs-identifier hs-type">Terminal</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717033"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#To%211A"><span class="hs-identifier hs-type">To&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="Pacer.Command.Scale.Params.html#ScaleParamsFinal"><span class="hs-identifier hs-type">ScaleParamsFinal</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717027"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717033"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span id="handle"><span class="annot"><span class="annottext">handle :: forall (es :: [Effect]) a.
+(Display a, From&#8484; a, HasCallStack, Ord a, Semifield a, Show a,
+ Terminal :&gt; es, To&#8474; a) =&gt;
+ScaleParamsFinal a -&gt; Eff es ()
+</span><a href="Pacer.Command.Scale.html#handle"><span class="hs-identifier hs-var hs-var">handle</span></a></span></span><span> </span><span id="local-6989586621679717216"><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">quantity</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><a href="Pacer.Command.Scale.Params.html#ScaleDistance"><span class="hs-identifier hs-type">ScaleDistance</span></a></span><span> </span><span id="local-6989586621679717218"><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717218"><span class="hs-identifier hs-var">dist</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717219"><span class="annot"><span class="annottext">distScaled :: SomeDistance a
+</span><a href="#local-6989586621679717219"><span class="hs-identifier hs-var hs-var">distScaled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717218"><span class="hs-identifier hs-var">dist</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a -&gt; Positive a -&gt; SomeDistance a
+forall m r. MSemiSpace m r =&gt; m -&gt; r -&gt; m
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Space.MSemiSpace.html/Numeric.Algebra.Space.MSemiSpace.html#.%2A"><span class="hs-operator hs-var">.*</span></a></span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">factor</span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Demote DistanceUnit)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SomeDistance a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717219"><span class="hs-identifier hs-var">distScaled</span></a></span><span>
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679717223"><span class="annot"><span class="annottext">Demote DistanceUnit
+</span><a href="#local-6989586621679717223"><span class="hs-keyword hs-var">unit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit -&gt; SomeSing DistanceUnit
+forall k. SingKind k =&gt; Demote k -&gt; SomeSing k
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#toSing"><span class="hs-identifier hs-var">toSing</span></a></span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+</span><a href="#local-6989586621679717223"><span class="hs-keyword hs-var">unit</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-37"></span><span>        </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SomeSing"><span class="hs-identifier hs-type">SomeSing</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679717226"><span id="local-6989586621679717227"><span class="annot"><span class="annottext">SDistanceUnit a
+</span><a href="#local-6989586621679717227"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717226"><span class="hs-identifier hs-type">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Sing a -&gt; (SingI a =&gt; Eff es ()) -&gt; Eff es ()
+forall {k} (n :: k) r. Sing n -&gt; (SingI n =&gt; r) -&gt; r
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#withSingI"><span class="hs-identifier hs-var">withSingI</span></a></span><span> </span><span class="annot"><span class="annottext">Sing a
+SDistanceUnit a
+</span><a href="#local-6989586621679717227"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">((SingI a =&gt; Eff es ()) -&gt; Eff es ())
+-&gt; (SingI a =&gt; Eff es ()) -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-38"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717239"><span class="annot"><span class="annottext">distScaled' :: ConvertedDistance (SomeDistance a) a
+</span><a href="#local-6989586621679717239"><span class="hs-identifier hs-var hs-var">distScaled'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI a, ConvertDistance a, ToConstraints a a) =&gt;
+a -&gt; ConvertedDistance a a
+SomeDistance a -&gt; ConvertedDistance (SomeDistance a) a
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a a) =&gt;
+a -&gt; ConvertedDistance a a
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717226"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717219"><span class="hs-identifier hs-var">distScaled</span></a></span><span>
+</span><span id="line-39"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Distance a a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">ConvertedDistance (SomeDistance a) a
+Distance a a
+</span><a href="#local-6989586621679717239"><span class="hs-identifier hs-var">distScaled'</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><a href="Pacer.Command.Scale.Params.html#ScaleDuration"><span class="hs-identifier hs-type">ScaleDuration</span></a></span><span> </span><span id="local-6989586621679717242"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717242"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe DistanceUnit -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CommandScaleE -&gt; Eff es ()
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScaleDurationUnit"><span class="hs-identifier hs-var">PEx.CommandScaleDurationUnit</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">Duration a -&gt; Eff es ()
+forall x. Display x =&gt; x -&gt; Eff es ()
+</span><a href="#local-6989586621679717247"><span class="hs-identifier hs-var">handleDisplay</span></a></span><span> </span><span class="annot"><span class="annottext">(Duration a -&gt; Eff es ()) -&gt; Duration a -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717242"><span class="hs-identifier hs-var">duration</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Positive a -&gt; Duration a
+forall m r. MSemiSpace m r =&gt; m -&gt; r -&gt; m
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Space.MSemiSpace.html/Numeric.Algebra.Space.MSemiSpace.html#.%2A"><span class="hs-operator hs-var">.*</span></a></span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">factor</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Pacer.Command.Scale.Params.html#ScalePace"><span class="hs-identifier hs-type">ScalePace</span></a></span><span> </span><span id="local-6989586621679717249"><span class="annot"><span class="annottext">PaceOptUnits a
+</span><a href="#local-6989586621679717249"><span class="hs-identifier hs-var">paceOptUnits</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PaceOptUnits a
+</span><a href="#local-6989586621679717249"><span class="hs-identifier hs-var">paceOptUnits</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679717250"><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717250"><span class="hs-identifier hs-var">pace</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717251"><span class="annot"><span class="annottext">paceScaled :: SomePace a
+</span><a href="#local-6989586621679717251"><span class="hs-identifier hs-var hs-var">paceScaled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717250"><span class="hs-identifier hs-var">pace</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a -&gt; Positive a -&gt; SomePace a
+forall m r. MSemiSpace m r =&gt; m -&gt; r -&gt; m
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Space.MSemiSpace.html/Numeric.Algebra.Space.MSemiSpace.html#.%2A"><span class="hs-operator hs-var">.*</span></a></span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">factor</span><span>
+</span><span id="line-49"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-50"></span><span>          </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SomePace a -&gt; Eff es ()
+forall x. Display x =&gt; x -&gt; Eff es ()
+</span><a href="#local-6989586621679717247"><span class="hs-identifier hs-var">handleDisplay</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717251"><span class="hs-identifier hs-var">paceScaled</span></a></span><span>
+</span><span id="line-51"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679717252"><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679717252"><span class="hs-keyword hs-var">unit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679717252"><span class="hs-keyword hs-var">unit</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-52"></span><span>            </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CommandScaleE -&gt; Eff es ()
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScalePaceMeters"><span class="hs-identifier hs-var">PEx.CommandScalePaceMeters</span></a></span><span>
+</span><span id="line-53"></span><span>            </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-54"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span>
+</span><span id="line-55"></span><span>                </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Pace 'Kilometer a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span>
+</span><span id="line-56"></span><span>                </span><span class="annot"><span class="annottext">(Pace 'Kilometer a -&gt; Text) -&gt; Pace 'Kilometer a -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI 'Kilometer, ConvertDistance a,
+ ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+SomePace a -&gt; ConvertedDistance (SomePace a) 'Kilometer
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717251"><span class="hs-identifier hs-var">paceScaled</span></a></span><span>
+</span><span id="line-57"></span><span>            </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-58"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span>
+</span><span id="line-59"></span><span>                </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Pace 'Mile a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span>
+</span><span id="line-60"></span><span>                </span><span class="annot"><span class="annottext">(Pace 'Mile a -&gt; Text) -&gt; Pace 'Mile a -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI 'Mile, ConvertDistance a, ToConstraints a 'Mile) =&gt;
+a -&gt; ConvertedDistance a 'Mile
+SomePace a -&gt; ConvertedDistance (SomePace a) 'Mile
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a 'Mile) =&gt;
+a -&gt; ConvertedDistance a 'Mile
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-type">Mile</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717251"><span class="hs-identifier hs-var">paceScaled</span></a></span><span>
+</span><span id="line-61"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679717254"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717254"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe DistanceUnit -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-63"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717255"><span class="annot"><span class="annottext">example :: Text
+</span><a href="#local-6989586621679717255"><span class="hs-identifier hs-var hs-var">example</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Text
+forall a. To&#8474; a =&gt; Duration a -&gt; Text
+</span><a href="Pacer.Data.Duration.html#toTimeString"><span class="hs-identifier hs-var">Dur.toTimeString</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717254"><span class="hs-identifier hs-var">duration</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; /km&quot;</span></span><span>
+</span><span id="line-64"></span><span>          </span><span class="annot"><span class="annottext">CommandScaleE -&gt; Eff es ()
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">(CommandScaleE -&gt; Eff es ()) -&gt; CommandScaleE -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; CommandScaleE
+</span><a href="Pacer.Exception.html#CommandScalePaceUnitNoUnit"><span class="hs-identifier hs-var">PEx.CommandScalePaceUnitNoUnit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679717255"><span class="hs-identifier hs-var">example</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">Duration a -&gt; Eff es ()
+forall x. Display x =&gt; x -&gt; Eff es ()
+</span><a href="#local-6989586621679717247"><span class="hs-identifier hs-var">handleDisplay</span></a></span><span> </span><span class="annot"><span class="annottext">(Duration a -&gt; Eff es ()) -&gt; Duration a -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717254"><span class="hs-identifier hs-var">duration</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Positive a -&gt; Duration a
+forall m r. MSemiSpace m r =&gt; m -&gt; r -&gt; m
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Space.MSemiSpace.html/Numeric.Algebra.Space.MSemiSpace.html#.%2A"><span class="hs-operator hs-var">.*</span></a></span><span> </span><span class="annot"><span class="annottext">ScaleParamsFinal a
+</span><a href="#local-6989586621679717216"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">factor</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><a href="#local-6989586621679717247"><span class="hs-identifier hs-type">handleDisplay</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717112"><span class="annot"><a href="#local-6989586621679717112"><span class="hs-identifier hs-type">x</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717112"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679717112"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717033"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621679717247"><span class="annot"><span class="annottext">handleDisplay :: forall x. Display x =&gt; x -&gt; Eff es ()
+</span><a href="#local-6989586621679717247"><span class="hs-identifier hs-var hs-var">handleDisplay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; (x -&gt; Text) -&gt; x -&gt; Eff es ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">x -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span>
+</span><span id="line-70"></span></pre></body></html>

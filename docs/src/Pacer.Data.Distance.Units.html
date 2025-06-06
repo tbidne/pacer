@@ -1,0 +1,379 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621679708425"><span id="local-6989586621679708426"></span></span><span class="hs-pragma">{-# LANGUAGE AllowAmbiguousTypes #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE CPP #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">{- ORMOLU_DISABLE -}</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="annot"><span class="hs-comment">-- | Units for distance.</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html"><span class="hs-identifier">Pacer.Data.Distance.Units</span></a></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Primary type</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Singletons</span></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier">SDistanceUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Conversion</span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertDistance"><span class="hs-identifier">ConvertDistance</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier">convertDistance</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertToMeters"><span class="hs-identifier">convertToMeters</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertToKilometers"><span class="hs-identifier">convertToKilometers</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-comment">{- ORMOLU_ENABLE -}</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Units.html"><span class="hs-identifier">Pacer.Class.Units</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Units.html#Units"><span class="hs-identifier">Units</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Units.html#baseFactor"><span class="hs-identifier">baseFactor</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-30"></span><span class="hs-comment">--                                    Core                                   --</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="annot"><span class="hs-comment">-- | Distance unit.</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">data</span><span> </span><span id="DistanceUnit"><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-var">DistanceUnit</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Meter"><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Kilometer"><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Mile"><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679708433"><span id="local-6989586621679708435"><span class="annot"><span class="annottext">DistanceUnit
+DistanceUnit -&gt; DistanceUnit -&gt; Bounded DistanceUnit
+forall a. a -&gt; a -&gt; Bounded a
+$cminBound :: DistanceUnit
+minBound :: DistanceUnit
+$cmaxBound :: DistanceUnit
+maxBound :: DistanceUnit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679708441"><span id="local-6989586621679708451"><span id="local-6989586621679708458"><span id="local-6989586621679708472"><span id="local-6989586621679708475"><span id="local-6989586621679708480"><span id="local-6989586621679708486"><span id="local-6989586621679708490"><span class="annot"><span class="annottext">Int -&gt; DistanceUnit
+DistanceUnit -&gt; Int
+DistanceUnit -&gt; [DistanceUnit]
+DistanceUnit -&gt; DistanceUnit
+DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+DistanceUnit -&gt; DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+(DistanceUnit -&gt; DistanceUnit)
+-&gt; (DistanceUnit -&gt; DistanceUnit)
+-&gt; (Int -&gt; DistanceUnit)
+-&gt; (DistanceUnit -&gt; Int)
+-&gt; (DistanceUnit -&gt; [DistanceUnit])
+-&gt; (DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit])
+-&gt; (DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit])
+-&gt; (DistanceUnit -&gt; DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit])
+-&gt; Enum DistanceUnit
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+$csucc :: DistanceUnit -&gt; DistanceUnit
+succ :: DistanceUnit -&gt; DistanceUnit
+$cpred :: DistanceUnit -&gt; DistanceUnit
+pred :: DistanceUnit -&gt; DistanceUnit
+$ctoEnum :: Int -&gt; DistanceUnit
+toEnum :: Int -&gt; DistanceUnit
+$cfromEnum :: DistanceUnit -&gt; Int
+fromEnum :: DistanceUnit -&gt; Int
+$cenumFrom :: DistanceUnit -&gt; [DistanceUnit]
+enumFrom :: DistanceUnit -&gt; [DistanceUnit]
+$cenumFromThen :: DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+enumFromThen :: DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+$cenumFromTo :: DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+enumFromTo :: DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+$cenumFromThenTo :: DistanceUnit -&gt; DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+enumFromThenTo :: DistanceUnit -&gt; DistanceUnit -&gt; DistanceUnit -&gt; [DistanceUnit]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679708498"><span id="local-6989586621679708502"><span class="annot"><span class="annottext">DistanceUnit -&gt; DistanceUnit -&gt; Bool
+(DistanceUnit -&gt; DistanceUnit -&gt; Bool)
+-&gt; (DistanceUnit -&gt; DistanceUnit -&gt; Bool) -&gt; Eq DistanceUnit
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: DistanceUnit -&gt; DistanceUnit -&gt; Bool
+== :: DistanceUnit -&gt; DistanceUnit -&gt; Bool
+$c/= :: DistanceUnit -&gt; DistanceUnit -&gt; Bool
+/= :: DistanceUnit -&gt; DistanceUnit -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679708507"><span id="local-6989586621679708509"><span class="annot"><span class="annottext">(forall x. DistanceUnit -&gt; Rep DistanceUnit x)
+-&gt; (forall x. Rep DistanceUnit x -&gt; DistanceUnit)
+-&gt; Generic DistanceUnit
+forall x. Rep DistanceUnit x -&gt; DistanceUnit
+forall x. DistanceUnit -&gt; Rep DistanceUnit x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. DistanceUnit -&gt; Rep DistanceUnit x
+from :: forall x. DistanceUnit -&gt; Rep DistanceUnit x
+$cto :: forall x. Rep DistanceUnit x -&gt; DistanceUnit
+to :: forall x. Rep DistanceUnit x -&gt; DistanceUnit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679708515"><span id="local-6989586621679708517"><span id="local-6989586621679708521"><span class="annot"><span class="annottext">Int -&gt; DistanceUnit -&gt; [Char] -&gt; [Char]
+[DistanceUnit] -&gt; [Char] -&gt; [Char]
+DistanceUnit -&gt; [Char]
+(Int -&gt; DistanceUnit -&gt; [Char] -&gt; [Char])
+-&gt; (DistanceUnit -&gt; [Char])
+-&gt; ([DistanceUnit] -&gt; [Char] -&gt; [Char])
+-&gt; Show DistanceUnit
+forall a.
+(Int -&gt; a -&gt; [Char] -&gt; [Char])
+-&gt; (a -&gt; [Char]) -&gt; ([a] -&gt; [Char] -&gt; [Char]) -&gt; Show a
+$cshowsPrec :: Int -&gt; DistanceUnit -&gt; [Char] -&gt; [Char]
+showsPrec :: Int -&gt; DistanceUnit -&gt; [Char] -&gt; [Char]
+$cshow :: DistanceUnit -&gt; [Char]
+show :: DistanceUnit -&gt; [Char]
+$cshowList :: [DistanceUnit] -&gt; [Char] -&gt; [Char]
+showList :: [DistanceUnit] -&gt; [Char] -&gt; [Char]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679708526"><span class="annot"><span class="annottext">DistanceUnit -&gt; ()
+(DistanceUnit -&gt; ()) -&gt; NFData DistanceUnit
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: DistanceUnit -&gt; ()
+rnf :: DistanceUnit -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679708544"><span id="local-6989586621679708548"><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679708555"><span class="annot"><span class="annottext">displayBuilder :: DistanceUnit -&gt; Builder
+</span><a href="#local-6989586621679708555"><span class="hs-identifier hs-var hs-var hs-var">displayBuilder</span></a></span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;m&quot;</span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;km&quot;</span></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;mi&quot;</span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-comment">-- NOTE: [Parsing Common prefixes]</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-comment">-- Say s1 is a prefix of s2. In that case, we need to ensure s2 is attempted</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-comment">-- first because otherwise s1 will succeed and we will never try s2. This</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-comment">-- also means s2 sill fail because the remaining s2 chars will not be</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-comment">-- parsed.</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-comment">-- Alternatively, we could check that the parse ends after s1</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-comment">-- (e.g. whitespace), but we leave that to &quot;upstream&quot; parsers, for now.</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679708581"><span class="annot"><span class="annottext">parser :: MParser DistanceUnit
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">[MParser DistanceUnit] -&gt; MParser DistanceUnit
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t (f a) -&gt; f a
+</span><span class="hs-identifier hs-var">asum</span></span><span>
+</span><span id="line-58"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MParser Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;meters&quot;</span></span><span> </span><span class="annot"><span class="annottext">MParser Text -&gt; DistanceUnit -&gt; MParser DistanceUnit
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; MParser Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;km&quot;</span></span><span> </span><span class="annot"><span class="annottext">MParser Text -&gt; DistanceUnit -&gt; MParser DistanceUnit
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; MParser Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;kilometers&quot;</span></span><span> </span><span class="annot"><span class="annottext">MParser Text -&gt; DistanceUnit -&gt; MParser DistanceUnit
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; MParser Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;miles&quot;</span></span><span> </span><span class="annot"><span class="annottext">MParser Text -&gt; DistanceUnit -&gt; MParser DistanceUnit
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; MParser Text
+</span><a href="Pacer.Class.Parser.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;mi&quot;</span></span><span> </span><span class="annot"><span class="annottext">MParser Text -&gt; DistanceUnit -&gt; MParser DistanceUnit
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">Char -&gt; MParser Char
+</span><a href="Pacer.Class.Parser.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'m'</span></span><span> </span><span class="annot"><span class="annottext">MParser Char -&gt; DistanceUnit -&gt; MParser DistanceUnit
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679708588"><span id="local-6989586621679708592"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621679708600"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DistanceUnit
+</span><a href="#local-6989586621679708600"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; (Text -&gt; Parser DistanceUnit) -&gt; Value -&gt; Parser DistanceUnit
+forall a. [Char] -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithText"><span class="hs-identifier hs-var">asnWithText</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;DistanceUnit&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResultDefault DistanceUnit -&gt; Parser DistanceUnit
+forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault DistanceUnit -&gt; Parser DistanceUnit)
+-&gt; (Text -&gt; ResultDefault DistanceUnit)
+-&gt; Text
+-&gt; Parser DistanceUnit
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault DistanceUnit
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parse"><span class="hs-identifier hs-var">P.parse</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679708608"><span id="local-6989586621679708612"><span id="local-6989586621679708615"><span id="local-6989586621679708618"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621679708625"><span class="annot"><span class="annottext">toJSON :: DistanceUnit -&gt; Value
+</span><a href="#local-6989586621679708625"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;m&quot;</span></span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;km&quot;</span></span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;mi&quot;</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Pacer.Class.Units.html#Units"><span class="hs-identifier hs-type">Units</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621679708640"><span class="annot"><span class="annottext">baseFactor :: forall b. From&#8484; b =&gt; DistanceUnit -&gt; b
+</span><a href="Pacer.Class.Units.html#baseFactor"><span class="hs-identifier hs-var hs-var hs-var">baseFactor</span></a></span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">&#8484; -&gt; b
+forall a. (From&#8484; a, HasCallStack) =&gt; &#8484; -&gt; a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#from%2124"><span class="hs-identifier hs-var">from&#8484;</span></a></span><span> </span><span class="annot"><span class="annottext">&#8484;
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Pacer.Class.Units.html#baseFactor"><span class="hs-identifier hs-var">baseFactor</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">&#8484; -&gt; b
+forall a. (From&#8484; a, HasCallStack) =&gt; &#8484; -&gt; a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#from%2124"><span class="hs-identifier hs-var">from&#8484;</span></a></span><span> </span><span class="annot"><span class="annottext">&#8484;
+</span><span class="hs-number">1_000</span></span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Pacer.Class.Units.html#baseFactor"><span class="hs-identifier hs-var">baseFactor</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">&#8484; -&gt; b
+forall a. (From&#8484; a, HasCallStack) =&gt; &#8484; -&gt; a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#from%2124"><span class="hs-identifier hs-var">from&#8484;</span></a></span><span> </span><span class="annot"><span class="annottext">&#8484;
+</span><span class="hs-number">1_609</span></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-80"></span><span class="hs-comment">--                                 Singleton                                 --</span><span>
+</span><span id="line-81"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="annot"><span class="hs-comment">-- | Singleton for 'DistanceUnit'.</span></span><span>
+</span><span id="line-84"></span><span class="hs-keyword">data</span><span> </span><span id="SDistanceUnit"><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-var">SDistanceUnit</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679708642"><span class="annot"><a href="#local-6989586621679708642"><span class="hs-identifier hs-type">d</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-85"></span><span>  </span><span id="SMeter"><span class="annot"><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier hs-var">SMeter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-type">Meter</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span id="SKilometer"><span class="annot"><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier hs-var">SKilometer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span>
+</span><span id="line-87"></span><span>  </span><span id="SMile"><span class="annot"><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier hs-var">SMile</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-type">Mile</span></a></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span id="local-6989586621679708647"><span id="local-6989586621679708649"><span id="local-6989586621679708653"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679708394"><span class="annot"><a href="#local-6989586621679708394"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708394"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679708396"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708396"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621679708657"><span class="annot"><span class="annottext">rnf :: SDistanceUnit d -&gt; ()
+</span><a href="#local-6989586621679708657"><span class="hs-identifier hs-var hs-var hs-var">rnf</span></a></span></span><span> </span><span class="annot"><span class="annottext">SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier hs-var">SMeter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">rnf</span></span><span> </span><span class="annot"><span class="annottext">SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier hs-var">SKilometer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">rnf</span></span><span> </span><span class="annot"><span class="annottext">SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier hs-var">SMile</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="Sing"><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#Sing"><span class="hs-identifier hs-var">Sing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-type">Meter</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621679708665"><span class="annot"><span class="annottext">sing :: Sing 'Meter
+</span><a href="#local-6989586621679708665"><span class="hs-identifier hs-var hs-var hs-var">sing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Sing 'Meter
+SDistanceUnit 'Meter
+</span><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier hs-var">SMeter</span></a></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621679708669"><span class="annot"><span class="annottext">sing :: Sing 'Kilometer
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#sing"><span class="hs-identifier hs-var hs-var hs-var">sing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Sing 'Kilometer
+SDistanceUnit 'Kilometer
+</span><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier hs-var">SKilometer</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-type">Mile</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621679708672"><span class="annot"><span class="annottext">sing :: Sing 'Mile
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#sing"><span class="hs-identifier hs-var hs-var hs-var">sing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Sing 'Mile
+SDistanceUnit 'Mile
+</span><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier hs-var">SMile</span></a></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingKind"><span class="hs-identifier hs-type">SingKind</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Demote"><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#Demote"><span class="hs-identifier hs-var">Demote</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621679708677"><span class="annot"><span class="annottext">fromSing :: forall (a :: DistanceUnit). Sing a -&gt; Demote DistanceUnit
+</span><a href="#local-6989586621679708677"><span class="hs-identifier hs-var hs-var hs-var">fromSing</span></a></span></span><span> </span><span class="annot"><span class="annottext">Sing a
+SDistanceUnit a
+</span><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier hs-var">SMeter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#fromSing"><span class="hs-identifier hs-var">fromSing</span></a></span><span> </span><span class="annot"><span class="annottext">Sing a
+SDistanceUnit a
+</span><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier hs-var">SKilometer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#fromSing"><span class="hs-identifier hs-var">fromSing</span></a></span><span> </span><span class="annot"><span class="annottext">Sing a
+SDistanceUnit a
+</span><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier hs-var">SMile</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621679708682"><span class="annot"><span class="annottext">toSing :: Demote DistanceUnit -&gt; SomeSing DistanceUnit
+</span><a href="#local-6989586621679708682"><span class="hs-identifier hs-var hs-var hs-var">toSing</span></a></span></span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Sing 'Meter -&gt; SomeSing DistanceUnit
+forall k (a :: k). Sing a -&gt; SomeSing k
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SomeSing"><span class="hs-identifier hs-var">SomeSing</span></a></span><span> </span><span class="annot"><span class="annottext">Sing 'Meter
+SDistanceUnit 'Meter
+</span><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier hs-var">SMeter</span></a></span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#toSing"><span class="hs-identifier hs-var">toSing</span></a></span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Sing 'Kilometer -&gt; SomeSing DistanceUnit
+forall k (a :: k). Sing a -&gt; SomeSing k
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SomeSing"><span class="hs-identifier hs-var">SomeSing</span></a></span><span> </span><span class="annot"><span class="annottext">Sing 'Kilometer
+SDistanceUnit 'Kilometer
+</span><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier hs-var">SKilometer</span></a></span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#toSing"><span class="hs-identifier hs-var">toSing</span></a></span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Sing 'Mile -&gt; SomeSing DistanceUnit
+forall k (a :: k). Sing a -&gt; SomeSing k
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SomeSing"><span class="hs-identifier hs-var">SomeSing</span></a></span><span> </span><span class="annot"><span class="annottext">Sing 'Mile
+SDistanceUnit 'Mile
+</span><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier hs-var">SMile</span></a></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-119"></span><span class="hs-comment">--                                 Conversion                                --</span><span>
+</span><span id="line-120"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="annot"><span class="hs-comment">-- | Common interface for converting distance units.</span></span><span>
+</span><span id="line-123"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertDistance"><span class="hs-identifier hs-type">ConvertDistance</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Constraint</span></span><span>
+</span><span id="line-124"></span><span class="hs-keyword">class</span><span> </span><span id="ConvertDistance"><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertDistance"><span class="hs-identifier hs-var">ConvertDistance</span></a></span></span><span> </span><span id="local-6989586621679708421"><span class="annot"><a href="#local-6989586621679708421"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ConvertedDistance"><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertedDistance"><span class="hs-identifier hs-var">ConvertedDistance</span></a></span></span><span> </span><span id="local-6989586621679708421"><span class="annot"><a href="#local-6989586621679708421"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679708685"><span class="annot"><a href="#local-6989586621679708685"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ToConstraints"><span class="annot"><a href="Pacer.Data.Distance.Units.html#ToConstraints"><span class="hs-identifier hs-var">ToConstraints</span></a></span></span><span> </span><span id="local-6989586621679708421"><span class="annot"><a href="#local-6989586621679708421"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679708686"><span class="annot"><a href="#local-6989586621679708686"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Constraint</span></span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span>  </span><span id="convertDistance_"><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertDistance_"><span class="hs-identifier hs-type">convertDistance_</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span id="local-6989586621679708420"><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708420"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ToConstraints"><span class="hs-identifier hs-type">ToConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708421"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708420"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679708421"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertedDistance"><span class="hs-identifier hs-type">ConvertedDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708421"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708420"><span class="hs-identifier hs-type">e</span></a></span></span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="annot"><span class="hs-comment">-- | Convert to meters.</span></span><span>
+</span><span id="line-131"></span><span id="local-6989586621679708409"><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertToMeters"><span class="hs-identifier hs-type">convertToMeters</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertDistance"><span class="hs-identifier hs-type">ConvertDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708409"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ToConstraints"><span class="hs-identifier hs-type">ToConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708409"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-type">Meter</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="#local-6989586621679708409"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertedDistance"><span class="hs-identifier hs-type">ConvertedDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708409"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-type">Meter</span></a></span></span><span>
+</span><span id="line-136"></span><span id="convertToMeters"><span class="annot"><span class="annottext">convertToMeters :: forall a.
+(ConvertDistance a, ToConstraints a 'Meter) =&gt;
+a -&gt; ConvertedDistance a 'Meter
+</span><a href="Pacer.Data.Distance.Units.html#convertToMeters"><span class="hs-identifier hs-var hs-var">convertToMeters</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-type">convertDistance</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-type">Meter</span></a></span><span>
+</span><span id="line-137"></span><span>
+</span><span id="line-138"></span><span class="annot"><span class="hs-comment">-- | Convert to kilometers.</span></span><span>
+</span><span id="line-139"></span><span id="local-6989586621679708416"><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertToKilometers"><span class="hs-identifier hs-type">convertToKilometers</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-140"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertDistance"><span class="hs-identifier hs-type">ConvertDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708416"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ToConstraints"><span class="hs-identifier hs-type">ToConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708416"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-141"></span><span>  </span><span class="annot"><a href="#local-6989586621679708416"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-142"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertedDistance"><span class="hs-identifier hs-type">ConvertedDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708416"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span></span><span>
+</span><span id="line-143"></span><span id="convertToKilometers"><span class="annot"><span class="annottext">convertToKilometers :: forall a.
+(ConvertDistance a, ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+</span><a href="Pacer.Data.Distance.Units.html#convertToKilometers"><span class="hs-identifier hs-var hs-var">convertToKilometers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-type">convertDistance</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span class="annot"><span class="hs-comment">-- | Converts distance with visible forall.</span></span><span>
+</span><span id="line-146"></span><span class="annot"><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-type">convertDistance</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679708414"><span class="annot"><a href="#local-6989586621679708414"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SingI"><span class="hs-identifier hs-type">SingI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708414"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679708415"><span class="annot"><a href="#local-6989586621679708415"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertDistance"><span class="hs-identifier hs-type">ConvertDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708415"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ToConstraints"><span class="hs-identifier hs-type">ToConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708415"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708414"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="#local-6989586621679708415"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#ConvertedDistance"><span class="hs-identifier hs-type">ConvertedDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708415"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679708414"><span class="hs-identifier hs-type">e</span></a></span><span>
+</span><span id="line-153"></span><span id="convertDistance"><span class="annot"><span class="annottext">convertDistance :: forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var hs-var">convertDistance</span></a></span></span><span> </span><span id="local-6989586621679708704"><span class="annot"><a href="#local-6989586621679708704"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">@</span><span id="local-6989586621679708705"><span class="annot"><a href="#local-6989586621679708705"><span class="hs-identifier hs-type hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a (e :: DistanceUnit).
+(ConvertDistance a, SingI e, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance_"><span class="hs-identifier hs-var">convertDistance_</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679708705"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679708704"><span class="hs-identifier hs-type">e</span></a></span><span>
+</span><span id="line-154"></span></pre></body></html>

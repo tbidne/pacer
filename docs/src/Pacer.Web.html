@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-redundant-constraints #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Web.html"><span class="hs-identifier">Pacer.Web</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Web.html#ensureWebDirExists"><span class="hs-identifier">ensureWebDirExists</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">and</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html"><span class="hs-identifier">Effectful.FileSystem.PathReader.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PR</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html"><span class="hs-identifier">Effectful.FileSystem.PathWriter.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PW</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html"><span class="hs-identifier">Effectful.Logger.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Logger</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Web.Paths.html"><span class="hs-identifier">Pacer.Web.Paths</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WPaths</span></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="annot"><span class="hs-comment">-- | Writes the web directory if it does not exist.</span></span><span>
+</span><span id="line-18"></span><span id="local-6989586621679729004"><span class="annot"><a href="Pacer.Web.html#ensureWebDirExists"><span class="hs-identifier hs-type">ensureWebDirExists</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#FileWriter"><span class="hs-identifier hs-type">FileWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729004"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729004"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#LoggerNS"><span class="hs-identifier hs-type">LoggerNS</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729004"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729004"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#PathWriter"><span class="hs-identifier hs-type">PathWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729004"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-comment">-- | Path to web path dir. This should be WPaths.getWebPath, though we</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-comment">-- take it as a parameter to save a function call.</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729004"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-31"></span><span id="ensureWebDirExists"><span class="annot"><span class="annottext">ensureWebDirExists :: forall (es :: [Effect]).
+(HasCallStack, FileWriter :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ PathReader :&gt; es, PathWriter :&gt; es) =&gt;
+Path Abs Dir -&gt; Bool -&gt; Eff es ()
+</span><a href="Pacer.Web.html#ensureWebDirExists"><span class="hs-identifier hs-var hs-var">ensureWebDirExists</span></a></span></span><span> </span><span id="local-6989586621679729121"><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729121"><span class="hs-identifier hs-var">webPath</span></a></span></span><span> </span><span id="local-6989586621679729122"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729122"><span class="hs-identifier hs-var">cleanInstall</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es () -&gt; Eff es ()
+forall (es :: [Effect]) a.
+(HasCallStack, LoggerNS :&gt; es) =&gt;
+Text -&gt; Eff es a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;ensureWebDirExists&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729124"><span class="annot"><span class="annottext">webOsPath :: OsPath
+</span><a href="#local-6989586621679729124"><span class="hs-identifier hs-var hs-var">webOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729121"><span class="hs-identifier hs-var">webPath</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621679729126"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729126"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Eff es Bool
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Path Abs Dir -&gt; Eff es Bool
+</span><a href="Pacer.Web.html#webDirExists"><span class="hs-identifier hs-var">webDirExists</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729121"><span class="hs-identifier hs-var">webPath</span></a></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729128"><span class="annot"><span class="annottext">copyFiles :: Bool
+</span><a href="#local-6989586621679729128"><span class="hs-identifier hs-var hs-var">copyFiles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729126"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729122"><span class="hs-identifier hs-var">cleanInstall</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729128"><span class="hs-identifier hs-var">copyFiles</span></a></span><span> </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-39"></span><span>    </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logDebug"><span class="hs-identifier hs-type">Logger.logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Copying web source&quot;</span></span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729122"><span class="hs-identifier hs-var">cleanInstall</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OsPath -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, PathWriter :&gt; es) =&gt;
+OsPath -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#removePathForcibly"><span class="hs-identifier hs-var">PW.removePathForcibly</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729124"><span class="hs-identifier hs-var">webOsPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, FileWriter :&gt; es, PathWriter :&gt; es) =&gt;
+Path Abs Dir -&gt; Eff es ()
+</span><a href="Pacer.Web.html#writeWebDir"><span class="hs-identifier hs-var">writeWebDir</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729121"><span class="hs-identifier hs-var">webPath</span></a></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="annot"><span class="hs-comment">-- | Determines if the web dir exists.</span></span><span>
+</span><span id="line-44"></span><span id="local-6989586621679729033"><span class="annot"><a href="Pacer.Web.html#webDirExists"><span class="hs-identifier hs-type">webDirExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729033"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729033"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-45"></span><span id="webDirExists"><span class="annot"><span class="annottext">webDirExists :: forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Path Abs Dir -&gt; Eff es Bool
+</span><a href="Pacer.Web.html#webDirExists"><span class="hs-identifier hs-var hs-var">webDirExists</span></a></span></span><span> </span><span id="local-6989586621679729160"><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729160"><span class="hs-identifier hs-var">webPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729161"><span class="annot"><span class="annottext">webOsPath :: OsPath
+</span><a href="#local-6989586621679729161"><span class="hs-identifier hs-var hs-var">webOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729160"><span class="hs-identifier hs-var">webPath</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621679729162"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729162"><span class="hs-identifier hs-var">dstExists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Eff es Bool
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+OsPath -&gt; Eff es Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#doesDirectoryExist"><span class="hs-identifier hs-var">PR.doesDirectoryExist</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729161"><span class="hs-identifier hs-var">webOsPath</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679729162"><span class="hs-identifier hs-var">dstExists</span></a></span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Eff es Bool
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-comment">-- Should this be more robust? I.e. check contents somehow (hash)?</span><span>
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621679729164"><span class="annot"><span class="annottext">[Bool]
+</span><a href="#local-6989586621679729164"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">[Path Rel File] -&gt; (Path Rel File -&gt; Eff es Bool) -&gt; Eff es [Bool]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f (t b)
+</span><span class="hs-identifier hs-var">for</span></span><span>
+</span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">[Path Rel File]
+</span><a href="Pacer.Web.Paths.html#webInternalFiles"><span class="hs-identifier hs-var">WPaths.webInternalFiles</span></a></span><span>
+</span><span id="line-56"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OsPath -&gt; Eff es Bool
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+OsPath -&gt; Eff es Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#doesFileExist"><span class="hs-identifier hs-var">PR.doesFileExist</span></a></span><span> </span><span class="annot"><span class="annottext">(OsPath -&gt; Eff es Bool)
+-&gt; (Path Rel File -&gt; OsPath) -&gt; Path Rel File -&gt; Eff es Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Path Abs File -&gt; OsPath)
+-&gt; (Path Rel File -&gt; Path Abs File) -&gt; Path Rel File -&gt; OsPath
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729160"><span class="hs-identifier hs-var">webPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel File -&gt; Path Abs File
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">[Bool] -&gt; Bool
+forall (t :: * -&gt; *). Foldable t =&gt; t Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">and</span></span><span> </span><span class="annot"><span class="annottext">[Bool]
+</span><a href="#local-6989586621679729164"><span class="hs-identifier hs-var">exists</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="annot"><span class="hs-comment">-- | Writes the web directory.</span></span><span>
+</span><span id="line-60"></span><span id="local-6989586621679729051"><span class="annot"><a href="Pacer.Web.html#writeWebDir"><span class="hs-identifier hs-type">writeWebDir</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#FileWriter"><span class="hs-identifier hs-type">FileWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729051"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#PathWriter"><span class="hs-identifier hs-type">PathWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729051"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729051"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-67"></span><span id="writeWebDir"><span class="annot"><span class="annottext">writeWebDir :: forall (es :: [Effect]).
+(HasCallStack, FileWriter :&gt; es, PathWriter :&gt; es) =&gt;
+Path Abs Dir -&gt; Eff es ()
+</span><a href="Pacer.Web.html#writeWebDir"><span class="hs-identifier hs-var hs-var">writeWebDir</span></a></span></span><span> </span><span id="local-6989586621679729192"><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729192"><span class="hs-identifier hs-var">webPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729193"><span class="annot"><span class="annottext">webOsPath :: OsPath
+</span><a href="#local-6989586621679729193"><span class="hs-identifier hs-var hs-var">webOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729192"><span class="hs-identifier hs-var">webPath</span></a></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; OsPath -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, PathWriter :&gt; es) =&gt;
+Bool -&gt; OsPath -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#createDirectoryIfMissing"><span class="hs-identifier hs-var">PW.createDirectoryIfMissing</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729193"><span class="hs-identifier hs-var">webOsPath</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><span class="annottext">[Path Rel Dir] -&gt; (Path Rel Dir -&gt; Eff es ()) -&gt; Eff es ()
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Foldable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f ()
+</span><span class="hs-identifier hs-var">for_</span></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">[Path Rel Dir]
+</span><a href="Pacer.Web.Paths.html#webInternalDirs"><span class="hs-identifier hs-var">WPaths.webInternalDirs</span></a></span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; OsPath -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, PathWriter :&gt; es) =&gt;
+Bool -&gt; OsPath -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#createDirectoryIfMissing"><span class="hs-identifier hs-var">PW.createDirectoryIfMissing</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">(OsPath -&gt; Eff es ())
+-&gt; (Path Rel Dir -&gt; OsPath) -&gt; Path Rel Dir -&gt; Eff es ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Path Abs Dir -&gt; OsPath)
+-&gt; (Path Rel Dir -&gt; Path Abs Dir) -&gt; Path Rel Dir -&gt; OsPath
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729192"><span class="hs-identifier hs-var">webPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel Dir -&gt; Path Abs Dir
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">[(Path Rel File, ByteString)]
+-&gt; ((Path Rel File, ByteString) -&gt; Eff es ()) -&gt; Eff es ()
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Foldable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f ()
+</span><span class="hs-identifier hs-var">for_</span></span><span> </span><span class="hs-special">$$</span><span class="annot"><span class="annottext">Addr#
+Int
+[Word8]
+Word8
+Int -&gt; Addr# -&gt; ByteString
+[Word8] -&gt; ShortByteString
+ShortByteString -&gt; PosixString
+PosixString -&gt; Path Rel File
+forall b t. PosixString -&gt; Path b t
+unsafePackLenLiteral :: Int -&gt; Addr# -&gt; ByteString
+pack :: [Word8] -&gt; ShortByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">WPaths.readWebDirTH</span></span><span> </span><span class="annot"><span class="annottext">(((Path Rel File, ByteString) -&gt; Eff es ()) -&gt; Eff es ())
+-&gt; ((Path Rel File, ByteString) -&gt; Eff es ()) -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679729232"><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679729232"><span class="hs-identifier hs-var">p</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679729233"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679729233"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">OsPath -&gt; ByteString -&gt; Eff es ()
+forall (es :: [Effect]).
+(FileWriter :&gt; es, HasCallStack) =&gt;
+OsPath -&gt; ByteString -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#writeBinaryFile"><span class="hs-identifier hs-var">writeBinaryFile</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Path Abs File -&gt; OsPath) -&gt; Path Abs File -&gt; OsPath
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729192"><span class="hs-identifier hs-var">webPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel File -&gt; Path Abs File
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="#local-6989586621679729232"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679729233"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-77"></span></pre></body></html>

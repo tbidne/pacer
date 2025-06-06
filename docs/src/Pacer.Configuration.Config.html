@@ -1,0 +1,530 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html"><span class="hs-identifier">Pacer.Configuration.Config</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#Config"><span class="hs-identifier">Config</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Config.html#LogConfig"><span class="hs-identifier">LogConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Config.html#ChartConfig"><span class="hs-identifier">ChartConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Config.html#ConfigWithPath"><span class="hs-identifier">ConfigWithPath</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.html/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AsnT</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Empty</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html"><span class="hs-identifier">FileSystem.OsPath</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OsPath</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html"><span class="hs-identifier">Pacer.Configuration.Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogLevelParam"><span class="hs-identifier">LogLevelParam</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier">LogVerbosity</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Utils.html#.%3A%3F%3A"><span class="hs-operator">(.:?:)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FilePath</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><span class="hs-comment">-- | Config with its parent directory.</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="ConfigWithPath"><span class="annot"><a href="Pacer.Configuration.Config.html#ConfigWithPath"><span class="hs-identifier hs-var">ConfigWithPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkConfigWithPath"><span class="annot"><a href="Pacer.Configuration.Config.html#MkConfigWithPath"><span class="hs-identifier hs-var">MkConfigWithPath</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Directory containing the config file. Used for resolving relative paths.</span></span><span>
+</span><span id="line-24"></span><span>    </span><span id="dirPath"><span class="annot"><span class="annottext">ConfigWithPath -&gt; Path Abs Dir
+</span><a href="Pacer.Configuration.Config.html#dirPath"><span class="hs-identifier hs-var hs-var">dirPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Config.</span></span><span>
+</span><span id="line-26"></span><span>    </span><span id="config"><span class="annot"><span class="annottext">ConfigWithPath -&gt; Config
+</span><a href="Pacer.Configuration.Config.html#config"><span class="hs-identifier hs-var hs-var">config</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#Config"><span class="hs-identifier hs-type">Config</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679714717"><span id="local-6989586621679714723"><span class="annot"><span class="annottext">ConfigWithPath -&gt; ConfigWithPath -&gt; Bool
+(ConfigWithPath -&gt; ConfigWithPath -&gt; Bool)
+-&gt; (ConfigWithPath -&gt; ConfigWithPath -&gt; Bool) -&gt; Eq ConfigWithPath
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ConfigWithPath -&gt; ConfigWithPath -&gt; Bool
+== :: ConfigWithPath -&gt; ConfigWithPath -&gt; Bool
+$c/= :: ConfigWithPath -&gt; ConfigWithPath -&gt; Bool
+/= :: ConfigWithPath -&gt; ConfigWithPath -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679714728"><span id="local-6989586621679714736"><span id="local-6989586621679714740"><span class="annot"><span class="annottext">Int -&gt; ConfigWithPath -&gt; ShowS
+[ConfigWithPath] -&gt; ShowS
+ConfigWithPath -&gt; String
+(Int -&gt; ConfigWithPath -&gt; ShowS)
+-&gt; (ConfigWithPath -&gt; String)
+-&gt; ([ConfigWithPath] -&gt; ShowS)
+-&gt; Show ConfigWithPath
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ConfigWithPath -&gt; ShowS
+showsPrec :: Int -&gt; ConfigWithPath -&gt; ShowS
+$cshow :: ConfigWithPath -&gt; String
+show :: ConfigWithPath -&gt; String
+$cshowList :: [ConfigWithPath] -&gt; ShowS
+showList :: [ConfigWithPath] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- NOTE: [User Path]</span><span>
+</span><span id="line-31"></span><span class="hs-comment">--</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- Paths that come from users must be OsPath and not Path since the</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- latter requires us to enforce that the user typed either an absolute or</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- relative path, but not both, but that is overly restrictive.</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="annot"><span class="hs-comment">-- | Config configuration.</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">data</span><span> </span><span id="Config"><span class="annot"><a href="Pacer.Configuration.Config.html#Config"><span class="hs-identifier hs-var">Config</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkConfig"><span class="annot"><a href="Pacer.Configuration.Config.html#MkConfig"><span class="hs-identifier hs-var">MkConfig</span></a></span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Chart config.</span></span><span>
+</span><span id="line-39"></span><span>    </span><span id="chartConfig"><span class="annot"><span class="annottext">Config -&gt; Maybe ChartConfig
+</span><a href="Pacer.Configuration.Config.html#chartConfig"><span class="hs-identifier hs-var hs-var">chartConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#ChartConfig"><span class="hs-identifier hs-type">ChartConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional logging.</span></span><span>
+</span><span id="line-41"></span><span>    </span><span id="logConfig"><span class="annot"><span class="annottext">Config -&gt; Maybe LogConfig
+</span><a href="Pacer.Configuration.Config.html#logConfig"><span class="hs-identifier hs-var hs-var">logConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#LogConfig"><span class="hs-identifier hs-type">LogConfig</span></a></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679714748"><span id="local-6989586621679714755"><span class="annot"><span class="annottext">Config -&gt; Config -&gt; Bool
+(Config -&gt; Config -&gt; Bool)
+-&gt; (Config -&gt; Config -&gt; Bool) -&gt; Eq Config
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Config -&gt; Config -&gt; Bool
+== :: Config -&gt; Config -&gt; Bool
+$c/= :: Config -&gt; Config -&gt; Bool
+/= :: Config -&gt; Config -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679714760"><span id="local-6989586621679714768"><span id="local-6989586621679714771"><span class="annot"><span class="annottext">Int -&gt; Config -&gt; ShowS
+[Config] -&gt; ShowS
+Config -&gt; String
+(Int -&gt; Config -&gt; ShowS)
+-&gt; (Config -&gt; String) -&gt; ([Config] -&gt; ShowS) -&gt; Show Config
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Config -&gt; ShowS
+showsPrec :: Int -&gt; Config -&gt; ShowS
+$cshow :: Config -&gt; String
+show :: Config -&gt; String
+$cshowList :: [Config] -&gt; ShowS
+showList :: [Config] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714777"><span id="local-6989586621679714781"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#Config"><span class="hs-identifier hs-type">Config</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkConfig"><span class="hs-identifier hs-type">MkConfig</span></a></span><span> </span><span id="local-6989586621679714789"><span class="annot"><span class="annottext">Maybe ChartConfig
+</span><a href="#local-6989586621679714789"><span class="hs-identifier hs-var">x1</span></a></span></span><span> </span><span id="local-6989586621679714790"><span class="annot"><span class="annottext">Maybe LogConfig
+</span><a href="#local-6989586621679714790"><span class="hs-identifier hs-var">x2</span></a></span></span><span> </span><span id="local-6989586621679714791"><span class="annot"><span class="annottext">&lt;&gt; :: Config -&gt; Config -&gt; Config
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkConfig"><span class="hs-identifier hs-type">MkConfig</span></a></span><span> </span><span id="local-6989586621679714792"><span class="annot"><span class="annottext">Maybe ChartConfig
+</span><a href="#local-6989586621679714792"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679714793"><span class="annot"><span class="annottext">Maybe LogConfig
+</span><a href="#local-6989586621679714793"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Maybe ChartConfig -&gt; Maybe LogConfig -&gt; Config
+</span><a href="Pacer.Configuration.Config.html#MkConfig"><span class="hs-identifier hs-var">MkConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe ChartConfig
+</span><a href="#local-6989586621679714789"><span class="hs-identifier hs-var">x1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ChartConfig -&gt; Maybe ChartConfig -&gt; Maybe ChartConfig
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe ChartConfig
+</span><a href="#local-6989586621679714792"><span class="hs-identifier hs-var">y1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe LogConfig
+</span><a href="#local-6989586621679714790"><span class="hs-identifier hs-var">x2</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe LogConfig -&gt; Maybe LogConfig -&gt; Maybe LogConfig
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe LogConfig
+</span><a href="#local-6989586621679714793"><span class="hs-identifier hs-var">y2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714799"><span id="local-6989586621679714803"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#Config"><span class="hs-identifier hs-type">Config</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621679714808"><span class="annot"><span class="annottext">mempty :: Config
+</span><span class="hs-identifier hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe ChartConfig -&gt; Maybe LogConfig -&gt; Config
+</span><a href="Pacer.Configuration.Config.html#MkConfig"><span class="hs-identifier hs-var">MkConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ChartConfig
+forall a. Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a
+</span><span class="hs-identifier hs-var">empty</span></span><span> </span><span class="annot"><span class="annottext">Maybe LogConfig
+forall a. Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a
+</span><span class="hs-identifier hs-var">empty</span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714812"><span id="local-6989586621679714816"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#Config"><span class="hs-identifier hs-type">Config</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679714834"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Config
+</span><a href="#local-6989586621679714834"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser Config) -&gt; Value -&gt; Parser Config
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithObject"><span class="hs-identifier hs-var">asnWithObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Config&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser Config) -&gt; Value -&gt; Parser Config)
+-&gt; (Object -&gt; Parser Config) -&gt; Value -&gt; Parser Config
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679714837"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714837"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621679714838"><span class="annot"><span class="annottext">Maybe ChartConfig
+</span><a href="#local-6989586621679714838"><span class="hs-identifier hs-var">chartConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714837"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe ChartConfig)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;chart&quot;</span></span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621679714840"><span class="annot"><span class="annottext">Maybe LogConfig
+</span><a href="#local-6989586621679714840"><span class="hs-identifier hs-var">logConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714837"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe LogConfig)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;log&quot;</span></span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">Key -&gt; [Key] -&gt; Object -&gt; Parser ()
+</span><a href="Pacer.Utils.html#failUnknownFields"><span class="hs-identifier hs-var">Utils.failUnknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;Config&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;chart&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;log&quot;</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714837"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-58"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkConfig"><span class="hs-identifier hs-type">MkConfig</span></a></span><span>
+</span><span id="line-59"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe ChartConfig
+chartConfig :: Maybe ChartConfig
+chartConfig :: Maybe ChartConfig
+</span><a href="Pacer.Configuration.Config.html#chartConfig"><span class="hs-identifier hs-var hs-var">chartConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">Maybe LogConfig
+logConfig :: Maybe LogConfig
+logConfig :: Maybe LogConfig
+</span><a href="Pacer.Configuration.Config.html#logConfig"><span class="hs-identifier hs-var hs-var">logConfig</span></a></span><span>
+</span><span id="line-61"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="LogConfig"><span class="annot"><a href="Pacer.Configuration.Config.html#LogConfig"><span class="hs-identifier hs-var">LogConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkLogConfig"><span class="annot"><a href="Pacer.Configuration.Config.html#MkLogConfig"><span class="hs-identifier hs-var">MkLogConfig</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="level"><span class="annot"><span class="annottext">LogConfig -&gt; Maybe LogLevelParam
+</span><a href="Pacer.Configuration.Config.html#level"><span class="hs-identifier hs-var hs-var">level</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogLevelParam"><span class="hs-identifier hs-type">LogLevelParam</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span id="verbosity"><span class="annot"><span class="annottext">LogConfig -&gt; Maybe LogVerbosity
+</span><a href="Pacer.Configuration.Config.html#verbosity"><span class="hs-identifier hs-var hs-var">verbosity</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Logging.html#LogVerbosity"><span class="hs-identifier hs-type">LogVerbosity</span></a></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679714846"><span id="local-6989586621679714852"><span class="annot"><span class="annottext">LogConfig -&gt; LogConfig -&gt; Bool
+(LogConfig -&gt; LogConfig -&gt; Bool)
+-&gt; (LogConfig -&gt; LogConfig -&gt; Bool) -&gt; Eq LogConfig
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: LogConfig -&gt; LogConfig -&gt; Bool
+== :: LogConfig -&gt; LogConfig -&gt; Bool
+$c/= :: LogConfig -&gt; LogConfig -&gt; Bool
+/= :: LogConfig -&gt; LogConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679714857"><span id="local-6989586621679714864"><span id="local-6989586621679714867"><span class="annot"><span class="annottext">Int -&gt; LogConfig -&gt; ShowS
+[LogConfig] -&gt; ShowS
+LogConfig -&gt; String
+(Int -&gt; LogConfig -&gt; ShowS)
+-&gt; (LogConfig -&gt; String)
+-&gt; ([LogConfig] -&gt; ShowS)
+-&gt; Show LogConfig
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; LogConfig -&gt; ShowS
+showsPrec :: Int -&gt; LogConfig -&gt; ShowS
+$cshow :: LogConfig -&gt; String
+show :: LogConfig -&gt; String
+$cshowList :: [LogConfig] -&gt; ShowS
+showList :: [LogConfig] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714873"><span id="local-6989586621679714877"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#LogConfig"><span class="hs-identifier hs-type">LogConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkLogConfig"><span class="hs-identifier hs-type">MkLogConfig</span></a></span><span> </span><span id="local-6989586621679714883"><span class="annot"><span class="annottext">Maybe LogLevelParam
+</span><a href="#local-6989586621679714883"><span class="hs-identifier hs-var">x1</span></a></span></span><span> </span><span id="local-6989586621679714884"><span class="annot"><span class="annottext">Maybe LogVerbosity
+</span><a href="#local-6989586621679714884"><span class="hs-identifier hs-var">x2</span></a></span></span><span> </span><span id="local-6989586621679714885"><span class="annot"><span class="annottext">&lt;&gt; :: LogConfig -&gt; LogConfig -&gt; LogConfig
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkLogConfig"><span class="hs-identifier hs-type">MkLogConfig</span></a></span><span> </span><span id="local-6989586621679714886"><span class="annot"><span class="annottext">Maybe LogLevelParam
+</span><a href="#local-6989586621679714886"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679714887"><span class="annot"><span class="annottext">Maybe LogVerbosity
+</span><a href="#local-6989586621679714887"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">Maybe LogLevelParam -&gt; Maybe LogVerbosity -&gt; LogConfig
+</span><a href="Pacer.Configuration.Config.html#MkLogConfig"><span class="hs-identifier hs-var">MkLogConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe LogLevelParam
+</span><a href="#local-6989586621679714883"><span class="hs-identifier hs-var">x1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe LogLevelParam -&gt; Maybe LogLevelParam -&gt; Maybe LogLevelParam
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe LogLevelParam
+</span><a href="#local-6989586621679714886"><span class="hs-identifier hs-var">y1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe LogVerbosity
+</span><a href="#local-6989586621679714884"><span class="hs-identifier hs-var">x2</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe LogVerbosity -&gt; Maybe LogVerbosity -&gt; Maybe LogVerbosity
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe LogVerbosity
+</span><a href="#local-6989586621679714887"><span class="hs-identifier hs-var">y2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714892"><span id="local-6989586621679714896"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#LogConfig"><span class="hs-identifier hs-type">LogConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621679714900"><span class="annot"><span class="annottext">mempty :: LogConfig
+</span><span class="hs-identifier hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevelParam -&gt; Maybe LogVerbosity -&gt; LogConfig
+</span><a href="Pacer.Configuration.Config.html#MkLogConfig"><span class="hs-identifier hs-var">MkLogConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe LogLevelParam
+forall a. Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a
+</span><span class="hs-identifier hs-var">empty</span></span><span> </span><span class="annot"><span class="annottext">Maybe LogVerbosity
+forall a. Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a
+</span><span class="hs-identifier hs-var">empty</span></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714903"><span id="local-6989586621679714906"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#LogConfig"><span class="hs-identifier hs-type">LogConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>  </span><span id="local-6989586621679714920"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser LogConfig
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser LogConfig) -&gt; Value -&gt; Parser LogConfig
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithObject"><span class="hs-identifier hs-var">asnWithObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;LogConfig&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser LogConfig) -&gt; Value -&gt; Parser LogConfig)
+-&gt; (Object -&gt; Parser LogConfig) -&gt; Value -&gt; Parser LogConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679714921"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714921"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621679714922"><span class="annot"><span class="annottext">Maybe LogLevelParam
+</span><a href="#local-6989586621679714922"><span class="hs-identifier hs-var">level</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714921"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe LogLevelParam)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;level&quot;</span></span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621679714923"><span class="annot"><span class="annottext">Maybe LogVerbosity
+</span><a href="#local-6989586621679714923"><span class="hs-identifier hs-var">verbosity</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714921"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe LogVerbosity)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;verbosity&quot;</span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Key -&gt; [Key] -&gt; Object -&gt; Parser ()
+</span><a href="Pacer.Utils.html#failUnknownFields"><span class="hs-identifier hs-var">Utils.failUnknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;LogConfig&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;level&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;verbosity&quot;</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679714921"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-82"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkLogConfig"><span class="hs-identifier hs-type">MkLogConfig</span></a></span><span>
+</span><span id="line-83"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevelParam
+level :: Maybe LogLevelParam
+level :: Maybe LogLevelParam
+</span><a href="Pacer.Configuration.Config.html#level"><span class="hs-identifier hs-var hs-var">level</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>          </span><span class="annot"><span class="annottext">Maybe LogVerbosity
+verbosity :: Maybe LogVerbosity
+verbosity :: Maybe LogVerbosity
+</span><a href="Pacer.Configuration.Config.html#verbosity"><span class="hs-identifier hs-var hs-var">verbosity</span></a></span><span>
+</span><span id="line-85"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">data</span><span> </span><span id="ChartConfig"><span class="annot"><a href="Pacer.Configuration.Config.html#ChartConfig"><span class="hs-identifier hs-var">ChartConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkChartConfig"><span class="annot"><a href="Pacer.Configuration.Config.html#MkChartConfig"><span class="hs-identifier hs-var">MkChartConfig</span></a></span></span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Optional path to activity-labels.json.</span></span><span>
+</span><span id="line-89"></span><span>    </span><span id="activityLabelsPath"><span class="annot"><span class="annottext">ChartConfig -&gt; Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#activityLabelsPath"><span class="hs-identifier hs-var hs-var">activityLabelsPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional path to activities file.</span></span><span>
+</span><span id="line-91"></span><span>    </span><span id="activityPaths"><span class="annot"><span class="annottext">ChartConfig -&gt; Seq OsPath
+</span><a href="Pacer.Configuration.Config.html#activityPaths"><span class="hs-identifier hs-var hs-var">activityPaths</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Build dir.</span></span><span>
+</span><span id="line-93"></span><span>    </span><span id="buildDir"><span class="annot"><span class="annottext">ChartConfig -&gt; Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#buildDir"><span class="hs-identifier hs-var hs-var">buildDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-comment">-- | Optional path to directory with activities file(s) and</span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-comment">-- chart-requests.json.</span><span>
+</span><span id="line-96"></span><span>    </span><span id="dataDir"><span class="annot"><span class="annottext">ChartConfig -&gt; Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#dataDir"><span class="hs-identifier hs-var hs-var">dataDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Optional path to chart-requests.json.</span></span><span>
+</span><span id="line-98"></span><span>    </span><span id="chartRequestsPath"><span class="annot"><span class="annottext">ChartConfig -&gt; Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#chartRequestsPath"><span class="hs-identifier hs-var hs-var">chartRequestsPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679714931"><span id="local-6989586621679714940"><span class="annot"><span class="annottext">ChartConfig -&gt; ChartConfig -&gt; Bool
+(ChartConfig -&gt; ChartConfig -&gt; Bool)
+-&gt; (ChartConfig -&gt; ChartConfig -&gt; Bool) -&gt; Eq ChartConfig
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ChartConfig -&gt; ChartConfig -&gt; Bool
+== :: ChartConfig -&gt; ChartConfig -&gt; Bool
+$c/= :: ChartConfig -&gt; ChartConfig -&gt; Bool
+/= :: ChartConfig -&gt; ChartConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679714944"><span id="local-6989586621679714954"><span id="local-6989586621679714957"><span class="annot"><span class="annottext">Int -&gt; ChartConfig -&gt; ShowS
+[ChartConfig] -&gt; ShowS
+ChartConfig -&gt; String
+(Int -&gt; ChartConfig -&gt; ShowS)
+-&gt; (ChartConfig -&gt; String)
+-&gt; ([ChartConfig] -&gt; ShowS)
+-&gt; Show ChartConfig
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ChartConfig -&gt; ShowS
+showsPrec :: Int -&gt; ChartConfig -&gt; ShowS
+$cshow :: ChartConfig -&gt; String
+show :: ChartConfig -&gt; String
+$cshowList :: [ChartConfig] -&gt; ShowS
+showList :: [ChartConfig] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714962"><span id="local-6989586621679714966"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#ChartConfig"><span class="hs-identifier hs-type">ChartConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkChartConfig"><span class="hs-identifier hs-type">MkChartConfig</span></a></span><span> </span><span id="local-6989586621679714976"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714976"><span class="hs-identifier hs-var">x1</span></a></span></span><span> </span><span id="local-6989586621679714977"><span class="annot"><span class="annottext">Seq OsPath
+</span><a href="#local-6989586621679714977"><span class="hs-identifier hs-var">x2</span></a></span></span><span> </span><span id="local-6989586621679714978"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714978"><span class="hs-identifier hs-var">x3</span></a></span></span><span> </span><span id="local-6989586621679714979"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714979"><span class="hs-identifier hs-var">x4</span></a></span></span><span> </span><span id="local-6989586621679714980"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714980"><span class="hs-identifier hs-var">x5</span></a></span></span><span> </span><span id="local-6989586621679714981"><span class="annot"><span class="annottext">&lt;&gt; :: ChartConfig -&gt; ChartConfig -&gt; ChartConfig
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkChartConfig"><span class="hs-identifier hs-type">MkChartConfig</span></a></span><span> </span><span id="local-6989586621679714982"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714982"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679714983"><span class="annot"><span class="annottext">Seq OsPath
+</span><a href="#local-6989586621679714983"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span id="local-6989586621679714984"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714984"><span class="hs-identifier hs-var">y3</span></a></span></span><span> </span><span id="local-6989586621679714985"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714985"><span class="hs-identifier hs-var">y4</span></a></span></span><span> </span><span id="local-6989586621679714986"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714986"><span class="hs-identifier hs-var">y5</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">Maybe OsPath
+-&gt; Seq OsPath
+-&gt; Maybe OsPath
+-&gt; Maybe OsPath
+-&gt; Maybe OsPath
+-&gt; ChartConfig
+</span><a href="Pacer.Configuration.Config.html#MkChartConfig"><span class="hs-identifier hs-var">MkChartConfig</span></a></span><span>
+</span><span id="line-105"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714976"><span class="hs-identifier hs-var">x1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; Maybe OsPath -&gt; Maybe OsPath
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714982"><span class="hs-identifier hs-var">y1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seq OsPath
+</span><a href="#local-6989586621679714977"><span class="hs-identifier hs-var">x2</span></a></span><span> </span><span class="annot"><span class="annottext">Seq OsPath -&gt; Seq OsPath -&gt; Seq OsPath
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Seq OsPath
+</span><a href="#local-6989586621679714983"><span class="hs-identifier hs-var">y2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714978"><span class="hs-identifier hs-var">x3</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; Maybe OsPath -&gt; Maybe OsPath
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714984"><span class="hs-identifier hs-var">y3</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714979"><span class="hs-identifier hs-var">x4</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; Maybe OsPath -&gt; Maybe OsPath
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714985"><span class="hs-identifier hs-var">y4</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714980"><span class="hs-identifier hs-var">x5</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; Maybe OsPath -&gt; Maybe OsPath
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679714986"><span class="hs-identifier hs-var">y5</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679714991"><span id="local-6989586621679714995"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#ChartConfig"><span class="hs-identifier hs-type">ChartConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621679714997"><span class="annot"><span class="annottext">mempty :: ChartConfig
+</span><span class="hs-identifier hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+-&gt; Seq OsPath
+-&gt; Maybe OsPath
+-&gt; Maybe OsPath
+-&gt; Maybe OsPath
+-&gt; ChartConfig
+</span><a href="Pacer.Configuration.Config.html#MkChartConfig"><span class="hs-identifier hs-var">MkChartConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Seq OsPath
+forall a. Seq a
+</span><span class="hs-identifier hs-var">Empty</span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679715000"><span id="local-6989586621679715003"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#ChartConfig"><span class="hs-identifier hs-type">ChartConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621679715039"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ChartConfig
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser ChartConfig) -&gt; Value -&gt; Parser ChartConfig
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithObject"><span class="hs-identifier hs-var">asnWithObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;ChartConfig&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser ChartConfig) -&gt; Value -&gt; Parser ChartConfig)
+-&gt; (Object -&gt; Parser ChartConfig) -&gt; Value -&gt; Parser ChartConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679715040"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679715040"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-116"></span><span>    </span><span id="local-6989586621679715041"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679715041"><span class="hs-identifier hs-var">activityLabelsPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall (f :: * -&gt; *).
+Traversable f =&gt;
+Parser (f String) -&gt; Parser (f OsPath)
+</span><a href="#local-6989586621679715042"><span class="hs-identifier hs-var">parseOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser (Maybe String) -&gt; Parser (Maybe OsPath))
+-&gt; Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679715040"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe String)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;activity-labels&quot;</span></span><span>
+</span><span id="line-117"></span><span>    </span><span id="local-6989586621679715043"><span class="annot"><span class="annottext">Seq OsPath
+</span><a href="#local-6989586621679715043"><span class="hs-identifier hs-var">activityPaths</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Seq String) -&gt; Parser (Seq OsPath)
+forall (f :: * -&gt; *).
+Traversable f =&gt;
+Parser (f String) -&gt; Parser (f OsPath)
+</span><a href="#local-6989586621679715042"><span class="hs-identifier hs-var">parseOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser (Seq String) -&gt; Parser (Seq OsPath))
+-&gt; Parser (Seq String) -&gt; Parser (Seq OsPath)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679715040"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Seq String)
+forall l.
+(FromJSON (Item l), IsList l) =&gt;
+Object -&gt; Key -&gt; Parser l
+</span><a href="Pacer.Utils.html#.%3A%3F%3A"><span class="hs-operator hs-var">.:?:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;activities&quot;</span></span><span>
+</span><span id="line-118"></span><span>    </span><span id="local-6989586621679715044"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679715044"><span class="hs-identifier hs-var">buildDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall (f :: * -&gt; *).
+Traversable f =&gt;
+Parser (f String) -&gt; Parser (f OsPath)
+</span><a href="#local-6989586621679715042"><span class="hs-identifier hs-var">parseOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser (Maybe String) -&gt; Parser (Maybe OsPath))
+-&gt; Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679715040"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe String)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;build-dir&quot;</span></span><span>
+</span><span id="line-119"></span><span>    </span><span id="local-6989586621679715045"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679715045"><span class="hs-identifier hs-var">dataDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall (f :: * -&gt; *).
+Traversable f =&gt;
+Parser (f String) -&gt; Parser (f OsPath)
+</span><a href="#local-6989586621679715042"><span class="hs-identifier hs-var">parseOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser (Maybe String) -&gt; Parser (Maybe OsPath))
+-&gt; Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679715040"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe String)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621679715046"><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679715046"><span class="hs-identifier hs-var">chartRequestsPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall (f :: * -&gt; *).
+Traversable f =&gt;
+Parser (f String) -&gt; Parser (f OsPath)
+</span><a href="#local-6989586621679715042"><span class="hs-identifier hs-var">parseOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser (Maybe String) -&gt; Parser (Maybe OsPath))
+-&gt; Parser (Maybe String) -&gt; Parser (Maybe OsPath)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679715040"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe String)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;chart-requests&quot;</span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">Key -&gt; [Key] -&gt; Object -&gt; Parser ()
+</span><a href="Pacer.Utils.html#failUnknownFields"><span class="hs-identifier hs-var">Utils.failUnknownFields</span></a></span><span>
+</span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;ChartConfig&quot;</span></span><span>
+</span><span id="line-124"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;build-dir&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;chart-requests&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;activity-labels&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;activities&quot;</span></span><span>
+</span><span id="line-129"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-130"></span><span>      </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679715040"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-131"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-132"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Configuration.Config.html#MkChartConfig"><span class="hs-identifier hs-type">MkChartConfig</span></a></span><span>
+</span><span id="line-133"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+activityLabelsPath :: Maybe OsPath
+activityLabelsPath :: Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#activityLabelsPath"><span class="hs-identifier hs-var hs-var">activityLabelsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>          </span><span class="annot"><span class="annottext">Seq OsPath
+activityPaths :: Seq OsPath
+activityPaths :: Seq OsPath
+</span><a href="Pacer.Configuration.Config.html#activityPaths"><span class="hs-identifier hs-var hs-var">activityPaths</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>          </span><span class="annot"><span class="annottext">Maybe OsPath
+buildDir :: Maybe OsPath
+buildDir :: Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#buildDir"><span class="hs-identifier hs-var hs-var">buildDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>          </span><span class="annot"><span class="annottext">Maybe OsPath
+dataDir :: Maybe OsPath
+dataDir :: Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#dataDir"><span class="hs-identifier hs-var hs-var">dataDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-137"></span><span>          </span><span class="annot"><span class="annottext">Maybe OsPath
+chartRequestsPath :: Maybe OsPath
+chartRequestsPath :: Maybe OsPath
+</span><a href="Pacer.Configuration.Config.html#chartRequestsPath"><span class="hs-identifier hs-var hs-var">chartRequestsPath</span></a></span><span>
+</span><span id="line-138"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-139"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-140"></span><span>      </span><span class="annot"><a href="#local-6989586621679715042"><span class="hs-identifier hs-type">parseOsPath</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-141"></span><span>        </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679714602"><span class="annot"><a href="#local-6989586621679714602"><span class="hs-identifier hs-type">f</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-142"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="annot"><a href="#local-6989586621679714602"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">AsnT.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679714602"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-144"></span><span>        </span><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">AsnT.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679714602"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>      </span><span id="local-6989586621679715042"><span class="annot"><span class="annottext">parseOsPath :: forall (f :: * -&gt; *).
+Traversable f =&gt;
+Parser (f String) -&gt; Parser (f OsPath)
+</span><a href="#local-6989586621679715042"><span class="hs-identifier hs-var hs-var">parseOsPath</span></a></span></span><span> </span><span id="local-6989586621679715056"><span class="annot"><span class="annottext">Parser (f String)
+</span><a href="#local-6989586621679715056"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (f String)
+</span><a href="#local-6989586621679715056"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (f String)
+-&gt; (f String -&gt; Parser (f OsPath)) -&gt; Parser (f OsPath)
+forall a b. Parser a -&gt; (a -&gt; Parser b) -&gt; Parser b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser OsPath) -&gt; f String -&gt; Parser (f OsPath)
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; f a -&gt; f (f b)
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser OsPath
+forall (m :: * -&gt; *).
+(HasCallStack, MonadFail m) =&gt;
+String -&gt; m OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#encodeValidFail"><span class="hs-identifier hs-var">OsPath.encodeValidFail</span></a></span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span id="local-6989586621679714633"><span id="local-6989586621679714634"><span id="local-6989586621679714635"><span id="local-6989586621679714636"><span id="local-6989586621679714637"><span id="local-6989586621679714638"><span id="local-6989586621679715063"><span id="local-6989586621679715068"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ConfigWithPath</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-148"></span><span id="local-6989586621679714653"><span id="local-6989586621679714654"><span id="local-6989586621679714655"><span id="local-6989586621679714656"><span id="local-6989586621679714657"><span id="local-6989586621679714658"><span id="local-6989586621679715098"><span id="local-6989586621679715103"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Config</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-149"></span><span id="local-6989586621679714667"><span id="local-6989586621679714668"><span id="local-6989586621679714669"><span id="local-6989586621679714670"><span id="local-6989586621679714671"><span id="local-6989586621679714672"><span id="local-6989586621679715130"><span id="local-6989586621679715135"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">LogConfig</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-150"></span><span id="local-6989586621679714690"><span id="local-6989586621679714691"><span id="local-6989586621679714692"><span id="local-6989586621679714693"><span id="local-6989586621679714694"><span id="local-6989586621679714695"><span id="local-6989586621679714696"><span id="local-6989586621679714697"><span id="local-6989586621679714698"><span id="local-6989586621679714699"><span id="local-6989586621679714700"><span id="local-6989586621679714701"><span id="local-6989586621679714702"><span id="local-6989586621679714703"><span id="local-6989586621679714704"><span id="local-6989586621679715162"><span id="local-6989586621679715167"><span id="local-6989586621679715172"><span id="local-6989586621679715177"><span id="local-6989586621679715182"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ChartConfig</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-151"></span></pre></body></html>

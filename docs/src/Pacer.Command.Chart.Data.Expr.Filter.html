@@ -1,0 +1,342 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Provides filter.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr.Filter</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier">FilterType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Activity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#ActivityType"><span class="hs-identifier">ActivityType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier">Label</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr.Ord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier">FilterOpOrd</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Set.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Expr.Set</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Moment</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier">Moment</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier">SomeDistance</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html"><span class="hs-identifier">Pacer.Data.Duration</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier">Duration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Pace.html"><span class="hs-identifier">Pacer.Data.Pace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier">SomePace</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html"><span class="hs-identifier">Text.Megaparsec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator">(&lt;?&gt;)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html"><span class="hs-identifier">Text.Megaparsec.Char</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MPC</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-20"></span><span class="hs-comment">--                                 FilterType                                --</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="annot"><span class="hs-comment">-- | Ways in which we can filter activities.</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="FilterType"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier hs-var">FilterType</span></a></span></span><span> </span><span id="local-6989586621679724044"><span class="annot"><a href="#local-6989586621679724044"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Filter based on distance.</span></span><span>
+</span><span id="line-26"></span><span>    </span><span id="FilterDistance"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDistance"><span class="hs-identifier hs-var">FilterDistance</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier hs-type">SomeDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724044"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Filter based on duration.</span></span><span>
+</span><span id="line-28"></span><span>    </span><span id="FilterDuration"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDuration"><span class="hs-identifier hs-var">FilterDuration</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724044"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Filter based on label set.</span></span><span>
+</span><span id="line-30"></span><span>    </span><span id="FilterLabel"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterLabel"><span class="hs-identifier hs-var">FilterLabel</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Set.html#FilterSet"><span class="hs-identifier hs-type">Set.FilterSet</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;label&quot;</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier hs-type">Label</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Filter based on date.</span></span><span>
+</span><span id="line-32"></span><span>    </span><span id="FilterDate"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDate"><span class="hs-identifier hs-var">FilterDate</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier hs-type">Moment</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Filter based on pace.</span></span><span>
+</span><span id="line-34"></span><span>    </span><span id="FilterPace"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterPace"><span class="hs-identifier hs-var">FilterPace</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Ord.html#FilterOpOrd"><span class="hs-identifier hs-type">FilterOpOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier hs-type">SomePace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724044"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Filter based on type.</span></span><span>
+</span><span id="line-36"></span><span>    </span><span id="FilterType"><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier hs-var">FilterType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Set.html#FilterElem"><span class="hs-identifier hs-type">Set.FilterElem</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#ActivityType"><span class="hs-identifier hs-type">ActivityType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679724095"><span id="local-6989586621679724121"><span class="annot"><span class="annottext">FilterType a -&gt; FilterType a -&gt; Bool
+(FilterType a -&gt; FilterType a -&gt; Bool)
+-&gt; (FilterType a -&gt; FilterType a -&gt; Bool) -&gt; Eq (FilterType a)
+forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+FilterType a -&gt; FilterType a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+FilterType a -&gt; FilterType a -&gt; Bool
+== :: FilterType a -&gt; FilterType a -&gt; Bool
+$c/= :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+FilterType a -&gt; FilterType a -&gt; Bool
+/= :: FilterType a -&gt; FilterType a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724130"><span id="local-6989586621679724132"><span class="annot"><span class="annottext">(forall x. FilterType a -&gt; Rep (FilterType a) x)
+-&gt; (forall x. Rep (FilterType a) x -&gt; FilterType a)
+-&gt; Generic (FilterType a)
+forall x. Rep (FilterType a) x -&gt; FilterType a
+forall x. FilterType a -&gt; Rep (FilterType a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (FilterType a) x -&gt; FilterType a
+forall a x. FilterType a -&gt; Rep (FilterType a) x
+$cfrom :: forall a x. FilterType a -&gt; Rep (FilterType a) x
+from :: forall x. FilterType a -&gt; Rep (FilterType a) x
+$cto :: forall a x. Rep (FilterType a) x -&gt; FilterType a
+to :: forall x. Rep (FilterType a) x -&gt; FilterType a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724139"><span id="local-6989586621679724167"><span id="local-6989586621679724171"><span class="annot"><span class="annottext">Int -&gt; FilterType a -&gt; ShowS
+[FilterType a] -&gt; ShowS
+FilterType a -&gt; String
+(Int -&gt; FilterType a -&gt; ShowS)
+-&gt; (FilterType a -&gt; String)
+-&gt; ([FilterType a] -&gt; ShowS)
+-&gt; Show (FilterType a)
+forall a. Show a =&gt; Int -&gt; FilterType a -&gt; ShowS
+forall a. Show a =&gt; [FilterType a] -&gt; ShowS
+forall a. Show a =&gt; FilterType a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; FilterType a -&gt; ShowS
+showsPrec :: Int -&gt; FilterType a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; FilterType a -&gt; String
+show :: FilterType a -&gt; String
+$cshowList :: forall a. Show a =&gt; [FilterType a] -&gt; ShowS
+showList :: [FilterType a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679724179"><span class="annot"><span class="annottext">FilterType a -&gt; ()
+(FilterType a -&gt; ()) -&gt; NFData (FilterType a)
+forall a. NFData a =&gt; FilterType a -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: forall a. NFData a =&gt; FilterType a -&gt; ()
+rnf :: FilterType a -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621679724000"><span id="local-6989586621679724246"><span id="local-6989586621679724250"><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Additive.AMonoid.html/Numeric.Algebra.Additive.AMonoid.html#AMonoid"><span class="hs-identifier hs-type">AMonoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#From%2124"><span class="hs-identifier hs-type">From&#8484;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Multiplicative.MSemigroup.html/Numeric.Algebra.Multiplicative.MSemigroup.html#MSemigroup"><span class="hs-identifier hs-type">MSemigroup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#To%211A"><span class="hs-identifier hs-type">To&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier hs-type">FilterType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724000"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679724294"><span class="annot"><span class="annottext">displayBuilder :: FilterType a -&gt; Builder
+</span><a href="#local-6989586621679724294"><span class="hs-identifier hs-var hs-var hs-var">displayBuilder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDistance"><span class="hs-identifier hs-type">FilterDistance</span></a></span><span> </span><span id="local-6989586621679724296"><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724296"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621679724297"><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679724297"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">[Builder] -&gt; Builder
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-54"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;distance &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724296"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>          </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot; &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>          </span><span class="annot"><span class="annottext">SomeDistance a -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679724297"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-58"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDuration"><span class="hs-identifier hs-type">FilterDuration</span></a></span><span> </span><span id="local-6989586621679724298"><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724298"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621679724299"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679724299"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">[Builder] -&gt; Builder
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-61"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;duration &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724298"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot; &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>          </span><span class="annot"><span class="annottext">Duration a -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679724299"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-65"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterLabel"><span class="hs-identifier hs-type">FilterLabel</span></a></span><span> </span><span id="local-6989586621679724300"><span class="annot"><span class="annottext">FilterSet &quot;label&quot; Label
+</span><a href="#local-6989586621679724300"><span class="hs-identifier hs-var">labelsSet</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilterSet &quot;label&quot; Label -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">FilterSet &quot;label&quot; Label
+</span><a href="#local-6989586621679724300"><span class="hs-identifier hs-var">labelsSet</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDate"><span class="hs-identifier hs-type">FilterDate</span></a></span><span> </span><span id="local-6989586621679724301"><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724301"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621679724302"><span class="annot"><span class="annottext">Moment
+</span><a href="#local-6989586621679724302"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">[Builder] -&gt; Builder
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-69"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;datetime &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724301"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot; &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>          </span><span class="annot"><span class="annottext">Moment -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Moment
+</span><a href="#local-6989586621679724302"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterPace"><span class="hs-identifier hs-type">FilterPace</span></a></span><span> </span><span id="local-6989586621679724303"><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724303"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621679724304"><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679724304"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">[Builder] -&gt; Builder
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-76"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;pace &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>          </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd
+</span><a href="#local-6989586621679724303"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>          </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot; &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>          </span><span class="annot"><span class="annottext">SomePace a -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679724304"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-80"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier hs-type">FilterType</span></a></span><span> </span><span id="local-6989586621679724305"><span class="annot"><span class="annottext">FilterElem &quot;type&quot; ActivityType
+</span><a href="#local-6989586621679724305"><span class="hs-identifier hs-var">typeElem</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilterElem &quot;type&quot; ActivityType -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">FilterElem &quot;type&quot; ActivityType
+</span><a href="#local-6989586621679724305"><span class="hs-identifier hs-var">typeElem</span></a></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621679724016"><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724016"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679724016"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-86"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724016"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724016"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679724016"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier hs-type">FilterType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679724016"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621679724352"><span class="annot"><span class="annottext">parser :: MParser (FilterType a)
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">[MParser (FilterType a)] -&gt; MParser (FilterType a)
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t (f a) -&gt; f a
+</span><span class="hs-identifier hs-var">asum</span></span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilterSet &quot;label&quot; Label -&gt; FilterType a
+forall a. FilterSet &quot;label&quot; Label -&gt; FilterType a
+</span><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterLabel"><span class="hs-identifier hs-var">FilterLabel</span></a></span><span> </span><span class="annot"><span class="annottext">(FilterSet &quot;label&quot; Label -&gt; FilterType a)
+-&gt; ParsecT Void Text Identity (FilterSet &quot;label&quot; Label)
+-&gt; MParser (FilterType a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity (FilterSet &quot;label&quot; Label)
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">MParser (FilterType a)
+</span><a href="#local-6989586621679724355"><span class="hs-identifier hs-var">parseDist</span></a></span><span> </span><span class="annot"><span class="annottext">MParser (FilterType a) -&gt; String -&gt; MParser (FilterType a)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+m a -&gt; String -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;distance&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>        </span><span class="annot"><span class="annottext">MParser (FilterType a)
+</span><a href="#local-6989586621679724356"><span class="hs-identifier hs-var">parseDuration</span></a></span><span> </span><span class="annot"><span class="annottext">MParser (FilterType a) -&gt; String -&gt; MParser (FilterType a)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+m a -&gt; String -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;duration&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>        </span><span class="annot"><span class="annottext">MParser (FilterType a)
+</span><a href="#local-6989586621679724357"><span class="hs-identifier hs-var">parsePace</span></a></span><span> </span><span class="annot"><span class="annottext">MParser (FilterType a) -&gt; String -&gt; MParser (FilterType a)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+m a -&gt; String -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;pace&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">MParser (FilterType a)
+forall {a}. ParsecT Void Text Identity (FilterType a)
+</span><a href="#local-6989586621679724358"><span class="hs-identifier hs-var">parseDate</span></a></span><span> </span><span class="annot"><span class="annottext">MParser (FilterType a) -&gt; String -&gt; MParser (FilterType a)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+m a -&gt; String -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;datetime&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">MParser (FilterType a)
+forall {a}. ParsecT Void Text Identity (FilterType a)
+</span><a href="#local-6989586621679724358"><span class="hs-identifier hs-var">parseDate</span></a></span><span> </span><span class="annot"><span class="annottext">MParser (FilterType a) -&gt; String -&gt; MParser (FilterType a)
+forall e s (m :: * -&gt; *) a.
+MonadParsec e s m =&gt;
+m a -&gt; String -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;datetime&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">FilterElem &quot;type&quot; ActivityType -&gt; FilterType a
+forall a. FilterElem &quot;type&quot; ActivityType -&gt; FilterType a
+</span><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterType"><span class="hs-identifier hs-var">FilterType</span></a></span><span> </span><span class="annot"><span class="annottext">(FilterElem &quot;type&quot; ActivityType -&gt; FilterType a)
+-&gt; ParsecT Void Text Identity (FilterElem &quot;type&quot; ActivityType)
+-&gt; MParser (FilterType a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity (FilterElem &quot;type&quot; ActivityType)
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-101"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-102"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-103"></span><span>      </span><span id="local-6989586621679724358"><span class="annot"><span class="annottext">parseDate :: ParsecT Void Text Identity (FilterType a)
+</span><a href="#local-6989586621679724358"><span class="hs-identifier hs-var hs-var">parseDate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; (FilterOpOrd -&gt; Moment -&gt; FilterType a)
+-&gt; ParsecT Void Text Identity (FilterType a)
+forall {t} {t} {b}.
+(Parser t, Parser t) =&gt;
+Text -&gt; (t -&gt; t -&gt; b) -&gt; ParsecT Void Text Identity b
+</span><a href="#local-6989586621679724365"><span class="hs-identifier hs-var">parsePred</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;datetime&quot;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; Moment -&gt; FilterType a
+forall a. FilterOpOrd -&gt; Moment -&gt; FilterType a
+</span><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDate"><span class="hs-identifier hs-var">FilterDate</span></a></span><span>
+</span><span id="line-104"></span><span>      </span><span id="local-6989586621679724355"><span class="annot"><span class="annottext">parseDist :: MParser (FilterType a)
+</span><a href="#local-6989586621679724355"><span class="hs-identifier hs-var hs-var">parseDist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; (FilterOpOrd -&gt; SomeDistance a -&gt; FilterType a)
+-&gt; MParser (FilterType a)
+forall {t} {t} {b}.
+(Parser t, Parser t) =&gt;
+Text -&gt; (t -&gt; t -&gt; b) -&gt; ParsecT Void Text Identity b
+</span><a href="#local-6989586621679724365"><span class="hs-identifier hs-var">parsePred</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;distance&quot;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; SomeDistance a -&gt; FilterType a
+forall a. FilterOpOrd -&gt; SomeDistance a -&gt; FilterType a
+</span><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDistance"><span class="hs-identifier hs-var">FilterDistance</span></a></span><span>
+</span><span id="line-105"></span><span>      </span><span id="local-6989586621679724356"><span class="annot"><span class="annottext">parseDuration :: MParser (FilterType a)
+</span><a href="#local-6989586621679724356"><span class="hs-identifier hs-var hs-var">parseDuration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; (FilterOpOrd -&gt; Duration a -&gt; FilterType a)
+-&gt; MParser (FilterType a)
+forall {t} {t} {b}.
+(Parser t, Parser t) =&gt;
+Text -&gt; (t -&gt; t -&gt; b) -&gt; ParsecT Void Text Identity b
+</span><a href="#local-6989586621679724365"><span class="hs-identifier hs-var">parsePred</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;duration&quot;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; Duration a -&gt; FilterType a
+forall a. FilterOpOrd -&gt; Duration a -&gt; FilterType a
+</span><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterDuration"><span class="hs-identifier hs-var">FilterDuration</span></a></span><span>
+</span><span id="line-106"></span><span>      </span><span id="local-6989586621679724357"><span class="annot"><span class="annottext">parsePace :: MParser (FilterType a)
+</span><a href="#local-6989586621679724357"><span class="hs-identifier hs-var hs-var">parsePace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; (FilterOpOrd -&gt; SomePace a -&gt; FilterType a)
+-&gt; MParser (FilterType a)
+forall {t} {t} {b}.
+(Parser t, Parser t) =&gt;
+Text -&gt; (t -&gt; t -&gt; b) -&gt; ParsecT Void Text Identity b
+</span><a href="#local-6989586621679724365"><span class="hs-identifier hs-var">parsePred</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;pace&quot;</span></span><span> </span><span class="annot"><span class="annottext">FilterOpOrd -&gt; SomePace a -&gt; FilterType a
+forall a. FilterOpOrd -&gt; SomePace a -&gt; FilterType a
+</span><a href="Pacer.Command.Chart.Data.Expr.Filter.html#FilterPace"><span class="hs-identifier hs-var">FilterPace</span></a></span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span>      </span><span id="local-6989586621679724365"><span class="annot"><span class="annottext">parsePred :: Tokens Text -&gt; (t -&gt; t -&gt; b) -&gt; ParsecT Void Text Identity b
+</span><a href="#local-6989586621679724365"><span class="hs-identifier hs-var hs-var">parsePred</span></a></span></span><span> </span><span id="local-6989586621679724419"><span class="annot"><span class="annottext">Tokens Text
+</span><a href="#local-6989586621679724419"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621679724420"><span class="annot"><span class="annottext">t -&gt; t -&gt; b
+</span><a href="#local-6989586621679724420"><span class="hs-identifier hs-var">cons</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">Tokens Text -&gt; ParsecT Void Text Identity (Tokens Text)
+forall e s (m :: * -&gt; *).
+MonadParsec e s m =&gt;
+Tokens s -&gt; m (Tokens s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Common.html/Text.Megaparsec.Common.html#string"><span class="hs-identifier hs-var">MPC.string</span></a></span><span> </span><span class="annot"><span class="annottext">Tokens Text
+</span><a href="#local-6989586621679724419"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-110"></span><span>        </span><span class="annot"><span class="annottext">ParsecT Void Text Identity ()
+forall e s (m :: * -&gt; *).
+(MonadParsec e s m, Token s ~ Char) =&gt;
+m ()
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html#space"><span class="hs-identifier hs-var">MPC.space</span></a></span><span>
+</span><span id="line-111"></span><span>        </span><span id="local-6989586621679724423"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679724423"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity t
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-112"></span><span>        </span><span class="annot"><span class="annottext">ParsecT Void Text Identity ()
+forall e s (m :: * -&gt; *).
+(MonadParsec e s m, Token s ~ Char) =&gt;
+m ()
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html#space"><span class="hs-identifier hs-var">MPC.space</span></a></span><span>
+</span><span id="line-113"></span><span>        </span><span id="local-6989586621679724424"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679724424"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity t
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-114"></span><span>        </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; b
+</span><a href="#local-6989586621679724420"><span class="hs-identifier hs-var">cons</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679724423"><span class="hs-identifier hs-var">op</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679724424"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-115"></span></pre></body></html>

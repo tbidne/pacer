@@ -1,0 +1,1297 @@
+[2025-06-06 16:13:48][Command][haddock_push] Starting...
+[2025-06-06 16:13:48][Command][haddock_push] Your branch is up to date with 'origin/main'.
+[2025-06-06 16:13:48][Command][haddock_push] Already on 'main'
+[2025-06-06 16:13:48][Command][haddock_push] Deleted branch gh-pages (was f3d1346).
+[2025-06-06 16:13:48][Command][haddock_push] Switched to a new branch 'gh-pages'
+[2025-06-06 16:13:48][Command][haddock_push] Configuration is affected by the following files:
+[2025-06-06 16:13:48][Command][haddock_push] - cabal.project
+[2025-06-06 16:13:48][Command][haddock_push] - cabal.project.local
+[2025-06-06 16:13:49][Command][haddock_push] Build profile: -w ghc-9.10.1 -O0
+[2025-06-06 16:13:49][Command][haddock_push] In order, the following will be built (use -v for more details):
+[2025-06-06 16:13:49][Command][haddock_push]  - algebra-simple-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - bounds-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - concurrent-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - effectful-utils-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - exception-utils-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - fs-utils-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - ioref-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - smart-math-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - relative-time-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - time-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - terminal-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - logger-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - fs-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - logger-ns-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - optparse-effectful-0.1 (lib) (requires build)
+[2025-06-06 16:13:49][Command][haddock_push]  - pacer-0.1 (lib) (configuration changed)
+[2025-06-06 16:13:49][Command][haddock_push]  - pacer-0.1 (lib:bench-utils) (configuration changed)
+[2025-06-06 16:13:49][Command][haddock_push] Starting     concurrent-effectful-0.1 (lib)
+[2025-06-06 16:13:49][Command][haddock_push] Starting     effectful-utils-0.1 (lib)
+[2025-06-06 16:13:49][Command][haddock_push] Starting     exception-utils-0.1 (lib)
+[2025-06-06 16:13:49][Command][haddock_push] Starting     ioref-effectful-0.1 (lib)
+[2025-06-06 16:13:49][Command][haddock_push] Starting     bounds-0.1 (lib)
+[2025-06-06 16:13:49][Command][haddock_push] Starting     fs-utils-0.1 (lib)
+[2025-06-06 16:13:50][Command][haddock_push] Starting     algebra-simple-0.1 (lib)
+[2025-06-06 16:13:59][Command][haddock_push] Building     algebra-simple-0.1 (lib)
+[2025-06-06 16:13:59][Command][haddock_push] Building     exception-utils-0.1 (lib)
+[2025-06-06 16:13:59][Command][haddock_push] Building     effectful-utils-0.1 (lib)
+[2025-06-06 16:13:59][Command][haddock_push] Building     ioref-effectful-0.1 (lib)
+[2025-06-06 16:13:59][Command][haddock_push] Building     bounds-0.1 (lib)
+[2025-06-06 16:13:59][Command][haddock_push] Building     concurrent-effectful-0.1 (lib)
+[2025-06-06 16:14:00][Command][haddock_push] Building     fs-utils-0.1 (lib)
+[2025-06-06 16:14:03][Command][haddock_push] Haddock      effectful-utils-0.1 (lib)
+[2025-06-06 16:14:04][Command][haddock_push] Haddock      ioref-effectful-0.1 (lib)
+[2025-06-06 16:14:05][Command][haddock_push] Haddock      concurrent-effectful-0.1 (lib)
+[2025-06-06 16:14:08][Command][haddock_push] Haddock      exception-utils-0.1 (lib)
+[2025-06-06 16:14:10][Command][haddock_push] Haddock      bounds-0.1 (lib)
+[2025-06-06 16:14:14][Command][haddock_push] Haddock      fs-utils-0.1 (lib)
+[2025-06-06 16:14:21][Command][haddock_push] Haddock      algebra-simple-0.1 (lib)
+[2025-06-06 16:14:39][Command][haddock_push] Installing   effectful-utils-0.1 (lib)
+[2025-06-06 16:14:44][Command][haddock_push] Completed    effectful-utils-0.1 (lib)
+[2025-06-06 16:14:44][Command][haddock_push] Starting     logger-effectful-0.1 (lib)
+[2025-06-06 16:14:44][Command][haddock_push] Starting     terminal-effectful-0.1 (lib)
+[2025-06-06 16:14:55][Command][haddock_push] Installing   bounds-0.1 (lib)
+[2025-06-06 16:14:56][Command][haddock_push] Installing   ioref-effectful-0.1 (lib)
+[2025-06-06 16:14:59][Command][haddock_push] Building     logger-effectful-0.1 (lib)
+[2025-06-06 16:14:59][Command][haddock_push] Building     terminal-effectful-0.1 (lib)
+[2025-06-06 16:15:01][Command][haddock_push] Completed    bounds-0.1 (lib)
+[2025-06-06 16:15:01][Command][haddock_push] Installing   exception-utils-0.1 (lib)
+[2025-06-06 16:15:04][Command][haddock_push] Installing   algebra-simple-0.1 (lib)
+[2025-06-06 16:15:04][Command][haddock_push] Completed    ioref-effectful-0.1 (lib)
+[2025-06-06 16:15:07][Command][haddock_push] Haddock      terminal-effectful-0.1 (lib)
+[2025-06-06 16:15:08][Command][haddock_push] Installing   concurrent-effectful-0.1 (lib)
+[2025-06-06 16:15:08][Command][haddock_push] Completed    exception-utils-0.1 (lib)
+[2025-06-06 16:15:10][Command][haddock_push] Completed    algebra-simple-0.1 (lib)
+[2025-06-06 16:15:10][Command][haddock_push] Starting     time-effectful-0.1 (lib)
+[2025-06-06 16:15:10][Command][haddock_push] Starting     relative-time-0.1 (lib)
+[2025-06-06 16:15:10][Command][haddock_push] Starting     smart-math-0.1 (lib)
+[2025-06-06 16:15:12][Command][haddock_push] Haddock      logger-effectful-0.1 (lib)
+[2025-06-06 16:15:13][Command][haddock_push] Completed    concurrent-effectful-0.1 (lib)
+[2025-06-06 16:15:17][Command][haddock_push] Installing   fs-utils-0.1 (lib)
+[2025-06-06 16:15:18][Command][haddock_push] Building     relative-time-0.1 (lib)
+[2025-06-06 16:15:18][Command][haddock_push] Building     smart-math-0.1 (lib)
+[2025-06-06 16:15:19][Command][haddock_push] Building     time-effectful-0.1 (lib)
+[2025-06-06 16:15:22][Command][haddock_push] Completed    fs-utils-0.1 (lib)
+[2025-06-06 16:15:22][Command][haddock_push] Starting     fs-effectful-0.1 (lib)
+[2025-06-06 16:15:28][Command][haddock_push] Haddock      time-effectful-0.1 (lib)
+[2025-06-06 16:15:29][Command][haddock_push] Haddock      relative-time-0.1 (lib)
+[2025-06-06 16:15:32][Command][haddock_push] Building     fs-effectful-0.1 (lib)
+[2025-06-06 16:15:53][Command][haddock_push] Installing   terminal-effectful-0.1 (lib)
+[2025-06-06 16:15:58][Command][haddock_push] Completed    terminal-effectful-0.1 (lib)
+[2025-06-06 16:16:01][Command][haddock_push] Haddock      smart-math-0.1 (lib)
+[2025-06-06 16:16:07][Command][haddock_push] Installing   logger-effectful-0.1 (lib)
+[2025-06-06 16:16:08][Command][haddock_push] Haddock      fs-effectful-0.1 (lib)
+[2025-06-06 16:16:11][Command][haddock_push] Completed    logger-effectful-0.1 (lib)
+[2025-06-06 16:16:13][Command][haddock_push] Installing   relative-time-0.1 (lib)
+[2025-06-06 16:16:16][Command][haddock_push] Completed    relative-time-0.1 (lib)
+[2025-06-06 16:16:18][Command][haddock_push] Installing   time-effectful-0.1 (lib)
+[2025-06-06 16:16:22][Command][haddock_push] Completed    time-effectful-0.1 (lib)
+[2025-06-06 16:16:22][Command][haddock_push] Starting     logger-ns-effectful-0.1 (lib)
+[2025-06-06 16:16:29][Command][haddock_push] Building     logger-ns-effectful-0.1 (lib)
+[2025-06-06 16:16:42][Command][haddock_push] Haddock      logger-ns-effectful-0.1 (lib)
+[2025-06-06 16:16:45][Command][haddock_push] Installing   smart-math-0.1 (lib)
+[2025-06-06 16:16:50][Command][haddock_push] Completed    smart-math-0.1 (lib)
+[2025-06-06 16:17:02][Command][haddock_push] Installing   fs-effectful-0.1 (lib)
+[2025-06-06 16:17:05][Command][haddock_push] Completed    fs-effectful-0.1 (lib)
+[2025-06-06 16:17:05][Command][haddock_push] Starting     optparse-effectful-0.1 (lib)
+[2025-06-06 16:17:11][Command][haddock_push] Building     optparse-effectful-0.1 (lib)
+[2025-06-06 16:17:16][Command][haddock_push] Haddock      optparse-effectful-0.1 (lib)
+[2025-06-06 16:17:24][Command][haddock_push] Installing   logger-ns-effectful-0.1 (lib)
+[2025-06-06 16:17:28][Command][haddock_push] Completed    logger-ns-effectful-0.1 (lib)
+[2025-06-06 16:17:53][Command][haddock_push] Installing   optparse-effectful-0.1 (lib)
+[2025-06-06 16:17:56][Command][haddock_push] Completed    optparse-effectful-0.1 (lib)
+[2025-06-06 16:17:56][Command][haddock_push] Configuring library for pacer-0.1...
+[2025-06-06 16:18:10][Command][haddock_push] Preprocessing library for pacer-0.1...
+[2025-06-06 16:18:10][Command][haddock_push] Building library for pacer-0.1...
+[2025-06-06 16:18:11][Command][haddock_push] [ 1 of 58] Compiling Pacer.Data.Result ( src/Pacer/Data/Result.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Result.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Result.dyn_o ) [Flags changed]
+[2025-06-06 16:18:13][Command][haddock_push] [ 2 of 58] Compiling Pacer.Prelude    ( src/Pacer/Prelude.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Prelude.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Prelude.dyn_o ) [Flags changed]
+[2025-06-06 16:18:17][Command][haddock_push] [ 3 of 58] Compiling Pacer.Configuration.Phase ( src/Pacer/Configuration/Phase.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Phase.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Phase.dyn_o ) [Flags changed]
+[2025-06-06 16:18:17][Command][haddock_push] [ 4 of 58] Compiling Pacer.Configuration.Args.TH ( src/Pacer/Configuration/Args/TH.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Args/TH.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Args/TH.dyn_o ) [Flags changed]
+[2025-06-06 16:18:18][Command][haddock_push] [ 5 of 58] Compiling Pacer.Class.Units ( src/Pacer/Class/Units.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/Units.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/Units.dyn_o ) [Flags changed]
+[2025-06-06 16:18:18][Command][haddock_push] [ 6 of 58] Compiling Pacer.Class.Parser ( src/Pacer/Class/Parser.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/Parser.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/Parser.dyn_o ) [Flags changed]
+[2025-06-06 16:18:19][Command][haddock_push] [ 7 of 58] Compiling Pacer.Data.Duration ( src/Pacer/Data/Duration.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Duration.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Duration.dyn_o ) [Flags changed]
+[2025-06-06 16:18:20][Command][haddock_push] [ 8 of 58] Compiling Pacer.Data.Distance.Units ( src/Pacer/Data/Distance/Units.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Distance/Units.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Distance/Units.dyn_o ) [Flags changed]
+[2025-06-06 16:18:21][Command][haddock_push] [ 9 of 58] Compiling Pacer.Data.Distance ( src/Pacer/Data/Distance.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Distance.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Distance.dyn_o ) [Flags changed]
+[2025-06-06 16:18:23][Command][haddock_push] [10 of 58] Compiling Pacer.Command.Chart.Data.Time.Year ( src/Pacer/Command/Chart/Data/Time/Year.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Year.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Year.dyn_o ) [Flags changed]
+[2025-06-06 16:18:24][Command][haddock_push] [11 of 58] Compiling Pacer.Command.Chart.Data.Time.Month ( src/Pacer/Command/Chart/Data/Time/Month.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Month.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Month.dyn_o ) [Flags changed]
+[2025-06-06 16:18:24][Command][haddock_push] [12 of 58] Compiling Pacer.Class.IOrd ( src/Pacer/Class/IOrd.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/IOrd.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/IOrd.dyn_o ) [Flags changed]
+[2025-06-06 16:18:24][Command][haddock_push] [13 of 58] Compiling Pacer.Command.Chart.Data.Time.Timestamp.Internal ( src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Timestamp/Internal.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Timestamp/Internal.dyn_o ) [Flags changed]
+[2025-06-06 16:18:25][Command][haddock_push] [14 of 58] Compiling Pacer.Command.Chart.Data.Time.Timestamp ( src/Pacer/Command/Chart/Data/Time/Timestamp.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Timestamp.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Timestamp.dyn_o ) [Flags changed]
+[2025-06-06 16:18:26][Command][haddock_push] [15 of 58] Compiling Pacer.Command.Chart.Data.Time.Moment ( src/Pacer/Command/Chart/Data/Time/Moment.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Moment.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Time/Moment.dyn_o ) [Flags changed]
+[2025-06-06 16:18:26][Command][haddock_push] [16 of 58] Compiling Pacer.Command.Chart.Data.Expr.Eq ( src/Pacer/Command/Chart/Data/Expr/Eq.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Eq.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Eq.dyn_o ) [Flags changed]
+[2025-06-06 16:18:27][Command][haddock_push] [17 of 58] Compiling Pacer.Command.Chart.Data.Expr.Ord ( src/Pacer/Command/Chart/Data/Expr/Ord.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Ord.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Ord.dyn_o ) [Flags changed]
+[2025-06-06 16:18:27][Command][haddock_push] [18 of 58] Compiling Pacer.Class.FromAlt ( src/Pacer/Class/FromAlt.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/FromAlt.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Class/FromAlt.dyn_o ) [Flags changed]
+[2025-06-06 16:18:27][Command][haddock_push] [19 of 58] Compiling Pacer.Utils      ( src/Pacer/Utils.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Utils.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Utils.dyn_o ) [Flags changed]
+[2025-06-06 16:18:28][Command][haddock_push] [20 of 58] Compiling Pacer.Data.Pace  ( src/Pacer/Data/Pace.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Pace.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Data/Pace.dyn_o ) [Flags changed]
+[2025-06-06 16:18:29][Command][haddock_push] [21 of 58] Compiling Pacer.Configuration.Utils ( src/Pacer/Configuration/Utils.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Utils.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Utils.dyn_o ) [Flags changed]
+[2025-06-06 16:18:30][Command][haddock_push] [22 of 58] Compiling Pacer.Configuration.Logging ( src/Pacer/Configuration/Logging.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Logging.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Logging.dyn_o ) [Flags changed]
+[2025-06-06 16:18:30][Command][haddock_push] [23 of 58] Compiling Pacer.Configuration.Env.Types ( src/Pacer/Configuration/Env/Types.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Env/Types.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Env/Types.dyn_o ) [Flags changed]
+[2025-06-06 16:18:31][Command][haddock_push] [24 of 58] Compiling Pacer.Configuration.Config ( src/Pacer/Configuration/Config.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Config.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Config.dyn_o ) [Flags changed]
+[2025-06-06 16:18:33][Command][haddock_push] [25 of 58] Compiling Pacer.Utils.Show ( src/Pacer/Utils/Show.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Utils/Show.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Utils/Show.dyn_o ) [Flags changed]
+[2025-06-06 16:18:33][Command][haddock_push] [26 of 58] Compiling Pacer.Utils.FileSearch ( src/Pacer/Utils/FileSearch.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Utils/FileSearch.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Utils/FileSearch.dyn_o ) [Flags changed]
+[2025-06-06 16:18:35][Command][haddock_push] [27 of 58] Compiling Pacer.Exception  ( src/Pacer/Exception.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Exception.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Exception.dyn_o ) [Flags changed]
+[2025-06-06 16:18:36][Command][haddock_push] [28 of 58] Compiling Pacer.Command.Scale.Params ( src/Pacer/Command/Scale/Params.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Scale/Params.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Scale/Params.dyn_o ) [Flags changed]
+[2025-06-06 16:18:36][Command][haddock_push] [29 of 58] Compiling Pacer.Command.Scale.Args ( src/Pacer/Command/Scale/Args.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Scale/Args.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Scale/Args.dyn_o ) [Flags changed]
+[2025-06-06 16:18:37][Command][haddock_push] [30 of 58] Compiling Pacer.Command.Scale ( src/Pacer/Command/Scale.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Scale.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Scale.dyn_o ) [Flags changed]
+[2025-06-06 16:18:37][Command][haddock_push] [31 of 58] Compiling Pacer.Command.Derive.Params ( src/Pacer/Command/Derive/Params.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Derive/Params.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Derive/Params.dyn_o ) [Flags changed]
+[2025-06-06 16:18:37][Command][haddock_push] [32 of 58] Compiling Pacer.Command.Derive.Args ( src/Pacer/Command/Derive/Args.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Derive/Args.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Derive/Args.dyn_o ) [Flags changed]
+[2025-06-06 16:18:38][Command][haddock_push] [33 of 58] Compiling Pacer.Command.Derive ( src/Pacer/Command/Derive.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Derive.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Derive.dyn_o ) [Flags changed]
+[2025-06-06 16:18:38][Command][haddock_push] [34 of 58] Compiling Pacer.Command.Chart.Data.Activity ( src/Pacer/Command/Chart/Data/Activity.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Activity.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Activity.dyn_o ) [Flags changed]
+[2025-06-06 16:18:41][Command][haddock_push] [35 of 58] Compiling Pacer.Command.Chart.Data.ActivityLabel ( src/Pacer/Command/Chart/Data/ActivityLabel.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ActivityLabel.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ActivityLabel.dyn_o ) [Flags changed]
+[2025-06-06 16:18:41][Command][haddock_push] [36 of 58] Compiling Pacer.Command.Convert.Params ( src/Pacer/Command/Convert/Params.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Convert/Params.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Convert/Params.dyn_o ) [Flags changed]
+[2025-06-06 16:18:42][Command][haddock_push] [37 of 58] Compiling Pacer.Command.Convert.Args ( src/Pacer/Command/Convert/Args.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Convert/Args.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Convert/Args.dyn_o ) [Flags changed]
+[2025-06-06 16:18:42][Command][haddock_push] [38 of 58] Compiling Pacer.Command.Convert ( src/Pacer/Command/Convert.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Convert.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Convert.dyn_o ) [Flags changed]
+[2025-06-06 16:18:42][Command][haddock_push] [39 of 58] Compiling Pacer.Command.Chart.Params ( src/Pacer/Command/Chart/Params.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Params.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Params.dyn_o ) [Flags changed]
+[2025-06-06 16:18:44][Command][haddock_push] [40 of 58] Compiling Pacer.Command.Chart.Args ( src/Pacer/Command/Chart/Args.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Args.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Args.dyn_o ) [Flags changed]
+[2025-06-06 16:18:44][Command][haddock_push] [41 of 58] Compiling Pacer.Command    ( src/Pacer/Command.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command.dyn_o ) [Flags changed]
+[2025-06-06 16:18:45][Command][haddock_push] [42 of 58] Compiling Pacer.Command.Chart.Data.Garmin ( src/Pacer/Command/Chart/Data/Garmin.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Garmin.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Garmin.dyn_o ) [Flags changed]
+[2025-06-06 16:18:45][Command][haddock_push] [43 of 58] Compiling Pacer.Command.Chart.Data.Expr.Set ( src/Pacer/Command/Chart/Data/Expr/Set.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Set.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Set.dyn_o ) [Flags changed]
+[2025-06-06 16:18:47][Command][haddock_push] [44 of 58] Compiling Pacer.Command.Chart.Data.Expr.Filter ( src/Pacer/Command/Chart/Data/Expr/Filter.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Filter.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr/Filter.dyn_o ) [Flags changed]
+[2025-06-06 16:18:47][Command][haddock_push] [45 of 58] Compiling Pacer.Command.Chart.Data.Expr ( src/Pacer/Command/Chart/Data/Expr.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Expr.dyn_o ) [Flags changed]
+[2025-06-06 16:18:48][Command][haddock_push] [46 of 58] Compiling Pacer.Command.Chart.Data.ChartRequest ( src/Pacer/Command/Chart/Data/ChartRequest.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ChartRequest.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ChartRequest.dyn_o ) [Flags changed]
+[2025-06-06 16:18:51][Command][haddock_push] [47 of 58] Compiling Pacer.Command.Chart.Data.ChartExtra ( src/Pacer/Command/Chart/Data/ChartExtra.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ChartExtra.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ChartExtra.dyn_o ) [Flags changed]
+[2025-06-06 16:18:51][Command][haddock_push] [48 of 58] Compiling Pacer.Command.Chart.Data.ChartData ( src/Pacer/Command/Chart/Data/ChartData.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ChartData.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/ChartData.dyn_o ) [Flags changed]
+[2025-06-06 16:18:53][Command][haddock_push] [49 of 58] Compiling Pacer.Command.Chart.Data.Chart ( src/Pacer/Command/Chart/Data/Chart.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Chart.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Data/Chart.dyn_o ) [Flags changed]
+[2025-06-06 16:18:54][Command][haddock_push] [50 of 58] Compiling Pacer.Command.Chart.Server ( src/Pacer/Command/Chart/Server.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Server.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart/Server.dyn_o ) [Flags changed]
+[2025-06-06 16:18:55][Command][haddock_push] [51 of 58] Compiling Pacer.Web.Utils  ( src/Pacer/Web/Utils.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Web/Utils.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Web/Utils.dyn_o ) [Flags changed]
+[2025-06-06 16:18:55][Command][haddock_push] [52 of 58] Compiling Pacer.Web.Paths  ( src/Pacer/Web/Paths.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Web/Paths.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Web/Paths.dyn_o ) [Flags changed]
+[2025-06-06 16:18:55][Command][haddock_push] [53 of 58] Compiling Pacer.Web        ( src/Pacer/Web.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Web.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Web.dyn_o ) [Flags changed]
+[2025-06-06 16:18:59][Command][haddock_push] [54 of 58] Compiling Pacer.Command.Chart ( src/Pacer/Command/Chart.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Command/Chart.dyn_o ) [Flags changed]
+[2025-06-06 16:19:00][Command][haddock_push] [55 of 58] Compiling Paths_pacer      ( dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/autogen/Paths_pacer.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Paths_pacer.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Paths_pacer.dyn_o ) [Flags changed]
+[2025-06-06 16:19:00][Command][haddock_push] [56 of 58] Compiling Pacer.Configuration.Args ( src/Pacer/Configuration/Args.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Args.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Args.dyn_o ) [Flags changed]
+[2025-06-06 16:19:03][Command][haddock_push] [57 of 58] Compiling Pacer.Configuration.Env ( src/Pacer/Configuration/Env.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Env.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Configuration/Env.dyn_o ) [Flags changed]
+[2025-06-06 16:19:04][Command][haddock_push] [58 of 58] Compiling Pacer.Driver     ( src/Pacer/Driver.hs, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Driver.o, dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/Pacer/Driver.dyn_o ) [Flags changed]
+[2025-06-06 16:19:13][Command][haddock_push] Preprocessing library for pacer-0.1...
+[2025-06-06 16:19:13][Command][haddock_push] Running Haddock on library for pacer-0.1...
+[2025-06-06 16:19:13][Command][haddock_push] Warning: The documentation for the following packages are not installed. No
+[2025-06-06 16:19:13][Command][haddock_push] links will be generated to these packages: attoparsec-0.14.4,
+[2025-06-06 16:19:13][Command][haddock_push] attoparsec-0.14.4, path-0.9.6, path-0.9.6, vector-0.13.2.0
+[2025-06-06 16:19:16][Command][haddock_push] [ 1 of 58] Compiling Pacer.Data.Result ( src/Pacer/Data/Result.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_106.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_106.dyn_o )
+[2025-06-06 16:19:17][Command][haddock_push] [ 2 of 58] Compiling Pacer.Prelude    ( src/Pacer/Prelude.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_110.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_110.dyn_o )
+[2025-06-06 16:19:20][Command][haddock_push] [ 3 of 58] Compiling Pacer.Configuration.Phase ( src/Pacer/Configuration/Phase.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_94.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_94.dyn_o )
+[2025-06-06 16:19:20][Command][haddock_push] [ 4 of 58] Compiling Pacer.Configuration.Args.TH ( src/Pacer/Configuration/Args/TH.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_84.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_84.dyn_o )
+[2025-06-06 16:19:21][Command][haddock_push] [ 5 of 58] Compiling Pacer.Class.Units ( src/Pacer/Class/Units.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_18.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_18.dyn_o )
+[2025-06-06 16:19:21][Command][haddock_push] [ 6 of 58] Compiling Pacer.Class.Parser ( src/Pacer/Class/Parser.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_16.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_16.dyn_o )
+[2025-06-06 16:19:23][Command][haddock_push] [ 7 of 58] Compiling Pacer.Data.Duration ( src/Pacer/Data/Duration.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_102.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_102.dyn_o )
+[2025-06-06 16:19:24][Command][haddock_push] [ 8 of 58] Compiling Pacer.Data.Distance.Units ( src/Pacer/Data/Distance/Units.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_100.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_100.dyn_o )
+[2025-06-06 16:19:24][Command][haddock_push] [ 9 of 58] Compiling Pacer.Data.Distance ( src/Pacer/Data/Distance.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_98.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_98.dyn_o )
+[2025-06-06 16:19:27][Command][haddock_push] [10 of 58] Compiling Pacer.Command.Chart.Data.Time.Year ( src/Pacer/Command/Chart/Data/Time/Year.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_58.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_58.dyn_o )
+[2025-06-06 16:19:27][Command][haddock_push] [11 of 58] Compiling Pacer.Command.Chart.Data.Time.Month ( src/Pacer/Command/Chart/Data/Time/Month.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_52.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_52.dyn_o )
+[2025-06-06 16:19:28][Command][haddock_push] [12 of 58] Compiling Pacer.Class.IOrd ( src/Pacer/Class/IOrd.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_14.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_14.dyn_o )
+[2025-06-06 16:19:29][Command][haddock_push] [13 of 58] Compiling Pacer.Command.Chart.Data.Time.Timestamp.Internal ( src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_56.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_56.dyn_o )
+[2025-06-06 16:19:29][Command][haddock_push] [14 of 58] Compiling Pacer.Command.Chart.Data.Time.Timestamp ( src/Pacer/Command/Chart/Data/Time/Timestamp.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_54.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_54.dyn_o )
+[2025-06-06 16:19:30][Command][haddock_push] [15 of 58] Compiling Pacer.Command.Chart.Data.Time.Moment ( src/Pacer/Command/Chart/Data/Time/Moment.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_50.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_50.dyn_o )
+[2025-06-06 16:19:31][Command][haddock_push] [16 of 58] Compiling Pacer.Command.Chart.Data.Expr.Eq ( src/Pacer/Command/Chart/Data/Expr/Eq.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_40.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_40.dyn_o )
+[2025-06-06 16:19:31][Command][haddock_push] [17 of 58] Compiling Pacer.Command.Chart.Data.Expr.Ord ( src/Pacer/Command/Chart/Data/Expr/Ord.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_44.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_44.dyn_o )
+[2025-06-06 16:19:31][Command][haddock_push] [18 of 58] Compiling Pacer.Class.FromAlt ( src/Pacer/Class/FromAlt.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_12.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_12.dyn_o )
+[2025-06-06 16:19:32][Command][haddock_push] [19 of 58] Compiling Pacer.Utils      ( src/Pacer/Utils.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_112.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_112.dyn_o )
+[2025-06-06 16:19:32][Command][haddock_push] [20 of 58] Compiling Pacer.Data.Pace  ( src/Pacer/Data/Pace.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_104.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_104.dyn_o )
+[2025-06-06 16:19:33][Command][haddock_push] [21 of 58] Compiling Pacer.Configuration.Utils ( src/Pacer/Configuration/Utils.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_96.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_96.dyn_o )
+[2025-06-06 16:19:34][Command][haddock_push] [22 of 58] Compiling Pacer.Configuration.Logging ( src/Pacer/Configuration/Logging.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_92.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_92.dyn_o )
+[2025-06-06 16:19:35][Command][haddock_push] [23 of 58] Compiling Pacer.Configuration.Env.Types ( src/Pacer/Configuration/Env/Types.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_90.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_90.dyn_o )
+[2025-06-06 16:19:36][Command][haddock_push] [24 of 58] Compiling Pacer.Configuration.Config ( src/Pacer/Configuration/Config.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_86.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_86.dyn_o )
+[2025-06-06 16:19:38][Command][haddock_push] [25 of 58] Compiling Pacer.Utils.Show ( src/Pacer/Utils/Show.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_116.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_116.dyn_o )
+[2025-06-06 16:19:38][Command][haddock_push] [26 of 58] Compiling Pacer.Utils.FileSearch ( src/Pacer/Utils/FileSearch.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_114.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_114.dyn_o )
+[2025-06-06 16:19:42][Command][haddock_push] [27 of 58] Compiling Pacer.Exception  ( src/Pacer/Exception.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_108.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_108.dyn_o )
+[2025-06-06 16:19:43][Command][haddock_push] [28 of 58] Compiling Pacer.Command.Scale.Params ( src/Pacer/Command/Scale/Params.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_80.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_80.dyn_o )
+[2025-06-06 16:19:43][Command][haddock_push] [29 of 58] Compiling Pacer.Command.Scale.Args ( src/Pacer/Command/Scale/Args.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_78.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_78.dyn_o )
+[2025-06-06 16:19:43][Command][haddock_push] [30 of 58] Compiling Pacer.Command.Scale ( src/Pacer/Command/Scale.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_76.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_76.dyn_o )
+[2025-06-06 16:19:44][Command][haddock_push] [31 of 58] Compiling Pacer.Command.Derive.Params ( src/Pacer/Command/Derive/Params.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_74.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_74.dyn_o )
+[2025-06-06 16:19:44][Command][haddock_push] [32 of 58] Compiling Pacer.Command.Derive.Args ( src/Pacer/Command/Derive/Args.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_72.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_72.dyn_o )
+[2025-06-06 16:19:44][Command][haddock_push] [33 of 58] Compiling Pacer.Command.Derive ( src/Pacer/Command/Derive.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_70.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_70.dyn_o )
+[2025-06-06 16:19:45][Command][haddock_push] [34 of 58] Compiling Pacer.Command.Chart.Data.Activity ( src/Pacer/Command/Chart/Data/Activity.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_26.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_26.dyn_o )
+[2025-06-06 16:19:48][Command][haddock_push] [35 of 58] Compiling Pacer.Command.Chart.Data.ActivityLabel ( src/Pacer/Command/Chart/Data/ActivityLabel.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_28.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_28.dyn_o )
+[2025-06-06 16:19:49][Command][haddock_push] [36 of 58] Compiling Pacer.Command.Convert.Params ( src/Pacer/Command/Convert/Params.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_68.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_68.dyn_o )
+[2025-06-06 16:19:49][Command][haddock_push] [37 of 58] Compiling Pacer.Command.Convert.Args ( src/Pacer/Command/Convert/Args.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_66.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_66.dyn_o )
+[2025-06-06 16:19:49][Command][haddock_push] [38 of 58] Compiling Pacer.Command.Convert ( src/Pacer/Command/Convert.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_64.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_64.dyn_o )
+[2025-06-06 16:19:49][Command][haddock_push] [39 of 58] Compiling Pacer.Command.Chart.Params ( src/Pacer/Command/Chart/Params.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_60.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_60.dyn_o )
+[2025-06-06 16:19:52][Command][haddock_push] [40 of 58] Compiling Pacer.Command.Chart.Args ( src/Pacer/Command/Chart/Args.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_24.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_24.dyn_o )
+[2025-06-06 16:19:52][Command][haddock_push] [41 of 58] Compiling Pacer.Command    ( src/Pacer/Command.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_20.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_20.dyn_o )
+[2025-06-06 16:19:53][Command][haddock_push] [42 of 58] Compiling Pacer.Command.Chart.Data.Garmin ( src/Pacer/Command/Chart/Data/Garmin.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_48.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_48.dyn_o )
+[2025-06-06 16:19:55][Command][haddock_push] [43 of 58] Compiling Pacer.Command.Chart.Data.Expr.Set ( src/Pacer/Command/Chart/Data/Expr/Set.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_46.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_46.dyn_o )
+[2025-06-06 16:19:57][Command][haddock_push] [44 of 58] Compiling Pacer.Command.Chart.Data.Expr.Filter ( src/Pacer/Command/Chart/Data/Expr/Filter.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_42.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_42.dyn_o )
+[2025-06-06 16:19:58][Command][haddock_push] [45 of 58] Compiling Pacer.Command.Chart.Data.Expr ( src/Pacer/Command/Chart/Data/Expr.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_38.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_38.dyn_o )
+[2025-06-06 16:20:00][Command][haddock_push] [46 of 58] Compiling Pacer.Command.Chart.Data.ChartRequest ( src/Pacer/Command/Chart/Data/ChartRequest.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_36.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_36.dyn_o )
+[2025-06-06 16:20:03][Command][haddock_push] [47 of 58] Compiling Pacer.Command.Chart.Data.ChartExtra ( src/Pacer/Command/Chart/Data/ChartExtra.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_34.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_34.dyn_o )
+[2025-06-06 16:20:03][Command][haddock_push] [48 of 58] Compiling Pacer.Command.Chart.Data.ChartData ( src/Pacer/Command/Chart/Data/ChartData.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_32.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_32.dyn_o )
+[2025-06-06 16:20:05][Command][haddock_push] [49 of 58] Compiling Pacer.Command.Chart.Data.Chart ( src/Pacer/Command/Chart/Data/Chart.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_30.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_30.dyn_o )
+[2025-06-06 16:20:05][Command][haddock_push] [50 of 58] Compiling Pacer.Command.Chart.Server ( src/Pacer/Command/Chart/Server.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_62.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_62.dyn_o )
+[2025-06-06 16:20:06][Command][haddock_push] [51 of 58] Compiling Pacer.Web.Utils  ( src/Pacer/Web/Utils.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_122.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_122.dyn_o )
+[2025-06-06 16:20:06][Command][haddock_push] [52 of 58] Compiling Pacer.Web.Paths  ( src/Pacer/Web/Paths.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_120.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_120.dyn_o )
+[2025-06-06 16:20:07][Command][haddock_push] [53 of 58] Compiling Pacer.Web        ( src/Pacer/Web.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_118.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_118.dyn_o )
+[2025-06-06 16:20:11][Command][haddock_push] [54 of 58] Compiling Pacer.Command.Chart ( src/Pacer/Command/Chart.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_22.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_22.dyn_o )
+[2025-06-06 16:20:12][Command][haddock_push] [55 of 58] Compiling Paths_pacer      ( dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/build/autogen/Paths_pacer.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_124.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_124.dyn_o )
+[2025-06-06 16:20:12][Command][haddock_push] [56 of 58] Compiling Pacer.Configuration.Args ( src/Pacer/Configuration/Args.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_82.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_82.dyn_o )
+[2025-06-06 16:20:15][Command][haddock_push] [57 of 58] Compiling Pacer.Configuration.Env ( src/Pacer/Configuration/Env.hs, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_88.o, /tmp/nix-shell.Yyoo4J/ghc756232_0/ghc_88.dyn_o )
+[2025-06-06 16:20:15][Command][haddock_push] [58 of 58] Compiling Pacer.Driver     ( src/Pacer/Driver.hs, nothing ) [HIE file is missing]
+[2025-06-06 16:20:16][Command][haddock_push] Haddock coverage:
+[2025-06-06 16:20:16][Command][haddock_push]   80% (  8 / 10) in 'Pacer.Data.Result'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     ResultDefault (src/Pacer/Data/Result.hs:46)
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Could not find documentation for exported module: OsPath
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export Path
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export File
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export Dir
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export absdir
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export absfile
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export reldir
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export relfile
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export Abs
+[2025-06-06 16:20:16][Command][haddock_push] Warning: Pacer.Prelude: Couldn't find .haddock for export Rel
+[2025-06-06 16:20:16][Command][haddock_push]   87% (319 /366) in 'Pacer.Prelude'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     <<$>> (src/Pacer/Prelude.hs:484)
+[2025-06-06 16:20:16][Command][haddock_push]     <<&>> (src/Pacer/Prelude.hs:489)
+[2025-06-06 16:20:16][Command][haddock_push]     identity (src/Pacer/Prelude.hs:686)
+[2025-06-06 16:20:16][Command][haddock_push]     LazyByteString (src/Pacer/Prelude.hs:510)
+[2025-06-06 16:20:16][Command][haddock_push]     toStrictBS (src/Pacer/Prelude.hs:513)
+[2025-06-06 16:20:16][Command][haddock_push]     fromStrictBS (src/Pacer/Prelude.hs:516)
+[2025-06-06 16:20:16][Command][haddock_push]     ByteStringBuilder (src/Pacer/Prelude.hs:518)
+[2025-06-06 16:20:16][Command][haddock_push]     builderToLazyBS (src/Pacer/Prelude.hs:521)
+[2025-06-06 16:20:16][Command][haddock_push]     showt (src/Pacer/Prelude.hs:494)
+[2025-06-06 16:20:16][Command][haddock_push]     packText (src/Pacer/Prelude.hs:497)
+[2025-06-06 16:20:16][Command][haddock_push]     unpackText (src/Pacer/Prelude.hs:500)
+[2025-06-06 16:20:16][Command][haddock_push]     LazyText (src/Pacer/Prelude.hs:502)
+[2025-06-06 16:20:16][Command][haddock_push]     toStrictText (src/Pacer/Prelude.hs:505)
+[2025-06-06 16:20:16][Command][haddock_push]     fromStrictText (src/Pacer/Prelude.hs:508)
+[2025-06-06 16:20:16][Command][haddock_push]     TextBuilder (src/Pacer/Prelude.hs:523)
+[2025-06-06 16:20:16][Command][haddock_push]     builderToLazyText (src/Pacer/Prelude.hs:526)
+[2025-06-06 16:20:16][Command][haddock_push]     firstA (src/Pacer/Prelude.hs:602)
+[2025-06-06 16:20:16][Command][haddock_push]     secondA (src/Pacer/Prelude.hs:605)
+[2025-06-06 16:20:16][Command][haddock_push]     readFail (src/Pacer/Prelude.hs:585)
+[2025-06-06 16:20:16][Command][haddock_push]     displayExceptiont (src/Pacer/Prelude.hs:582)
+[2025-06-06 16:20:16][Command][haddock_push]     mkPositiveFail (src/Pacer/Prelude.hs:572)
+[2025-06-06 16:20:16][Command][haddock_push]     listToNESeq (src/Pacer/Prelude.hs:590)
+[2025-06-06 16:20:16][Command][haddock_push]     parseCanonicalAbsDir (src/Pacer/Prelude.hs:640)
+[2025-06-06 16:20:16][Command][haddock_push]     parseCanonicalAbsFile (src/Pacer/Prelude.hs:648)
+[2025-06-06 16:20:16][Command][haddock_push]     asnObject (src/Pacer/Prelude.hs:695)
+[2025-06-06 16:20:16][Command][haddock_push]     asnWithObject (src/Pacer/Prelude.hs:692)
+[2025-06-06 16:20:16][Command][haddock_push]     asnWithText (src/Pacer/Prelude.hs:689)
+[2025-06-06 16:20:16][Command][haddock_push]     Os (src/Pacer/Prelude.hs:650)
+[2025-06-06 16:20:16][Command][haddock_push]     currentOs (src/Pacer/Prelude.hs:662)
+[2025-06-06 16:20:16][Command][haddock_push]     currentOsStr (src/Pacer/Prelude.hs:666)
+[2025-06-06 16:20:16][Command][haddock_push]     isPosix (src/Pacer/Prelude.hs:669)
+[2025-06-06 16:20:16][Command][haddock_push]     posixWindowsStr (src/Pacer/Prelude.hs:680)
+[2025-06-06 16:20:16][Command][haddock_push]     posixWindowsOsPath (src/Pacer/Prelude.hs:674)
+[2025-06-06 16:20:16][Command][haddock_push]     Path
+[2025-06-06 16:20:16][Command][haddock_push]     Bool
+[2025-06-06 16:20:16][Command][haddock_push]     Ordering
+[2025-06-06 16:20:16][Command][haddock_push]     showSpace
+[2025-06-06 16:20:16][Command][haddock_push]     File
+[2025-06-06 16:20:16][Command][haddock_push]     Dir
+[2025-06-06 16:20:16][Command][haddock_push]     absdir
+[2025-06-06 16:20:16][Command][haddock_push]     absfile
+[2025-06-06 16:20:16][Command][haddock_push]     reldir
+[2025-06-06 16:20:16][Command][haddock_push]     relfile
+[2025-06-06 16:20:16][Command][haddock_push]     Abs
+[2025-06-06 16:20:16][Command][haddock_push]     Rel
+[2025-06-06 16:20:16][Command][haddock_push]     ResultDefault (src/Pacer/Data/Result.hs:46)
+[2025-06-06 16:20:16][Command][haddock_push]   50% (  3 /  6) in 'Pacer.Configuration.Phase'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     ConfigPhaseF (src/Pacer/Configuration/Phase.hs:21)
+[2025-06-06 16:20:16][Command][haddock_push]     ConfigOnlyF (src/Pacer/Configuration/Phase.hs:26)
+[2025-06-06 16:20:16][Command][haddock_push]    0% (  0 /  2) in 'Pacer.Configuration.Args.TH'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     gitData (src/Pacer/Configuration/Args/TH.hs:27)
+[2025-06-06 16:20:16][Command][haddock_push]  100% (  3 /  3) in 'Pacer.Class.Units'
+[2025-06-06 16:20:16][Command][haddock_push]   71% ( 20 / 28) in 'Pacer.Class.Parser'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     readDigits (src/Pacer/Class/Parser.hs:220)
+[2025-06-06 16:20:16][Command][haddock_push]     lexeme (src/Pacer/Class/Parser.hs:252)
+[2025-06-06 16:20:16][Command][haddock_push]     allExcept (src/Pacer/Class/Parser.hs:255)
+[2025-06-06 16:20:16][Command][haddock_push]     char (src/Pacer/Class/Parser.hs:261)
+[2025-06-06 16:20:16][Command][haddock_push]     symbol (src/Pacer/Class/Parser.hs:271)
+[2025-06-06 16:20:16][Command][haddock_push]     symbols (src/Pacer/Class/Parser.hs:268)
+[2025-06-06 16:20:16][Command][haddock_push]     prefix (src/Pacer/Class/Parser.hs:277)
+[2025-06-06 16:20:16][Command][haddock_push]     binary (src/Pacer/Class/Parser.hs:274)
+[2025-06-06 16:20:16][Command][haddock_push]   44% (  4 /  9) in 'Pacer.Data.Duration'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     toHrMinSec (src/Pacer/Data/Duration.hs:119)
+[2025-06-06 16:20:16][Command][haddock_push]     toTimeString (src/Pacer/Data/Duration.hs:156)
+[2025-06-06 16:20:16][Command][haddock_push]     liftDuration (src/Pacer/Data/Duration.hs:109)
+[2025-06-06 16:20:16][Command][haddock_push]     liftDuration2 (src/Pacer/Data/Duration.hs:116)
+[2025-06-06 16:20:16][Command][haddock_push]  100% ( 10 / 10) in 'Pacer.Data.Distance.Units'
+[2025-06-06 16:20:16][Command][haddock_push]   85% ( 23 / 27) in 'Pacer.Data.Distance'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     liftDist (src/Pacer/Data/Distance.hs:187)
+[2025-06-06 16:20:16][Command][haddock_push]     liftDist2 (src/Pacer/Data/Distance.hs:194)
+[2025-06-06 16:20:16][Command][haddock_push]     liftDistLeft2 (src/Pacer/Data/Distance.hs:203)
+[2025-06-06 16:20:16][Command][haddock_push]     liftSomeDist (src/Pacer/Data/Distance.hs:363)
+[2025-06-06 16:20:16][Command][haddock_push]   85% (  6 /  7) in 'Pacer.Command.Chart.Data.Time.Year'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]   85% (  6 /  7) in 'Pacer.Command.Chart.Data.Time.Month'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]   90% ( 10 / 11) in 'Pacer.Class.IOrd'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]   50% (  5 / 10) in 'Pacer.Command.Chart.Data.Time.Timestamp.Internal'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     fromLocalTime (src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs:180)
+[2025-06-06 16:20:16][Command][haddock_push]     timestampToYear (src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs:189)
+[2025-06-06 16:20:16][Command][haddock_push]     timestampToDay (src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs:192)
+[2025-06-06 16:20:16][Command][haddock_push]     dayToYearMonth (src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs:198)
+[2025-06-06 16:20:16][Command][haddock_push]   47% ( 11 / 23) in 'Pacer.Command.Chart.Data.Time.Timestamp'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     fromLocalTime (src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs:180)
+[2025-06-06 16:20:16][Command][haddock_push]     timestampToYear (src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs:189)
+[2025-06-06 16:20:16][Command][haddock_push]     timestampToYearMonth (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:197)
+[2025-06-06 16:20:16][Command][haddock_push]     timestampToDay (src/Pacer/Command/Chart/Data/Time/Timestamp/Internal.hs:192)
+[2025-06-06 16:20:16][Command][haddock_push]     sameYear (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:120)
+[2025-06-06 16:20:16][Command][haddock_push]     sameMonth (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:126)
+[2025-06-06 16:20:16][Command][haddock_push]     sameWeek (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:132)
+[2025-06-06 16:20:16][Command][haddock_push]     roundTimestampYear (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:75)
+[2025-06-06 16:20:16][Command][haddock_push]     roundTimestampMonth (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:83)
+[2025-06-06 16:20:16][Command][haddock_push]     roundTimestampWeek (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:91)
+[2025-06-06 16:20:16][Command][haddock_push]     fmtTimestamp (src/Pacer/Command/Chart/Data/Time/Timestamp.hs:51)
+[2025-06-06 16:20:16][Command][haddock_push]   66% (  2 /  3) in 'Pacer.Command.Chart.Data.Time.Moment'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]   50% (  2 /  4) in 'Pacer.Command.Chart.Data.Expr.Eq'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     toFun (src/Pacer/Command/Chart/Data/Expr/Eq.hs:35)
+[2025-06-06 16:20:16][Command][haddock_push]     toIFun (src/Pacer/Command/Chart/Data/Expr/Eq.hs:39)
+[2025-06-06 16:20:16][Command][haddock_push]   50% (  2 /  4) in 'Pacer.Command.Chart.Data.Expr.Ord'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     toFun (src/Pacer/Command/Chart/Data/Expr/Ord.hs:47)
+[2025-06-06 16:20:16][Command][haddock_push]     toIFun (src/Pacer/Command/Chart/Data/Expr/Ord.hs:54)
+[2025-06-06 16:20:16][Command][haddock_push]   33% (  2 /  6) in 'Pacer.Class.FromAlt'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     isNonEmpty (src/Pacer/Class/FromAlt.hs:32)
+[2025-06-06 16:20:16][Command][haddock_push]     asum1M (src/Pacer/Class/FromAlt.hs:62)
+[2025-06-06 16:20:16][Command][haddock_push]     alt1M (src/Pacer/Class/FromAlt.hs:67)
+[2025-06-06 16:20:16][Command][haddock_push]   76% ( 16 / 21) in 'Pacer.Utils'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     encodePretty (src/Pacer/Utils.hs:190)
+[2025-06-06 16:20:16][Command][haddock_push]     seqGroupBy (src/Pacer/Utils.hs:76)
+[2025-06-06 16:20:16][Command][haddock_push]     neSeqGroupBy (src/Pacer/Utils.hs:85)
+[2025-06-06 16:20:16][Command][haddock_push]     PaceMetersErrMsg (src/Pacer/Utils.hs:73)
+[2025-06-06 16:20:16][Command][haddock_push]   85% ( 12 / 14) in 'Pacer.Data.Pace'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     PaceDistF (src/Pacer/Data/Pace.hs:84)
+[2025-06-06 16:20:16][Command][haddock_push]   30% (  7 / 23) in 'Pacer.Configuration.Utils'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     DistancePaceArgs (src/Pacer/Configuration/Utils.hs:102)
+[2025-06-06 16:20:16][Command][haddock_push]     dpArgsParser (src/Pacer/Configuration/Utils.hs:119)
+[2025-06-06 16:20:16][Command][haddock_push]     ddpArgsParser (src/Pacer/Configuration/Utils.hs:151)
+[2025-06-06 16:20:16][Command][haddock_push]     paceOptUnitsParserHelp (src/Pacer/Configuration/Utils.hs:75)
+[2025-06-06 16:20:16][Command][haddock_push]     distanceUnitParser (src/Pacer/Configuration/Utils.hs:164)
+[2025-06-06 16:20:16][Command][haddock_push]     someDistanceParser (src/Pacer/Configuration/Utils.hs:204)
+[2025-06-06 16:20:16][Command][haddock_push]     somePaceParser (src/Pacer/Configuration/Utils.hs:222)
+[2025-06-06 16:20:16][Command][haddock_push]     readOsPath (src/Pacer/Configuration/Utils.hs:235)
+[2025-06-06 16:20:16][Command][haddock_push]     readPath (src/Pacer/Configuration/Utils.hs:238)
+[2025-06-06 16:20:16][Command][haddock_push]     readParseable (src/Pacer/Configuration/Utils.hs:255)
+[2025-06-06 16:20:16][Command][haddock_push]     mkCommand (src/Pacer/Configuration/Utils.hs:263)
+[2025-06-06 16:20:16][Command][haddock_push]     mkCommandDesc (src/Pacer/Configuration/Utils.hs:277)
+[2025-06-06 16:20:16][Command][haddock_push]     mkCommandDescChunk (src/Pacer/Configuration/Utils.hs:280)
+[2025-06-06 16:20:16][Command][haddock_push]     mkHelp (src/Pacer/Configuration/Utils.hs:266)
+[2025-06-06 16:20:16][Command][haddock_push]     mkMultiHelp (src/Pacer/Configuration/Utils.hs:269)
+[2025-06-06 16:20:16][Command][haddock_push]   22% (  2 /  9) in 'Pacer.Configuration.Logging'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]     LogLevelParam (src/Pacer/Configuration/Logging.hs:22)
+[2025-06-06 16:20:16][Command][haddock_push]     parser (src/Pacer/Configuration/Logging.hs:31)
+[2025-06-06 16:20:16][Command][haddock_push]     parseLogLevel (src/Pacer/Configuration/Logging.hs:41)
+[2025-06-06 16:20:16][Command][haddock_push]     LogVerbosity (src/Pacer/Configuration/Logging.hs:60)
+[2025-06-06 16:20:16][Command][haddock_push]     verbosityParser (src/Pacer/Configuration/Logging.hs:76)
+[2025-06-06 16:20:16][Command][haddock_push]     parseLogVerbosity (src/Pacer/Configuration/Logging.hs:86)
+[2025-06-06 16:20:16][Command][haddock_push]   87% (  7 /  8) in 'Pacer.Configuration.Env.Types'
+[2025-06-06 16:20:16][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:16][Command][haddock_push]     Module header
+[2025-06-06 16:20:16][Command][haddock_push]   40% (  2 /  5) in 'Pacer.Configur
+[2025-06-06 16:20:22][Command][haddock_push] ation.Config'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     LogConfig (src/Pacer/Configuration/Config.hs:63)
+[2025-06-06 16:20:22][Command][haddock_push]     ChartConfig (src/Pacer/Configuration/Config.hs:87)
+[2025-06-06 16:20:22][Command][haddock_push]   50% (  7 / 14) in 'Pacer.Utils.Show'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     showOsPath (src/Pacer/Utils/Show.hs:23)
+[2025-06-06 16:20:22][Command][haddock_push]     showtOsPath (src/Pacer/Utils/Show.hs:26)
+[2025-06-06 16:20:22][Command][haddock_push]     showPath (src/Pacer/Utils/Show.hs:29)
+[2025-06-06 16:20:22][Command][haddock_push]     showtPath (src/Pacer/Utils/Show.hs:32)
+[2025-06-06 16:20:22][Command][haddock_push]     showMapListInline (src/Pacer/Utils/Show.hs:84)
+[2025-06-06 16:20:22][Command][haddock_push]     showMapListNewlines (src/Pacer/Utils/Show.hs:90)
+[2025-06-06 16:20:22][Command][haddock_push] Warning: 'searchFile' is out of scope.
+[2025-06-06 16:20:22][Command][haddock_push]     If you qualify the identifier, haddock can try to link it anyway.
+[2025-06-06 16:20:22][Command][haddock_push]   91% ( 21 / 23) in 'Pacer.Utils.FileSearch'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     searchFilesToList (src/Pacer/Utils/FileSearch.hs:529)
+[2025-06-06 16:20:22][Command][haddock_push] Warning: 'FileNotFoundE' is out of scope.
+[2025-06-06 16:20:22][Command][haddock_push]     If you qualify the identifier, haddock can try to link it anyway.
+[2025-06-06 16:20:22][Command][haddock_push]   88% (  8 /  9) in 'Pacer.Exception'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]   70% (  7 / 10) in 'Pacer.Command.Scale.Params'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     ScaleParamsArgs (src/Pacer/Command/Scale/Params.hs:60)
+[2025-06-06 16:20:22][Command][haddock_push]     ScaleParamsFinal (src/Pacer/Command/Scale/Params.hs:62)
+[2025-06-06 16:20:22][Command][haddock_push]     ScaleQuantityF (src/Pacer/Command/Scale/Params.hs:45)
+[2025-06-06 16:20:22][Command][haddock_push]  100% (  2 /  2) in 'Pacer.Command.Scale.Args'
+[2025-06-06 16:20:22][Command][haddock_push]  100% (  2 /  2) in 'Pacer.Command.Scale'
+[2025-06-06 16:20:22][Command][haddock_push]   70% (  7 / 10) in 'Pacer.Command.Derive.Params'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     DeriveParamsArgs (src/Pacer/Command/Derive/Params.hs:63)
+[2025-06-06 16:20:22][Command][haddock_push]     DeriveParamsFinal (src/Pacer/Command/Derive/Params.hs:65)
+[2025-06-06 16:20:22][Command][haddock_push]     DeriveQuantityF (src/Pacer/Command/Derive/Params.hs:50)
+[2025-06-06 16:20:22][Command][haddock_push]  100% (  2 /  2) in 'Pacer.Command.Derive.Args'
+[2025-06-06 16:20:22][Command][haddock_push]  100% ( 13 / 13) in 'Pacer.Command.Derive'
+[2025-06-06 16:20:22][Command][haddock_push]   67% ( 19 / 28) in 'Pacer.Command.Chart.Data.Activity'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     mkSomeActivitiesFail (src/Pacer/Command/Chart/Data/Activity.hs:442)
+[2025-06-06 16:20:22][Command][haddock_push]     mkSomeActivities (src/Pacer/Command/Chart/Data/Activity.hs:491)
+[2025-06-06 16:20:22][Command][haddock_push]     ActivityDatetimeOverlapE (src/Pacer/Command/Chart/Data/Activity.hs:462)
+[2025-06-06 16:20:22][Command][haddock_push]     someActivitiesToNE (src/Pacer/Command/Chart/Data/Activity.hs:789)
+[2025-06-06 16:20:22][Command][haddock_push]     someActivitiesToList (src/Pacer/Command/Chart/Data/Activity.hs:795)
+[2025-06-06 16:20:22][Command][haddock_push]     mapSomeActivities (src/Pacer/Command/Chart/Data/Activity.hs:736)
+[2025-06-06 16:20:22][Command][haddock_push]     mapAccumSomeActivities (src/Pacer/Command/Chart/Data/Activity.hs:747)
+[2025-06-06 16:20:22][Command][haddock_push]     unionSomeActivities (src/Pacer/Command/Chart/Data/Activity.hs:780)
+[2025-06-06 16:20:22][Command][haddock_push]    0% (  0 /  3) in 'Pacer.Command.Chart.Data.ActivityLabel'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     ActivityLabel (src/Pacer/Command/Chart/Data/ActivityLabel.hs:17)
+[2025-06-06 16:20:22][Command][haddock_push]     ActivityLabels (src/Pacer/Command/Chart/Data/ActivityLabel.hs:34)
+[2025-06-06 16:20:22][Command][haddock_push]   62% (  5 /  8) in 'Pacer.Command.Convert.Params'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     ConvertParamsArgs (src/Pacer/Command/Convert/Params.hs:47)
+[2025-06-06 16:20:22][Command][haddock_push]     ConvertParamsFinal (src/Pacer/Command/Convert/Params.hs:49)
+[2025-06-06 16:20:22][Command][haddock_push]     ConvertParamsF (src/Pacer/Command/Convert/Params.hs:34)
+[2025-06-06 16:20:22][Command][haddock_push]  100% (  2 /  2) in 'Pacer.Command.Convert.Args'
+[2025-06-06 16:20:22][Command][haddock_push]  100% (  2 /  2) in 'Pacer.Command.Convert'
+[2025-06-06 16:20:22][Command][haddock_push]   53% (  7 / 13) in 'Pacer.Command.Chart.Params'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     ChartParamsArgs (src/Pacer/Command/Chart/Params.hs:140)
+[2025-06-06 16:20:22][Command][haddock_push]     ChartParamsFinal (src/Pacer/Command/Chart/Params.hs:142)
+[2025-06-06 16:20:22][Command][haddock_push]     ActivityPathsF (src/Pacer/Command/Chart/Params.hs:114)
+[2025-06-06 16:20:22][Command][haddock_push]     BuildDirF (src/Pacer/Command/Chart/Params.hs:83)
+[2025-06-06 16:20:22][Command][haddock_push]     MPathF (src/Pacer/Command/Chart/Params.hs:102)
+[2025-06-06 16:20:22][Command][haddock_push]     PathF (src/Pacer/Command/Chart/Params.hs:90)
+[2025-06-06 16:20:22][Command][haddock_push]  100% (  2 /  2) in 'Pacer.Command.Chart.Args'
+[2025-06-06 16:20:22][Command][haddock_push]   66% (  6 /  9) in 'Pacer.Command'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     CommandPhaseArgs (src/Pacer/Command.hs:48)
+[2025-06-06 16:20:22][Command][haddock_push]     CommandPhaseFinal (src/Pacer/Command.hs:50)
+[2025-06-06 16:20:22][Command][haddock_push]   37% (  3 /  8) in 'Pacer.Command.Chart.Data.Garmin'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     GarminAct (src/Pacer/Command/Chart/Data/Garmin.hs:57)
+[2025-06-06 16:20:22][Command][haddock_push]     readActivitiesCsv (src/Pacer/Command/Chart/Data/Garmin.hs:149)
+[2025-06-06 16:20:22][Command][haddock_push]     getActivitiesType (src/Pacer/Command/Chart/Data/Garmin.hs:287)
+[2025-06-06 16:20:22][Command][haddock_push]     displaySummarizedSequences (src/Pacer/Command/Chart/Data/Garmin.hs:247)
+[2025-06-06 16:20:22][Command][haddock_push]   60% (  9 / 15) in 'Pacer.Command.Chart.Data.Expr.Set'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     memberFun (src/Pacer/Command/Chart/Data/Expr/Set.hs:221)
+[2025-06-06 16:20:22][Command][haddock_push]     existsElemFun (src/Pacer/Command/Chart/Data/Expr/Set.hs:426)
+[2025-06-06 16:20:22][Command][haddock_push]     existsSetFun (src/Pacer/Command/Chart/Data/Expr/Set.hs:430)
+[2025-06-06 16:20:22][Command][haddock_push]     hasElemFun (src/Pacer/Command/Chart/Data/Expr/Set.hs:434)
+[2025-06-06 16:20:22][Command][haddock_push]     compFun (src/Pacer/Command/Chart/Data/Expr/Set.hs:438)
+[2025-06-06 16:20:22][Command][haddock_push]     parseTextNonEmpty (src/Pacer/Command/Chart/Data/Expr/Set.hs:455)
+[2025-06-06 16:20:22][Command][haddock_push]  100% (  2 /  2) in 'Pacer.Command.Chart.Data.Expr.Filter'
+[2025-06-06 16:20:22][Command][haddock_push]   45% (  5 / 11) in 'Pacer.Command.Chart.Data.Expr'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     eval (src/Pacer/Command/Chart/Data/Expr.hs:82)
+[2025-06-06 16:20:22][Command][haddock_push]     ExprToken (src/Pacer/Command/Chart/Data/Expr.hs:100)
+[2025-06-06 16:20:22][Command][haddock_push]     exprLexer (src/Pacer/Command/Chart/Data/Expr.hs:191)
+[2025-06-06 16:20:22][Command][haddock_push]     exprParser (src/Pacer/Command/Chart/Data/Expr.hs:215)
+[2025-06-06 16:20:22][Command][haddock_push]     lexParse (src/Pacer/Command/Chart/Data/Expr.hs:270)
+[2025-06-06 16:20:22][Command][haddock_push]   64% (  9 / 14) in 'Pacer.Command.Chart.Data.ChartRequest'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     ChartType (src/Pacer/Command/Chart/Data/ChartRequest.hs:94)
+[2025-06-06 16:20:22][Command][haddock_push]     ChartSumPeriod (src/Pacer/Command/Chart/Data/ChartRequest.hs:61)
+[2025-06-06 16:20:22][Command][haddock_push]     ChartTheme (src/Pacer/Command/Chart/Data/ChartRequest.hs:191)
+[2025-06-06 16:20:22][Command][haddock_push]     ChartThemeConfig (src/Pacer/Command/Chart/Data/ChartRequest.hs:248)
+[2025-06-06 16:20:22][Command][haddock_push]   33% (  1 /  3) in 'Pacer.Command.Chart.Data.ChartExtra'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     mkChartExtra (src/Pacer/Command/Chart/Data/ChartExtra.hs:22)
+[2025-06-06 16:20:22][Command][haddock_push]   80% (  4 /  5) in 'Pacer.Command.Chart.Data.ChartData'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]   60% (  3 /  5) in 'Pacer.Command.Chart.Data.Chart'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     mkChart (src/Pacer/Command/Chart/Data/Chart.hs:105)
+[2025-06-06 16:20:22][Command][haddock_push]   37% (  3 /  8) in 'Pacer.Command.Chart.Server'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     launchServer (src/Pacer/Command/Chart/Server.hs:70)
+[2025-06-06 16:20:22][Command][haddock_push]     ServerEff (src/Pacer/Command/Chart/Server.hs:84)
+[2025-06-06 16:20:22][Command][haddock_push]     run (src/Pacer/Command/Chart/Server.hs:98)
+[2025-06-06 16:20:22][Command][haddock_push]     runServerEff (src/Pacer/Command/Chart/Server.hs:90)
+[2025-06-06 16:20:22][Command][haddock_push]     runServerEffMock (src/Pacer/Command/Chart/Server.hs:94)
+[2025-06-06 16:20:22][Command][haddock_push]   75% (  3 /  4) in 'Pacer.Web.Utils'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]   90% ( 10 / 11) in 'Pacer.Web.Paths'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]   50% (  1 /  2) in 'Pacer.Web'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push] Warning: 'unmatched' is out of scope.
+[2025-06-06 16:20:22][Command][haddock_push]     If you qualify the identifier, haddock can try to link it anyway.
+[2025-06-06 16:20:22][Command][haddock_push]   87% (  7 /  8) in 'Pacer.Command.Chart'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     ChartPaths (src/Pacer/Command/Chart.hs:245)
+[2025-06-06 16:20:22][Command][haddock_push]   66% (  2 /  3) in 'Pacer.Configuration.Args'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]    0% (  0 /  2) in 'Pacer.Configuration.Env'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     mkLogEnv (src/Pacer/Configuration/Env.hs:21)
+[2025-06-06 16:20:22][Command][haddock_push]   36% (  4 / 11) in 'Pacer.Driver'
+[2025-06-06 16:20:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:20:22][Command][haddock_push]     Module header
+[2025-06-06 16:20:22][Command][haddock_push]     runApp (src/Pacer/Driver.hs:89)
+[2025-06-06 16:20:22][Command][haddock_push]     runLogger (src/Pacer/Driver.hs:310)
+[2025-06-06 16:20:22][Command][haddock_push]     displayInnerMatchKnown (src/Pacer/Driver.hs:334)
+[2025-06-06 16:20:22][Command][haddock_push]     knownExceptions (src/Pacer/Driver.hs:341)
+[2025-06-06 16:20:22][Command][haddock_push]     Env (src/Pacer/Driver.hs:138)
+[2025-06-06 16:20:22][Command][haddock_push]     getEnv (src/Pacer/Driver.hs:159)
+[2025-06-06 16:20:22][Command][haddock_push] Warning: Pacer.Prelude: could not find link destinations for: 
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Prim.~#
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Vector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Aeson.Types.ToJSON.KeyValuePair
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Aeson.Types.ToJSON.FromPairs
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Aeson.Types.ToJSON.fromPairs
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Aeson.Types.ToJSON.pair
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Aeson.TH.Arity
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Applicative.Rep_WrappedArrow
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Applicative.Rep_WrappedMonad
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Semigroup.Rep_WrappedMonoid
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Semigroup.Rep_Last
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Semigroup.Rep_First
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Semigroup.Rep_Arg
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Semigroup.Rep_Max
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Semigroup.Rep_Min
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Complex.Rep_Complex
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Functor.Sum.Rep_Sum
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Functor.Product.Rep_Product
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Functor.Compose.Rep_Compose
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Foldable1.JoinWith
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Foldable1.FromMaybe
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Foldable1.NonEmptyDList
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Bits.SizeValid
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.String.Encoding.UTF32.UTF32_Invalid
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.String.Encoding.UTF16.UTF16_Invalid
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.String.Encoding.ISO_8859_1.ISO_8859_1_Invalid
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.String.Encoding.ASCII7.ASCII7_Invalid
+[2025-06-06 16:20:22][Command][haddock_push] - Data.ByteString.Builder.RealFloat.FormatMode
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Csv.Incremental.More
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.Rep_ViewR
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.Rep_ViewL
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.Rep_Elem
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.Rep_Node
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.Rep_Digit
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.Rep_FingerTree
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Tree.Rep_Tree
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Graph.Rep_SCC
+[2025-06-06 16:20:22][Command][haddock_push] - Control.DeepSeq.GNFData
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.NonDet.ErrorEmpty
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.FileSystem.PathWriter.Utils.Rep_CopyDirConfig
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.FileSystem.PathWriter.Utils.Rep_Overwrite
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.FileSystem.PathWriter.Utils.Rep_TargetName
+[2025-06-06 16:20:22][Command][haddock_push] - FileSystem.PathType.Rep_PathType
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.SingKind
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.DemoteRep
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.fromSing
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.SingI
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.sing
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Sing
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:UReckWordp0
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:UReckIntp0
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:UReckFloatp0
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:UReckDoublep0
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:UReckCharp0
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_Tuple4
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_Tuple3
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_Tuple2
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_Proxy
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_Either
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_Maybe
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_NonEmpty
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_List
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Fingerprint
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_GeneralCategory
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_SrcLoc
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Down
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple15
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple14
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple13
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple12
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple11
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple10
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple9
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple8
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple7
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple6
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple5
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple4
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple3
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Tuple2
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Solo
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Unit
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Proxy
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Ordering
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Bool
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Either
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Maybe
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_NonEmpty
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_List
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Void
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_M1
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_V1
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_U1
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Par1
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Rec1
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_K1
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_:+:
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_:*:
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_:.:
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_R:UReckWordp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_R:UReckWordp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_R:UReckIntp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_R:UReckIntp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_R:UReckFloatp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_R:UReckDoublep
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_R:UReckDoublep
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_R:UReckCharp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep1_R:UReckCharp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_R:UReckPtrp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Fixity
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_Associativity
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_SourceUnpackedness
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_SourceStrictness
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_DecidedStrictness
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Semigroup.Internal.Rep_Alt
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Semigroup.Internal.Rep_Product
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Semigroup.Internal.Rep_Sum
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Semigroup.Internal.Rep_Any
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Semigroup.Internal.Rep_All
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Semigroup.Internal.Rep_Endo
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Semigroup.Internal.Rep_Dual
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Monoid.Rep_Ap
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Monoid.Rep_Last
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Monoid.Rep_First
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.ByteOrder.Rep_ByteOrder
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Functor.Const.Rep_Const
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_RTSFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_HpcFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_ParFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_TickyFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_TraceFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_DoTrace
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_ProfFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_DoHeapProfile
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_CCFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_DoCostCentres
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_DebugFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_MiscFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_ConcFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_GCFlags
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.RTS.Flags.Rep_GiveGCStats
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Functor.Identity.Rep_Identity
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Stats.Rep_RTSStats
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Stats.Rep_GCDetails
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Data.Version.Rep_Version
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Functor.ZipList.Rep_ZipList
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Control.Arrow.Rep_Kleisli
+[2025-06-06 16:20:22][Command][haddock_push] - Development.GitRev.Internal.Git.Common.InternalError
+[2025-06-06 16:20:22][Command][haddock_push] - Development.GitRev.Internal.Git.Common.GitError
+[2025-06-06 16:20:22][Command][haddock_push] - Network.HTTP.Types.Header.Rep_ByteRange
+[2025-06-06 16:20:22][Command][haddock_push] - Network.HTTP.Types.Method.Rep_StdMethod
+[2025-06-06 16:20:22][Command][haddock_push] - Network.HTTP.Types.Status.Rep_Status
+[2025-06-06 16:20:22][Command][haddock_push] - Network.HTTP.Types.Version.Rep_HttpVersion
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Logger.Dynamic.Rep_LogLevel
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.LoggerNS.Utils.Rep_LocStrategy
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.LoggerNS.Utils.Rep_LogFormatter
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.LoggerNS.Utils.Rep_Namespace
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Debug.Blind
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Debug.ShowComment
+[2025-06-06 16:20:22][Command][haddock_push] - Network.Socket.Info.GetAddrInfo
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.Label.GenericLabelOpticContext
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.TH.Internal.Sum.NCon
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.TH.Internal.Product.OpticStab
+[2025-06-06 16:20:22][Command][haddock_push] - Options.Applicative.Help.Core.Parenthetic
+[2025-06-06 16:20:22][Command][haddock_push] - Options.Applicative.BashCompletion.Richness
+[2025-06-06 16:20:22][Command][haddock_push] - Prettyprinter.Render.Terminal.Internal.Layer
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Time.Relative.Rep_RelativeTime
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.Fraction.Internal.Rep_Fraction
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.Interval.Internal.Rep_IntervalBound
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.Interval.Internal.Rep_Interval
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.ModN.Internal.Rep_ModN
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.ModP.Internal.Rep_ModP
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.NonNegative.Internal.Rep_NonNegative
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.NonZero.Internal.Rep_NonZero
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.Positive.Internal.Rep_Positive
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Text.Internal.Encoding.PartialUtf8CodePoint
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Text.Short.Internal.B
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Time.TimeSpec.Rep_TimeSpec
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UUID.Types.Internal.Builder.ByteSource
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UUID.Types.Internal.Builder./-/
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UUID.Types.Internal.Builder.ByteSink
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UUID.Types.Internal.Builder.Takes1Byte
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UUID.Types.Internal.Builder.Takes2Bytes
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UUID.Types.Internal.Builder.Takes4Bytes
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UUID.Types.Internal.UnpackedUUID
+[2025-06-06 16:20:22][Command][haddock_push] - Network.Wai.Handler.Warp.Types.ExceptionInsideResponseBody
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.DictionaryHash
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.Stream
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Internal.Rep_DecompressError
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Internal.Rep_DecompressParams
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Internal.Rep_CompressParams
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.Label.Void0
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Cont.Rep_ContT
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:SingBoola0
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.STrue
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:DemoteRepBool
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.SFalse
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.Rep_R:UReckFloatp
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:SingMaybeb0
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.SNothing
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.SJust
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.Generics.D:R:DemoteRepMaybe
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Except.Rep_ExceptT
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.IsList.D:R:ItemList
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.IsList.D:R:ItemNonEmpty
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Maybe.Rep_MaybeT
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.RWS.Lazy.Rep_RWST
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.RWS.Strict.Rep_RWST
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.State.Strict.Rep_StateT
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Writer.Lazy.Rep_WriterT
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Writer.Strict.Rep_WriterT
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.D:R:ItemSeq
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.UnzipWith
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Sequence.Internal.unzipWith'
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Set.Internal.MergeSet
+[2025-06-06 16:20:22][Command][haddock_push] - Control.DeepSeq.Zero
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.At.Core.R:IxKindMaybe
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.At.Core.R:IxKindList
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.At.Core.R:IxKindNonEmpty
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.At.Core.R:IxKindSeq
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.At.Core.R:IxKindTuple2
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.At.Core.R:IxKindTuple3
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.At.Core.R:IxKindTuple4
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.ReadOnly.D:R:ReadOnlyOpticAn_AffineTraversal
+[2025-06-06 16:20:22][Command][haddock_push] - Text.PrettyPrint.Annotated.HughesPJ.Rep_Doc
+[2025-06-06 16:20:22][Command][haddock_push] - Text.PrettyPrint.Annotated.HughesPJ.Rep_Mode
+[2025-06-06 16:20:22][Command][haddock_push] - Text.PrettyPrint.Annotated.HughesPJ.Rep_Style
+[2025-06-06 16:20:22][Command][haddock_push] - Text.PrettyPrint.Annotated.HughesPJ.Rep_TextDetails
+[2025-06-06 16:20:22][Command][haddock_push] - Text.PrettyPrint.HughesPJ.Rep_Doc
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Applicative.Backwards.Rep_Backwards
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Functor.Constant.Rep_Constant
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Functor.Reverse.Rep_Reverse
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Singletons.D:R:DemoteFUN
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Singletons.D:R:DemoteWrappedSing
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.IORef.Static.D:R:StaticRepIORefE0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.IORef.Static.MkIORefEtatic
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Primitive.D:R:PrimStateIO
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.LoggerNS.Static.D:R:StaticRepLoggerNS0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.LoggerNS.Static.MkLoggerNS
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Optparse.Static.D:R:StaticRepOptparse0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Optparse.Static.MkOptparse
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Reader.Static.D:R:StaticRepReader0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Reader.Static.Reader
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.State.Static.Local.D:R:StaticRepState0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.State.Static.Local.State
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Posix.PathException
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Posix.SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Fusion.Util.Id
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Fusion.Bundle.Size.Size
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Internal.Monad.D:R:PrimStateEff
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Internal.Monad.D:R:StaticRepIOE0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Internal.Monad.IOE
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Fusion.Bundle.Monadic.Bundle
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.Vector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.MVector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.Mutable
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeWrite
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicSet
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MVector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_2
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_3
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_4
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Bool
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Char
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Double
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Float
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Int
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Word
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Word16
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Word32
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.MV_Word8
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.Unbox
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.Vector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.basicLength
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.basicUnsafeIndexM
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeNew
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.basicUnsafeFreeze
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeSlice
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicLength
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeGrow
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeRead
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.elemseq
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicInitialize
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.basicUnsafeCopy
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeCopy
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorTuple20
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_2
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorTuple30
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_3
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorTuple40
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_4
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.basicUnsafeSlice
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsBool0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorBool0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsInt0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorInt0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Concurrent.Effect.D:R:StaticRepConcurrent0
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Concurrent.Effect.Concurrent
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Aeson.Types.Internal.Rep_Value
+[2025-06-06 16:20:22][Command][haddock_push] - Data.ByteString.Internal.Type.D:R:ItemByteString
+[2025-06-06 16:20:22][Command][haddock_push] - Data.ByteString.Short.Internal.Rep_ShortByteString
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Fix.Rep_Fix
+[2025-06-06 16:20:22][Command][haddock_push] - Network.URI.Rep_URIAuth
+[2025-06-06 16:20:22][Command][haddock_push] - Network.URI.Rep_URI
+[2025-06-06 16:20:22][Command][haddock_push] - System.OsString.Internal.Types.Rep_OsChar
+[2025-06-06 16:20:22][Command][haddock_push] - System.OsString.Internal.Types.Rep_OsString
+[2025-06-06 16:20:22][Command][haddock_push] - System.OsString.Internal.Types.Rep_PosixChar
+[2025-06-06 16:20:22][Command][haddock_push] - System.OsString.Internal.Types.Rep_PosixString
+[2025-06-06 16:20:22][Command][haddock_push] - System.OsString.Internal.Types.Rep_WindowsChar
+[2025-06-06 16:20:22][Command][haddock_push] - System.OsString.Internal.Types.Rep_WindowsString
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Strict.Either.Rep_Either
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Strict.Maybe.Rep_Maybe
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Strict.These.Rep_These
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Strict.Tuple.Rep_Pair
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Tagged.Rep_Tagged
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Functor.These.Rep_These1
+[2025-06-06 16:20:22][Command][haddock_push] - Data.These.Rep_These
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Base.basicUnsafeThaw
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Primitive.Vector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Primitive.Mutable.MVector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Storable.Vector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Strict.Vector
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Bool
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Char
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Double
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Float
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Int
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Word
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Word16
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Word32
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.V_Word8
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicClear
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicOverlaps
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeMove
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Generic.Mutable.Base.basicUnsafeReplicate
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsTuple20
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsChar0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsDouble0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsFloat0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsTuple30
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsTuple40
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsWord0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsWord160
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsWord320
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:MVectorsWord80
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorChar0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorDouble0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorFloat0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorWord0
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorWord160
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorWord320
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Vector.Unboxed.Base.D:R:VectorWord80
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Control.D:R:StMIOa
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Control.D:R:StMLista
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Control.D:R:StMMaybea
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Internal.Unlift.Rep_Limit
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Internal.Unlift.Rep_Persistence
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Internal.Unlift.Rep_UnliftStrategy
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Internal.Posix.Rep_Path
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Accum.Rep_AccumT
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.RWS.CPS.Rep_RWST
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Select.Rep_SelectT
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Writer.CPS.Rep_WriterT
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Posix.Rep_SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - Data.UnixTime.Types.Rep_UnixTime
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.LoggerNS.Utils.D:R:ItemNamespace
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Biff.Rep_Biff
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Clown.Rep_Clown
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Fix.Rep_Fix
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Flip.Rep_Flip
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Join.Rep_Join
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Joker.Rep_Joker
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Product.Rep_Product
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Sum.Rep_Sum
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Tannen.Rep_Tannen
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Bifunctor.Wrapped.Rep_WrappedBifunctor
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Applicative.Lift.Rep_Lift
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Datatype.Rep_ConstructorInfo
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Datatype.Rep_ConstructorVariant
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Datatype.Rep_DatatypeInfo
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Datatype.Rep_DatatypeVariant
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Datatype.Rep_FieldStrictness
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Datatype.Rep_Strictness
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Datatype.Rep_Unpackedness
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_AnnLookup
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_AnnTarget
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Bang
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_BndrVis
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Body
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Bytes
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Callconv
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Clause
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Con
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Dec
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_DecidedStrictness
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_DerivClause
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_DerivStrategy
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_DocLoc
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Exp
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_FamilyResultSig
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_FixityDirection
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Fixity
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Foreign
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_FunDep
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Guard
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Info
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_InjectivityAnn
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Inline
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Lit
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Loc
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Match
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_ModName
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_ModuleInfo
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Module
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_NameFlavour
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_NameSpace
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Name
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_NamespaceSpecifier
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_OccName
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Overlap
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Pat
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_PatSynArgs
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_PatSynDir
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Phases
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_PkgName
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Pragma
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Range
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Role
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_RuleBndr
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_RuleMatch
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Safety
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_SourceStrictness
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_SourceUnpackedness
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Specificity
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Stmt
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_TyLit
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_TySynEqn
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_TyVarBndr
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_Type
+[2025-06-06 16:20:22][Command][haddock_push] - Language.Haskell.TH.Syntax.Rep_TypeFamilyHead
+[2025-06-06 16:20:22][Command][haddock_push] - Prettyprinter.Internal.FlattenResult
+[2025-06-06 16:20:22][Command][haddock_push] - Prettyprinter.Internal.Rep_Doc
+[2025-06-06 16:20:22][Command][haddock_push] - Prettyprinter.Internal.Rep_SimpleDocStream
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.ForeignSrcLang.Type.Rep_ForeignSrcLang
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.LanguageExtensions.Type.Rep_Extension
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Identity.Rep_IdentityT
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.Reader.Rep_ReaderT
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Monad.Trans.State.Lazy.Rep_StateT
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Text.Display.Generic.D:R:RepRecordInstance
+[2025-06-06 16:20:22][Command][haddock_push] - System.Console.Terminal.Common.Rep_Window
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Error.Rep_ErrorFancy
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Error.Rep_ErrorItem
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Error.Rep_ParseErrorBundle
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Error.Rep_ParseError
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Pos.Rep_InvalidPosException
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Pos.Rep_Pos
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Pos.Rep_SourcePos
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.State.Rep_PosState
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.State.Rep_State
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenShareInput2
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenByteString0
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensShareInput2
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensByteString0
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenList
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensList
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenNoShareInput0
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensNoShareInput0
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenNoShareInput2
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensNoShareInput2
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenSeq
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensSeq
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenShareInput0
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensShareInput0
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokenText0
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Stream.D:R:TokensText0
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Data.Duration.Rep_Duration
+[2025-06-06 16:20:22][Command][haddock_push] - GHC.Internal.IO.Exception.Rep_ExitCode
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Data.Distance.Units.D:R:DemoteDistanceUnit
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Data.Distance.Units.Rep_DistanceUnit
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Printf.UPrintf
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Printf.hspr
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Printf.spr
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Data.Distance.Rep_Distance
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.Interval.Internal.D:R:DemoteIntervalBound
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Year.Rep_Year
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Month.Rep_Month
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Timestamp.Internal.Rep_Timestamp
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Moment.Rep_Moment
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Eq.Rep_FilterOpEq
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Ord.Rep_FilterOpOrd
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Class.FromAlt.D:R:Alt1Seq
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Class.FromAlt.D:R:Alt1List
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Class.FromAlt.D:R:Alt1Maybe
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Utils.Rep_AesonE
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_SomeActivities
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_SomeActivitiesKey
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_Activity
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_Label
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_ActivityType
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.IResult
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.Parser
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.State
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.Pos
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.More
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.ByteString.Buffer.Buffer
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Tuple.Only.Rep_Only
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.Chunk
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.ChunkElem
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.atBufferEnd
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.bufferElemAt
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.chunkElemToChar
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.nullChunk
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.pappendChunk
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.D:R:ChunkElemByteString
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Text.Buffer.Buffer
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Attoparsec.Internal.Types.D:R:ChunkElemText
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Csv.Conversion.GFromRecordProd
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Csv.Conversion.gparseRecordProd
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Csv.Conversion.gtoRecord
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterSet
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterSetOpSet
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterSetOpElem
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterElem
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterElemOpSet
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Filter.Rep_FilterType
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Rep_Expr
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartRequests
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartThemeConfig
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartTheme
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_GarminSettings
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartRequest
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartType
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartSumPeriod
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_YAxisType
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Monad.D:R:PrimStateIO
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceNatural
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceChar
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceDouble
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceFloat
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceInt
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceInteger
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceWord
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceWord16
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceWord32
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Numerical.Subtractive.D:R:DifferenceWord8
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Monad.D:R:FailureEither
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Monad.D:R:PrimVarIO
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.Monad.D:R:FailureMaybe
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeChar
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeDouble
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeFloat
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeInt
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeWord
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeWord16
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeWord32
+[2025-06-06 16:20:22][Command][haddock_push] - Basement.PrimType.D:R:PrimSizeWord8
+[2025-06-06 16:20:22][Command][haddock_push] - Web.Internal.FormUrlEncoded.Rep_Form
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.ContentTypes.Rep_AcceptHeader
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.ContentTypes.Rep_NoContent
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.IsSecure.Rep_IsSecure
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.Stream.Rep_StreamBody'
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.Stream.Rep_Stream
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.Verbs.Rep_NoContentVerb
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.Verbs.Rep_Verb
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.Links.Escaped
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.Server.Internal.BasicAuth.Rep_BasicAuthCheck
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.Server.Internal.BasicAuth.Rep_BasicAuthResult
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.Server.Internal.DelayedIO.D:R:StMDelayedIOa
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.Server.Internal.Handler.Rep_Handler
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.Server.Internal.Handler.D:R:StMHandlera
+[2025-06-06 16:20:22][Command][haddock_push] - Data.SOP.BasicFunctors.Rep_:.:
+[2025-06-06 16:20:22][Command][haddock_push] - Data.SOP.BasicFunctors.Rep_I
+[2025-06-06 16:20:22][Command][haddock_push] - Data.SOP.BasicFunctors.Rep_K
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.Rep_CompressionLevel
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.Rep_CompressionStrategy
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.Rep_Format
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.Rep_MemoryLevel
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.Rep_Method
+[2025-06-06 16:20:22][Command][haddock_push] - Codec.Compression.Zlib.Stream.Rep_WindowBits
+[2025-06-06 16:20:22][Command][haddock_push] - Data.IP.Addr.Rep_IP
+[2025-06-06 16:20:22][Command][haddock_push] - Data.IP.Addr.Rep_IPv4
+[2025-06-06 16:20:22][Command][haddock_push] - Data.IP.Addr.Rep_IPv6
+[2025-06-06 16:20:22][Command][haddock_push] - Data.IP.Range.Rep_AddrRange
+[2025-06-06 16:20:22][Command][haddock_push] - Data.IP.Range.Rep_IPRange
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.API.ResponseHeaders.NFDataHList
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Graph.SetM
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.Error.Static.ErrorWrapper
+[2025-06-06 16:20:22][Command][haddock_push] - Effectful.NonDet.Rep_OnEmptyPolicy
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Error.Builder.Rep_EF
+[2025-06-06 16:20:22][Command][haddock_push] - Text.Megaparsec.Error.Builder.Rep_ET
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Containers.NonEmpty.D:R:NEList
+[2025-06-06 16:20:22][Command][haddock_push] - Data.Containers.NonEmpty.D:R:NESeq
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.Arrow.WrappedArrow
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.Internal.Generic.GAffineFieldMaybe
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.Internal.Generic.GPositionPath
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.Internal.Generic.gafieldMaybe
+[2025-06-06 16:20:22][Command][haddock_push] - Optics.TH.Internal.Product.OpticType
+[2025-06-06 16:20:22][Command][haddock_push] - Options.Applicative.Internal.ComplResult
+[2025-06-06 16:20:22][Command][haddock_push] - Control.Applicative.Permutations.Branch
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Internal.Windows.Path
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Internal.Windows.Rep_Path
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Windows.Abs
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Windows.PathException
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Windows.Rel
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Windows.SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - OsPath.Windows.Rep_SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Internal.Posix.Path
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Posix.Abs
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Posix.Dir
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Posix.File
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Posix.PathException
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Posix.Rel
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Posix.SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Internal.Posix.Rep_Path
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Internal.Windows.Path
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Internal.Windows.Rep_Path
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Posix.Rep_SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Windows.Abs
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Windows.Dir
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Windows.File
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Windows.PathException
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Windows.Rel
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Windows.SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - Path.Windows.Rep_SomeBase
+[2025-06-06 16:20:22][Command][haddock_push] - Servant.Server.Experimental.Auth.Rep_AuthHandler
+[2025-06-06 16:20:22][Command][haddock_push] - Numeric.Data.ModP.Internal.Primality.Rep_MaybePrime
+[2025-06-06 16:20:22][Command][haddock_push] Warning: Pacer.Data.Duration: could not find link destinations for: 
+[2025-06-06 16:20:22][Command][haddock_push] - Pacer.Data.Duration.Rep_Duration
+[2025-06-06 16:20:22][Command][haddock_push] Warning: Pacer.Data.Distance.Units: could not find link destinations for: 
+[2025-06-06 16:20:47][Command][haddock_push] - Pac
+[2025-06-06 16:21:26][Command][haddock_push] er.Data.Distance.Units.D:R:DemoteDistanceUnit
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.Units.Rep_DistanceUnit
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Data.Distance: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.Units.D:R:DemoteDistanceUnit
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.Units.Rep_DistanceUnit
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.D:R:DistanceValSomeDistance
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.D:R:HideDistanceSomeDistance
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.D:R:DistanceValDistance
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.D:R:HideDistanceDistance
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Distance.Rep_Distance
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:DistanceValSomePace
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:HideDistanceSomePace
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:DistanceValPace
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:HideDistancePace
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValSomeActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceSomeActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValSomeActivitiesKey
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceSomeActivitiesKey
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValSomeActivities
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceSomeActivities
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Time.Year: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Year.Rep_Year
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Time.Month: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Month.Rep_Month
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Time.Timestamp.Internal: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Timestamp.Internal.Rep_Timestamp
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Time.Timestamp: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Timestamp.Internal.Rep_Timestamp
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Time.Moment: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Time.Moment.Rep_Moment
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Expr.Eq: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Eq.Rep_FilterOpEq
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Expr.Ord: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Ord.Rep_FilterOpOrd
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Class.FromAlt: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Class.FromAlt.D:R:Alt1Seq
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Class.FromAlt.D:R:Alt1List
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Class.FromAlt.D:R:Alt1Maybe
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Utils: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Utils.Rep_AesonE
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Data.Pace: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:DistanceValSomePace
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:HideDistanceSomePace
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:DistanceValPace
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Data.Pace.D:R:HideDistancePace
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Activity: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValSomeActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceSomeActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceActivity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValSomeActivitiesKey
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceSomeActivitiesKey
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:DistanceValSomeActivities
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.D:R:HideDistanceSomeActivities
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_SomeActivities
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_SomeActivitiesKey
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_Activity
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_Label
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Activity.Rep_ActivityType
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Expr.Set: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterSet
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterSetOpSet
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterSetOpElem
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterElem
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Set.Rep_FilterElemOpSet
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Expr.Filter: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Filter.Rep_FilterType
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.Expr: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.Expr.Rep_Expr
+[2025-06-06 16:21:26][Command][haddock_push] Warning: Pacer.Command.Chart.Data.ChartRequest: could not find link destinations for: 
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartRequests
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartThemeConfig
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartTheme
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_GarminSettings
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartRequest
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartType
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_ChartSumPeriod
+[2025-06-06 16:21:26][Command][haddock_push] - Pacer.Command.Chart.Data.ChartRequest.Rep_YAxisType
+[2025-06-06 16:21:28][Command][haddock_push] Documentation created:
+[2025-06-06 16:21:28][Command][haddock_push] /home/tommy/Dev/tommy/github/pacer/./dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer
+[2025-06-06 16:21:31][Command][haddock_push] Configuring library 'bench-utils' for pacer-0.1...
+[2025-06-06 16:21:45][Command][haddock_push] Preprocessing library 'bench-utils' for pacer-0.1...
+[2025-06-06 16:21:45][Command][haddock_push] Running Haddock on library 'bench-utils' for pacer-0.1...
+[2025-06-06 16:21:45][Command][haddock_push] Warning: The documentation for the following packages are not installed. No
+[2025-06-06 16:21:45][Command][haddock_push] links will be generated to these packages: attoparsec-0.14.4,
+[2025-06-06 16:21:45][Command][haddock_push] attoparsec-0.14.4, path-0.9.6, path-0.9.6, vector-0.13.2.0
+[2025-06-06 16:21:46][Command][haddock_push] [1 of 1] Compiling Bench.Pacer.Utils ( bench/utils/Bench/Pacer/Utils.hs, nothing )
+[2025-06-06 16:22:22][Command][haddock_push] Haddock coverage:
+[2025-06-06 16:22:22][Command][haddock_push]   69% (  9 / 13) in 'Bench.Pacer.Utils'
+[2025-06-06 16:22:22][Command][haddock_push]   Missing documentation for:
+[2025-06-06 16:22:22][Command][haddock_push]     Module header
+[2025-06-06 16:22:22][Command][haddock_push]     concatActivitiesJson (bench/utils/Bench/Pacer/Utils.hs:115)
+[2025-06-06 16:22:22][Command][haddock_push]     mkActivityJsonList (bench/utils/Bench/Pacer/Utils.hs:70)
+[2025-06-06 16:22:22][Command][haddock_push]     tsStrToActivityJson (bench/utils/Bench/Pacer/Utils.hs:100)
+[2025-06-06 16:22:23][Command][haddock_push] Documentation created:
+[2025-06-06 16:22:23][Command][haddock_push] /home/tommy/Dev/tommy/github/pacer/./dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/l/bench-utils/noopt/doc/html/pacer/bench-utils

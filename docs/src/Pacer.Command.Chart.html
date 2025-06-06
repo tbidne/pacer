@@ -1,0 +1,826 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE CPP #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="annot"><span class="hs-comment">-- | Chart functionality.</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.html"><span class="hs-identifier">Pacer.Command.Chart</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Top level command</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.html#handle"><span class="hs-identifier">handle</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Low level functions</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.html#ChartPaths"><span class="hs-identifier">ChartPaths</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Misc</span></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.html#createChartSeq"><span class="hs-identifier">createChartSeq</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.html#updateLabels"><span class="hs-identifier">updateLabels</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Foldable1</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Foldable1</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">foldlMap1'</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Map</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MP</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Set</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Set.NonEmpty.html/Data.Set.NonEmpty.html"><span class="hs-identifier">Data.Set.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NESet</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html"><span class="hs-identifier">Effectful.Logger.Dynamic</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Logger</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Activity</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Activity"><span class="hs-identifier">Activity</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier">Label</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier">SomeActivities</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Activity</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Activity</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ActivityLabel</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#ActivityLabels"><span class="hs-identifier">ActivityLabels</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#MkActivityLabels"><span class="hs-identifier">MkActivityLabels</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Chart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Charts"><span class="hs-identifier">Charts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Chart</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Chart</span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html"><span class="hs-identifier">Pacer.Command.Chart.Data.ChartRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier">ChartRequests</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Garmin.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Garmin</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Garmin</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier">Timestamp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html"><span class="hs-identifier">Pacer.Command.Chart.Params</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ActivitiesType"><span class="hs-identifier">ActivitiesType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ActivitiesDefault"><span class="hs-identifier">ActivitiesDefault</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ActivitiesGarmin"><span class="hs-identifier">ActivitiesGarmin</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ChartParams"><span class="hs-identifier">ChartParams</span></a></span><span>
+</span><span id="line-41"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#activityLabelsPath"><span class="hs-identifier">activityLabelsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#activityPaths"><span class="hs-identifier">activityPaths</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#buildDir"><span class="hs-identifier">buildDir</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#chartRequestsPath"><span class="hs-identifier">chartRequestsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#cleanInstall"><span class="hs-identifier">cleanInstall</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#json"><span class="hs-identifier">json</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#port"><span class="hs-identifier">port</span></a></span><span>
+</span><span id="line-48"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ChartParamsFinal"><span class="hs-identifier">ChartParamsFinal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Server.html"><span class="hs-identifier">Pacer.Command.Chart.Server</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Server.html#ServerEff"><span class="hs-identifier">ServerEff</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Server.html"><span class="hs-identifier">Pacer.Command.Chart.Server</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Server</span></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Configuration.Env.Types.html"><span class="hs-identifier">Pacer.Configuration.Env.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Configuration.Env.Types.html#LogEnv"><span class="hs-identifier">LogEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html"><span class="hs-identifier">Pacer.Data.Distance.Units</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Exception.html"><span class="hs-identifier">Pacer.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Exception.html#GarminE"><span class="hs-identifier">GarminE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Exception.html#GarminUnitRequired"><span class="hs-identifier">GarminUnitRequired</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Utils.Show.html"><span class="hs-identifier">Pacer.Utils.Show</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Utils.Show</span></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Web.html"><span class="hs-identifier">Pacer.Web</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Web</span></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Web.Paths.html"><span class="hs-identifier">Pacer.Web.Paths</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WPaths</span></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.OsPath</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OsPath</span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="annot"><span class="hs-comment">-- | Handles chart command.</span></span><span>
+</span><span id="line-64"></span><span id="local-6989586621679729238"><span class="annot"><a href="Pacer.Command.Chart.html#handle"><span class="hs-identifier hs-type">handle</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#FileWriter"><span class="hs-identifier hs-type">FileWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#LoggerNS"><span class="hs-identifier hs-type">LoggerNS</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathReader.Dynamic.html/Effectful.FileSystem.PathReader.Dynamic.html#PathReader"><span class="hs-identifier hs-type">PathReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#PathWriter"><span class="hs-identifier hs-type">PathWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Reader.Static.html/Effectful.Reader.Static.html#Reader"><span class="hs-identifier hs-type">Reader</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Env.Types.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Server.html#ServerEff"><span class="hs-identifier hs-type">ServerEff</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ChartParamsFinal"><span class="hs-identifier hs-type">ChartParamsFinal</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729238"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-77"></span><span id="handle"><span class="annot"><span class="annottext">handle :: forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, FileWriter :&gt; es, Logger :&gt; es,
+ LoggerNS :&gt; es, PathReader :&gt; es, PathWriter :&gt; es,
+ Reader LogEnv :&gt; es, ServerEff :&gt; es) =&gt;
+ChartParamsFinal -&gt; Eff es ()
+</span><a href="Pacer.Command.Chart.html#handle"><span class="hs-identifier hs-var hs-var">handle</span></a></span></span><span> </span><span id="local-6989586621679729589"><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729589"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-78"></span><span>  </span><span id="local-6989586621679729590"><span class="annot"><span class="annottext">Charts
+</span><a href="#local-6989586621679729590"><span class="hs-identifier hs-var">charts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal -&gt; Eff es Charts
+forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ Reader LogEnv :&gt; es) =&gt;
+ChartParamsFinal -&gt; Eff es Charts
+</span><a href="Pacer.Command.Chart.html#createCharts"><span class="hs-identifier hs-var">createCharts</span></a></span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729589"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729589"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">json</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logInfo"><span class="hs-identifier hs-type">Logger.logInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Using build-dir: &quot;</span></span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Text
+forall b t. Path b t -&gt; Text
+</span><a href="Pacer.Utils.Show.html#showtPath"><span class="hs-identifier hs-var">Utils.Show.showtPath</span></a></span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729589"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">buildDir</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span>      </span><span class="hs-comment">-- params.json is active, so stop after json generation</span><span>
+</span><span id="line-87"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729600"><span class="annot"><span class="annottext">jsonPath :: Path Abs File
+</span><a href="#local-6989586621679729600"><span class="hs-identifier hs-var hs-var">jsonPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729589"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">buildDir</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel File -&gt; Path Abs File
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Path Rel File
+</span><a href="Pacer.Command.Chart.html#jsonName"><span class="hs-identifier hs-var">jsonName</span></a></span><span>
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">Charts -&gt; Path Abs File -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, FileWriter :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ PathWriter :&gt; es) =&gt;
+Charts -&gt; Path Abs File -&gt; Eff es ()
+</span><a href="Pacer.Command.Chart.html#createChartsJsonFile"><span class="hs-identifier hs-var">createChartsJsonFile</span></a></span><span> </span><span class="annot"><span class="annottext">Charts
+</span><a href="#local-6989586621679729590"><span class="hs-identifier hs-var">charts</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729600"><span class="hs-identifier hs-var">jsonPath</span></a></span><span>
+</span><span id="line-89"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621679729604"><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729604"><span class="hs-identifier hs-var">webDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Eff es (Path Abs Dir)
+forall (es :: [Effect]).
+(HasCallStack, PathReader :&gt; es) =&gt;
+Eff es (Path Abs Dir)
+</span><a href="Pacer.Web.Paths.html#getWebPath"><span class="hs-identifier hs-var">WPaths.getWebPath</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Bool -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, FileWriter :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ PathReader :&gt; es, PathWriter :&gt; es) =&gt;
+Path Abs Dir -&gt; Bool -&gt; Eff es ()
+</span><a href="Pacer.Web.html#ensureWebDirExists"><span class="hs-identifier hs-var">Web.ensureWebDirExists</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729604"><span class="hs-identifier hs-var">webDir</span></a></span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729589"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">cleanInstall</span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span>      </span><span class="annot"><span class="annottext">Word16 -&gt; Path Abs Dir -&gt; Charts -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Logger :&gt; es, LoggerNS :&gt; es, ServerEff :&gt; es) =&gt;
+Word16 -&gt; Path Abs Dir -&gt; Charts -&gt; Eff es ()
+</span><a href="Pacer.Command.Chart.Server.html#launchServer"><span class="hs-identifier hs-var">Server.launchServer</span></a></span><span>
+</span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729589"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">port</span><span>
+</span><span id="line-95"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679729604"><span class="hs-identifier hs-var">webDir</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; Path Rel Dir -&gt; Path Abs Dir
+forall b t. Path b Dir -&gt; Path Rel t -&gt; Path b t
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#%3C%3C%2F%3E%3E"><span class="hs-operator hs-var">&lt;&lt;/&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="">[reldir|dist|]</span></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>        </span><span class="annot"><span class="annottext">Charts
+</span><a href="#local-6989586621679729590"><span class="hs-identifier hs-var">charts</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span id="local-6989586621679729263"><span class="annot"><a href="Pacer.Command.Chart.html#createCharts"><span class="hs-identifier hs-type">createCharts</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729263"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729263"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#LoggerNS"><span class="hs-identifier hs-type">LoggerNS</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729263"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>    </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Reader.Static.html/Effectful.Reader.Static.html#Reader"><span class="hs-identifier hs-type">Reader</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Env.Types.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729263"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Params.html#ChartParamsFinal"><span class="hs-identifier hs-type">ChartParamsFinal</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729263"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Charts"><span class="hs-identifier hs-type">Charts</span></a></span></span><span>
+</span><span id="line-107"></span><span id="createCharts"><span class="annot"><span class="annottext">createCharts :: forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ Reader LogEnv :&gt; es) =&gt;
+ChartParamsFinal -&gt; Eff es Charts
+</span><a href="Pacer.Command.Chart.html#createCharts"><span class="hs-identifier hs-var hs-var">createCharts</span></a></span></span><span> </span><span id="local-6989586621679729662"><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729662"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es Charts -&gt; Eff es Charts
+forall (es :: [Effect]) a.
+(HasCallStack, LoggerNS :&gt; es) =&gt;
+Text -&gt; Eff es a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;createCharts&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Eff es Charts -&gt; Eff es Charts) -&gt; Eff es Charts -&gt; Eff es Charts
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logInfo"><span class="hs-identifier hs-type">Logger.logInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Using chart-requests: &quot;</span></span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; Text
+forall b t. Path b t -&gt; Text
+</span><a href="Pacer.Utils.Show.html#showtPath"><span class="hs-identifier hs-var">Utils.Show.showtPath</span></a></span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729662"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">chartRequestsPath</span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><span class="annottext">NESeq (Path Abs File)
+-&gt; (Path Abs File -&gt; Eff es ()) -&gt; Eff es (NESeq ())
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f (t b)
+</span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729662"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">activityPaths</span><span> </span><span class="annot"><span class="annottext">((Path Abs File -&gt; Eff es ()) -&gt; Eff es (NESeq ()))
+-&gt; (Path Abs File -&gt; Eff es ()) -&gt; Eff es (NESeq ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679729665"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729665"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-112"></span><span>    </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logInfo"><span class="hs-identifier hs-type">Logger.logInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Using activities: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; Text
+forall b t. Path b t -&gt; Text
+</span><a href="Pacer.Utils.Show.html#showtPath"><span class="hs-identifier hs-var">Utils.Show.showtPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729665"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729662"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">activityLabelsPath</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><span class="annottext">Maybe (Path Abs File)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logDebug"><span class="hs-identifier hs-type">Logger.logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;No activity-labels given&quot;</span></span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679729668"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729668"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-117"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logInfo"><span class="hs-identifier hs-type">Logger.logInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Using activity-labels: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; Text
+forall b t. Path b t -&gt; Text
+</span><a href="Pacer.Utils.Show.html#showtPath"><span class="hs-identifier hs-var">Utils.Show.showtPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729668"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><span class="annottext">ChartPaths -&gt; Eff es Charts
+forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ Reader LogEnv :&gt; es) =&gt;
+ChartPaths -&gt; Eff es Charts
+</span><a href="Pacer.Command.Chart.html#createChartSeq"><span class="hs-identifier hs-var">createChartSeq</span></a></span><span> </span><span class="annot"><span class="annottext">ChartPaths
+</span><a href="#local-6989586621679729669"><span class="hs-identifier hs-var">chartPaths</span></a></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-121"></span><span>    </span><span id="local-6989586621679729669"><span class="annot"><span class="annottext">chartPaths :: ChartPaths
+</span><a href="#local-6989586621679729669"><span class="hs-identifier hs-var hs-var">chartPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-122"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729662"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">chartRequestsPath</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729662"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">activityLabelsPath</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ChartParamsFinal
+</span><a href="#local-6989586621679729662"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">activityPaths</span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="hs-comment">-- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and</span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- writes the file to the given location.</span><span>
+</span><span id="line-126"></span><span class="annot"><a href="Pacer.Command.Chart.html#createChartsJsonFile"><span class="hs-identifier hs-type">createChartsJsonFile</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679729291"><span class="annot"><a href="#local-6989586621679729291"><span class="hs-identifier hs-type">es</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#FileWriter"><span class="hs-identifier hs-type">FileWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729291"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-130"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729291"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#LoggerNS"><span class="hs-identifier hs-type">LoggerNS</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729291"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#PathWriter"><span class="hs-identifier hs-type">PathWriter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729291"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Charts"><span class="hs-identifier hs-type">Charts</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729291"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span id="createChartsJsonFile"><span class="annot"><span class="annottext">createChartsJsonFile :: forall (es :: [Effect]).
+(HasCallStack, FileWriter :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ PathWriter :&gt; es) =&gt;
+Charts -&gt; Path Abs File -&gt; Eff es ()
+</span><a href="Pacer.Command.Chart.html#createChartsJsonFile"><span class="hs-identifier hs-var hs-var">createChartsJsonFile</span></a></span></span><span> </span><span id="local-6989586621679729699"><span class="annot"><span class="annottext">Charts
+</span><a href="#local-6989586621679729699"><span class="hs-identifier hs-var">charts</span></a></span></span><span> </span><span id="local-6989586621679729700"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729700"><span class="hs-identifier hs-var">outJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; Eff es () -&gt; Eff es ()
+forall (es :: [Effect]) a.
+(HasCallStack, LoggerNS :&gt; es) =&gt;
+Text -&gt; Eff es a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;createChartsJsonFile&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-139"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729701"><span class="annot"><span class="annottext">bs :: LazyByteString
+</span><a href="#local-6989586621679729701"><span class="hs-identifier hs-var hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Charts -&gt; LazyByteString
+forall a. ToJSON a =&gt; a -&gt; LazyByteString
+</span><a href="Pacer.Utils.html#encodePretty"><span class="hs-identifier hs-var">Utils.encodePretty</span></a></span><span> </span><span class="annot"><span class="annottext">Charts
+</span><a href="#local-6989586621679729699"><span class="hs-identifier hs-var">charts</span></a></span><span>
+</span><span id="line-140"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621679729703"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729703"><span class="hs-identifier hs-var">dir</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; (OsPath, OsPath)
+</span><span class="hs-identifier hs-var">OsPath.splitFileName</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729705"><span class="hs-identifier hs-var">outJsonOsPath</span></a></span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; OsPath -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, PathWriter :&gt; es) =&gt;
+Bool -&gt; OsPath -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.PathWriter.Dynamic.html/Effectful.FileSystem.PathWriter.Dynamic.html#createDirectoryIfMissing"><span class="hs-identifier hs-var">createDirectoryIfMissing</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729703"><span class="hs-identifier hs-var">dir</span></a></span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">OsPath -&gt; ByteString -&gt; Eff es ()
+forall (es :: [Effect]).
+(FileWriter :&gt; es, HasCallStack) =&gt;
+OsPath -&gt; ByteString -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileWriter.Dynamic.html/Effectful.FileSystem.FileWriter.Dynamic.html#writeBinaryFile"><span class="hs-identifier hs-var">writeBinaryFile</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729705"><span class="hs-identifier hs-var">outJsonOsPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LazyByteString -&gt; ByteString
+</span><a href="Pacer.Prelude.html#toStrictBS"><span class="hs-identifier hs-var">toStrictBS</span></a></span><span> </span><span class="annot"><span class="annottext">LazyByteString
+</span><a href="#local-6989586621679729701"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729709"><span class="annot"><span class="annottext">msg :: Text
+</span><a href="#local-6989586621679729709"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Wrote json file: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Text
+</span><a href="Pacer.Utils.Show.html#showtOsPath"><span class="hs-identifier hs-var">Utils.Show.showtOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679729705"><span class="hs-identifier hs-var">outJsonOsPath</span></a></span><span>
+</span><span id="line-147"></span><span>    </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logInfo"><span class="hs-identifier hs-type">Logger.logInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679729709"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-149"></span><span>    </span><span id="local-6989586621679729705"><span class="annot"><span class="annottext">outJsonOsPath :: OsPath
+</span><a href="#local-6989586621679729705"><span class="hs-identifier hs-var hs-var">outJsonOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; OsPath
+forall b t. Path b t -&gt; OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.Path.html/FileSystem.Path.html#toOsPath"><span class="hs-identifier hs-var">toOsPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729700"><span class="hs-identifier hs-var">outJson</span></a></span><span>
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span class="hs-comment">-- | Given file paths to activities and chart requests, generates a sequence of</span><span>
+</span><span id="line-152"></span><span class="hs-comment">-- charts.</span><span>
+</span><span id="line-153"></span><span class="annot"><a href="Pacer.Command.Chart.html#createChartSeq"><span class="hs-identifier hs-type">createChartSeq</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-154"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679729311"><span class="annot"><a href="#local-6989586621679729311"><span class="hs-identifier hs-type">es</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729311"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729311"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#LoggerNS"><span class="hs-identifier hs-type">LoggerNS</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729311"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Reader.Static.html/Effectful.Reader.Static.html#Reader"><span class="hs-identifier hs-type">Reader</span></a></span><span> </span><span class="annot"><a href="Pacer.Configuration.Env.Types.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729311"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.html#ChartPaths"><span class="hs-identifier hs-type">ChartPaths</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-162"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729311"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Chart.html#Charts"><span class="hs-identifier hs-type">Charts</span></a></span><span>
+</span><span id="line-163"></span><span id="createChartSeq"><span class="annot"><span class="annottext">createChartSeq :: forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es, LoggerNS :&gt; es,
+ Reader LogEnv :&gt; es) =&gt;
+ChartPaths -&gt; Eff es Charts
+</span><a href="Pacer.Command.Chart.html#createChartSeq"><span class="hs-identifier hs-var hs-var">createChartSeq</span></a></span></span><span> </span><span id="local-6989586621679729746"><span class="annot"><span class="annottext">ChartPaths
+</span><a href="#local-6989586621679729746"><span class="hs-identifier hs-var">chartPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621679729747"><span class="annot"><span class="annottext">ChartRequests Double
+</span><a href="#local-6989586621679729747"><span class="hs-identifier hs-var">chartRequests</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679729748"><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729748"><span class="hs-identifier hs-var">activitiesWithLabels</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ChartPaths -&gt; Eff es (ChartRequests Double, SomeActivities Double)
+forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es, LoggerNS :&gt; es) =&gt;
+ChartPaths -&gt; Eff es (ChartRequests Double, SomeActivities Double)
+</span><a href="Pacer.Command.Chart.html#readChartInputs"><span class="hs-identifier hs-var">readChartInputs</span></a></span><span> </span><span class="annot"><span class="annottext">ChartPaths
+</span><a href="#local-6989586621679729746"><span class="hs-identifier hs-var">chartPaths</span></a></span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><span class="annottext">Result CreateChartE Charts -&gt; Eff es Charts
+forall e (m :: * -&gt; *) a.
+(Exception e, HasCallStack, MonadThrow m) =&gt;
+Result e a -&gt; m a
+</span><a href="Pacer.Data.Result.html#throwErr"><span class="hs-identifier hs-var">throwErr</span></a></span><span> </span><span class="annot"><span class="annottext">(Result CreateChartE Charts -&gt; Eff es Charts)
+-&gt; Eff es (Result CreateChartE Charts) -&gt; Eff es Charts
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+-&gt; ChartRequests Double -&gt; Eff es (Result CreateChartE Charts)
+forall (es :: [Effect]) a.
+(Display a, From&#8484; a, Logger :&gt; es, MetricSpace a, Ord a,
+ Reader LogEnv :&gt; es, Semifield a, Show a, To&#8477; a) =&gt;
+SomeActivities a
+-&gt; ChartRequests a -&gt; Eff es (Result CreateChartE Charts)
+</span><a href="Pacer.Command.Chart.Data.Chart.html#mkCharts"><span class="hs-identifier hs-var">Chart.mkCharts</span></a></span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729748"><span class="hs-identifier hs-var">activitiesWithLabels</span></a></span><span> </span><span class="annot"><span class="annottext">ChartRequests Double
+</span><a href="#local-6989586621679729747"><span class="hs-identifier hs-var">chartRequests</span></a></span><span>
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span class="annot"><span class="hs-comment">-- | Given file paths to activities and chart requests, reads the inputs.</span></span><span>
+</span><span id="line-168"></span><span class="annot"><a href="Pacer.Command.Chart.html#readChartInputs"><span class="hs-identifier hs-type">readChartInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679729334"><span class="annot"><a href="#local-6989586621679729334"><span class="hs-identifier hs-type">es</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-171"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-effectful-0.1-e36fc806e7c6a22475c146f14f54ce4000691b2d7fbb3fd2cec90d44aa064737/share/doc/html/src/Effectful.FileSystem.FileReader.Dynamic.html/Effectful.FileSystem.FileReader.Dynamic.html#FileReader"><span class="hs-identifier hs-type">FileReader</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729334"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-172"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729334"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-173"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#LoggerNS"><span class="hs-identifier hs-type">LoggerNS</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729334"><span class="hs-identifier hs-type">es</span></a></span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-175"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.html#ChartPaths"><span class="hs-identifier hs-type">ChartPaths</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-176"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729334"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier hs-type">ChartRequests</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-177"></span><span id="readChartInputs"><span class="annot"><span class="annottext">readChartInputs :: forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es, LoggerNS :&gt; es) =&gt;
+ChartPaths -&gt; Eff es (ChartRequests Double, SomeActivities Double)
+</span><a href="Pacer.Command.Chart.html#readChartInputs"><span class="hs-identifier hs-var hs-var">readChartInputs</span></a></span></span><span> </span><span id="local-6989586621679729861"><span class="annot"><span class="annottext">ChartPaths
+</span><a href="#local-6989586621679729861"><span class="hs-identifier hs-var">chartPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Eff es (ChartRequests Double, SomeActivities Double)
+-&gt; Eff es (ChartRequests Double, SomeActivities Double)
+forall (es :: [Effect]) a.
+(HasCallStack, LoggerNS :&gt; es) =&gt;
+Text -&gt; Eff es a -&gt; Eff es a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-ns-effectful-0.1-ae2e630453229cbb00613472d13a57e996eac70db6fdcd6c66ce2f6fc739e434/share/doc/html/src/Effectful.LoggerNS.Static.html/Effectful.LoggerNS.Static.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;readChartInputs&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Eff es (ChartRequests Double, SomeActivities Double)
+ -&gt; Eff es (ChartRequests Double, SomeActivities Double))
+-&gt; Eff es (ChartRequests Double, SomeActivities Double)
+-&gt; Eff es (ChartRequests Double, SomeActivities Double)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621679729862"><span class="annot"><span class="annottext">ChartRequests Double
+</span><a href="#local-6989586621679729862"><span class="hs-identifier hs-var">chartRequests</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-179"></span><span>    </span><span class="annot"><span class="annottext">forall a (es :: [Effect]).
+(FileReader :&gt; es, FromJSON a, HasCallStack) =&gt;
+Path Abs File -&gt; Eff es a
+</span><a href="Pacer.Utils.html#readDecodeJson"><span class="hs-identifier hs-var">Utils.readDecodeJson</span></a></span><span>
+</span><span id="line-180"></span><span>      </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.ChartRequest.html#ChartRequests"><span class="hs-identifier hs-type">ChartRequests</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>      </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729864"><span class="hs-identifier hs-var">chartRequestsPath</span></a></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span>  </span><span id="local-6989586621679729865"><span class="annot"><span class="annottext">NESeq (SomeActivities Double)
+</span><a href="#local-6989586621679729865"><span class="hs-identifier hs-var">activitiesNE</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NESeq (Path Abs File)
+-&gt; (Path Abs File -&gt; Eff es (SomeActivities Double))
+-&gt; Eff es (NESeq (SomeActivities Double))
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f (t b)
+</span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">NESeq (Path Abs File)
+</span><a href="#local-6989586621679729866"><span class="hs-identifier hs-var">activitiesPaths</span></a></span><span> </span><span class="annot"><span class="annottext">((Path Abs File -&gt; Eff es (SomeActivities Double))
+ -&gt; Eff es (NESeq (SomeActivities Double)))
+-&gt; (Path Abs File -&gt; Eff es (SomeActivities Double))
+-&gt; Eff es (NESeq (SomeActivities Double))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679729867"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729867"><span class="hs-identifier hs-var">rp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-184"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729868"><span class="annot"><span class="annottext">mDistUnit :: Maybe DistanceUnit
+</span><a href="#local-6989586621679729868"><span class="hs-identifier hs-var hs-var">mDistUnit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-185"></span><span>          </span><span class="annot"><span class="annottext">Optic' An_AffineTraversal NoIx (ChartRequests Double) DistanceUnit
+-&gt; ChartRequests Double -&gt; Maybe DistanceUnit
+forall k (is :: IxList) s a.
+Is k An_AffineFold =&gt;
+Optic' k is s a -&gt; s -&gt; Maybe a
+</span><a href="file:///nix/store/nxp7m462ws2dz3sc7k7vzml10hs63r9x-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.AffineFold.html/Optics.AffineFold.html#preview"><span class="hs-identifier hs-var">preview</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Optic
+  A_Lens
+  NoIx
+  (ChartRequests Double)
+  (ChartRequests Double)
+  (Maybe GarminSettings)
+  (Maybe GarminSettings)
+</span><span class="">#garminSettings</span></span><span> </span><span class="annot"><span class="annottext">Optic
+  A_Lens
+  NoIx
+  (ChartRequests Double)
+  (ChartRequests Double)
+  (Maybe GarminSettings)
+  (Maybe GarminSettings)
+-&gt; Optic
+     An_Iso
+     NoIx
+     GarminSettings
+     GarminSettings
+     (Maybe DistanceUnit)
+     (Maybe DistanceUnit)
+-&gt; Optic
+     An_AffineTraversal
+     NoIx
+     (ChartRequests Double)
+     (ChartRequests Double)
+     (Maybe DistanceUnit)
+     (Maybe DistanceUnit)
+forall (is :: IxList) (js :: IxList) (ks :: IxList) k k' l m s t u
+       v a b.
+(AppendIndices is js ks, JoinKinds k A_Prism k',
+ JoinKinds k' l m) =&gt;
+Optic k is s t (Maybe u) (Maybe v)
+-&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/nxp7m462ws2dz3sc7k7vzml10hs63r9x-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Data.Maybe.Optics.html/Data.Maybe.Optics.html#%25%3F"><span class="hs-operator hs-var">%?</span></a></span><span> </span><span class="annot"><span class="annottext">Optic
+  An_Iso
+  NoIx
+  GarminSettings
+  GarminSettings
+  (Maybe DistanceUnit)
+  (Maybe DistanceUnit)
+</span><span class="">#distanceUnit</span></span><span> </span><span class="annot"><span class="annottext">Optic
+  An_AffineTraversal
+  NoIx
+  (ChartRequests Double)
+  (ChartRequests Double)
+  (Maybe DistanceUnit)
+  (Maybe DistanceUnit)
+-&gt; Optic
+     A_Prism
+     NoIx
+     (Maybe DistanceUnit)
+     (Maybe DistanceUnit)
+     DistanceUnit
+     DistanceUnit
+-&gt; Optic'
+     An_AffineTraversal NoIx (ChartRequests Double) DistanceUnit
+forall k l m (is :: IxList) (js :: IxList) (ks :: IxList) s t u v a
+       b.
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/nxp7m462ws2dz3sc7k7vzml10hs63r9x-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Internal.Optic.html/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">Optic
+  A_Prism
+  NoIx
+  (Maybe DistanceUnit)
+  (Maybe DistanceUnit)
+  DistanceUnit
+  DistanceUnit
+forall a b. Prism (Maybe a) (Maybe b) a b
+</span><a href="file:///nix/store/nxp7m462ws2dz3sc7k7vzml10hs63r9x-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Data.Maybe.Optics.html/Data.Maybe.Optics.html#_Just"><span class="hs-identifier hs-var">_Just</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ChartRequests Double
+</span><a href="#local-6989586621679729862"><span class="hs-identifier hs-var">chartRequests</span></a></span><span>
+</span><span id="line-186"></span><span>    </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+-&gt; Path Abs File -&gt; Eff es (SomeActivities Double)
+</span><a href="#local-6989586621679729873"><span class="hs-identifier hs-var">readActivities</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><a href="#local-6989586621679729868"><span class="hs-identifier hs-var">mDistUnit</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729867"><span class="hs-identifier hs-var">rp</span></a></span><span>
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729876"><span class="annot"><span class="annottext">combineActivities :: Result ActivityDatetimeOverlapE (SomeActivities a)
+-&gt; SomeActivities a
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities a)
+</span><a href="#local-6989586621679729876"><span class="hs-identifier hs-var hs-var">combineActivities</span></a></span></span><span> </span><span id="local-6989586621679729877"><span class="annot"><span class="annottext">Result ActivityDatetimeOverlapE (SomeActivities a)
+</span><a href="#local-6989586621679729877"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679729878"><span class="annot"><span class="annottext">SomeActivities a
+</span><a href="#local-6989586621679729878"><span class="hs-identifier hs-var">rs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Result ActivityDatetimeOverlapE (SomeActivities a)
+</span><a href="#local-6989586621679729877"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="annot"><span class="annottext">Result ActivityDatetimeOverlapE (SomeActivities a)
+-&gt; (SomeActivities a
+    -&gt; Result ActivityDatetimeOverlapE (SomeActivities a))
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities a)
+forall a b.
+Result ActivityDatetimeOverlapE a
+-&gt; (a -&gt; Result ActivityDatetimeOverlapE b)
+-&gt; Result ActivityDatetimeOverlapE b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">SomeActivities a
+-&gt; SomeActivities a
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities a)
+forall a.
+SomeActivities a
+-&gt; SomeActivities a
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities a)
+</span><a href="Pacer.Command.Chart.Data.Activity.html#unionSomeActivities"><span class="hs-identifier hs-var">Activity.unionSomeActivities</span></a></span><span> </span><span class="annot"><span class="annottext">SomeActivities a
+</span><a href="#local-6989586621679729878"><span class="hs-identifier hs-var">rs</span></a></span><span>
+</span><span id="line-189"></span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621679729880"><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729880"><span class="hs-identifier hs-var">allActivities</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-191"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">(SomeActivities Double
+ -&gt; Result ActivityDatetimeOverlapE (SomeActivities Double))
+-&gt; (Result ActivityDatetimeOverlapE (SomeActivities Double)
+    -&gt; SomeActivities Double
+    -&gt; Result ActivityDatetimeOverlapE (SomeActivities Double))
+-&gt; NESeq (SomeActivities Double)
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities Double)
+forall a b. (a -&gt; b) -&gt; (b -&gt; a -&gt; b) -&gt; NESeq a -&gt; b
+forall (t :: * -&gt; *) a b.
+Foldable1 t =&gt;
+(a -&gt; b) -&gt; (b -&gt; a -&gt; b) -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldlMap1'</span></span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities Double)
+forall e a. a -&gt; Result e a
+</span><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">Result ActivityDatetimeOverlapE (SomeActivities Double)
+-&gt; SomeActivities Double
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities Double)
+forall {a}.
+Result ActivityDatetimeOverlapE (SomeActivities a)
+-&gt; SomeActivities a
+-&gt; Result ActivityDatetimeOverlapE (SomeActivities a)
+</span><a href="#local-6989586621679729876"><span class="hs-identifier hs-var">combineActivities</span></a></span><span> </span><span class="annot"><span class="annottext">NESeq (SomeActivities Double)
+</span><a href="#local-6989586621679729865"><span class="hs-identifier hs-var">activitiesNE</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-192"></span><span>      </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679729883"><span class="annot"><span class="annottext">ActivityDatetimeOverlapE
+</span><a href="#local-6989586621679729883"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ActivityDatetimeOverlapE -&gt; Eff es (SomeActivities Double)
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">ActivityDatetimeOverlapE
+</span><a href="#local-6989586621679729883"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-193"></span><span>      </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679729885"><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729885"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SomeActivities Double -&gt; Eff es (SomeActivities Double)
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729885"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span>  </span><span class="hs-comment">-- If a labels file exists, use it to update the activities.</span><span>
+</span><span id="line-196"></span><span>  </span><span id="local-6989586621679729886"><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729886"><span class="hs-identifier hs-var">activitiesWithLabels</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-197"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Path Abs File)
+</span><a href="#local-6989586621679729887"><span class="hs-identifier hs-var">mActivityLabelsPath</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-198"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Path Abs File)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SomeActivities Double -&gt; Eff es (SomeActivities Double)
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729880"><span class="hs-identifier hs-var">allActivities</span></a></span><span>
+</span><span id="line-199"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679729888"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729888"><span class="hs-identifier hs-var">activityLabelsPath</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-200"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.ActivityLabel.html#MkActivityLabels"><span class="hs-identifier hs-type">MkActivityLabels</span></a></span><span> </span><span id="local-6989586621679729889"><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729889"><span class="hs-identifier hs-var">activityLabels</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; Eff es ActivityLabels
+forall a (es :: [Effect]).
+(FileReader :&gt; es, FromJSON a, HasCallStack) =&gt;
+Path Abs File -&gt; Eff es a
+</span><a href="Pacer.Utils.html#readDecodeJson"><span class="hs-identifier hs-var">Utils.readDecodeJson</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729888"><span class="hs-identifier hs-var">activityLabelsPath</span></a></span><span>
+</span><span id="line-201"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679729890"><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729890"><span class="hs-identifier hs-var">newActivities</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679729891"><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729891"><span class="hs-identifier hs-var">unusedTimestamps</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-202"></span><span>              </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+-&gt; SomeActivities Double
+-&gt; (SomeActivities Double, Map Timestamp (NESet Label))
+forall a.
+Map Timestamp (NESet Label)
+-&gt; SomeActivities a
+-&gt; (SomeActivities a, Map Timestamp (NESet Label))
+</span><a href="Pacer.Command.Chart.html#updateLabels"><span class="hs-identifier hs-var">updateLabels</span></a></span><span> </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729889"><span class="hs-identifier hs-var">activityLabels</span></a></span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729880"><span class="hs-identifier hs-var">allActivities</span></a></span><span>
+</span><span id="line-203"></span><span>
+</span><span id="line-204"></span><span>        </span><span class="hs-comment">-- Warn if any timestamps in the labels file were not used.</span><span>
+</span><span id="line-205"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Map Timestamp (NESet Label) -&gt; Bool
+forall k a. Map k a -&gt; Bool
+</span><span class="hs-identifier hs-var">MP.null</span></span><span> </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729891"><span class="hs-identifier hs-var">unusedTimestamps</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-206"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679729894"><span class="annot"><span class="annottext">msg :: Text
+</span><a href="#local-6989586621679729894"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-207"></span><span>                </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-208"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The following timestamps with labels from '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-209"></span><span>                    </span><span class="annot"><span class="annottext">Path Abs File -&gt; Text
+forall b t. Path b t -&gt; Text
+</span><a href="Pacer.Utils.Show.html#showtPath"><span class="hs-identifier hs-var">Utils.Show.showtPath</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729888"><span class="hs-identifier hs-var">activityLabelsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-210"></span><span>                    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;' were not found in activities files:&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-211"></span><span>                    </span><span class="annot"><span class="annottext">((Timestamp, NESet Label) -&gt; Text)
+-&gt; [(Timestamp, NESet Label)] -&gt; Text
+forall (f :: * -&gt; *) c a.
+(Foldable f, IsString c, Semigroup c) =&gt;
+(a -&gt; c) -&gt; f a -&gt; c
+</span><a href="Pacer.Utils.Show.html#showMapListNewlines"><span class="hs-identifier hs-var">Utils.Show.showMapListNewlines</span></a></span><span>
+</span><span id="line-212"></span><span>                      </span><span class="annot"><span class="annottext">(Timestamp, NESet Label) -&gt; Text
+forall {a} {a}.
+(Display a, HasField &quot;unLabel&quot; a Text) =&gt;
+(a, NESet a) -&gt; Text
+</span><a href="#local-6989586621679729896"><span class="hs-identifier hs-var">displayUnused</span></a></span><span>
+</span><span id="line-213"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Map Timestamp (NESet Label) -&gt; [(Timestamp, NESet Label)]
+forall k a. Map k a -&gt; [(k, a)]
+</span><span class="hs-identifier hs-var">MP.toList</span></span><span> </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729891"><span class="hs-identifier hs-var">unusedTimestamps</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span><span>                  </span><span class="hs-special">]</span><span>
+</span><span id="line-215"></span><span>          </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/logger-effectful-0.1-4c462c8d83799fc5c4900b79f30134a510b541d670854fe1dc3097beacce1d6c/share/doc/html/src/Effectful.Logger.Dynamic.html/Effectful.Logger.Dynamic.html#logWarn"><span class="hs-identifier hs-type">Logger.logWarn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679729894"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-216"></span><span>
+</span><span id="line-217"></span><span>        </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729890"><span class="hs-identifier hs-var">newActivities</span></a></span><span>
+</span><span id="line-218"></span><span>
+</span><span id="line-219"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ChartRequests Double
+</span><a href="#local-6989586621679729862"><span class="hs-identifier hs-var">chartRequests</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SomeActivities Double
+</span><a href="#local-6989586621679729886"><span class="hs-identifier hs-var">activitiesWithLabels</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-220"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-221"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679729864"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729864"><span class="hs-identifier hs-var">chartRequestsPath</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679729887"><span class="annot"><span class="annottext">Maybe (Path Abs File)
+</span><a href="#local-6989586621679729887"><span class="hs-identifier hs-var">mActivityLabelsPath</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679729866"><span class="annot"><span class="annottext">NESeq (Path Abs File)
+</span><a href="#local-6989586621679729866"><span class="hs-identifier hs-var">activitiesPaths</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChartPaths
+</span><a href="#local-6989586621679729861"><span class="hs-identifier hs-var">chartPaths</span></a></span><span>
+</span><span id="line-222"></span><span>
+</span><span id="line-223"></span><span>    </span><span id="local-6989586621679729896"><span class="annot"><span class="annottext">displayUnused :: (a, NESet a) -&gt; Text
+</span><a href="#local-6989586621679729896"><span class="hs-identifier hs-var hs-var">displayUnused</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679729911"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679729911"><span class="hs-identifier hs-var">ts</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679729912"><span class="annot"><span class="annottext">NESet a
+</span><a href="#local-6989586621679729912"><span class="hs-identifier hs-var">labels</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-224"></span><span>      </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-225"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679729911"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-226"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-227"></span><span>          </span><span class="annot"><span class="annottext">(a -&gt; Text) -&gt; [a] -&gt; Text
+forall (f :: * -&gt; *) c a.
+(Foldable f, IsString c, Semigroup c) =&gt;
+(a -&gt; c) -&gt; f a -&gt; c
+</span><a href="Pacer.Utils.Show.html#showMapListInline"><span class="hs-identifier hs-var">Utils.Show.showMapListInline</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-operator">.</span><span class="hs-identifier">unLabel</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmpty a -&gt; [a]
+forall a. NonEmpty a -&gt; [a]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty a -&gt; [a]) -&gt; NonEmpty a -&gt; [a]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NESet a -&gt; NonEmpty a
+forall a. NESet a -&gt; NonEmpty a
+</span><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Set.NonEmpty.Internal.html/Data.Set.NonEmpty.Internal.html#toList"><span class="hs-identifier hs-var">NESet.toList</span></a></span><span> </span><span class="annot"><span class="annottext">NESet a
+</span><a href="#local-6989586621679729912"><span class="hs-identifier hs-var">labels</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-228"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-229"></span><span>
+</span><span id="line-230"></span><span>    </span><span class="hs-comment">-- DistanceUnit should be set if this is a garmin (csv) file.</span><span>
+</span><span id="line-231"></span><span>    </span><span class="hs-comment">-- If it is a custom activities (json) file, it is ignored.</span><span>
+</span><span id="line-232"></span><span>    </span><span class="annot"><a href="#local-6989586621679729873"><span class="hs-identifier hs-type">readActivities</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-233"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-234"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-235"></span><span>      </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729334"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-236"></span><span>    </span><span id="local-6989586621679729873"><span class="annot"><span class="annottext">readActivities :: Maybe DistanceUnit
+-&gt; Path Abs File -&gt; Eff es (SomeActivities Double)
+</span><a href="#local-6989586621679729873"><span class="hs-identifier hs-var hs-var">readActivities</span></a></span></span><span> </span><span id="local-6989586621679729917"><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><a href="#local-6989586621679729917"><span class="hs-identifier hs-var">mInputDistUnit</span></a></span></span><span> </span><span id="local-6989586621679729918"><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729918"><span class="hs-identifier hs-var">activitiesPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-237"></span><span>      </span><span class="annot"><span class="annottext">Path Abs File -&gt; Eff es ActivitiesType
+forall (es :: [Effect]).
+(Logger :&gt; es) =&gt;
+Path Abs File -&gt; Eff es ActivitiesType
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#getActivitiesType"><span class="hs-identifier hs-var">Garmin.getActivitiesType</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729918"><span class="hs-identifier hs-var">activitiesPath</span></a></span><span> </span><span class="annot"><span class="annottext">Eff es ActivitiesType
+-&gt; (ActivitiesType -&gt; Eff es (SomeActivities Double))
+-&gt; Eff es (SomeActivities Double)
+forall a b. Eff es a -&gt; (a -&gt; Eff es b) -&gt; Eff es b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-238"></span><span>        </span><span class="annot"><span class="annottext">ActivitiesType
+</span><a href="Pacer.Command.Chart.Params.html#ActivitiesDefault"><span class="hs-identifier hs-var">ActivitiesDefault</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Path Abs File -&gt; Eff es (SomeActivities Double)
+forall a (es :: [Effect]).
+(FileReader :&gt; es, FromJSON a, HasCallStack) =&gt;
+Path Abs File -&gt; Eff es a
+</span><a href="Pacer.Utils.html#readDecodeJson"><span class="hs-identifier hs-var">Utils.readDecodeJson</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729918"><span class="hs-identifier hs-var">activitiesPath</span></a></span><span>
+</span><span id="line-239"></span><span>        </span><span class="annot"><span class="annottext">ActivitiesType
+</span><a href="Pacer.Command.Chart.Params.html#ActivitiesGarmin"><span class="hs-identifier hs-var">ActivitiesGarmin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-240"></span><span>          </span><span id="local-6989586621679729920"><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679729920"><span class="hs-identifier hs-var">inputDistUnit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><a href="#local-6989586621679729917"><span class="hs-identifier hs-var">mInputDistUnit</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-241"></span><span>            </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GarminE -&gt; Eff es DistanceUnit
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">GarminE
+</span><a href="Pacer.Exception.html#GarminUnitRequired"><span class="hs-identifier hs-var">GarminUnitRequired</span></a></span><span>
+</span><span id="line-242"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679729921"><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679729921"><span class="hs-identifier hs-var">du</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DistanceUnit -&gt; Eff es DistanceUnit
+forall a. a -&gt; Eff es a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679729921"><span class="hs-identifier hs-var">du</span></a></span><span>
+</span><span id="line-243"></span><span>          </span><span class="annot"><span class="annottext">DistanceUnit -&gt; Path Abs File -&gt; Eff es (SomeActivities Double)
+forall (es :: [Effect]).
+(HasCallStack, FileReader :&gt; es, Logger :&gt; es) =&gt;
+DistanceUnit -&gt; Path Abs File -&gt; Eff es (SomeActivities Double)
+</span><a href="Pacer.Command.Chart.Data.Garmin.html#readActivitiesCsv"><span class="hs-identifier hs-var">Garmin.readActivitiesCsv</span></a></span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679729920"><span class="hs-identifier hs-var">inputDistUnit</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs File
+</span><a href="#local-6989586621679729918"><span class="hs-identifier hs-var">activitiesPath</span></a></span><span>
+</span><span id="line-244"></span><span>
+</span><span id="line-245"></span><span class="hs-keyword">type</span><span> </span><span id="ChartPaths"><span class="annot"><a href="Pacer.Command.Chart.html#ChartPaths"><span class="hs-identifier hs-var">ChartPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-246"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Tuple3</span></span><span>
+</span><span id="line-247"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- chart-requests</span><span>
+</span><span id="line-248"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- activity-labels</span><span>
+</span><span id="line-249"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Sequence.NonEmpty.Internal.html/Data.Sequence.NonEmpty.Internal.html#NESeq"><span class="hs-identifier hs-type">NESeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- activities</span><span>
+</span><span id="line-250"></span><span>
+</span><span id="line-251"></span><span class="hs-comment">-- | Updates all activities with labels from the given map @m@. Returns a (possibly</span><span>
+</span><span id="line-252"></span><span class="hs-comment">-- empty) subset of @m@ that was 'unmatched' i.e. had no corresponding</span><span>
+</span><span id="line-253"></span><span class="hs-comment">-- activity in SomeActivities.</span><span>
+</span><span id="line-254"></span><span id="local-6989586621679729444"><span class="annot"><a href="Pacer.Command.Chart.html#updateLabels"><span class="hs-identifier hs-type">updateLabels</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-255"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Timestamp -&gt; labels map.</span></span><span>
+</span><span id="line-256"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Set.NonEmpty.Internal.html/Data.Set.NonEmpty.Internal.html#NESet"><span class="hs-identifier hs-type">NESet</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier hs-type">Label</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-257"></span><span>  </span><span class="annot"><span class="hs-comment">-- | All activities.</span></span><span>
+</span><span id="line-258"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729444"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-259"></span><span>  </span><span class="annot"><span class="hs-comment">-- | (New activities, unmatching timestamps).</span></span><span>
+</span><span id="line-260"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729444"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Set.NonEmpty.Internal.html/Data.Set.NonEmpty.Internal.html#NESet"><span class="hs-identifier hs-type">NESet</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Label"><span class="hs-identifier hs-type">Label</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-261"></span><span id="updateLabels"><span class="annot"><span class="annottext">updateLabels :: forall a.
+Map Timestamp (NESet Label)
+-&gt; SomeActivities a
+-&gt; (SomeActivities a, Map Timestamp (NESet Label))
+</span><a href="Pacer.Command.Chart.html#updateLabels"><span class="hs-identifier hs-var hs-var">updateLabels</span></a></span></span><span> </span><span id="local-6989586621679729928"><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729928"><span class="hs-identifier hs-var">activityLabels</span></a></span></span><span> </span><span id="local-6989586621679729929"><span class="annot"><span class="annottext">SomeActivities a
+</span><a href="#local-6989586621679729929"><span class="hs-identifier hs-var">rs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeActivities a
+</span><a href="#local-6989586621679729930"><span class="hs-identifier hs-var">newActivities</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729931"><span class="hs-identifier hs-var">unmatched</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-262"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-263"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679729930"><span class="annot"><span class="annottext">SomeActivities a
+</span><a href="#local-6989586621679729930"><span class="hs-identifier hs-var">newActivities</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679729932"><span class="annot"><span class="annottext">Set Timestamp
+</span><a href="#local-6989586621679729932"><span class="hs-identifier hs-var">matched</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-264"></span><span>      </span><span class="annot"><span class="annottext">(forall (d :: DistanceUnit).
+ Activity d a -&gt; (Activity d a, Set Timestamp))
+-&gt; SomeActivities a -&gt; (SomeActivities a, Set Timestamp)
+forall a1 a2 b.
+Semigroup b =&gt;
+(forall (d :: DistanceUnit). Activity d a1 -&gt; (Activity d a2, b))
+-&gt; SomeActivities a1 -&gt; (SomeActivities a2, b)
+</span><a href="Pacer.Command.Chart.Data.Activity.html#mapAccumSomeActivities"><span class="hs-identifier hs-var">Activity.mapAccumSomeActivities</span></a></span><span> </span><span class="annot"><span class="annottext">Activity d a -&gt; (Activity d a, Set Timestamp)
+forall (d :: DistanceUnit).
+Activity d a -&gt; (Activity d a, Set Timestamp)
+forall (d :: DistanceUnit) a.
+Activity d a -&gt; (Activity d a, Set Timestamp)
+</span><a href="#local-6989586621679729934"><span class="hs-identifier hs-var">updateActivityLabels</span></a></span><span> </span><span class="annot"><span class="annottext">SomeActivities a
+</span><a href="#local-6989586621679729929"><span class="hs-identifier hs-var">rs</span></a></span><span>
+</span><span id="line-265"></span><span>
+</span><span id="line-266"></span><span>    </span><span id="local-6989586621679729931"><span class="annot"><span class="annottext">unmatched :: Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729931"><span class="hs-identifier hs-var hs-var">unmatched</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+-&gt; Set Timestamp -&gt; Map Timestamp (NESet Label)
+forall k a. Ord k =&gt; Map k a -&gt; Set k -&gt; Map k a
+</span><span class="hs-identifier hs-var">MP.withoutKeys</span></span><span> </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729928"><span class="hs-identifier hs-var">activityLabels</span></a></span><span> </span><span class="annot"><span class="annottext">Set Timestamp
+</span><a href="#local-6989586621679729932"><span class="hs-identifier hs-var">matched</span></a></span><span>
+</span><span id="line-267"></span><span>
+</span><span id="line-268"></span><span>    </span><span class="annot"><a href="#local-6989586621679729934"><span class="hs-identifier hs-type">updateActivityLabels</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-269"></span><span>      </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679729472"><span class="annot"><a href="#local-6989586621679729472"><span class="hs-identifier hs-type">d</span></a></span></span><span> </span><span id="local-6989586621679729473"><span class="annot"><a href="#local-6989586621679729473"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-270"></span><span>      </span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Activity"><span class="hs-identifier hs-type">Activity</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729472"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729473"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-271"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Activity.html#Activity"><span class="hs-identifier hs-type">Activity</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729472"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679729473"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-272"></span><span>    </span><span id="local-6989586621679729934"><span class="annot"><span class="annottext">updateActivityLabels :: forall (d :: DistanceUnit) a.
+Activity d a -&gt; (Activity d a, Set Timestamp)
+</span><a href="#local-6989586621679729934"><span class="hs-identifier hs-var hs-var">updateActivityLabels</span></a></span></span><span> </span><span id="local-6989586621679729950"><span class="annot"><span class="annottext">Activity d a
+</span><a href="#local-6989586621679729950"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Map Timestamp (NESet Label) -&gt; Maybe (NESet Label)
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">MP.lookup</span></span><span> </span><span class="annot"><span class="annottext">Activity d a
+</span><a href="#local-6989586621679729950"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">datetime</span><span> </span><span class="annot"><span class="annottext">Map Timestamp (NESet Label)
+</span><a href="#local-6989586621679729928"><span class="hs-identifier hs-var">activityLabels</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-273"></span><span>      </span><span class="annot"><span class="annottext">Maybe (NESet Label)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Activity d a
+</span><a href="#local-6989586621679729950"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Set Timestamp
+forall a. Set a
+</span><span class="hs-identifier hs-var">Set.empty</span></span><span class="hs-special">)</span><span>
+</span><span id="line-274"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679729953"><span class="annot"><span class="annottext">NESet Label
+</span><a href="#local-6989586621679729953"><span class="hs-identifier hs-var">labels</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-275"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Optic
+  A_Lens NoIx (Activity d a) (Activity d a) (Set Label) (Set Label)
+-&gt; (Set Label -&gt; Set Label) -&gt; Activity d a -&gt; Activity d a
+forall k (is :: IxList) s t a b.
+Is k A_Setter =&gt;
+Optic k is s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><a href="file:///nix/store/nxp7m462ws2dz3sc7k7vzml10hs63r9x-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Setter.html/Optics.Setter.html#over%27"><span class="hs-identifier hs-var">over'</span></a></span><span> </span><span class="annot"><span class="annottext">Optic
+  A_Lens NoIx (Activity d a) (Activity d a) (Set Label) (Set Label)
+</span><span class="">#labels</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set Label -&gt; Set Label -&gt; Set Label
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.union</span></span><span> </span><span class="annot"><span class="annottext">(Set Label -&gt; Set Label -&gt; Set Label)
+-&gt; Set Label -&gt; Set Label -&gt; Set Label
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NESet Label -&gt; Set Label
+forall a. NESet a -&gt; Set a
+</span><a href="file:///nix/store/n2pn8j7bicypyy4x21n1q3bp7xhvaibp-nonempty-containers-0.3.4.5-doc/share/doc/nonempty-containers-0.3.4.5/html/src/Data.Set.NonEmpty.Internal.html/Data.Set.NonEmpty.Internal.html#toSet"><span class="hs-identifier hs-var">NESet.toSet</span></a></span><span> </span><span class="annot"><span class="annottext">NESet Label
+</span><a href="#local-6989586621679729953"><span class="hs-identifier hs-var">labels</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Activity d a
+</span><a href="#local-6989586621679729950"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-276"></span><span>          </span><span class="annot"><span class="annottext">Timestamp -&gt; Set Timestamp
+forall a. a -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.singleton</span></span><span> </span><span class="annot"><span class="annottext">Activity d a
+</span><a href="#local-6989586621679729950"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">datetime</span><span>
+</span><span id="line-277"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-278"></span><span>
+</span><span id="line-279"></span><span class="annot"><a href="Pacer.Command.Chart.html#jsonName"><span class="hs-identifier hs-type">jsonName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span>
+</span><span id="line-280"></span><span id="jsonName"><span class="annot"><span class="annottext">jsonName :: Path Rel File
+</span><a href="Pacer.Command.Chart.html#jsonName"><span class="hs-identifier hs-var hs-var">jsonName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[relfile|charts.json|]</span></span><span>
+</span><span id="line-281"></span></pre></body></html>

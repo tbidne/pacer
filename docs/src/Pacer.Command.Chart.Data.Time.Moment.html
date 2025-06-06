@@ -1,0 +1,472 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Moment</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Moment</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier">Moment</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html"><span class="hs-identifier">Pacer.Class.IOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.IOrd.html#IEq"><span class="hs-identifier">IEq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator">(~~)</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#IOrd"><span class="hs-identifier">IOrd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator">(&lt;~)</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Month.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Month</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Month.html#Month"><span class="hs-identifier">Month</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp</span></a></span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier">Timestamp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier">timestampToYear</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier">timestampToYearMonth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Year.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Year</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Year.html#Year"><span class="hs-identifier">Year</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.html/Text.Megaparsec.html"><span class="hs-identifier">Text.Megaparsec</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MP</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html"><span class="hs-identifier">Text.Megaparsec.Char</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MPC</span></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><span class="hs-comment">-- | Generalized 'Timestamp', for activity filtering.</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="Moment"><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier hs-var">Moment</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | A year like 2013.</span></span><span>
+</span><span id="line-24"></span><span>    </span><span id="MomentYear"><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-var">MomentYear</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Year.html#Year"><span class="hs-identifier hs-type">Year</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | A year and month like 2013-08.</span></span><span>
+</span><span id="line-26"></span><span>    </span><span id="MomentYearMonth"><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-var">MomentYearMonth</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Year.html#Year"><span class="hs-identifier hs-type">Year</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Month.html#Month"><span class="hs-identifier hs-type">Month</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- A Timestamp.</span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-comment">-- NOTE: These timestamps should be in between 1950 and 2099. Should we</span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-comment">-- enforce this? E.g. do not export the bare constructor, and make sure</span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-comment">-- parsing enforces this.</span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-comment">-- Probably the most robust course of action would be to make Timestamp</span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-comment">-- enforce the constraint, then we'd inherit it here. We'd probably</span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-comment">-- want Year and Timestamp defined in the same module so we could share</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-comment">-- the validation.</span><span>
+</span><span id="line-37"></span><span>    </span><span id="MomentTimestamp"><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-var">MomentTimestamp</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679711491"><span id="local-6989586621679711503"><span class="annot"><span class="annottext">Moment -&gt; Moment -&gt; Bool
+(Moment -&gt; Moment -&gt; Bool)
+-&gt; (Moment -&gt; Moment -&gt; Bool) -&gt; Eq Moment
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Moment -&gt; Moment -&gt; Bool
+== :: Moment -&gt; Moment -&gt; Bool
+$c/= :: Moment -&gt; Moment -&gt; Bool
+/= :: Moment -&gt; Moment -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711508"><span id="local-6989586621679711510"><span class="annot"><span class="annottext">(forall x. Moment -&gt; Rep Moment x)
+-&gt; (forall x. Rep Moment x -&gt; Moment) -&gt; Generic Moment
+forall x. Rep Moment x -&gt; Moment
+forall x. Moment -&gt; Rep Moment x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. Moment -&gt; Rep Moment x
+from :: forall x. Moment -&gt; Rep Moment x
+$cto :: forall x. Rep Moment x -&gt; Moment
+to :: forall x. Rep Moment x -&gt; Moment
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711516"><span id="local-6989586621679711529"><span id="local-6989586621679711533"><span class="annot"><span class="annottext">Int -&gt; Moment -&gt; ShowS
+[Moment] -&gt; ShowS
+Moment -&gt; String
+(Int -&gt; Moment -&gt; ShowS)
+-&gt; (Moment -&gt; String) -&gt; ([Moment] -&gt; ShowS) -&gt; Show Moment
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Moment -&gt; ShowS
+showsPrec :: Int -&gt; Moment -&gt; ShowS
+$cshow :: Moment -&gt; String
+show :: Moment -&gt; String
+$cshowList :: [Moment] -&gt; ShowS
+showList :: [Moment] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679711538"><span class="annot"><span class="annottext">Moment -&gt; ()
+(Moment -&gt; ()) -&gt; NFData Moment
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: Moment -&gt; ()
+rnf :: Moment -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-42"></span><span class="hs-comment">--                                Base Classes                               --</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- NOTE: We do not implement the usual Eq/Ord here like timestamp, since we</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- have a different (non-lawful) instance in mind. The derived Eq instance</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- is purely so &quot;upstream&quot; types (e.g. Expr, ChartRequests) can have Eq.</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- That notwithstanding, we only care about IEq/IOrd.</span><span>
+</span><span id="line-50"></span><span class="hs-comment">--</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- These _do_ allow different constructors to be equal, provided they overlap.</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- Our general interest in Moment Ord comparisons is when filtering Activities</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- e.g. we want to filter activities w/ Activity.datetime &gt;= Moment. In</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- particular, we need to compare &quot;low precision&quot; moments like years w/ higher</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- precision timestamps. For example, we may want to takes activities with a</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- timestamp &gt;= 2013.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- To do this, we introduce the below IEq/IOrd functions that compare</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- based on the &quot;common data&quot; e.g. 2013-08-10 and 2013 are compared</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- via the year, 2013.</span><span>
+</span><span id="line-62"></span><span class="hs-comment">--</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- Note that this is not lawful (breaks transitivity, specifically), hence</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- are not part of Eq/Ord instances.</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#IEq"><span class="hs-identifier hs-type">IEq</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier hs-type">Moment</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711598"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711598"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679711599"><span class="annot"><span class="annottext">~~ :: Moment -&gt; Moment -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var hs-var hs-var">~~</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711600"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711600"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711598"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711600"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711601"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711601"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711602"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711602"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711601"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711602"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711603"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711603"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711604"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711604"><span class="hs-identifier hs-var">t2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711603"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">ResultDefault Year -&gt; Year
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault Year
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m Year
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier hs-var">timestampToYear</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711604"><span class="hs-identifier hs-var">t2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711606"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711606"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711607"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711607"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711606"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711607"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711608"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711608"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679711609"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711609"><span class="hs-identifier hs-var">m1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711610"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711610"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span id="local-6989586621679711611"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711611"><span class="hs-identifier hs-var">m2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711608"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711610"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711609"><span class="hs-identifier hs-var">m1</span></a></span><span> </span><span class="annot"><span class="annottext">Month -&gt; Month -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711611"><span class="hs-identifier hs-var">m2</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711613"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711613"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679711614"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711614"><span class="hs-identifier hs-var">m1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711615"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711615"><span class="hs-identifier hs-var">t2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711613"><span class="hs-identifier hs-var">y1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711614"><span class="hs-identifier hs-var">m1</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Year, Month) -&gt; (Year, Month) -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault (Year, Month)
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-var">timestampToYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711615"><span class="hs-identifier hs-var">t2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711616"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711616"><span class="hs-identifier hs-var">t1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711617"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711617"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault Year -&gt; Year
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault Year
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m Year
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier hs-var">timestampToYear</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711616"><span class="hs-identifier hs-var">t1</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711617"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711618"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711618"><span class="hs-identifier hs-var">t1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711619"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711619"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span id="local-6989586621679711620"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711620"><span class="hs-identifier hs-var">m2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault (Year, Month)
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-var">timestampToYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711618"><span class="hs-identifier hs-var">t1</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Year, Month) -&gt; (Year, Month) -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711619"><span class="hs-identifier hs-var">y2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711620"><span class="hs-identifier hs-var">m2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711621"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711621"><span class="hs-identifier hs-var">t1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711622"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711622"><span class="hs-identifier hs-var">t2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711621"><span class="hs-identifier hs-var">t1</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Timestamp -&gt; Bool
+forall a. IEq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711622"><span class="hs-identifier hs-var">t2</span></a></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#IOrd"><span class="hs-identifier hs-type">IOrd</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier hs-type">Moment</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711661"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711661"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679711662"><span class="annot"><span class="annottext">&lt;~ :: Moment -&gt; Moment -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var hs-var hs-var">&lt;~</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711663"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711663"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711661"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711663"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711665"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711665"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711666"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711666"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711665"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711666"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711667"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711667"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711668"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711668"><span class="hs-identifier hs-var">t2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711667"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">ResultDefault Year -&gt; Year
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault Year
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m Year
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier hs-var">timestampToYear</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711668"><span class="hs-identifier hs-var">t2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-comment">-- Notice that, unlike Timestamp's Ord (and what we would do if we had Ord</span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-comment">-- for Moment), we use (&lt;=) even when the LHS has _more_ precision than the</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-comment">-- RHS. Timestamp uses (&lt;), since it is the only way to be lawful:</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-comment">-- data w/ less precision is arbitrarily chosen to be &quot;lesser&quot;, so the only</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-comment">-- way it can be (&lt;=) is if it satisfies the stronger (&lt;).</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-comment">-- Here, OTOH, we explicitly do _not_ promise transitivity. We consistently</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-comment">-- compare &quot;up to common data&quot;, which allows us to sensibly make comparisons</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-comment">-- like. For a concrete example, consider:</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-comment">--     2013-08-12T14:30:00 &gt;  2013-08-12 -- True (Timestamp)</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-comment">--     2013-08-12T14:30:00 &gt;. 2013-08-12 -- False (Moment)</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-comment">-- Explanation: Timestamp's rule about less precise data being &quot;lesser&quot;</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-comment">-- means that 2013-08-12 &lt; 2013-08-12T14:30:00.</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-comment">-- On the other hand, Moment's IOrd only compares whatever data they have</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-comment">-- in common. In this case that is 2013-08-12, which is equal. Hence</span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-comment">-- &lt;~ is true, therefore &gt;. cannot be true (because laws).</span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711669"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711669"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711670"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711670"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711669"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711670"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711671"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711671"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679711672"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711672"><span class="hs-identifier hs-var">m1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711673"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711673"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span id="local-6989586621679711674"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711674"><span class="hs-identifier hs-var">m2</span></a></span></span><span>
+</span><span id="line-102"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711671"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711673"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-103"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711671"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711673"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711672"><span class="hs-identifier hs-var">m1</span></a></span><span> </span><span class="annot"><span class="annottext">Month -&gt; Month -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711674"><span class="hs-identifier hs-var">m2</span></a></span><span>
+</span><span id="line-104"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711676"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711676"><span class="hs-identifier hs-var">y1</span></a></span></span><span> </span><span id="local-6989586621679711677"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711677"><span class="hs-identifier hs-var">m1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711678"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711678"><span class="hs-identifier hs-var">t2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679711679"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711679"><span class="hs-identifier hs-var">y2</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711680"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711680"><span class="hs-identifier hs-var">m2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Year, Month) -&gt; (Year, Month))
+-&gt; ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault (Year, Month)
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-var">timestampToYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711678"><span class="hs-identifier hs-var">t2</span></a></span><span>
+</span><span id="line-107"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span>
+</span><span id="line-108"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711676"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711679"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-109"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711676"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711679"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711677"><span class="hs-identifier hs-var">m1</span></a></span><span> </span><span class="annot"><span class="annottext">Month -&gt; Month -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711680"><span class="hs-identifier hs-var">m2</span></a></span><span>
+</span><span id="line-110"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711681"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711681"><span class="hs-identifier hs-var">t1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711682"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711682"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault Year -&gt; Year
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault Year
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m Year
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier hs-var">timestampToYear</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711681"><span class="hs-identifier hs-var">t1</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711682"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711683"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711683"><span class="hs-identifier hs-var">t1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711684"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711684"><span class="hs-identifier hs-var">y2</span></a></span></span><span> </span><span id="local-6989586621679711685"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711685"><span class="hs-identifier hs-var">m2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679711686"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711686"><span class="hs-identifier hs-var">y1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711687"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711687"><span class="hs-identifier hs-var">m1</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Year, Month) -&gt; (Year, Month))
+-&gt; ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault (Year, Month)
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-var">timestampToYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711683"><span class="hs-identifier hs-var">t1</span></a></span><span>
+</span><span id="line-114"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span>
+</span><span id="line-115"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711686"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711684"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-116"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711686"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711684"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711687"><span class="hs-identifier hs-var">m1</span></a></span><span> </span><span class="annot"><span class="annottext">Month -&gt; Month -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711685"><span class="hs-identifier hs-var">m2</span></a></span><span>
+</span><span id="line-117"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711688"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711688"><span class="hs-identifier hs-var">t1</span></a></span></span><span> </span><span class="annot"><a href="Pacer.Class.IOrd.html#%3C~"><span class="hs-operator hs-var">&lt;~</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711689"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711689"><span class="hs-identifier hs-var">t2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711688"><span class="hs-identifier hs-var">t1</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Timestamp -&gt; Bool
+forall a. IEq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="Pacer.Class.IOrd.html#~~"><span class="hs-operator hs-var">~~</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711689"><span class="hs-identifier hs-var">t2</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711688"><span class="hs-identifier hs-var">t1</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Timestamp -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711689"><span class="hs-identifier hs-var">t2</span></a></span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679711693"><span id="local-6989586621679711697"><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier hs-type">Moment</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621679711712"><span class="annot"><span class="annottext">displayBuilder :: Moment -&gt; Builder
+</span><a href="#local-6989586621679711712"><span class="hs-identifier hs-var hs-var hs-var">displayBuilder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-type">MomentYear</span></a></span><span> </span><span id="local-6989586621679711714"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711714"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Year -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711714"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-type">MomentYearMonth</span></a></span><span> </span><span id="local-6989586621679711715"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711715"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679711716"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711716"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Year -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711715"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;-&quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Month -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711716"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-type">MomentTimestamp</span></a></span><span> </span><span id="local-6989586621679711717"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711717"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Builder
+forall a. Display a =&gt; a -&gt; Builder
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#displayBuilder"><span class="hs-identifier hs-var">displayBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711717"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679711720"><span id="local-6989586621679711724"><span class="annot"><a href="file:///nix/store/11xdxvwjh511a6hif7hb1d40k6pamrqf-aeson-2.2.3.0-doc/share/doc/aeson-2.2.3.0/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier hs-type">Moment</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-127"></span><span>  </span><span id="local-6989586621679711733"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Moment
+</span><a href="#local-6989586621679711733"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser Moment) -&gt; Value -&gt; Parser Moment
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="Pacer.Prelude.html#asnWithText"><span class="hs-identifier hs-var">asnWithText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Moment&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResultDefault Moment -&gt; Parser Moment
+forall (m :: * -&gt; *) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Pacer.Data.Result.html#failErr"><span class="hs-identifier hs-var">failErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault Moment -&gt; Parser Moment)
+-&gt; (Text -&gt; ResultDefault Moment) -&gt; Text -&gt; Parser Moment
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault Moment
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Moment.html#Moment"><span class="hs-identifier hs-type">Moment</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621679711756"><span class="annot"><span class="annottext">parser :: MParser Moment
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><span class="annottext">[MParser Moment] -&gt; MParser Moment
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t (f a) -&gt; f a
+</span><span class="hs-identifier hs-var">asum</span></span><span>
+</span><span id="line-132"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Moment
+</span><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentTimestamp"><span class="hs-identifier hs-var">MomentTimestamp</span></a></span><span> </span><span class="annot"><span class="annottext">(Timestamp -&gt; Moment)
+-&gt; ParsecT Void Text Identity Timestamp -&gt; MParser Moment
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity Timestamp
+-&gt; ParsecT Void Text Identity Timestamp
+forall a.
+ParsecT Void Text Identity a -&gt; ParsecT Void Text Identity a
+forall e s (m :: * -&gt; *) a. MonadParsec e s m =&gt; m a -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Class.html/Text.Megaparsec.Class.html#try"><span class="hs-identifier hs-var">MP.try</span></a></span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity Timestamp
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">MParser Moment -&gt; MParser Moment
+forall a.
+ParsecT Void Text Identity a -&gt; ParsecT Void Text Identity a
+forall e s (m :: * -&gt; *) a. MonadParsec e s m =&gt; m a -&gt; m a
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Class.html/Text.Megaparsec.Class.html#try"><span class="hs-identifier hs-var">MP.try</span></a></span><span> </span><span class="annot"><span class="annottext">MParser Moment
+</span><a href="#local-6989586621679711760"><span class="hs-identifier hs-var">parseYearMonth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>        </span><span class="annot"><span class="annottext">MParser Moment
+</span><a href="#local-6989586621679711761"><span class="hs-identifier hs-var">parseYear</span></a></span><span>
+</span><span id="line-135"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-136"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-137"></span><span>      </span><span id="local-6989586621679711760"><span class="annot"><span class="annottext">parseYearMonth :: MParser Moment
+</span><a href="#local-6989586621679711760"><span class="hs-identifier hs-var hs-var">parseYearMonth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-138"></span><span>        </span><span id="local-6989586621679711774"><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711774"><span class="hs-identifier hs-var">year</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity Year
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-139"></span><span>        </span><span class="annot"><span class="annottext">Token Text -&gt; ParsecT Void Text Identity (Token Text)
+forall e s (m :: * -&gt; *).
+(MonadParsec e s m, Token s ~ Char) =&gt;
+Token s -&gt; m (Token s)
+</span><a href="file:///nix/store/alc14zaj09dr60ym1gq12mg3lnbx5v3y-megaparsec-9.7.0-doc/share/doc/megaparsec-9.7.0/html/src/Text.Megaparsec.Char.html/Text.Megaparsec.Char.html#char"><span class="hs-identifier hs-var">MPC.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+Token Text
+</span><span class="hs-char">'-'</span></span><span>
+</span><span id="line-140"></span><span>        </span><span id="local-6989586621679711776"><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711776"><span class="hs-identifier hs-var">month</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity Month
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-141"></span><span>        </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Year -&gt; Month -&gt; Moment
+</span><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYearMonth"><span class="hs-identifier hs-var">MomentYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711774"><span class="hs-identifier hs-var">year</span></a></span><span> </span><span class="annot"><span class="annottext">Month
+</span><a href="#local-6989586621679711776"><span class="hs-identifier hs-var">month</span></a></span><span>
+</span><span id="line-142"></span><span>
+</span><span id="line-143"></span><span>      </span><span id="local-6989586621679711761"><span class="annot"><span class="annottext">parseYear :: MParser Moment
+</span><a href="#local-6989586621679711761"><span class="hs-identifier hs-var hs-var">parseYear</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year -&gt; Moment
+</span><a href="Pacer.Command.Chart.Data.Time.Moment.html#MomentYear"><span class="hs-identifier hs-var">MomentYear</span></a></span><span> </span><span class="annot"><span class="annottext">(Year -&gt; Moment)
+-&gt; ParsecT Void Text Identity Year -&gt; MParser Moment
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ParsecT Void Text Identity Year
+forall a. Parser a =&gt; MParser a
+</span><a href="Pacer.Class.Parser.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-144"></span></pre></body></html>

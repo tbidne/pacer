@@ -1,0 +1,410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Bench.Pacer.Utils.html"><span class="hs-identifier">Bench.Pacer.Utils</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * High level</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#genAndDecodeActivities"><span class="hs-identifier">genAndDecodeActivities</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#genAndDecodeOverlappedActivities"><span class="hs-identifier">genAndDecodeOverlappedActivities</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Low level</span></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#genActivitiesJson"><span class="hs-identifier">genActivitiesJson</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#genOverlappedActivitiesJson"><span class="hs-identifier">genOverlappedActivitiesJson</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#decodeActivities"><span class="hs-identifier">decodeActivities</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#decodeErrorActivities"><span class="hs-identifier">decodeErrorActivities</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Low level</span></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#concatActivitiesJson"><span class="hs-identifier">concatActivitiesJson</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#mkActivityJsonList"><span class="hs-identifier">mkActivityJsonList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Bench.Pacer.Utils.html#tsStrToActivityJson"><span class="hs-identifier">tsStrToActivityJson</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BS</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C8</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">LocalTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">LocalTime</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ZonedTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ZonedTime</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Calendar</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Cal</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Class.Parser.html/Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Class.Parser.html/Pacer.Class.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Class.Parser.html/Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Activity.html/Pacer.Command.Chart.Data.Activity.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Activity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Activity.html/Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier">SomeActivities</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.html/Pacer.Command.Chart.Data.Time.Timestamp.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TS</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp.Internal</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier">Timestamp</span></a></span><span>
+</span><span id="line-30"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier">TimestampDate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>        </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampTime"><span class="hs-identifier">TimestampTime</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>        </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampZoned"><span class="hs-identifier">TimestampZoned</span></a></span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Data.Result.html/Pacer.Data.Result.html"><span class="hs-identifier">Pacer.Data.Result</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Data.Result.html/Pacer.Data.Result.html#onErr"><span class="hs-identifier">onErr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Data.Result.html/Pacer.Data.Result.html#onOk"><span class="hs-identifier">onOk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Prelude.html/Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Utils.html/Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Utils.html/Pacer.Utils.html#AesonE"><span class="hs-identifier">AesonE</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Utils.html/Pacer.Utils.html"><span class="hs-identifier">Pacer.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/rsrlq3hdcrik3xs9dq92wq5ws1wmikd0-scientific-0.3.8.0-doc/share/doc/scientific-0.3.8.0/html/src/Utils.html/Utils.html"><span class="hs-identifier">Utils</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="annot"><span class="hs-comment">-- | 'genActivitiesJson' and 'decodeActivities'.</span></span><span>
+</span><span id="line-42"></span><span class="annot"><a href="Bench.Pacer.Utils.html#genAndDecodeActivities"><span class="hs-identifier hs-type">genAndDecodeActivities</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Activity.html/Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-43"></span><span id="genAndDecodeActivities"><span class="annot"><span class="annottext">genAndDecodeActivities :: Word -&gt; SomeActivities Double
+</span><a href="Bench.Pacer.Utils.html#genAndDecodeActivities"><span class="hs-identifier hs-var hs-var">genAndDecodeActivities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; SomeActivities Double
+</span><a href="Bench.Pacer.Utils.html#decodeActivities"><span class="hs-identifier hs-var">decodeActivities</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; SomeActivities Double)
+-&gt; (Word -&gt; ByteString) -&gt; Word -&gt; SomeActivities Double
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#genActivitiesJson"><span class="hs-identifier hs-var">genActivitiesJson</span></a></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="annot"><span class="hs-comment">-- | 'genOverlappedActivitiesJson' and 'decodeErrorActivities'.</span></span><span>
+</span><span id="line-46"></span><span class="annot"><a href="Bench.Pacer.Utils.html#genAndDecodeOverlappedActivities"><span class="hs-identifier hs-type">genAndDecodeOverlappedActivities</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Utils.html/Pacer.Utils.html#AesonE"><span class="hs-identifier hs-type">AesonE</span></a></span><span>
+</span><span id="line-47"></span><span id="genAndDecodeOverlappedActivities"><span class="annot"><span class="annottext">genAndDecodeOverlappedActivities :: Word -&gt; AesonE
+</span><a href="Bench.Pacer.Utils.html#genAndDecodeOverlappedActivities"><span class="hs-identifier hs-var hs-var">genAndDecodeOverlappedActivities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; AesonE
+</span><a href="Bench.Pacer.Utils.html#decodeErrorActivities"><span class="hs-identifier hs-var">decodeErrorActivities</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; AesonE) -&gt; (Word -&gt; ByteString) -&gt; Word -&gt; AesonE
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#genOverlappedActivitiesJson"><span class="hs-identifier hs-var">genOverlappedActivitiesJson</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="annot"><span class="hs-comment">-- | Decodes activities json w/ expected error.</span></span><span>
+</span><span id="line-50"></span><span class="annot"><a href="Bench.Pacer.Utils.html#decodeErrorActivities"><span class="hs-identifier hs-type">decodeErrorActivities</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Utils.html/Pacer.Utils.html#AesonE"><span class="hs-identifier hs-type">AesonE</span></a></span><span>
+</span><span id="line-51"></span><span id="decodeErrorActivities"><span class="annot"><span class="annottext">decodeErrorActivities :: ByteString -&gt; AesonE
+</span><a href="Bench.Pacer.Utils.html#decodeErrorActivities"><span class="hs-identifier hs-var hs-var">decodeErrorActivities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SomeActivities Double -&gt; AesonE)
+-&gt; Result AesonE (SomeActivities Double) -&gt; AesonE
+forall a e. (a -&gt; e) -&gt; Result e a -&gt; e
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Data.Result.html/Pacer.Data.Result.html#onOk"><span class="hs-identifier hs-var">onOk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Char] -&gt; SomeActivities Double -&gt; AesonE
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Result AesonE (SomeActivities Double) -&gt; AesonE)
+-&gt; (ByteString -&gt; Result AesonE (SomeActivities Double))
+-&gt; ByteString
+-&gt; AesonE
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Result AesonE a
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Utils.html/Pacer.Utils.html#decodeJson"><span class="hs-identifier hs-var">Utils.decodeJson</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Activity.html/Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="annot"><span class="hs-comment">-- | Decodes activities json.</span></span><span>
+</span><span id="line-54"></span><span class="annot"><a href="Bench.Pacer.Utils.html#decodeActivities"><span class="hs-identifier hs-type">decodeActivities</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Activity.html/Pacer.Command.Chart.Data.Activity.html#SomeActivities"><span class="hs-identifier hs-type">SomeActivities</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-55"></span><span id="decodeActivities"><span class="annot"><span class="annottext">decodeActivities :: ByteString -&gt; SomeActivities Double
+</span><a href="Bench.Pacer.Utils.html#decodeActivities"><span class="hs-identifier hs-var hs-var">decodeActivities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AesonE -&gt; SomeActivities Double)
+-&gt; Result AesonE (SomeActivities Double) -&gt; SomeActivities Double
+forall e a. (e -&gt; a) -&gt; Result e a -&gt; a
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Data.Result.html/Pacer.Data.Result.html#onErr"><span class="hs-identifier hs-var">onErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Char] -&gt; SomeActivities Double
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">([Char] -&gt; SomeActivities Double)
+-&gt; (AesonE -&gt; [Char]) -&gt; AesonE -&gt; SomeActivities Double
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AesonE -&gt; [Char]
+forall e. Exception e =&gt; e -&gt; [Char]
+</span><span class="hs-identifier hs-var">displayException</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Result AesonE (SomeActivities Double) -&gt; SomeActivities Double)
+-&gt; (ByteString -&gt; Result AesonE (SomeActivities Double))
+-&gt; ByteString
+-&gt; SomeActivities Double
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Result AesonE (SomeActivities Double)
+forall a. FromJSON a =&gt; ByteString -&gt; Result AesonE a
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Utils.html/Pacer.Utils.html#decodeJson"><span class="hs-identifier hs-var">Utils.decodeJson</span></a></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="annot"><span class="hs-comment">-- | Generate activities json with immediate overlap.</span></span><span>
+</span><span id="line-58"></span><span class="annot"><a href="Bench.Pacer.Utils.html#genOverlappedActivitiesJson"><span class="hs-identifier hs-type">genOverlappedActivitiesJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-59"></span><span id="genOverlappedActivitiesJson"><span class="annot"><span class="annottext">genOverlappedActivitiesJson :: Word -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#genOverlappedActivitiesJson"><span class="hs-identifier hs-var hs-var">genOverlappedActivitiesJson</span></a></span></span><span> </span><span id="local-6989586621679073801"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073801"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#concatActivitiesJson"><span class="hs-identifier hs-var">concatActivitiesJson</span></a></span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><span class="annottext">([ByteString] -&gt; ByteString) -&gt; [ByteString] -&gt; ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsStrToActivityJson"><span class="hs-identifier hs-var">tsStrToActivityJson</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;1980-04-08&quot;</span></span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">ByteString -&gt; [ByteString] -&gt; [ByteString]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsStrToActivityJson"><span class="hs-identifier hs-var">tsStrToActivityJson</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;1980-04-08&quot;</span></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">ByteString -&gt; [ByteString] -&gt; [ByteString]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; [ByteString]
+</span><a href="Bench.Pacer.Utils.html#mkActivityJsonList"><span class="hs-identifier hs-var">mkActivityJsonList</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073801"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="annot"><span class="hs-comment">-- | Generate activities json sized by the parameter.</span></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Bench.Pacer.Utils.html#genActivitiesJson"><span class="hs-identifier hs-type">genActivitiesJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-67"></span><span id="genActivitiesJson"><span class="annot"><span class="annottext">genActivitiesJson :: Word -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#genActivitiesJson"><span class="hs-identifier hs-var hs-var">genActivitiesJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#concatActivitiesJson"><span class="hs-identifier hs-var">concatActivitiesJson</span></a></span><span> </span><span class="annot"><span class="annottext">([ByteString] -&gt; ByteString)
+-&gt; (Word -&gt; [ByteString]) -&gt; Word -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; [ByteString]
+</span><a href="Bench.Pacer.Utils.html#mkActivityJsonList"><span class="hs-identifier hs-var">mkActivityJsonList</span></a></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="annot"><a href="Bench.Pacer.Utils.html#mkActivityJsonList"><span class="hs-identifier hs-type">mkActivityJsonList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-70"></span><span id="mkActivityJsonList"><span class="annot"><span class="annottext">mkActivityJsonList :: Word -&gt; [ByteString]
+</span><a href="Bench.Pacer.Utils.html#mkActivityJsonList"><span class="hs-identifier hs-var hs-var">mkActivityJsonList</span></a></span></span><span> </span><span id="local-6989586621679073802"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073802"><span class="hs-identifier hs-var">maxAll</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ByteString]
+</span><a href="#local-6989586621679073803"><span class="hs-identifier hs-var">allActivities</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-comment">-- NOTE: [Avoiding overlaps]</span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-74"></span><span>    </span><span class="hs-comment">-- Our activities creation is fairly simple. For each of Date, Time, Zoned</span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-comment">-- types, given a start date, create a sequence of activities by where each</span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-comment">-- activity is the previous activity + 1 day.</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-comment">-- Because we interlace all of Date, Time, Zoned, the easiest way to</span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-comment">-- avoid overlaps is to choose a start date for each s.t. the ranges will</span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-comment">-- not overlap at all.</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-comment">-- The current max activities is 10_000, so each range is 10_000 / 3 = 3,333</span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-comment">-- days ~ 9 years.</span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-comment">-- Thus if we space out each start date by 10 years, we should be fine.</span><span>
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621679073804"><span class="annot"><span class="annottext">maxEach :: Word
+</span><a href="#local-6989586621679073804"><span class="hs-identifier hs-var hs-var">maxEach</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073802"><span class="hs-identifier hs-var">maxAll</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
+forall g. MGroup g =&gt; g -&gt; g -&gt; g
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Multiplicative.MGroup.html/Numeric.Algebra.Multiplicative.MGroup.html#.%25."><span class="hs-operator hs-var">.%.</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">3</span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><a href="#local-6989586621679073803"><span class="hs-identifier hs-type">allActivities</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621679073803"><span class="annot"><span class="annottext">allActivities :: [ByteString]
+</span><a href="#local-6989586621679073803"><span class="hs-identifier hs-var hs-var">allActivities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">[[ByteString]] -&gt; [ByteString]
+forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
+</span><span class="hs-identifier hs-var">join</span></span><span>
+</span><span id="line-91"></span><span>        </span><span class="hs-comment">-- zipWith3 so that we can interleave the different times, just so the</span><span>
+</span><span id="line-92"></span><span>        </span><span class="hs-comment">-- sorting is non-trivial.</span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">([[ByteString]] -&gt; [ByteString]) -&gt; [[ByteString]] -&gt; [ByteString]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Timestamp -&gt; Timestamp -&gt; Timestamp -&gt; [ByteString])
+-&gt; [Timestamp] -&gt; [Timestamp] -&gt; [Timestamp] -&gt; [[ByteString]]
+forall a b c d. (a -&gt; b -&gt; c -&gt; d) -&gt; [a] -&gt; [b] -&gt; [c] -&gt; [d]
+</span><span class="hs-identifier hs-var">L.zipWith3</span></span><span>
+</span><span id="line-94"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679073807"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073807"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679073808"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073808"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679073809"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073809"><span class="hs-identifier hs-var">z</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Timestamp -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsToActivityJson"><span class="hs-identifier hs-var">tsToActivityJson</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073807"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsToActivityJson"><span class="hs-identifier hs-var">tsToActivityJson</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073808"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsToActivityJson"><span class="hs-identifier hs-var">tsToActivityJson</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073809"><span class="hs-identifier hs-var">z</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word -&gt; [Timestamp]
+</span><a href="Bench.Pacer.Utils.html#dates"><span class="hs-identifier hs-var">dates</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073804"><span class="hs-identifier hs-var">maxEach</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word -&gt; [Timestamp]
+</span><a href="Bench.Pacer.Utils.html#times"><span class="hs-identifier hs-var">times</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073804"><span class="hs-identifier hs-var">maxEach</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word -&gt; [Timestamp]
+</span><a href="Bench.Pacer.Utils.html#zoneds"><span class="hs-identifier hs-var">zoneds</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073804"><span class="hs-identifier hs-var">maxEach</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span class="annot"><a href="Bench.Pacer.Utils.html#tsStrToActivityJson"><span class="hs-identifier hs-type">tsStrToActivityJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-100"></span><span id="tsStrToActivityJson"><span class="annot"><span class="annottext">tsStrToActivityJson :: Text -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsStrToActivityJson"><span class="hs-identifier hs-var hs-var">tsStrToActivityJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsToActivityJson"><span class="hs-identifier hs-var">tsToActivityJson</span></a></span><span> </span><span class="annot"><span class="annottext">(Timestamp -&gt; ByteString)
+-&gt; (Text -&gt; Timestamp) -&gt; Text -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Timestamp
+forall a. Parser a =&gt; Text -&gt; a
+</span><a href="Bench.Pacer.Utils.html#unsafeParse"><span class="hs-identifier hs-var">unsafeParse</span></a></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="annot"><a href="Bench.Pacer.Utils.html#tsToActivityJson"><span class="hs-identifier hs-type">tsToActivityJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-103"></span><span id="tsToActivityJson"><span class="annot"><span class="annottext">tsToActivityJson :: Timestamp -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#tsToActivityJson"><span class="hs-identifier hs-var hs-var">tsToActivityJson</span></a></span></span><span> </span><span id="local-6989586621679073815"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073815"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-comment">-- intercalate over unlines so we don't have a trailing newline</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><span class="annottext">ByteString -&gt; [ByteString] -&gt; ByteString
+</span><span class="hs-identifier hs-var">BS.intercalate</span></span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;\n&quot;</span></span><span>
+</span><span id="line-107"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;    {&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;      \&quot;datetime\&quot;: \&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#encodeTimestamp"><span class="hs-identifier hs-var">encodeTimestamp</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679073815"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;\&quot;,&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;      \&quot;distance\&quot;: \&quot;marathon\&quot;,&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>      </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;      \&quot;duration\&quot;: \&quot;3h20m\&quot;&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-111"></span><span>      </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;    }&quot;</span></span><span>
+</span><span id="line-112"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="annot"><a href="Bench.Pacer.Utils.html#concatActivitiesJson"><span class="hs-identifier hs-type">concatActivitiesJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-115"></span><span id="concatActivitiesJson"><span class="annot"><span class="annottext">concatActivitiesJson :: [ByteString] -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#concatActivitiesJson"><span class="hs-identifier hs-var hs-var">concatActivitiesJson</span></a></span></span><span> </span><span id="local-6989586621679073818"><span class="annot"><span class="annottext">[ByteString]
+</span><a href="#local-6989586621679073818"><span class="hs-identifier hs-var">rs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
+</span><span class="hs-identifier hs-var">C8.unlines</span></span><span>
+</span><span id="line-117"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;{&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>      </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;  \&quot;activities\&quot;: [&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>      </span><span class="annot"><span class="annottext">ByteString -&gt; [ByteString] -&gt; ByteString
+</span><span class="hs-identifier hs-var">BS.intercalate</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;,\n&quot;</span></span><span> </span><span class="annot"><span class="annottext">[ByteString]
+</span><a href="#local-6989586621679073818"><span class="hs-identifier hs-var">rs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-120"></span><span>      </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;  ]&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>      </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;}&quot;</span></span><span>
+</span><span id="line-122"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="hs-comment">-- See NOTE: [Avoiding overlaps] for choosing good start dates for each</span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- 3 types.</span><span>
+</span><span id="line-126"></span><span class="annot"><a href="Bench.Pacer.Utils.html#startDate"><span class="hs-identifier hs-type">startDate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Day</span></span><span>
+</span><span id="line-127"></span><span id="startDate"><span class="annot"><span class="annottext">startDate :: Day
+</span><a href="Bench.Pacer.Utils.html#startDate"><span class="hs-identifier hs-var hs-var">startDate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Day
+forall a. Parser a =&gt; Text -&gt; a
+</span><a href="Bench.Pacer.Utils.html#unsafeParse"><span class="hs-identifier hs-var">unsafeParse</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;1990-04-08&quot;</span></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="annot"><a href="Bench.Pacer.Utils.html#dates"><span class="hs-identifier hs-type">dates</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-130"></span><span id="dates"><span class="annot"><span class="annottext">dates :: Word -&gt; [Timestamp]
+</span><a href="Bench.Pacer.Utils.html#dates"><span class="hs-identifier hs-var hs-var">dates</span></a></span></span><span> </span><span id="local-6989586621679073821"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073821"><span class="hs-identifier hs-var">mx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; Timestamp
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-var">TimestampDate</span></a></span><span> </span><span class="annot"><span class="annottext">(Day -&gt; Timestamp) -&gt; (Word -&gt; Day) -&gt; Word -&gt; Timestamp
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Day -&gt; Word -&gt; Day
+</span><a href="Bench.Pacer.Utils.html#incDate"><span class="hs-identifier hs-var">incDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="Bench.Pacer.Utils.html#startDate"><span class="hs-identifier hs-var">startDate</span></a></span><span> </span><span class="annot"><span class="annottext">(Word -&gt; Timestamp) -&gt; [Word] -&gt; [Timestamp]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073821"><span class="hs-identifier hs-var">mx</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="annot"><a href="Bench.Pacer.Utils.html#startTime"><span class="hs-identifier hs-type">startTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span>
+</span><span id="line-133"></span><span id="startTime"><span class="annot"><span class="annottext">startTime :: LocalTime
+</span><a href="Bench.Pacer.Utils.html#startTime"><span class="hs-identifier hs-var hs-var">startTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; LocalTime
+forall a. Parser a =&gt; Text -&gt; a
+</span><a href="Bench.Pacer.Utils.html#unsafeParse"><span class="hs-identifier hs-var">unsafeParse</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;2000-04-08T12:00:00&quot;</span></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="annot"><a href="Bench.Pacer.Utils.html#times"><span class="hs-identifier hs-type">times</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-136"></span><span id="times"><span class="annot"><span class="annottext">times :: Word -&gt; [Timestamp]
+</span><a href="Bench.Pacer.Utils.html#times"><span class="hs-identifier hs-var hs-var">times</span></a></span></span><span> </span><span id="local-6989586621679073825"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073825"><span class="hs-identifier hs-var">mx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LocalTime -&gt; Timestamp
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampTime"><span class="hs-identifier hs-var">TimestampTime</span></a></span><span> </span><span class="annot"><span class="annottext">(LocalTime -&gt; Timestamp)
+-&gt; (Word -&gt; LocalTime) -&gt; Word -&gt; Timestamp
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LocalTime -&gt; Word -&gt; LocalTime
+</span><a href="Bench.Pacer.Utils.html#incTime"><span class="hs-identifier hs-var">incTime</span></a></span><span> </span><span class="annot"><span class="annottext">LocalTime
+</span><a href="Bench.Pacer.Utils.html#startTime"><span class="hs-identifier hs-var">startTime</span></a></span><span> </span><span class="annot"><span class="annottext">(Word -&gt; Timestamp) -&gt; [Word] -&gt; [Timestamp]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073825"><span class="hs-identifier hs-var">mx</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-137"></span><span>
+</span><span id="line-138"></span><span class="annot"><a href="Bench.Pacer.Utils.html#startZoned"><span class="hs-identifier hs-type">startZoned</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ZonedTime</span></span><span>
+</span><span id="line-139"></span><span id="startZoned"><span class="annot"><span class="annottext">startZoned :: ZonedTime
+</span><a href="Bench.Pacer.Utils.html#startZoned"><span class="hs-identifier hs-var hs-var">startZoned</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ZonedTime
+forall a. Parser a =&gt; Text -&gt; a
+</span><a href="Bench.Pacer.Utils.html#unsafeParse"><span class="hs-identifier hs-var">unsafeParse</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;2010-04-08T12:00:00-0800&quot;</span></span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="annot"><a href="Bench.Pacer.Utils.html#zoneds"><span class="hs-identifier hs-type">zoneds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-142"></span><span id="zoneds"><span class="annot"><span class="annottext">zoneds :: Word -&gt; [Timestamp]
+</span><a href="Bench.Pacer.Utils.html#zoneds"><span class="hs-identifier hs-var hs-var">zoneds</span></a></span></span><span> </span><span id="local-6989586621679073828"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073828"><span class="hs-identifier hs-var">mx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ZonedTime -&gt; Timestamp
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampZoned"><span class="hs-identifier hs-var">TimestampZoned</span></a></span><span> </span><span class="annot"><span class="annottext">(ZonedTime -&gt; Timestamp)
+-&gt; (Word -&gt; ZonedTime) -&gt; Word -&gt; Timestamp
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ZonedTime -&gt; Word -&gt; ZonedTime
+</span><a href="Bench.Pacer.Utils.html#incZoned"><span class="hs-identifier hs-var">incZoned</span></a></span><span> </span><span class="annot"><span class="annottext">ZonedTime
+</span><a href="Bench.Pacer.Utils.html#startZoned"><span class="hs-identifier hs-var">startZoned</span></a></span><span> </span><span class="annot"><span class="annottext">(Word -&gt; Timestamp) -&gt; [Word] -&gt; [Timestamp]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073828"><span class="hs-identifier hs-var">mx</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span class="annot"><a href="Bench.Pacer.Utils.html#encodeTimestamp"><span class="hs-identifier hs-type">encodeTimestamp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html/Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-145"></span><span id="encodeTimestamp"><span class="annot"><span class="annottext">encodeTimestamp :: Timestamp -&gt; ByteString
+</span><a href="Bench.Pacer.Utils.html#encodeTimestamp"><span class="hs-identifier hs-var hs-var">encodeTimestamp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ByteString)
+-&gt; (Timestamp -&gt; Text) -&gt; Timestamp -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Text
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Command.Chart.Data.Time.Timestamp.html/Pacer.Command.Chart.Data.Time.Timestamp.html#fmtTimestamp"><span class="hs-identifier hs-var">TS.fmtTimestamp</span></a></span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span class="annot"><a href="Bench.Pacer.Utils.html#incDate"><span class="hs-identifier hs-type">incDate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Day</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Day</span></span><span>
+</span><span id="line-148"></span><span id="incDate"><span class="annot"><span class="annottext">incDate :: Day -&gt; Word -&gt; Day
+</span><a href="Bench.Pacer.Utils.html#incDate"><span class="hs-identifier hs-var hs-var">incDate</span></a></span></span><span> </span><span id="local-6989586621679073832"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679073832"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679073833"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073833"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Day -&gt; Day
+</span><span class="hs-identifier hs-var">Cal.addDays</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073833"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679073832"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="annot"><a href="Bench.Pacer.Utils.html#incTime"><span class="hs-identifier hs-type">incTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span>
+</span><span id="line-151"></span><span id="incTime"><span class="annot"><span class="annottext">incTime :: LocalTime -&gt; Word -&gt; LocalTime
+</span><a href="Bench.Pacer.Utils.html#incTime"><span class="hs-identifier hs-var hs-var">incTime</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span> </span><span id="local-6989586621679073835"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679073835"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679073836"><span class="annot"><span class="annottext">TimeOfDay
+</span><a href="#local-6989586621679073836"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679073837"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073837"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; TimeOfDay -&gt; LocalTime
+</span><span class="hs-identifier hs-var">LocalTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Day -&gt; Word -&gt; Day
+</span><a href="Bench.Pacer.Utils.html#incDate"><span class="hs-identifier hs-var">incDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679073835"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073837"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TimeOfDay
+</span><a href="#local-6989586621679073836"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span class="annot"><a href="Bench.Pacer.Utils.html#incZoned"><span class="hs-identifier hs-type">incZoned</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ZonedTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ZonedTime</span></span><span>
+</span><span id="line-154"></span><span id="incZoned"><span class="annot"><span class="annottext">incZoned :: ZonedTime -&gt; Word -&gt; ZonedTime
+</span><a href="Bench.Pacer.Utils.html#incZoned"><span class="hs-identifier hs-var hs-var">incZoned</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ZonedTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span> </span><span id="local-6989586621679073838"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679073838"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679073839"><span class="annot"><span class="annottext">TimeOfDay
+</span><a href="#local-6989586621679073839"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679073840"><span class="annot"><span class="annottext">TimeZone
+</span><a href="#local-6989586621679073840"><span class="hs-identifier hs-var">z</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679073841"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073841"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-155"></span><span>  </span><span class="annot"><span class="annottext">LocalTime -&gt; TimeZone -&gt; ZonedTime
+</span><span class="hs-identifier hs-var">ZonedTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Day -&gt; TimeOfDay -&gt; LocalTime
+</span><span class="hs-identifier hs-var">LocalTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Day -&gt; Word -&gt; Day
+</span><a href="Bench.Pacer.Utils.html#incDate"><span class="hs-identifier hs-var">incDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679073838"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679073841"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TimeOfDay
+</span><a href="#local-6989586621679073839"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TimeZone
+</span><a href="#local-6989586621679073840"><span class="hs-identifier hs-var">z</span></a></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span id="local-6989586621679073685"><span class="annot"><a href="Bench.Pacer.Utils.html#unsafeParse"><span class="hs-identifier hs-type">unsafeParse</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Class.Parser.html/Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679073685"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679073685"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-158"></span><span id="unsafeParse"><span class="annot"><span class="annottext">unsafeParse :: forall a. Parser a =&gt; Text -&gt; a
+</span><a href="Bench.Pacer.Utils.html#unsafeParse"><span class="hs-identifier hs-var hs-var">unsafeParse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault a -&gt; a
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Data.Result.html/Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault a -&gt; a) -&gt; (Text -&gt; ResultDefault a) -&gt; Text -&gt; a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault a
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="file:///home/tommy/Dev/tommy/github/pacer/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pacer-0.1/noopt/doc/html/pacer/src/Pacer.Class.Parser.html/Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span>
+</span><span id="line-159"></span></pre></body></html>

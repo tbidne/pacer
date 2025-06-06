@@ -1,0 +1,492 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Timestamp</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier">Timestamp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Construction</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#fromLocalTime"><span class="hs-identifier">Internal.fromLocalTime</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Elimination</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier">Internal.timestampToYear</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier">timestampToYearMonth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToDay"><span class="hs-identifier">Internal.timestampToDay</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Predicates</span></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameYear"><span class="hs-identifier">sameYear</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameMonth"><span class="hs-identifier">sameMonth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameWeek"><span class="hs-identifier">sameWeek</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameInterval"><span class="hs-identifier">sameInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Rounding</span></span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampYear"><span class="hs-identifier">roundTimestampYear</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampMonth"><span class="hs-identifier">roundTimestampMonth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampWeek"><span class="hs-identifier">roundTimestampWeek</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundInterval"><span class="hs-identifier">roundInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Formatting</span></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#fmtTimestamp"><span class="hs-identifier">fmtTimestamp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Misc</span></span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#strictOverlaps"><span class="hs-identifier">strictOverlaps</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">LocalTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">LocalTime</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ZonedTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ZonedTime</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Calendar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Day</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ModifiedJulianDay</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Calendar</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Cal</span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Calendar.WeekDate</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Week</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Format</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Format</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Month.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Month</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Month.html#Month"><span class="hs-identifier">Month</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp.Internal</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier">Timestamp</span></a></span><span>
+</span><span id="line-41"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier">TimestampDate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampTime"><span class="hs-identifier">TimestampTime</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>        </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampZoned"><span class="hs-identifier">TimestampZoned</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Timestamp.Internal</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Internal</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Year.html"><span class="hs-identifier">Pacer.Command.Chart.Data.Time.Year</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Year.html#Year"><span class="hs-identifier">Year</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#fmtTimestamp"><span class="hs-identifier hs-type">fmtTimestamp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-51"></span><span id="fmtTimestamp"><span class="annot"><span class="annottext">fmtTimestamp :: Timestamp -&gt; Text
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#fmtTimestamp"><span class="hs-identifier hs-var hs-var">fmtTimestamp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Pacer.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; (Timestamp -&gt; String) -&gt; Timestamp -&gt; Text
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">&lt;&lt;&lt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-type">TimestampDate</span></a></span><span> </span><span id="local-6989586621679711238"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711238"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TimeLocale -&gt; String -&gt; Day -&gt; String
+forall t. FormatTime t =&gt; TimeLocale -&gt; String -&gt; t -&gt; String
+</span><span class="hs-identifier hs-var">Format.formatTime</span></span><span> </span><span class="annot"><span class="annottext">TimeLocale
+</span><a href="#local-6989586621679711240"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679711241"><span class="hs-identifier hs-var">dfmt</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711238"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampTime"><span class="hs-identifier hs-type">TimestampTime</span></a></span><span> </span><span id="local-6989586621679711242"><span class="annot"><span class="annottext">LocalTime
+</span><a href="#local-6989586621679711242"><span class="hs-identifier hs-var">lt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TimeLocale -&gt; String -&gt; LocalTime -&gt; String
+forall t. FormatTime t =&gt; TimeLocale -&gt; String -&gt; t -&gt; String
+</span><span class="hs-identifier hs-var">Format.formatTime</span></span><span> </span><span class="annot"><span class="annottext">TimeLocale
+</span><a href="#local-6989586621679711240"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679711241"><span class="hs-identifier hs-var">dfmt</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679711243"><span class="hs-identifier hs-var">tfmt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">LocalTime
+</span><a href="#local-6989586621679711242"><span class="hs-identifier hs-var">lt</span></a></span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampZoned"><span class="hs-identifier hs-type">TimestampZoned</span></a></span><span> </span><span id="local-6989586621679711244"><span class="annot"><span class="annottext">ZonedTime
+</span><a href="#local-6989586621679711244"><span class="hs-identifier hs-var">zt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TimeLocale -&gt; String -&gt; ZonedTime -&gt; String
+forall t. FormatTime t =&gt; TimeLocale -&gt; String -&gt; t -&gt; String
+</span><span class="hs-identifier hs-var">Format.formatTime</span></span><span> </span><span class="annot"><span class="annottext">TimeLocale
+</span><a href="#local-6989586621679711240"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679711241"><span class="hs-identifier hs-var">dfmt</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679711243"><span class="hs-identifier hs-var">tfmt</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679711245"><span class="hs-identifier hs-var">zfmt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ZonedTime
+</span><a href="#local-6989586621679711244"><span class="hs-identifier hs-var">zt</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621679711241"><span class="annot"><span class="annottext">dfmt :: String
+</span><a href="#local-6989586621679711241"><span class="hs-identifier hs-var hs-var">dfmt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;%Y-%m-%d&quot;</span></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621679711243"><span class="annot"><span class="annottext">tfmt :: String
+</span><a href="#local-6989586621679711243"><span class="hs-identifier hs-var hs-var">tfmt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;T%H:%M:%S&quot;</span></span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621679711245"><span class="annot"><span class="annottext">zfmt :: String
+</span><a href="#local-6989586621679711245"><span class="hs-identifier hs-var hs-var">zfmt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;%z&quot;</span></span><span>
+</span><span id="line-60"></span><span>    </span><span id="local-6989586621679711240"><span class="annot"><span class="annottext">l :: TimeLocale
+</span><a href="#local-6989586621679711240"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TimeLocale
+</span><span class="hs-identifier hs-var">Format.defaultTimeLocale</span></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- | Returns a list of timestamps that overlap with this one. Strict in the</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- sense that the timestamp itself is not included.</span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#strictOverlaps"><span class="hs-identifier hs-type">strictOverlaps</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-65"></span><span id="strictOverlaps"><span class="annot"><span class="annottext">strictOverlaps :: Timestamp -&gt; [Timestamp]
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#strictOverlaps"><span class="hs-identifier hs-var hs-var">strictOverlaps</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-type">TimestampDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#strictOverlaps"><span class="hs-identifier hs-var">strictOverlaps</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampTime"><span class="hs-identifier hs-type">TimestampTime</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span> </span><span id="local-6989586621679711254"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711254"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="annot"><span class="annottext">TimeOfDay
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Day -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-var">TimestampDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711254"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-67"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#strictOverlaps"><span class="hs-identifier hs-var">strictOverlaps</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampZoned"><span class="hs-identifier hs-type">TimestampZoned</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ZonedTime</span></span><span> </span><span id="local-6989586621679711255"><span class="annot"><span class="annottext">l :: LocalTime
+</span><a href="#local-6989586621679711255"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">LocalTime</span></span><span> </span><span id="local-6989586621679711256"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711256"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="annot"><span class="annottext">TimeOfDay
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TimeZone
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Day -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-var">TimestampDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711256"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">LocalTime -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampTime"><span class="hs-identifier hs-var">TimestampTime</span></a></span><span> </span><span class="annot"><span class="annottext">LocalTime
+</span><a href="#local-6989586621679711255"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-71"></span><span class="hs-comment">--                                  Rounding                                 --</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampYear"><span class="hs-identifier hs-type">roundTimestampYear</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-75"></span><span id="roundTimestampYear"><span class="annot"><span class="annottext">roundTimestampYear :: Timestamp -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampYear"><span class="hs-identifier hs-var hs-var">roundTimestampYear</span></a></span></span><span> </span><span id="local-6989586621679711257"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711257"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-var">TimestampDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711258"><span class="hs-identifier hs-var">newDay</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679711259"><span class="annot"><span class="annottext">day :: Day
+</span><a href="#local-6989586621679711259"><span class="hs-identifier hs-var hs-var">day</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToDay"><span class="hs-identifier hs-var">Internal.timestampToDay</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711257"><span class="hs-identifier hs-var">ts</span></a></span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679711260"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711260"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; (Integer, WeekOfYear, WeekOfYear)
+</span><span class="hs-identifier hs-var">Cal.toGregorian</span></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711259"><span class="hs-identifier hs-var">day</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span>    </span><span id="local-6989586621679711258"><span class="annot"><span class="annottext">newDay :: Day
+</span><a href="#local-6989586621679711258"><span class="hs-identifier hs-var hs-var">newDay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; WeekOfYear -&gt; WeekOfYear -&gt; Day
+</span><span class="hs-identifier hs-var">Cal.fromGregorian</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711260"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampMonth"><span class="hs-identifier hs-type">roundTimestampMonth</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-83"></span><span id="roundTimestampMonth"><span class="annot"><span class="annottext">roundTimestampMonth :: Timestamp -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampMonth"><span class="hs-identifier hs-var hs-var">roundTimestampMonth</span></a></span></span><span> </span><span id="local-6989586621679711263"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711263"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-var">TimestampDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711264"><span class="hs-identifier hs-var">newDay</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-85"></span><span>    </span><span id="local-6989586621679711265"><span class="annot"><span class="annottext">day :: Day
+</span><a href="#local-6989586621679711265"><span class="hs-identifier hs-var hs-var">day</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToDay"><span class="hs-identifier hs-var">Internal.timestampToDay</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711263"><span class="hs-identifier hs-var">ts</span></a></span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679711266"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711266"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711267"><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711267"><span class="hs-identifier hs-var">moy</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; (Integer, WeekOfYear, WeekOfYear)
+</span><span class="hs-identifier hs-var">Cal.toGregorian</span></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711265"><span class="hs-identifier hs-var">day</span></a></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621679711264"><span class="annot"><span class="annottext">newDay :: Day
+</span><a href="#local-6989586621679711264"><span class="hs-identifier hs-var hs-var">newDay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; WeekOfYear -&gt; WeekOfYear -&gt; Day
+</span><span class="hs-identifier hs-var">Cal.fromGregorian</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711266"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711267"><span class="hs-identifier hs-var">moy</span></a></span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampWeek"><span class="hs-identifier hs-type">roundTimestampWeek</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-91"></span><span id="roundTimestampWeek"><span class="annot"><span class="annottext">roundTimestampWeek :: Timestamp -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundTimestampWeek"><span class="hs-identifier hs-var hs-var">roundTimestampWeek</span></a></span></span><span> </span><span id="local-6989586621679711268"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711268"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-var">TimestampDate</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711269"><span class="hs-identifier hs-var">newDay</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621679711270"><span class="annot"><span class="annottext">day :: Day
+</span><a href="#local-6989586621679711270"><span class="hs-identifier hs-var hs-var">day</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToDay"><span class="hs-identifier hs-var">Internal.timestampToDay</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711268"><span class="hs-identifier hs-var">ts</span></a></span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679711271"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711271"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711272"><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711272"><span class="hs-identifier hs-var">woy</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DayOfWeek
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">FirstWeekType
+-&gt; DayOfWeek -&gt; Day -&gt; (Integer, WeekOfYear, DayOfWeek)
+</span><span class="hs-identifier hs-var">Week.toWeekCalendar</span></span><span> </span><span class="annot"><span class="annottext">FirstWeekType
+</span><span class="hs-identifier hs-var">Week.FirstWholeWeek</span></span><span> </span><span class="annot"><span class="annottext">DayOfWeek
+</span><span class="hs-identifier hs-var">Week.Monday</span></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711270"><span class="hs-identifier hs-var">day</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span>    </span><span id="local-6989586621679711269"><span class="annot"><span class="annottext">newDay :: Day
+</span><a href="#local-6989586621679711269"><span class="hs-identifier hs-var hs-var">newDay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">FirstWeekType
+-&gt; DayOfWeek -&gt; Integer -&gt; WeekOfYear -&gt; DayOfWeek -&gt; Day
+</span><span class="hs-identifier hs-var">Week.fromWeekCalendar</span></span><span>
+</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">FirstWeekType
+</span><span class="hs-identifier hs-var">Week.FirstWholeWeek</span></span><span>
+</span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">DayOfWeek
+</span><span class="hs-identifier hs-var">Week.Monday</span></span><span>
+</span><span id="line-102"></span><span>        </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711271"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711272"><span class="hs-identifier hs-var">woy</span></a></span><span>
+</span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">DayOfWeek
+</span><span class="hs-identifier hs-var">Week.Monday</span></span><span>
+</span><span id="line-105"></span><span>
+</span><span id="line-106"></span><span class="hs-comment">-- | Rounds the timestamp down to the start of its interval. That is,</span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- finds the interval containing the given timestamp, and returns the</span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- interval's start day.</span><span>
+</span><span id="line-109"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundInterval"><span class="hs-identifier hs-type">roundInterval</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Day</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-110"></span><span id="roundInterval"><span class="annot"><span class="annottext">roundInterval :: Day -&gt; Word16 -&gt; Timestamp -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#roundInterval"><span class="hs-identifier hs-var hs-var">roundInterval</span></a></span></span><span> </span><span id="local-6989586621679711277"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711277"><span class="hs-identifier hs-var">totalStart</span></a></span></span><span> </span><span id="local-6989586621679711278"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679711278"><span class="hs-identifier hs-var">period</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><span class="annottext">Day -&gt; Timestamp
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#TimestampDate"><span class="hs-identifier hs-var">TimestampDate</span></a></span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><span class="annottext">(Day -&gt; Timestamp) -&gt; (Timestamp -&gt; Day) -&gt; Timestamp -&gt; Timestamp
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="hs-operator">.</span><span class="hs-identifier">start</span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="annottext">(Interval -&gt; Day) -&gt; (Timestamp -&gt; Interval) -&gt; Timestamp -&gt; Day
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Day -&gt; Word16 -&gt; Timestamp -&gt; Interval
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#findInterval"><span class="hs-identifier hs-var">findInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711277"><span class="hs-identifier hs-var">totalStart</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679711278"><span class="hs-identifier hs-var">period</span></a></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-116"></span><span class="hs-comment">--                              Group functions                              --</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameYear"><span class="hs-identifier hs-type">sameYear</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-120"></span><span id="sameYear"><span class="annot"><span class="annottext">sameYear :: HasCallStack =&gt; Timestamp -&gt; Timestamp -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameYear"><span class="hs-identifier hs-var hs-var">sameYear</span></a></span></span><span> </span><span id="local-6989586621679711293"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711293"><span class="hs-identifier hs-var">ts1</span></a></span></span><span> </span><span id="local-6989586621679711294"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711294"><span class="hs-identifier hs-var">ts2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711295"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Year -&gt; Year -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Year
+</span><a href="#local-6989586621679711296"><span class="hs-identifier hs-var">y2</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-122"></span><span>    </span><span id="local-6989586621679711295"><span class="annot"><span class="annottext">y1 :: Year
+</span><a href="#local-6989586621679711295"><span class="hs-identifier hs-var hs-var">y1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault Year -&gt; Year
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault Year -&gt; Year) -&gt; ResultDefault Year -&gt; Year
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault Year
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m Year
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier hs-var">Internal.timestampToYear</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711293"><span class="hs-identifier hs-var">ts1</span></a></span><span>
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621679711296"><span class="annot"><span class="annottext">y2 :: Year
+</span><a href="#local-6989586621679711296"><span class="hs-identifier hs-var hs-var">y2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault Year -&gt; Year
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault Year -&gt; Year) -&gt; ResultDefault Year -&gt; Year
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault Year
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m Year
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToYear"><span class="hs-identifier hs-var">Internal.timestampToYear</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711294"><span class="hs-identifier hs-var">ts2</span></a></span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameMonth"><span class="hs-identifier hs-type">sameMonth</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-126"></span><span id="sameMonth"><span class="annot"><span class="annottext">sameMonth :: HasCallStack =&gt; Timestamp -&gt; Timestamp -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameMonth"><span class="hs-identifier hs-var hs-var">sameMonth</span></a></span></span><span> </span><span id="local-6989586621679711312"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711312"><span class="hs-identifier hs-var">ts1</span></a></span></span><span> </span><span id="local-6989586621679711313"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711313"><span class="hs-identifier hs-var">ts2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Year, Month)
+</span><a href="#local-6989586621679711314"><span class="hs-identifier hs-var">ym1</span></a></span><span> </span><span class="annot"><span class="annottext">(Year, Month) -&gt; (Year, Month) -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">(Year, Month)
+</span><a href="#local-6989586621679711315"><span class="hs-identifier hs-var">ym2</span></a></span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-128"></span><span>    </span><span id="local-6989586621679711314"><span class="annot"><span class="annottext">ym1 :: (Year, Month)
+</span><a href="#local-6989586621679711314"><span class="hs-identifier hs-var hs-var">ym1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Year, Month) -&gt; (Year, Month))
+-&gt; ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault (Year, Month)
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-var">timestampToYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711312"><span class="hs-identifier hs-var">ts1</span></a></span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621679711315"><span class="annot"><span class="annottext">ym2 :: (Year, Month)
+</span><a href="#local-6989586621679711315"><span class="hs-identifier hs-var hs-var">ym2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Pacer.Data.Result.html#errorErr"><span class="hs-identifier hs-var">errorErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultDefault (Year, Month) -&gt; (Year, Month))
+-&gt; ResultDefault (Year, Month) -&gt; (Year, Month)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; ResultDefault (Year, Month)
+forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-var">timestampToYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711313"><span class="hs-identifier hs-var">ts2</span></a></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameWeek"><span class="hs-identifier hs-type">sameWeek</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-132"></span><span id="sameWeek"><span class="annot"><span class="annottext">sameWeek :: Timestamp -&gt; Timestamp -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameWeek"><span class="hs-identifier hs-var hs-var">sameWeek</span></a></span></span><span> </span><span id="local-6989586621679711316"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711316"><span class="hs-identifier hs-var">ts1</span></a></span></span><span> </span><span id="local-6989586621679711317"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711317"><span class="hs-identifier hs-var">ts2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711318"><span class="hs-identifier hs-var">y1</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711319"><span class="hs-identifier hs-var">y2</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711321"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">WeekOfYear -&gt; WeekOfYear -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711322"><span class="hs-identifier hs-var">w2</span></a></span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-134"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679711318"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711318"><span class="hs-identifier hs-var">y1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711321"><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711321"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; (Integer, WeekOfYear, WeekOfYear)
+</span><a href="#local-6989586621679711323"><span class="hs-identifier hs-var">timestampToYearMonthWeek</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711316"><span class="hs-identifier hs-var">ts1</span></a></span><span>
+</span><span id="line-135"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679711319"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711319"><span class="hs-identifier hs-var">y2</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711322"><span class="annot"><span class="annottext">WeekOfYear
+</span><a href="#local-6989586621679711322"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">WeekOfYear
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; (Integer, WeekOfYear, WeekOfYear)
+</span><a href="#local-6989586621679711323"><span class="hs-identifier hs-var">timestampToYearMonthWeek</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711317"><span class="hs-identifier hs-var">ts2</span></a></span><span>
+</span><span id="line-136"></span><span>
+</span><span id="line-137"></span><span>    </span><span id="local-6989586621679711323"><span class="annot"><span class="annottext">timestampToYearMonthWeek :: Timestamp -&gt; (Integer, WeekOfYear, WeekOfYear)
+</span><a href="#local-6989586621679711323"><span class="hs-identifier hs-var hs-var">timestampToYearMonthWeek</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; (Integer, WeekOfYear, WeekOfYear)
+</span><span class="hs-identifier hs-var">Week.toWeekDate</span></span><span> </span><span class="annot"><span class="annottext">(Day -&gt; (Integer, WeekOfYear, WeekOfYear))
+-&gt; (Timestamp -&gt; Day)
+-&gt; Timestamp
+-&gt; (Integer, WeekOfYear, WeekOfYear)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToDay"><span class="hs-identifier hs-var">Internal.timestampToDay</span></a></span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span class="hs-comment">-- | Determines if two timestamps belong to the same interval @vi@ where</span><span>
+</span><span id="line-140"></span><span class="hs-comment">-- @vi@ is an element in @d, d + p, d + 2p, ...@. In other words, each</span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- timestamp will belong in some interval @d + pk@. sameInterval determines</span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- if they are the same.</span><span>
+</span><span id="line-143"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameInterval"><span class="hs-identifier hs-type">sameInterval</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Start day d</span></span><span>
+</span><span id="line-145"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Day</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-146"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Interval period (i.e. number of days) p</span></span><span>
+</span><span id="line-147"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-148"></span><span>  </span><span class="annot"><span class="hs-comment">-- | ts1</span></span><span>
+</span><span id="line-149"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-150"></span><span>  </span><span class="annot"><span class="hs-comment">-- | ts2</span></span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-153"></span><span id="sameInterval"><span class="annot"><span class="annottext">sameInterval :: Day -&gt; Word16 -&gt; Timestamp -&gt; Timestamp -&gt; Bool
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#sameInterval"><span class="hs-identifier hs-var hs-var">sameInterval</span></a></span></span><span> </span><span id="local-6989586621679711326"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711326"><span class="hs-identifier hs-var">totalStart</span></a></span></span><span> </span><span id="local-6989586621679711327"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679711327"><span class="hs-identifier hs-var">period</span></a></span></span><span> </span><span id="local-6989586621679711328"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711328"><span class="hs-identifier hs-var">ts1</span></a></span></span><span> </span><span id="local-6989586621679711329"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711329"><span class="hs-identifier hs-var">ts2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-154"></span><span>  </span><span class="annot"><span class="annottext">Day -&gt; Word16 -&gt; Timestamp -&gt; Interval
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#findInterval"><span class="hs-identifier hs-var">findInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711326"><span class="hs-identifier hs-var">totalStart</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679711327"><span class="hs-identifier hs-var">period</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711328"><span class="hs-identifier hs-var">ts1</span></a></span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><span class="annottext">Interval -&gt; Interval -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Day -&gt; Word16 -&gt; Timestamp -&gt; Interval
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#findInterval"><span class="hs-identifier hs-var">findInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711326"><span class="hs-identifier hs-var">totalStart</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679711327"><span class="hs-identifier hs-var">period</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711329"><span class="hs-identifier hs-var">ts2</span></a></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-158"></span><span class="hs-comment">--                                    Misc                                   --</span><span>
+</span><span id="line-159"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-160"></span><span>
+</span><span id="line-161"></span><span class="hs-comment">-- Start day for an interval. Naturally this should be associated with an</span><span>
+</span><span id="line-162"></span><span class="hs-comment">-- end date (either on the data or derived from a period), but because</span><span>
+</span><span id="line-163"></span><span class="hs-comment">-- this type is internal and we do need actually need the end date for</span><span>
+</span><span id="line-164"></span><span class="hs-comment">-- anything, we do not have it.</span><span>
+</span><span id="line-165"></span><span class="hs-comment">--</span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- If we ever _do_ need the end date, either add @end :: Date@ or maybe add</span><span>
+</span><span id="line-167"></span><span class="hs-comment">-- the period in the type i.e. @Interval (p :: Nat)@.</span><span>
+</span><span id="line-168"></span><span class="hs-keyword">newtype</span><span> </span><span id="Interval"><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#Interval"><span class="hs-identifier hs-var">Interval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkInterval"><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#MkInterval"><span class="hs-identifier hs-var">MkInterval</span></a></span></span><span> </span><span class="hs-special">{</span><span id="start"><span class="annot"><span class="annottext">Interval -&gt; Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#start"><span class="hs-identifier hs-var hs-var">start</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Day</span></span><span class="hs-special">}</span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679711333"><span id="local-6989586621679711337"><span class="annot"><span class="annottext">Interval -&gt; Interval -&gt; Bool
+(Interval -&gt; Interval -&gt; Bool)
+-&gt; (Interval -&gt; Interval -&gt; Bool) -&gt; Eq Interval
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Interval -&gt; Interval -&gt; Bool
+== :: Interval -&gt; Interval -&gt; Bool
+$c/= :: Interval -&gt; Interval -&gt; Bool
+/= :: Interval -&gt; Interval -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679711341"><span id="local-6989586621679711347"><span id="local-6989586621679711351"><span class="annot"><span class="annottext">WeekOfYear -&gt; Interval -&gt; String -&gt; String
+[Interval] -&gt; String -&gt; String
+Interval -&gt; String
+(WeekOfYear -&gt; Interval -&gt; String -&gt; String)
+-&gt; (Interval -&gt; String)
+-&gt; ([Interval] -&gt; String -&gt; String)
+-&gt; Show Interval
+forall a.
+(WeekOfYear -&gt; a -&gt; String -&gt; String)
+-&gt; (a -&gt; String) -&gt; ([a] -&gt; String -&gt; String) -&gt; Show a
+$cshowsPrec :: WeekOfYear -&gt; Interval -&gt; String -&gt; String
+showsPrec :: WeekOfYear -&gt; Interval -&gt; String -&gt; String
+$cshow :: Interval -&gt; String
+show :: Interval -&gt; String
+$cshowList :: [Interval] -&gt; String -&gt; String
+showList :: [Interval] -&gt; String -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span class="hs-comment">-- | For @findInterval d1 p d2, d1 &lt;= d2@, returns interval @[s, e]@ s.t.</span><span>
+</span><span id="line-172"></span><span class="hs-comment">--</span><span>
+</span><span id="line-173"></span><span class="hs-comment">-- * @s = d1 * pk@</span><span>
+</span><span id="line-174"></span><span class="hs-comment">--</span><span>
+</span><span id="line-175"></span><span class="hs-comment">-- * @e = d1 * p(k + 1)@</span><span>
+</span><span id="line-176"></span><span class="hs-comment">--</span><span>
+</span><span id="line-177"></span><span class="hs-comment">-- * @s &lt;= d2 &lt;= e@</span><span>
+</span><span id="line-178"></span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#findInterval"><span class="hs-identifier hs-type">findInterval</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Day</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#Interval"><span class="hs-identifier hs-type">Interval</span></a></span><span>
+</span><span id="line-179"></span><span id="findInterval"><span class="annot"><span class="annottext">findInterval :: Day -&gt; Word16 -&gt; Timestamp -&gt; Interval
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#findInterval"><span class="hs-identifier hs-var hs-var">findInterval</span></a></span></span><span> </span><span id="local-6989586621679711355"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711355"><span class="hs-identifier hs-var">totalStart</span></a></span></span><span> </span><span id="local-6989586621679711356"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679711356"><span class="hs-identifier hs-var">period</span></a></span></span><span> </span><span id="local-6989586621679711357"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711357"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#MkInterval"><span class="hs-identifier hs-type">MkInterval</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Day
+start :: Day
+start :: Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#start"><span class="hs-identifier hs-var hs-var">start</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-181"></span><span>    </span><span class="hs-comment">-- d1</span><span>
+</span><span id="line-182"></span><span>    </span><span id="local-6989586621679711359"><span class="annot"><span class="annottext">day&#8484; :: Integer
+</span><a href="#local-6989586621679711359"><span class="hs-identifier hs-var hs-var">day&#8484;</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621679711355"><span class="hs-identifier hs-var">totalStart</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">toModifiedJulianDay</span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span>    </span><span class="hs-comment">-- d2</span><span>
+</span><span id="line-185"></span><span>    </span><span id="local-6989586621679711360"><span class="annot"><span class="annottext">tsDay&#8484; :: Integer
+</span><a href="#local-6989586621679711360"><span class="hs-identifier hs-var hs-var">tsDay&#8484;</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Timestamp -&gt; Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToDay"><span class="hs-identifier hs-var">Internal.timestampToDay</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621679711357"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span class="hs-identifier">toModifiedJulianDay</span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span>    </span><span class="hs-comment">-- p</span><span>
+</span><span id="line-188"></span><span>    </span><span id="local-6989586621679711361"><span class="annot"><span class="annottext">period&#8484; :: Integer
+</span><a href="#local-6989586621679711361"><span class="hs-identifier hs-var hs-var">period&#8484;</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679711356"><span class="hs-identifier hs-var">period</span></a></span><span>
+</span><span id="line-189"></span><span>
+</span><span id="line-190"></span><span>    </span><span class="hs-comment">-- k = (d2 - d1) / p i.e. largest k s.t. d1 + kp &lt;= d2.</span><span>
+</span><span id="line-191"></span><span>    </span><span id="local-6989586621679711362"><span class="annot"><span class="annottext">k :: Integer
+</span><a href="#local-6989586621679711362"><span class="hs-identifier hs-var hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711360"><span class="hs-identifier hs-var">tsDay&#8484;</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711359"><span class="hs-identifier hs-var">day&#8484;</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall g. MGroup g =&gt; g -&gt; g -&gt; g
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Multiplicative.MGroup.html/Numeric.Algebra.Multiplicative.MGroup.html#.%25."><span class="hs-operator hs-var">.%.</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711361"><span class="hs-identifier hs-var">period&#8484;</span></a></span><span>
+</span><span id="line-192"></span><span>
+</span><span id="line-193"></span><span>    </span><span class="hs-comment">-- s = d1 + pk</span><span>
+</span><span id="line-194"></span><span>    </span><span id="local-6989586621679711358"><span class="annot"><span class="annottext">start :: Day
+</span><a href="#local-6989586621679711358"><span class="hs-identifier hs-var hs-var">start</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Day
+</span><span class="hs-identifier hs-var">ModifiedJulianDay</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Day) -&gt; Integer -&gt; Day
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711359"><span class="hs-identifier hs-var">day&#8484;</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711361"><span class="hs-identifier hs-var">period&#8484;</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679711362"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-195"></span><span>
+</span><span id="line-196"></span><span id="local-6989586621679711180"><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-type">timestampToYearMonth</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679711180"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679711180"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Tuple2</span></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Year.html#Year"><span class="hs-identifier hs-type">Year</span></a></span><span> </span><span class="annot"><a href="Pacer.Command.Chart.Data.Time.Month.html#Month"><span class="hs-identifier hs-type">Month</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-197"></span><span id="timestampToYearMonth"><span class="annot"><span class="annottext">timestampToYearMonth :: forall (m :: * -&gt; *). MonadFail m =&gt; Timestamp -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.html#timestampToYearMonth"><span class="hs-identifier hs-var hs-var">timestampToYearMonth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Day -&gt; m (Year, Month)
+forall (m :: * -&gt; *). MonadFail m =&gt; Day -&gt; m (Year, Month)
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#dayToYearMonth"><span class="hs-identifier hs-var">Internal.dayToYearMonth</span></a></span><span> </span><span class="annot"><span class="annottext">(Day -&gt; m (Year, Month))
+-&gt; (Timestamp -&gt; Day) -&gt; Timestamp -&gt; m (Year, Month)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; Day
+</span><a href="Pacer.Command.Chart.Data.Time.Timestamp.Internal.html#timestampToDay"><span class="hs-identifier hs-var">Internal.timestampToDay</span></a></span><span>
+</span><span id="line-198"></span></pre></body></html>

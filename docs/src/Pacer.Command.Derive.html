@@ -1,0 +1,563 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Derive functionality.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.html"><span class="hs-identifier">Pacer.Command.Derive</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Top level handler</span></span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.html#handle"><span class="hs-identifier">handle</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Low level functions</span></span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Distance</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.html#deriveDistance"><span class="hs-identifier">deriveDistance</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.html#deriveSomeDistance"><span class="hs-identifier">deriveSomeDistance</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Duration</span></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.html#deriveDuration"><span class="hs-identifier">deriveDuration</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.html#deriveSomeDuration"><span class="hs-identifier">deriveSomeDuration</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Pace</span></span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.html#derivePace"><span class="hs-identifier">derivePace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.html#deriveSomePace"><span class="hs-identifier">deriveSomePace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html"><span class="hs-identifier">Pacer.Command.Derive.Params</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveParams"><span class="hs-identifier">DeriveParams</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Derive.Params.html#quantity"><span class="hs-identifier">quantity</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#unit"><span class="hs-keyword">unit</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveParamsFinal"><span class="hs-identifier">DeriveParamsFinal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveQuantity"><span class="hs-identifier">DeriveQuantity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveDistance"><span class="hs-identifier">DeriveDistance</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveDuration"><span class="hs-identifier">DeriveDuration</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DerivePace"><span class="hs-identifier">DerivePace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html#Distance"><span class="hs-identifier">Distance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#MkDistance"><span class="hs-identifier">MkDistance</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html#unDistance"><span class="hs-identifier">unDistance</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.html#HasDistance"><span class="hs-identifier">HasDistance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#hideDistance"><span class="hs-identifier">hideDistance</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier">SomeDistance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#MkSomeDistance"><span class="hs-identifier">MkSomeDistance</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html"><span class="hs-identifier">Pacer.Data.Distance.Units</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier">Kilometer</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier">Meter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier">Mile</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier">SDistanceUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier">SKilometer</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier">SMeter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier">SMile</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html"><span class="hs-identifier">Pacer.Data.Distance.Units</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DistU</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html"><span class="hs-identifier">Pacer.Data.Duration</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier">Duration</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#MkDuration"><span class="hs-identifier">MkDuration</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html"><span class="hs-identifier">Pacer.Data.Duration</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Duration</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Pace.html"><span class="hs-identifier">Pacer.Data.Pace</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Pacer.Data.Pace.html#Pace"><span class="hs-identifier">Pace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#MkPace"><span class="hs-identifier">MkPace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="Pacer.Data.Pace.html#PaceDistF"><span class="hs-identifier">PaceDistF</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier">SomePace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#MkSomePace"><span class="hs-identifier">MkSomePace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="Pacer.Data.Pace.html#mkPace"><span class="hs-identifier">mkPace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Exception.html"><span class="hs-identifier">Pacer.Exception</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PEx</span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="annot"><span class="hs-comment">-- | Handles derive command.</span></span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Pacer.Command.Derive.html#handle"><span class="hs-identifier hs-type">handle</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717487"><span class="annot"><a href="#local-6989586621679717487"><span class="hs-identifier hs-type">es</span></a></span></span><span> </span><span id="local-6989586621679717481"><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#Display"><span class="hs-identifier hs-type">Display</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#From%2124"><span class="hs-identifier hs-type">From&#8484;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#Terminal"><span class="hs-identifier hs-type">Terminal</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Effect.html/Effectful.Internal.Effect.html#%3A%3E"><span class="hs-operator hs-type">:&gt;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717487"><span class="hs-identifier hs-type">es</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#To%211A"><span class="hs-identifier hs-type">To&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveParamsFinal"><span class="hs-identifier hs-type">DeriveParamsFinal</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717481"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><a href="file:///nix/store/1hak7cv0zdhl1xga54zmrx8mlz5ilw6q-effectful-core-2.5.1.0-doc/share/doc/effectful-core-2.5.1.0/html/src/Effectful.Internal.Monad.html/Effectful.Internal.Monad.html#Eff"><span class="hs-identifier hs-type">Eff</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717487"><span class="hs-identifier hs-type">es</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span id="handle"><span class="annot"><span class="annottext">handle :: forall (es :: [Effect]) a.
+(Display a, From&#8484; a, HasCallStack, Ord a, Semifield a, Show a,
+ Terminal :&gt; es, To&#8474; a) =&gt;
+DeriveParamsFinal a -&gt; Eff es ()
+</span><a href="Pacer.Command.Derive.html#handle"><span class="hs-identifier hs-var hs-var">handle</span></a></span></span><span> </span><span id="local-6989586621679717728"><span class="annot"><span class="annottext">DeriveParamsFinal a
+</span><a href="#local-6989586621679717728"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DeriveParamsFinal a
+</span><a href="#local-6989586621679717728"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">quantity</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveDistance"><span class="hs-identifier hs-type">DeriveDistance</span></a></span><span> </span><span id="local-6989586621679717729"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717729"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span id="local-6989586621679717730"><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717730"><span class="hs-identifier hs-var">pace</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717731"><span class="annot"><span class="annottext">dist :: SomeDistance a
+</span><a href="#local-6989586621679717731"><span class="hs-identifier hs-var hs-var">dist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; SomePace a -&gt; SomeDistance a
+forall a. MGroup a =&gt; Duration a -&gt; SomePace a -&gt; SomeDistance a
+</span><a href="Pacer.Command.Derive.html#deriveSomeDistance"><span class="hs-identifier hs-var">deriveSomeDistance</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717729"><span class="hs-identifier hs-var">duration</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717730"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DeriveParamsFinal a
+</span><a href="#local-6989586621679717728"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Demote DistanceUnit)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SomeDistance a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717731"><span class="hs-identifier hs-var">dist</span></a></span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679717734"><span class="annot"><span class="annottext">Demote DistanceUnit
+</span><a href="#local-6989586621679717734"><span class="hs-keyword hs-var">unit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit -&gt; SomeSing DistanceUnit
+forall k. SingKind k =&gt; Demote k -&gt; SomeSing k
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#toSing"><span class="hs-identifier hs-var">toSing</span></a></span><span> </span><span class="annot"><span class="annottext">Demote DistanceUnit
+</span><a href="#local-6989586621679717734"><span class="hs-keyword hs-var">unit</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-68"></span><span>        </span><span class="annot"><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#SomeSing"><span class="hs-identifier hs-type">SomeSing</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679717737"><span id="local-6989586621679717738"><span class="annot"><span class="annottext">SDistanceUnit a
+</span><a href="#local-6989586621679717738"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#SDistanceUnit"><span class="hs-identifier hs-type">SDistanceUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717737"><span class="hs-identifier hs-type">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Sing a -&gt; (SingI a =&gt; Eff es ()) -&gt; Eff es ()
+forall {k} (n :: k) r. Sing n -&gt; (SingI n =&gt; r) -&gt; r
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#withSingI"><span class="hs-identifier hs-var">withSingI</span></a></span><span> </span><span class="annot"><span class="annottext">Sing a
+SDistanceUnit a
+</span><a href="#local-6989586621679717738"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">((SingI a =&gt; Eff es ()) -&gt; Eff es ())
+-&gt; (SingI a =&gt; Eff es ()) -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-69"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717750"><span class="annot"><span class="annottext">dist' :: ConvertedDistance (SomeDistance a) a
+</span><a href="#local-6989586621679717750"><span class="hs-identifier hs-var hs-var">dist'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI a, ConvertDistance a, ToConstraints a a) =&gt;
+a -&gt; ConvertedDistance a a
+SomeDistance a -&gt; ConvertedDistance (SomeDistance a) a
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a a) =&gt;
+a -&gt; ConvertedDistance a a
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717737"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717731"><span class="hs-identifier hs-var">dist</span></a></span><span>
+</span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Distance a a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">ConvertedDistance (SomeDistance a) a
+Distance a a
+</span><a href="#local-6989586621679717750"><span class="hs-identifier hs-var">dist'</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DeriveDuration"><span class="hs-identifier hs-type">DeriveDuration</span></a></span><span> </span><span id="local-6989586621679717752"><span class="annot"><span class="annottext">PaceOptUnits a
+</span><a href="#local-6989586621679717752"><span class="hs-identifier hs-var">paceOptUnits</span></a></span></span><span> </span><span id="local-6989586621679717753"><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717753"><span class="hs-identifier hs-var">dist</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Eff es () -&gt; Eff es ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe DistanceUnit -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">DeriveParamsFinal a
+</span><a href="#local-6989586621679717728"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">(Eff es () -&gt; Eff es ()) -&gt; Eff es () -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CommandDeriveE -&gt; Eff es ()
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDeriveDurationUnit"><span class="hs-identifier hs-var">PEx.CommandDeriveDurationUnit</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717758"><span class="annot"><span class="annottext">duration :: Duration a
+</span><a href="#local-6989586621679717758"><span class="hs-identifier hs-var hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PaceOptUnits a
+</span><a href="#local-6989586621679717752"><span class="hs-identifier hs-var">paceOptUnits</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-76"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679717759"><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717759"><span class="hs-identifier hs-var">pace</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SomeDistance a -&gt; SomePace a -&gt; Duration a
+forall a.
+(From&#8484; a, Ord a, Semifield a, Show a) =&gt;
+SomeDistance a -&gt; SomePace a -&gt; Duration a
+</span><a href="Pacer.Command.Derive.html#deriveSomeDuration"><span class="hs-identifier hs-var">deriveSomeDuration</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717753"><span class="hs-identifier hs-var">dist</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717759"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-77"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679717760"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717760"><span class="hs-identifier hs-var">paceDuration</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717753"><span class="hs-identifier hs-var">dist</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-78"></span><span>            </span><span class="annot"><a href="Pacer.Data.Distance.html#MkSomeDistance"><span class="hs-identifier hs-type">MkSomeDistance</span></a></span><span> </span><span id="local-6989586621679717761"><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717761"><span class="hs-identifier hs-var">sdist</span></a></span></span><span> </span><span id="local-6989586621679717762"><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717762"><span class="hs-identifier hs-var">distx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717761"><span class="hs-identifier hs-var">sdist</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-80"></span><span>                </span><span class="annot"><span class="annottext">Sing d
+SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier hs-var">SMeter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-81"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717773"><span class="annot"><span class="annottext">disty :: ConvertedDistance (Distance d a) 'Kilometer
+</span><a href="#local-6989586621679717773"><span class="hs-identifier hs-var hs-var">disty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI 'Kilometer, ConvertDistance a,
+ ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+Distance d a -&gt; ConvertedDistance (Distance d a) 'Kilometer
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717762"><span class="hs-identifier hs-var">distx</span></a></span><span>
+</span><span id="line-82"></span><span>                   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Distance 'Kilometer a -&gt; Pace 'Kilometer a -&gt; Duration a
+forall a (d :: DistanceUnit).
+MSemigroup a =&gt;
+Distance d a -&gt; Pace d a -&gt; Duration a
+</span><a href="Pacer.Command.Derive.html#deriveDuration"><span class="hs-identifier hs-var">deriveDuration</span></a></span><span> </span><span class="annot"><span class="annottext">ConvertedDistance (Distance d a) 'Kilometer
+Distance 'Kilometer a
+</span><a href="#local-6989586621679717773"><span class="hs-identifier hs-var">disty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (d :: DistanceUnit) a. PaceDistF d =&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Data.Pace.html#MkPace"><span class="hs-identifier hs-var">MkPace</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717760"><span class="hs-identifier hs-var">paceDuration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>                </span><span class="annot"><span class="annottext">Sing d
+SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier hs-var">SKilometer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Distance d a -&gt; Pace d a -&gt; Duration a
+forall a (d :: DistanceUnit).
+MSemigroup a =&gt;
+Distance d a -&gt; Pace d a -&gt; Duration a
+</span><a href="Pacer.Command.Derive.html#deriveDuration"><span class="hs-identifier hs-var">deriveDuration</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717762"><span class="hs-identifier hs-var">distx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Duration a -&gt; Pace d a
+forall (d :: DistanceUnit) a. PaceDistF d =&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Data.Pace.html#MkPace"><span class="hs-identifier hs-var">MkPace</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717760"><span class="hs-identifier hs-var">paceDuration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>                </span><span class="annot"><span class="annottext">Sing d
+SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier hs-var">SMile</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Distance d a -&gt; Pace d a -&gt; Duration a
+forall a (d :: DistanceUnit).
+MSemigroup a =&gt;
+Distance d a -&gt; Pace d a -&gt; Duration a
+</span><a href="Pacer.Command.Derive.html#deriveDuration"><span class="hs-identifier hs-var">deriveDuration</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717762"><span class="hs-identifier hs-var">distx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Duration a -&gt; Pace d a
+forall (d :: DistanceUnit) a. PaceDistF d =&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Data.Pace.html#MkPace"><span class="hs-identifier hs-var">MkPace</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717760"><span class="hs-identifier hs-var">paceDuration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717758"><span class="hs-identifier hs-var">duration</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><a href="Pacer.Command.Derive.Params.html#DerivePace"><span class="hs-identifier hs-type">DerivePace</span></a></span><span> </span><span id="local-6989586621679717780"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717780"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span id="local-6989586621679717781"><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717781"><span class="hs-identifier hs-var">dist</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717782"><span class="annot"><span class="annottext">pace :: SomePace a
+</span><a href="#local-6989586621679717782"><span class="hs-identifier hs-var hs-var">pace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SomeDistance a -&gt; Duration a -&gt; SomePace a
+forall a.
+(From&#8484; a, Ord a, Semifield a, Show a) =&gt;
+SomeDistance a -&gt; Duration a -&gt; SomePace a
+</span><a href="Pacer.Command.Derive.html#deriveSomePace"><span class="hs-identifier hs-var">deriveSomePace</span></a></span><span> </span><span class="annot"><span class="annottext">SomeDistance a
+</span><a href="#local-6989586621679717781"><span class="hs-identifier hs-var">dist</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717780"><span class="hs-identifier hs-var">duration</span></a></span><span>
+</span><span id="line-88"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DeriveParamsFinal a
+</span><a href="#local-6989586621679717728"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-operator">.</span><span class="hs-keyword">unit</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">Maybe DistanceUnit
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SomePace a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717782"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679717783"><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679717783"><span class="hs-keyword hs-var">unit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="#local-6989586621679717783"><span class="hs-keyword hs-var">unit</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-91"></span><span>        </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Meter"><span class="hs-identifier hs-var">Meter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CommandDeriveE -&gt; Eff es ()
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; Eff es a
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">CommandDeriveE
+</span><a href="Pacer.Exception.html#CommandDerivePaceMeters"><span class="hs-identifier hs-var">PEx.CommandDerivePaceMeters</span></a></span><span>
+</span><span id="line-92"></span><span>        </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-var">Kilometer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Pace 'Kilometer a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">(Pace 'Kilometer a -&gt; Text) -&gt; Pace 'Kilometer a -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI 'Kilometer, ConvertDistance a,
+ ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+SomePace a -&gt; ConvertedDistance (SomePace a) 'Kilometer
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Kilometer"><span class="hs-identifier hs-type">Kilometer</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717782"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">DistanceUnit
+</span><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-var">Mile</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Eff es ()
+forall (es :: [Effect]).
+(HasCallStack, Terminal :&gt; es) =&gt;
+Text -&gt; Eff es ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/terminal-effectful-0.1-32c7545799ecf1653c7ee6565a9698c2ad256c1b0e4d7eadf6d03924ad8d5f6b/share/doc/html/src/Effectful.Terminal.Dynamic.html/Effectful.Terminal.Dynamic.html#putTextLn"><span class="hs-identifier hs-var">putTextLn</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Eff es ()) -&gt; Text -&gt; Eff es ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Pace 'Mile a -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/v4mdbmfdmg0vckv8d11a05a84s63a9v9-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">(Pace 'Mile a -&gt; Text) -&gt; Pace 'Mile a -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI 'Mile, ConvertDistance a, ToConstraints a 'Mile) =&gt;
+a -&gt; ConvertedDistance a 'Mile
+SomePace a -&gt; ConvertedDistance (SomePace a) 'Mile
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a 'Mile) =&gt;
+a -&gt; ConvertedDistance a 'Mile
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#Mile"><span class="hs-identifier hs-type">Mile</span></a></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679717782"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span class="annot"><span class="hs-comment">-- | Given a distance and a duration, derives the pace.</span></span><span>
+</span><span id="line-96"></span><span class="annot"><a href="Pacer.Command.Derive.html#derivePace"><span class="hs-identifier hs-type">derivePace</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717577"><span class="annot"><a href="#local-6989586621679717577"><span class="hs-identifier hs-type">d</span></a></span></span><span> </span><span id="local-6989586621679717576"><span class="annot"><a href="#local-6989586621679717576"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Multiplicative.MGroup.html/Numeric.Algebra.Multiplicative.MGroup.html#MGroup"><span class="hs-identifier hs-type">MGroup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717576"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Pacer.Data.Pace.html#PaceDistF"><span class="hs-identifier hs-type">PaceDistF</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717577"><span class="hs-identifier hs-type">d</span></a></span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Distance.</span></span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.html#Distance"><span class="hs-identifier hs-type">Distance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717577"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717576"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Duration.</span></span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717576"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Pace.</span></span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Pacer.Data.Pace.html#Pace"><span class="hs-identifier hs-type">Pace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717577"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717576"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-107"></span><span id="derivePace"><span class="annot"><span class="annottext">derivePace :: forall (d :: DistanceUnit) a.
+(MGroup a, PaceDistF d) =&gt;
+Distance d a -&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Command.Derive.html#derivePace"><span class="hs-identifier hs-var hs-var">derivePace</span></a></span></span><span> </span><span id="local-6989586621679717791"><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717791"><span class="hs-identifier hs-var">distance</span></a></span></span><span> </span><span id="local-6989586621679717792"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717792"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><span class="annottext">Duration a -&gt; Pace d a
+forall (d :: DistanceUnit) a. PaceDistF d =&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Data.Pace.html#mkPace"><span class="hs-identifier hs-var">mkPace</span></a></span><span> </span><span class="annot"><span class="annottext">(Duration a -&gt; Pace d a) -&gt; Duration a -&gt; Pace d a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717792"><span class="hs-identifier hs-var">duration</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Positive a -&gt; Duration a
+forall v k. MSpace v k =&gt; v -&gt; k -&gt; v
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Space.MSpace.html/Numeric.Algebra.Space.MSpace.html#.%25"><span class="hs-operator hs-var">.%</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717791"><span class="hs-identifier hs-var">distance</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">unDistance</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- | Given an existentially-quantified distance and a duration, derives</span><span>
+</span><span id="line-111"></span><span class="hs-comment">-- the pace.</span><span>
+</span><span id="line-112"></span><span class="annot"><a href="Pacer.Command.Derive.html#deriveSomePace"><span class="hs-identifier hs-type">deriveSomePace</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717575"><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#From%2124"><span class="hs-identifier hs-type">From&#8484;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Existentially-quantified distance.</span></span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier hs-type">SomeDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Duration.</span></span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Pace.</span></span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier hs-type">SomePace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717575"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-121"></span><span id="deriveSomePace"><span class="annot"><span class="annottext">deriveSomePace :: forall a.
+(From&#8484; a, Ord a, Semifield a, Show a) =&gt;
+SomeDistance a -&gt; Duration a -&gt; SomePace a
+</span><a href="Pacer.Command.Derive.html#deriveSomePace"><span class="hs-identifier hs-var hs-var">deriveSomePace</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#MkSomeDistance"><span class="hs-identifier hs-type">MkSomeDistance</span></a></span><span> </span><span id="local-6989586621679717800"><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717800"><span class="hs-identifier hs-var">sdist</span></a></span></span><span> </span><span id="local-6989586621679717801"><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717801"><span class="hs-identifier hs-var">distance</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679717802"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717802"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717800"><span class="hs-identifier hs-var">sdist</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="annottext">Sing d
+SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SMeter"><span class="hs-identifier hs-var">SMeter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-124"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679717815"><span class="annot"><span class="annottext">distanceKm :: ConvertedDistance (Distance d a) 'Kilometer
+</span><a href="#local-6989586621679717815"><span class="hs-identifier hs-var hs-var">distanceKm</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Distance d a -&gt; ConvertedDistance (Distance d a) 'Kilometer
+forall a.
+(ConvertDistance a, ToConstraints a 'Kilometer) =&gt;
+a -&gt; ConvertedDistance a 'Kilometer
+</span><a href="Pacer.Data.Distance.Units.html#convertToKilometers"><span class="hs-identifier hs-var">DistU.convertToKilometers</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717801"><span class="hs-identifier hs-var">distance</span></a></span><span>
+</span><span id="line-125"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Pace 'Kilometer a -&gt; HideDistance (Pace 'Kilometer a)
+forall a. HasDistance a =&gt; a -&gt; HideDistance a
+</span><a href="Pacer.Data.Distance.html#hideDistance"><span class="hs-identifier hs-var">hideDistance</span></a></span><span> </span><span class="annot"><span class="annottext">(Pace 'Kilometer a -&gt; HideDistance (Pace 'Kilometer a))
+-&gt; Pace 'Kilometer a -&gt; HideDistance (Pace 'Kilometer a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Distance 'Kilometer a -&gt; Duration a -&gt; Pace 'Kilometer a
+forall (d :: DistanceUnit) a.
+(MGroup a, PaceDistF d) =&gt;
+Distance d a -&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Command.Derive.html#derivePace"><span class="hs-identifier hs-var">derivePace</span></a></span><span> </span><span class="annot"><span class="annottext">ConvertedDistance (Distance d a) 'Kilometer
+Distance 'Kilometer a
+</span><a href="#local-6989586621679717815"><span class="hs-identifier hs-var">distanceKm</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717802"><span class="hs-identifier hs-var">duration</span></a></span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">Sing d
+SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SKilometer"><span class="hs-identifier hs-var">SKilometer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-127"></span><span>      </span><span class="annot"><span class="annottext">Pace d a -&gt; HideDistance (Pace d a)
+forall a. HasDistance a =&gt; a -&gt; HideDistance a
+</span><a href="Pacer.Data.Distance.html#hideDistance"><span class="hs-identifier hs-var">hideDistance</span></a></span><span> </span><span class="annot"><span class="annottext">(Pace d a -&gt; HideDistance (Pace d a))
+-&gt; Pace d a -&gt; HideDistance (Pace d a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Distance d a -&gt; Duration a -&gt; Pace d a
+forall (d :: DistanceUnit) a.
+(MGroup a, PaceDistF d) =&gt;
+Distance d a -&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Command.Derive.html#derivePace"><span class="hs-identifier hs-var">derivePace</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717801"><span class="hs-identifier hs-var">distance</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717802"><span class="hs-identifier hs-var">duration</span></a></span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><span class="annottext">Sing d
+SDistanceUnit d
+</span><a href="Pacer.Data.Distance.Units.html#SMile"><span class="hs-identifier hs-var">SMile</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">Pace d a -&gt; HideDistance (Pace d a)
+forall a. HasDistance a =&gt; a -&gt; HideDistance a
+</span><a href="Pacer.Data.Distance.html#hideDistance"><span class="hs-identifier hs-var">hideDistance</span></a></span><span> </span><span class="annot"><span class="annottext">(Pace d a -&gt; HideDistance (Pace d a))
+-&gt; Pace d a -&gt; HideDistance (Pace d a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Distance d a -&gt; Duration a -&gt; Pace d a
+forall (d :: DistanceUnit) a.
+(MGroup a, PaceDistF d) =&gt;
+Distance d a -&gt; Duration a -&gt; Pace d a
+</span><a href="Pacer.Command.Derive.html#derivePace"><span class="hs-identifier hs-var">derivePace</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717801"><span class="hs-identifier hs-var">distance</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717802"><span class="hs-identifier hs-var">duration</span></a></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="annot"><span class="hs-comment">-- | Given a distance and pace, derives the duration.</span></span><span>
+</span><span id="line-132"></span><span id="local-6989586621679717571"><span id="local-6989586621679717572"><span class="annot"><a href="Pacer.Command.Derive.html#deriveDuration"><span class="hs-identifier hs-type">deriveDuration</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Multiplicative.MSemigroup.html/Numeric.Algebra.Multiplicative.MSemigroup.html#MSemigroup"><span class="hs-identifier hs-type">MSemigroup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717571"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Distance.</span></span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.html#Distance"><span class="hs-identifier hs-type">Distance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717572"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717571"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Pace.</span></span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Pacer.Data.Pace.html#Pace"><span class="hs-identifier hs-type">Pace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717572"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717571"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Duration.</span></span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717571"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-140"></span><span id="deriveDuration"><span class="annot"><span class="annottext">deriveDuration :: forall a (d :: DistanceUnit).
+MSemigroup a =&gt;
+Distance d a -&gt; Pace d a -&gt; Duration a
+</span><a href="Pacer.Command.Derive.html#deriveDuration"><span class="hs-identifier hs-var hs-var">deriveDuration</span></a></span></span><span> </span><span id="local-6989586621679717839"><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717839"><span class="hs-identifier hs-var">distance</span></a></span></span><span> </span><span id="local-6989586621679717840"><span class="annot"><span class="annottext">Pace d a
+</span><a href="#local-6989586621679717840"><span class="hs-identifier hs-var">pace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Pace d a
+</span><a href="#local-6989586621679717840"><span class="hs-identifier hs-var">pace</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">unPace</span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Positive a -&gt; Duration a
+forall m r. MSemiSpace m r =&gt; m -&gt; r -&gt; m
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Space.MSemiSpace.html/Numeric.Algebra.Space.MSemiSpace.html#.%2A"><span class="hs-operator hs-var">.*</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717839"><span class="hs-identifier hs-var">distance</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">unDistance</span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- | Given existentially-quantified distance and pace, derives the duration.</span><span>
+</span><span id="line-143"></span><span class="hs-comment">-- Different distance units are converted.</span><span>
+</span><span id="line-144"></span><span id="local-6989586621679717565"><span class="annot"><a href="Pacer.Command.Derive.html#deriveSomeDuration"><span class="hs-identifier hs-type">deriveSomeDuration</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Integer.html/Numeric.Convert.Integer.html#From%2124"><span class="hs-identifier hs-type">From&#8484;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679717565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717565"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679717565"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-150"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Existentially-quantified distance.</span></span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier hs-type">SomeDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717565"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Existentially-quantified pace.</span></span><span>
+</span><span id="line-153"></span><span>  </span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier hs-type">SomePace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717565"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-154"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Duration.</span></span><span>
+</span><span id="line-155"></span><span>  </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717565"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-156"></span><span id="deriveSomeDuration"><span class="annot"><span class="annottext">deriveSomeDuration :: forall a.
+(From&#8484; a, Ord a, Semifield a, Show a) =&gt;
+SomeDistance a -&gt; SomePace a -&gt; Duration a
+</span><a href="Pacer.Command.Derive.html#deriveSomeDuration"><span class="hs-identifier hs-var hs-var">deriveSomeDuration</span></a></span></span><span>
+</span><span id="line-157"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#MkSomeDistance"><span class="hs-identifier hs-type">MkSomeDistance</span></a></span><span> </span><span id="local-6989586621679717849"><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717849"><span class="hs-identifier hs-var">sdistance</span></a></span></span><span> </span><span id="local-6989586621679717850"><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717850"><span class="hs-identifier hs-var">distance</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#MkSomePace"><span class="hs-identifier hs-type">MkSomePace</span></a></span><span> </span><span class="hs-glyph">@</span><span id="local-6989586621679717853"><span class="annot"><a href="#local-6989586621679717853"><span class="hs-identifier hs-type hs-type">distUnit</span></a></span></span><span> </span><span id="local-6989586621679717854"><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717854"><span class="hs-identifier hs-var">space</span></a></span></span><span> </span><span id="local-6989586621679717855"><span class="annot"><span class="annottext">Pace d a
+</span><a href="#local-6989586621679717855"><span class="hs-identifier hs-var">pace</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><span class="annottext">Distance d a -&gt; Pace d a -&gt; Duration a
+forall a (d :: DistanceUnit).
+MSemigroup a =&gt;
+Distance d a -&gt; Pace d a -&gt; Duration a
+</span><a href="Pacer.Command.Derive.html#deriveDuration"><span class="hs-identifier hs-var">deriveDuration</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717856"><span class="hs-identifier hs-var">distance'</span></a></span><span> </span><span class="annot"><span class="annottext">Pace d a
+</span><a href="#local-6989586621679717855"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-160"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-161"></span><span>      </span><span id="local-6989586621679717856"><span class="annot"><span class="annottext">distance' :: Distance d a
+</span><a href="#local-6989586621679717856"><span class="hs-identifier hs-var hs-var">distance'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-162"></span><span>        </span><span class="annot"><span class="annottext">Sing d -&gt; (SingI d =&gt; Distance d a) -&gt; Distance d a
+forall {k} (n :: k) r. Sing n -&gt; (SingI n =&gt; r) -&gt; r
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#withSingI"><span class="hs-identifier hs-var">withSingI</span></a></span><span> </span><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717849"><span class="hs-identifier hs-var">sdistance</span></a></span><span>
+</span><span id="line-163"></span><span>          </span><span class="annot"><span class="annottext">((SingI d =&gt; Distance d a) -&gt; Distance d a)
+-&gt; (SingI d =&gt; Distance d a) -&gt; Distance d a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Sing d -&gt; (SingI d =&gt; Distance d a) -&gt; Distance d a
+forall {k} (n :: k) r. Sing n -&gt; (SingI n =&gt; r) -&gt; r
+</span><a href="file:///nix/store/l8y6b4ahaj66wmcdgqd7yhm5r91zplqs-singletons-3.0.4-doc/share/doc/singletons-3.0.4/html/src/Data.Singletons.html/Data.Singletons.html#withSingI"><span class="hs-identifier hs-var">withSingI</span></a></span><span> </span><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717854"><span class="hs-identifier hs-var">space</span></a></span><span>
+</span><span id="line-164"></span><span>          </span><span class="annot"><span class="annottext">((SingI d =&gt; Distance d a) -&gt; Distance d a)
+-&gt; (SingI d =&gt; Distance d a) -&gt; Distance d a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall a.
+(SingI d, ConvertDistance a, ToConstraints a d) =&gt;
+a -&gt; ConvertedDistance a d
+Distance d a -&gt; ConvertedDistance (Distance d a) d
+forall (e :: DistanceUnit) -&gt;
+forall a.
+(SingI e, ConvertDistance a, ToConstraints a e) =&gt;
+a -&gt; ConvertedDistance a e
+forall a.
+(ConvertDistance a, ToConstraints a d) =&gt;
+a -&gt; ConvertedDistance a d
+</span><a href="Pacer.Data.Distance.Units.html#convertDistance"><span class="hs-identifier hs-var">DistU.convertDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717853"><span class="hs-identifier hs-type">distUnit</span></a></span><span> </span><span class="annot"><span class="annottext">Distance d a
+</span><a href="#local-6989586621679717850"><span class="hs-identifier hs-var">distance</span></a></span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="annot"><span class="hs-comment">-- | Given a duration and pace, derives the distance.</span></span><span>
+</span><span id="line-167"></span><span class="annot"><a href="Pacer.Command.Derive.html#deriveDistance"><span class="hs-identifier hs-type">deriveDistance</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-168"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717604"><span class="annot"><a href="#local-6989586621679717604"><span class="hs-identifier hs-type">d</span></a></span></span><span> </span><span id="local-6989586621679717603"><span class="annot"><a href="#local-6989586621679717603"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Multiplicative.MGroup.html/Numeric.Algebra.Multiplicative.MGroup.html#MGroup"><span class="hs-identifier hs-type">MGroup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717603"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-170"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Distance.</span></span><span>
+</span><span id="line-171"></span><span>  </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717603"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-172"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Pace.</span></span><span>
+</span><span id="line-173"></span><span>  </span><span class="annot"><a href="Pacer.Data.Pace.html#Pace"><span class="hs-identifier hs-type">Pace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717604"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717603"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-174"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Distance.</span></span><span>
+</span><span id="line-175"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.html#Distance"><span class="hs-identifier hs-type">Distance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717604"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717603"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-176"></span><span id="deriveDistance"><span class="annot"><span class="annottext">deriveDistance :: forall (d :: DistanceUnit) a.
+MGroup a =&gt;
+Duration a -&gt; Pace d a -&gt; Distance d a
+</span><a href="Pacer.Command.Derive.html#deriveDistance"><span class="hs-identifier hs-var hs-var">deriveDistance</span></a></span></span><span> </span><span id="local-6989586621679717864"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717864"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#MkPace"><span class="hs-identifier hs-type">MkPace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#MkDuration"><span class="hs-identifier hs-type">MkDuration</span></a></span><span> </span><span id="local-6989586621679717870"><span class="annot"><span class="annottext">Positive a
+</span><a href="#local-6989586621679717870"><span class="hs-identifier hs-var">paceDuration</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-177"></span><span>  </span><span class="annot"><span class="annottext">Positive a -&gt; Distance d a
+forall (d :: DistanceUnit) a. Positive a -&gt; Distance d a
+</span><a href="Pacer.Data.Distance.html#MkDistance"><span class="hs-identifier hs-var">MkDistance</span></a></span><span> </span><span class="annot"><span class="annottext">(Positive a -&gt; Distance d a) -&gt; Positive a -&gt; Distance d a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Positive a
+</span><a href="#local-6989586621679717871"><span class="hs-identifier hs-var">scaleDuration</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717864"><span class="hs-identifier hs-var">duration</span></a></span><span>
+</span><span id="line-178"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-179"></span><span>    </span><span class="hs-comment">-- monomorphic on Second so that we have to use toSeconds</span><span>
+</span><span id="line-180"></span><span>    </span><span class="annot"><a href="#local-6989586621679717871"><span class="hs-identifier hs-type">scaleDuration</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717603"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/smart-math-0.1-5cb01be2e38ea340706d960904f6b2fa5b91d8cb0a158739b3aed413102accbf/share/doc/html/src/Numeric.Data.Positive.Internal.html/Numeric.Data.Positive.Internal.html#Positive"><span class="hs-identifier hs-type">Positive</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717603"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-181"></span><span>    </span><span id="local-6989586621679717871"><span class="annot"><span class="annottext">scaleDuration :: Duration a -&gt; Positive a
+</span><a href="#local-6989586621679717871"><span class="hs-identifier hs-var hs-var">scaleDuration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-operator">.</span><span class="hs-identifier">unDuration</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Duration a -&gt; Positive a)
+-&gt; (Duration a -&gt; Duration a) -&gt; Duration a -&gt; Positive a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Duration a -&gt; Positive a -&gt; Duration a
+forall v k. MSpace v k =&gt; v -&gt; k -&gt; v
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Space.MSpace.html/Numeric.Algebra.Space.MSpace.html#.%25"><span class="hs-operator hs-var">.%</span></a></span><span> </span><span class="annot"><span class="annottext">Positive a
+</span><a href="#local-6989586621679717870"><span class="hs-identifier hs-var">paceDuration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- | Given a duration and existentially-quantified pace, derives the</span><span>
+</span><span id="line-184"></span><span class="hs-comment">-- distance.</span><span>
+</span><span id="line-185"></span><span class="annot"><a href="Pacer.Command.Derive.html#deriveSomeDistance"><span class="hs-identifier hs-type">deriveSomeDistance</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-186"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679717530"><span class="annot"><a href="#local-6989586621679717530"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-187"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Multiplicative.MGroup.html/Numeric.Algebra.Multiplicative.MGroup.html#MGroup"><span class="hs-identifier hs-type">MGroup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717530"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Duration.</span></span><span>
+</span><span id="line-189"></span><span>  </span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717530"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-190"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Existentially-quantified Pace.</span></span><span>
+</span><span id="line-191"></span><span>  </span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier hs-type">SomePace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717530"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-192"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Existentially-quantified Distance.</span></span><span>
+</span><span id="line-193"></span><span>  </span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier hs-type">SomeDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679717530"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-194"></span><span id="deriveSomeDistance"><span class="annot"><span class="annottext">deriveSomeDistance :: forall a. MGroup a =&gt; Duration a -&gt; SomePace a -&gt; SomeDistance a
+</span><a href="Pacer.Command.Derive.html#deriveSomeDistance"><span class="hs-identifier hs-var hs-var">deriveSomeDistance</span></a></span></span><span> </span><span id="local-6989586621679717874"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717874"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#MkSomePace"><span class="hs-identifier hs-type">MkSomePace</span></a></span><span> </span><span id="local-6989586621679717877"><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717877"><span class="hs-identifier hs-var">space</span></a></span></span><span> </span><span id="local-6989586621679717878"><span class="annot"><span class="annottext">Pace d a
+</span><a href="#local-6989586621679717878"><span class="hs-identifier hs-var">pace</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-195"></span><span>  </span><span class="annot"><span class="annottext">Sing d -&gt; Distance d a -&gt; SomeDistance a
+forall (d :: DistanceUnit) a.
+Sing d -&gt; Distance d a -&gt; SomeDistance a
+</span><a href="Pacer.Data.Distance.html#MkSomeDistance"><span class="hs-identifier hs-var">MkSomeDistance</span></a></span><span> </span><span class="annot"><span class="annottext">Sing d
+</span><a href="#local-6989586621679717877"><span class="hs-identifier hs-var">space</span></a></span><span> </span><span class="annot"><span class="annottext">(Distance d a -&gt; SomeDistance a) -&gt; Distance d a -&gt; SomeDistance a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; Pace d a -&gt; Distance d a
+forall (d :: DistanceUnit) a.
+MGroup a =&gt;
+Duration a -&gt; Pace d a -&gt; Distance d a
+</span><a href="Pacer.Command.Derive.html#deriveDistance"><span class="hs-identifier hs-var">deriveDistance</span></a></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679717874"><span class="hs-identifier hs-var">duration</span></a></span><span> </span><span class="annot"><span class="annottext">Pace d a
+</span><a href="#local-6989586621679717878"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-196"></span></pre></body></html>

@@ -1,0 +1,744 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Pacer.Configuration.Utils.html"><span class="hs-identifier">Pacer.Configuration.Utils</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Custom types and parsers</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#DistancePaceArgs"><span class="hs-identifier">DistancePaceArgs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#dpArgsParser"><span class="hs-identifier">dpArgsParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#DistanceDurationPaceArgs"><span class="hs-identifier">DistanceDurationPaceArgs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#ddpArgsParser"><span class="hs-identifier">ddpArgsParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#PaceOptUnits"><span class="hs-identifier">PaceOptUnits</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#paceOptUnitsParserHelp"><span class="hs-identifier">paceOptUnitsParserHelp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Other Parsers</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#distanceUnitParser"><span class="hs-identifier">distanceUnitParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#someDistanceParser"><span class="hs-identifier">someDistanceParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#somePaceParser"><span class="hs-identifier">somePaceParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Readers</span></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#readOsPath"><span class="hs-identifier">readOsPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#readPath"><span class="hs-identifier">readPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#readParseable"><span class="hs-identifier">readParseable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Commands</span></span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#mkCommand"><span class="hs-identifier">mkCommand</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#mkCommandDesc"><span class="hs-identifier">mkCommandDesc</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#mkCommandDescChunk"><span class="hs-identifier">mkCommandDescChunk</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Misc</span></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier">mkHelp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Pacer.Configuration.Utils.html#mkMultiHelp"><span class="hs-identifier">mkMultiHelp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html"><span class="hs-identifier">FileSystem.OsPath</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OsPath</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.Internal.html/Options.Applicative.Builder.Internal.html#CommandFields"><span class="hs-identifier">CommandFields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#InfoMod"><span class="hs-identifier">InfoMod</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.Internal.html/Options.Applicative.Builder.Internal.html#Mod"><span class="hs-identifier">Mod</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#ReadM"><span class="hs-identifier">ReadM</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OA</span></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.html/Options.Applicative.Help.html"><span class="hs-identifier">Options.Applicative.Help</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html#Chunk"><span class="hs-identifier">Chunk</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Pretty.html/Options.Applicative.Help.Pretty.html#Doc"><span class="hs-identifier">Doc</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html"><span class="hs-identifier">Options.Applicative.Help.Chunk</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Chunk</span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Pretty.html/Options.Applicative.Help.Pretty.html"><span class="hs-identifier">Options.Applicative.Help.Pretty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Pretty</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Class.Parser.html"><span class="hs-identifier">Pacer.Class.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html"><span class="hs-identifier">Pacer.Data.Distance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier">DistanceUnit</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier">SomeDistance</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Duration.html"><span class="hs-identifier">Pacer.Data.Duration</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier">Duration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Data.Pace.html"><span class="hs-identifier">Pacer.Data.Pace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier">SomePace</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Pacer.Prelude.html"><span class="hs-identifier">Pacer.Prelude</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- | Represents the pace. For some conversions, the units are optional,</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- hence we only require the underlying Duration (a Pace is just a duration</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- with a unit, after all).</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- It is arguably simpler to require a unit for pace, and make the user</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- use --duration for when they don't want a unit (e.g. convert or scale).</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- So why do we allow no units? Consider deriving duration:</span><span>
+</span><span id="line-56"></span><span class="hs-comment">--</span><span>
+</span><span id="line-57"></span><span class="hs-comment">--     derive --distance '10 km' --pace 5m30s</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- Requring the user to type '/km' on the pace is redundant (hence annoying).</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- Futhermore, we cannot replace this with '--duration 5m30s', since that has</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- an entirely different meaning. Therefore it makes sense to have the units</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- optional here, so we might as well make the units optional wherever</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- sensible.</span><span>
+</span><span id="line-64"></span><span class="hs-keyword">type</span><span> </span><span id="PaceOptUnits"><span class="annot"><a href="Pacer.Configuration.Utils.html#PaceOptUnits"><span class="hs-identifier hs-var">PaceOptUnits</span></a></span></span><span> </span><span id="local-6989586621679713816"><span class="annot"><a href="#local-6989586621679713816"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier hs-type">SomePace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713816"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713816"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#paceOptUnitsParserHelp"><span class="hs-identifier hs-type">paceOptUnitsParserHelp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679713633"><span class="annot"><a href="#local-6989586621679713633"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713633"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679713633"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713633"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679713633"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Configuration.Utils.html#PaceOptUnits"><span class="hs-identifier hs-type">PaceOptUnits</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713633"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span id="paceOptUnitsParserHelp"><span class="annot"><span class="annottext">paceOptUnitsParserHelp :: forall a.
+(From&#8474; a, Ord a, Semifield a, Show a) =&gt;
+FilePath -&gt; Parser (PaceOptUnits a)
+</span><a href="Pacer.Configuration.Utils.html#paceOptUnitsParserHelp"><span class="hs-identifier hs-var hs-var">paceOptUnitsParserHelp</span></a></span></span><span> </span><span id="local-6989586621679713843"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679713843"><span class="hs-identifier hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><span class="annottext">ReadM (PaceOptUnits a)
+-&gt; Mod OptionFields (PaceOptUnits a) -&gt; Parser (PaceOptUnits a)
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">ReadM (PaceOptUnits a)
+</span><a href="#local-6989586621679713845"><span class="hs-identifier hs-var">read</span></a></span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields (PaceOptUnits a)]
+-&gt; Mod OptionFields (PaceOptUnits a)
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-79"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (PaceOptUnits a)
+forall (f :: * -&gt; *) a. HasName f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;pace&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (PaceOptUnits a)
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;TIME_STR [/UNIT]&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (PaceOptUnits a)
+forall (f :: * -&gt; *) a. FilePath -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var">mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679713843"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-82"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><a href="#local-6989586621679713845"><span class="hs-identifier hs-type">read</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#ReadM"><span class="hs-identifier hs-type">ReadM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Configuration.Utils.html#PaceOptUnits"><span class="hs-identifier hs-type">PaceOptUnits</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713633"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621679713845"><span class="annot"><span class="annottext">read :: ReadM (PaceOptUnits a)
+</span><a href="#local-6989586621679713845"><span class="hs-identifier hs-var hs-var">read</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-87"></span><span>      </span><span id="local-6989586621679713848"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679713848"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReadM Text
+forall s. IsString s =&gt; ReadM s
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#str"><span class="hs-identifier hs-var">OA.str</span></a></span><span>
+</span><span id="line-88"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault (Duration a)
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679713848"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-89"></span><span>        </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679713852"><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679713852"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PaceOptUnits a -&gt; ReadM (PaceOptUnits a)
+forall a. a -&gt; ReadM a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(PaceOptUnits a -&gt; ReadM (PaceOptUnits a))
+-&gt; PaceOptUnits a -&gt; ReadM (PaceOptUnits a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Duration a -&gt; PaceOptUnits a
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">Duration a
+</span><a href="#local-6989586621679713852"><span class="hs-identifier hs-var">duration</span></a></span><span>
+</span><span id="line-90"></span><span>        </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679713854"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679713854"><span class="hs-identifier hs-var">err1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-91"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault (SomePace a)
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679713848"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-92"></span><span>            </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679713855"><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679713855"><span class="hs-identifier hs-var">pace</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PaceOptUnits a -&gt; ReadM (PaceOptUnits a)
+forall a. a -&gt; ReadM a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(PaceOptUnits a -&gt; ReadM (PaceOptUnits a))
+-&gt; PaceOptUnits a -&gt; ReadM (PaceOptUnits a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SomePace a -&gt; PaceOptUnits a
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">SomePace a
+</span><a href="#local-6989586621679713855"><span class="hs-identifier hs-var">pace</span></a></span><span>
+</span><span id="line-93"></span><span>            </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679713856"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679713856"><span class="hs-identifier hs-var">err2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-94"></span><span>              </span><span class="annot"><span class="annottext">FilePath -&gt; ReadM (PaceOptUnits a)
+forall a. FilePath -&gt; ReadM a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; FilePath -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-95"></span><span>                </span><span class="annot"><span class="annottext">(FilePath -&gt; ReadM (PaceOptUnits a))
+-&gt; FilePath -&gt; ReadM (PaceOptUnits a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[FilePath] -&gt; FilePath
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-96"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Could not parse pace.\n* Error 1 (without unit):\n&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>                    </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679713854"><span class="hs-identifier hs-var">err1</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>                    </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;\n* Error 2 (with unit):\n&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>                    </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679713856"><span class="hs-identifier hs-var">err2</span></a></span><span>
+</span><span id="line-100"></span><span>                  </span><span class="hs-special">]</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="hs-keyword">data</span><span> </span><span id="DistancePaceArgs"><span class="annot"><a href="Pacer.Configuration.Utils.html#DistancePaceArgs"><span class="hs-identifier hs-var">DistancePaceArgs</span></a></span></span><span> </span><span id="local-6989586621679713676"><span class="annot"><a href="#local-6989586621679713676"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkDistancePaceArgs"><span class="annot"><a href="Pacer.Configuration.Utils.html#MkDistancePaceArgs"><span class="hs-identifier hs-var">MkDistancePaceArgs</span></a></span></span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Possible distance.</span></span><span>
+</span><span id="line-104"></span><span>    </span><span id="mSomeDistance"><span class="annot"><span class="annottext">forall a. DistancePaceArgs a -&gt; Maybe (SomeDistance a)
+</span><a href="Pacer.Configuration.Utils.html#mSomeDistance"><span class="hs-identifier hs-var hs-var">mSomeDistance</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier hs-type">SomeDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713676"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Possible pace.</span></span><span>
+</span><span id="line-106"></span><span>    </span><span id="mSomePace"><span class="annot"><span class="annottext">forall a. DistancePaceArgs a -&gt; Maybe (SomePace a)
+</span><a href="Pacer.Configuration.Utils.html#mSomePace"><span class="hs-identifier hs-var hs-var">mSomePace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier hs-type">SomePace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713676"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679713866"><span id="local-6989586621679713873"><span class="annot"><span class="annottext">DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool
+(DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool)
+-&gt; (DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool)
+-&gt; Eq (DistancePaceArgs a)
+forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool
+== :: DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool
+$c/= :: forall a.
+(From&#8484; a, MetricSpace a, Ord a, Semifield a, Show a) =&gt;
+DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool
+/= :: DistancePaceArgs a -&gt; DistancePaceArgs a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679713885"><span id="local-6989586621679713894"><span id="local-6989586621679713898"><span class="annot"><span class="annottext">Int -&gt; DistancePaceArgs a -&gt; FilePath -&gt; FilePath
+[DistancePaceArgs a] -&gt; FilePath -&gt; FilePath
+DistancePaceArgs a -&gt; FilePath
+(Int -&gt; DistancePaceArgs a -&gt; FilePath -&gt; FilePath)
+-&gt; (DistancePaceArgs a -&gt; FilePath)
+-&gt; ([DistancePaceArgs a] -&gt; FilePath -&gt; FilePath)
+-&gt; Show (DistancePaceArgs a)
+forall a.
+Show a =&gt;
+Int -&gt; DistancePaceArgs a -&gt; FilePath -&gt; FilePath
+forall a. Show a =&gt; [DistancePaceArgs a] -&gt; FilePath -&gt; FilePath
+forall a. Show a =&gt; DistancePaceArgs a -&gt; FilePath
+forall a.
+(Int -&gt; a -&gt; FilePath -&gt; FilePath)
+-&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; FilePath -&gt; FilePath) -&gt; Show a
+$cshowsPrec :: forall a.
+Show a =&gt;
+Int -&gt; DistancePaceArgs a -&gt; FilePath -&gt; FilePath
+showsPrec :: Int -&gt; DistancePaceArgs a -&gt; FilePath -&gt; FilePath
+$cshow :: forall a. Show a =&gt; DistancePaceArgs a -&gt; FilePath
+show :: DistancePaceArgs a -&gt; FilePath
+$cshowList :: forall a. Show a =&gt; [DistancePaceArgs a] -&gt; FilePath -&gt; FilePath
+showList :: [DistancePaceArgs a] -&gt; FilePath -&gt; FilePath
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#dpArgsParser"><span class="hs-identifier hs-type">dpArgsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679713696"><span class="annot"><a href="#local-6989586621679713696"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713696"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679713696"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713696"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713696"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679713696"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Configuration.Utils.html#DistancePaceArgs"><span class="hs-identifier hs-type">DistancePaceArgs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713696"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span id="dpArgsParser"><span class="annot"><span class="annottext">dpArgsParser :: forall a.
+(From&#8474; a, Ord a, Parser a, Semifield a, Show a) =&gt;
+Parser (DistancePaceArgs a)
+</span><a href="Pacer.Configuration.Utils.html#dpArgsParser"><span class="hs-identifier hs-var hs-var">dpArgsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621679713926"><span class="annot"><span class="annottext">Maybe (SomeDistance a)
+</span><a href="#local-6989586621679713926"><span class="hs-identifier hs-var">mSomeDistance</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (SomeDistance a) -&gt; Parser (Maybe (SomeDistance a))
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span> </span><span class="annot"><span class="annottext">Parser (SomeDistance a)
+forall a.
+(AMonoid a, From&#8474; a, Ord a, Parser a, Show a) =&gt;
+Parser (SomeDistance a)
+</span><a href="Pacer.Configuration.Utils.html#someDistanceParser"><span class="hs-identifier hs-var">someDistanceParser</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621679713928"><span class="annot"><span class="annottext">Maybe (SomePace a)
+</span><a href="#local-6989586621679713928"><span class="hs-identifier hs-var">mSomePace</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (SomePace a) -&gt; Parser (Maybe (SomePace a))
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span> </span><span class="annot"><span class="annottext">Parser (SomePace a)
+forall a.
+(From&#8474; a, Ord a, Semifield a, Show a) =&gt;
+Parser (SomePace a)
+</span><a href="Pacer.Configuration.Utils.html#somePaceParser"><span class="hs-identifier hs-var">somePaceParser</span></a></span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-124"></span><span>    </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Configuration.Utils.html#MkDistancePaceArgs"><span class="hs-identifier hs-type">MkDistancePaceArgs</span></a></span><span>
+</span><span id="line-125"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe (SomeDistance a)
+mSomeDistance :: Maybe (SomeDistance a)
+mSomeDistance :: Maybe (SomeDistance a)
+</span><a href="Pacer.Configuration.Utils.html#mSomeDistance"><span class="hs-identifier hs-var hs-var">mSomeDistance</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>        </span><span class="annot"><span class="annottext">Maybe (SomePace a)
+mSomePace :: Maybe (SomePace a)
+mSomePace :: Maybe (SomePace a)
+</span><a href="Pacer.Configuration.Utils.html#mSomePace"><span class="hs-identifier hs-var hs-var">mSomePace</span></a></span><span>
+</span><span id="line-127"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-comment">-- | Args for derive and scale. All args are optional, though we require</span><span>
+</span><span id="line-130"></span><span class="hs-comment">-- exactly 2 and 1, respectively.</span><span>
+</span><span id="line-131"></span><span class="hs-keyword">data</span><span> </span><span id="DistanceDurationPaceArgs"><span class="annot"><a href="Pacer.Configuration.Utils.html#DistanceDurationPaceArgs"><span class="hs-identifier hs-var">DistanceDurationPaceArgs</span></a></span></span><span> </span><span id="local-6989586621679713708"><span class="annot"><a href="#local-6989586621679713708"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkDistanceDurationPaceArgs"><span class="annot"><a href="Pacer.Configuration.Utils.html#MkDistanceDurationPaceArgs"><span class="hs-identifier hs-var">MkDistanceDurationPaceArgs</span></a></span></span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Possible duration.</span></span><span>
+</span><span id="line-133"></span><span>    </span><span id="mDuration"><span class="annot"><span class="annottext">forall a. DistanceDurationPaceArgs a -&gt; Maybe (Duration a)
+</span><a href="Pacer.Configuration.Utils.html#mDuration"><span class="hs-identifier hs-var hs-var">mDuration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713708"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Possible pace.</span></span><span>
+</span><span id="line-135"></span><span>    </span><span id="mPaceOptUnits"><span class="annot"><span class="annottext">forall a. DistanceDurationPaceArgs a -&gt; Maybe (PaceOptUnits a)
+</span><a href="Pacer.Configuration.Utils.html#mPaceOptUnits"><span class="hs-identifier hs-var hs-var">mPaceOptUnits</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Configuration.Utils.html#PaceOptUnits"><span class="hs-identifier hs-type">PaceOptUnits</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713708"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Possible distance.</span></span><span>
+</span><span id="line-137"></span><span>    </span><span id="mSomeDistance"><span class="annot"><span class="annottext">forall a. DistanceDurationPaceArgs a -&gt; Maybe (SomeDistance a)
+</span><a href="Pacer.Configuration.Utils.html#mSomeDistance"><span class="hs-identifier hs-var hs-var">mSomeDistance</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier hs-type">SomeDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713708"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679713939"><span id="local-6989586621679713947"><span class="annot"><span class="annottext">DistanceDurationPaceArgs a -&gt; DistanceDurationPaceArgs a -&gt; Bool
+(DistanceDurationPaceArgs a -&gt; DistanceDurationPaceArgs a -&gt; Bool)
+-&gt; (DistanceDurationPaceArgs a
+    -&gt; DistanceDurationPaceArgs a -&gt; Bool)
+-&gt; Eq (DistanceDurationPaceArgs a)
+forall a.
+(MetricSpace a, From&#8484; a, Ord a, Semifield a, Show a) =&gt;
+DistanceDurationPaceArgs a -&gt; DistanceDurationPaceArgs a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a.
+(MetricSpace a, From&#8484; a, Ord a, Semifield a, Show a) =&gt;
+DistanceDurationPaceArgs a -&gt; DistanceDurationPaceArgs a -&gt; Bool
+== :: DistanceDurationPaceArgs a -&gt; DistanceDurationPaceArgs a -&gt; Bool
+$c/= :: forall a.
+(MetricSpace a, From&#8484; a, Ord a, Semifield a, Show a) =&gt;
+DistanceDurationPaceArgs a -&gt; DistanceDurationPaceArgs a -&gt; Bool
+/= :: DistanceDurationPaceArgs a -&gt; DistanceDurationPaceArgs a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679713957"><span id="local-6989586621679713966"><span id="local-6989586621679713970"><span class="annot"><span class="annottext">Int -&gt; DistanceDurationPaceArgs a -&gt; FilePath -&gt; FilePath
+[DistanceDurationPaceArgs a] -&gt; FilePath -&gt; FilePath
+DistanceDurationPaceArgs a -&gt; FilePath
+(Int -&gt; DistanceDurationPaceArgs a -&gt; FilePath -&gt; FilePath)
+-&gt; (DistanceDurationPaceArgs a -&gt; FilePath)
+-&gt; ([DistanceDurationPaceArgs a] -&gt; FilePath -&gt; FilePath)
+-&gt; Show (DistanceDurationPaceArgs a)
+forall a.
+Show a =&gt;
+Int -&gt; DistanceDurationPaceArgs a -&gt; FilePath -&gt; FilePath
+forall a.
+Show a =&gt;
+[DistanceDurationPaceArgs a] -&gt; FilePath -&gt; FilePath
+forall a. Show a =&gt; DistanceDurationPaceArgs a -&gt; FilePath
+forall a.
+(Int -&gt; a -&gt; FilePath -&gt; FilePath)
+-&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; FilePath -&gt; FilePath) -&gt; Show a
+$cshowsPrec :: forall a.
+Show a =&gt;
+Int -&gt; DistanceDurationPaceArgs a -&gt; FilePath -&gt; FilePath
+showsPrec :: Int -&gt; DistanceDurationPaceArgs a -&gt; FilePath -&gt; FilePath
+$cshow :: forall a. Show a =&gt; DistanceDurationPaceArgs a -&gt; FilePath
+show :: DistanceDurationPaceArgs a -&gt; FilePath
+$cshowList :: forall a.
+Show a =&gt;
+[DistanceDurationPaceArgs a] -&gt; FilePath -&gt; FilePath
+showList :: [DistanceDurationPaceArgs a] -&gt; FilePath -&gt; FilePath
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#ddpArgsParser"><span class="hs-identifier hs-type">ddpArgsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679713723"><span class="annot"><a href="#local-6989586621679713723"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713723"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679713723"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713723"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713723"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679713723"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-149"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-150"></span><span>  </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Configuration.Utils.html#DistanceDurationPaceArgs"><span class="hs-identifier hs-type">DistanceDurationPaceArgs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713723"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span id="ddpArgsParser"><span class="annot"><span class="annottext">ddpArgsParser :: forall a.
+(From&#8474; a, Ord a, Parser a, Semifield a, Show a) =&gt;
+FilePath -&gt; Parser (DistanceDurationPaceArgs a)
+</span><a href="Pacer.Configuration.Utils.html#ddpArgsParser"><span class="hs-identifier hs-var hs-var">ddpArgsParser</span></a></span></span><span> </span><span id="local-6989586621679714000"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714000"><span class="hs-identifier hs-var">paceOptUnitsHelp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-152"></span><span>  </span><span id="local-6989586621679714001"><span class="annot"><span class="annottext">Maybe (Duration a)
+</span><a href="#local-6989586621679714001"><span class="hs-identifier hs-var">mDuration</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Duration a) -&gt; Parser (Maybe (Duration a))
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span> </span><span class="annot"><span class="annottext">Parser (Duration a)
+forall a.
+(From&#8474; a, Ord a, Semifield a, Show a) =&gt;
+Parser (Duration a)
+</span><a href="Pacer.Configuration.Utils.html#durationParser"><span class="hs-identifier hs-var">durationParser</span></a></span><span>
+</span><span id="line-153"></span><span>  </span><span id="local-6989586621679714003"><span class="annot"><span class="annottext">Maybe (PaceOptUnits a)
+</span><a href="#local-6989586621679714003"><span class="hs-identifier hs-var">mPaceOptUnits</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (PaceOptUnits a) -&gt; Parser (Maybe (PaceOptUnits a))
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser (PaceOptUnits a) -&gt; Parser (Maybe (PaceOptUnits a)))
+-&gt; Parser (PaceOptUnits a) -&gt; Parser (Maybe (PaceOptUnits a))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Parser (PaceOptUnits a)
+forall a.
+(From&#8474; a, Ord a, Semifield a, Show a) =&gt;
+FilePath -&gt; Parser (PaceOptUnits a)
+</span><a href="Pacer.Configuration.Utils.html#paceOptUnitsParserHelp"><span class="hs-identifier hs-var">paceOptUnitsParserHelp</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714000"><span class="hs-identifier hs-var">paceOptUnitsHelp</span></a></span><span>
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621679714004"><span class="annot"><span class="annottext">Maybe (SomeDistance a)
+</span><a href="#local-6989586621679714004"><span class="hs-identifier hs-var">mSomeDistance</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (SomeDistance a) -&gt; Parser (Maybe (SomeDistance a))
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">OA.optional</span></span><span> </span><span class="annot"><span class="annottext">Parser (SomeDistance a)
+forall a.
+(AMonoid a, From&#8474; a, Ord a, Parser a, Show a) =&gt;
+Parser (SomeDistance a)
+</span><a href="Pacer.Configuration.Utils.html#someDistanceParser"><span class="hs-identifier hs-var">someDistanceParser</span></a></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span>  </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-157"></span><span>    </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Pacer.Configuration.Utils.html#MkDistanceDurationPaceArgs"><span class="hs-identifier hs-type">MkDistanceDurationPaceArgs</span></a></span><span>
+</span><span id="line-158"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe (Duration a)
+mDuration :: Maybe (Duration a)
+mDuration :: Maybe (Duration a)
+</span><a href="Pacer.Configuration.Utils.html#mDuration"><span class="hs-identifier hs-var hs-var">mDuration</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>        </span><span class="annot"><span class="annottext">Maybe (PaceOptUnits a)
+mPaceOptUnits :: Maybe (PaceOptUnits a)
+mPaceOptUnits :: Maybe (PaceOptUnits a)
+</span><a href="Pacer.Configuration.Utils.html#mPaceOptUnits"><span class="hs-identifier hs-var hs-var">mPaceOptUnits</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>        </span><span class="annot"><span class="annottext">Maybe (SomeDistance a)
+mSomeDistance :: Maybe (SomeDistance a)
+mSomeDistance :: Maybe (SomeDistance a)
+</span><a href="Pacer.Configuration.Utils.html#mSomeDistance"><span class="hs-identifier hs-var hs-var">mSomeDistance</span></a></span><span>
+</span><span id="line-161"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#distanceUnitParser"><span class="hs-identifier hs-type">distanceUnitParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Pacer.Data.Distance.Units.html#DistanceUnit"><span class="hs-identifier hs-type">DistanceUnit</span></a></span><span>
+</span><span id="line-164"></span><span id="distanceUnitParser"><span class="annot"><span class="annottext">distanceUnitParser :: Parser DistanceUnit
+</span><a href="Pacer.Configuration.Utils.html#distanceUnitParser"><span class="hs-identifier hs-var hs-var">distanceUnitParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><span class="annottext">ReadM DistanceUnit
+-&gt; Mod OptionFields DistanceUnit -&gt; Parser DistanceUnit
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-166"></span><span>    </span><span class="annot"><span class="annottext">ReadM DistanceUnit
+forall a. Parser a =&gt; ReadM a
+</span><a href="Pacer.Configuration.Utils.html#readParseable"><span class="hs-identifier hs-var">readParseable</span></a></span><span>
+</span><span id="line-167"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields DistanceUnit] -&gt; Mod OptionFields DistanceUnit
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-168"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields DistanceUnit
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">OA.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'u'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-169"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields DistanceUnit
+forall (f :: * -&gt; *) a. HasName f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;unit&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-170"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields DistanceUnit
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;UNIT&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-171"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields DistanceUnit
+forall (f :: * -&gt; *) a. FilePath -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var">mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714006"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-172"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-173"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-175"></span><span>    </span><span id="local-6989586621679714006"><span class="annot"><span class="annottext">helpTxt :: FilePath
+</span><a href="#local-6989586621679714006"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Output unit e.g. 'km', 'miles'.&quot;</span></span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#durationParser"><span class="hs-identifier hs-type">durationParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-178"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679713725"><span class="annot"><a href="#local-6989586621679713725"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-179"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713725"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-180"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679713725"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-181"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713725"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-182"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679713725"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-183"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-184"></span><span>  </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Duration.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713725"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-185"></span><span id="durationParser"><span class="annot"><span class="annottext">durationParser :: forall a.
+(From&#8474; a, Ord a, Semifield a, Show a) =&gt;
+Parser (Duration a)
+</span><a href="Pacer.Configuration.Utils.html#durationParser"><span class="hs-identifier hs-var hs-var">durationParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-186"></span><span>  </span><span class="annot"><span class="annottext">ReadM (Duration a)
+-&gt; Mod OptionFields (Duration a) -&gt; Parser (Duration a)
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-187"></span><span>    </span><span class="annot"><span class="annottext">ReadM (Duration a)
+forall a. Parser a =&gt; ReadM a
+</span><a href="Pacer.Configuration.Utils.html#readParseable"><span class="hs-identifier hs-var">readParseable</span></a></span><span>
+</span><span id="line-188"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields (Duration a)] -&gt; Mod OptionFields (Duration a)
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-189"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (Duration a)
+forall (f :: * -&gt; *) a. HasName f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;duration&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-190"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (Duration a)
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;TIME_STR&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-191"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (Duration a)
+forall (f :: * -&gt; *) a. FilePath -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var">mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;A length of time e.g. '1h2m3s'.&quot;</span></span><span>
+</span><span id="line-192"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-193"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#someDistanceParser"><span class="hs-identifier hs-type">someDistanceParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-196"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679713706"><span class="annot"><a href="#local-6989586621679713706"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-197"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Additive.AMonoid.html/Numeric.Algebra.Additive.AMonoid.html#AMonoid"><span class="hs-identifier hs-type">AMonoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713706"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-198"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713706"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-199"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679713706"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-200"></span><span>    </span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713706"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-201"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679713706"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-202"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-203"></span><span>  </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Distance.html#SomeDistance"><span class="hs-identifier hs-type">SomeDistance</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713706"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-204"></span><span id="someDistanceParser"><span class="annot"><span class="annottext">someDistanceParser :: forall a.
+(AMonoid a, From&#8474; a, Ord a, Parser a, Show a) =&gt;
+Parser (SomeDistance a)
+</span><a href="Pacer.Configuration.Utils.html#someDistanceParser"><span class="hs-identifier hs-var hs-var">someDistanceParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-205"></span><span>  </span><span class="annot"><span class="annottext">ReadM (SomeDistance a)
+-&gt; Mod OptionFields (SomeDistance a) -&gt; Parser (SomeDistance a)
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-206"></span><span>    </span><span class="annot"><span class="annottext">ReadM (SomeDistance a)
+forall a. Parser a =&gt; ReadM a
+</span><a href="Pacer.Configuration.Utils.html#readParseable"><span class="hs-identifier hs-var">readParseable</span></a></span><span>
+</span><span id="line-207"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields (SomeDistance a)]
+-&gt; Mod OptionFields (SomeDistance a)
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-208"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (SomeDistance a)
+forall (f :: * -&gt; *) a. HasName f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;distance&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-209"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (SomeDistance a)
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;DIST_STR&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-210"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (SomeDistance a)
+forall (f :: * -&gt; *) a. FilePath -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var">mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;A distance with units e.g. '4 km'.&quot;</span></span><span>
+</span><span id="line-211"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-212"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-213"></span><span>
+</span><span id="line-214"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#somePaceParser"><span class="hs-identifier hs-type">somePaceParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-215"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679713707"><span class="annot"><a href="#local-6989586621679713707"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-216"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Convert.Rational.html/Numeric.Convert.Rational.html#From%211A"><span class="hs-identifier hs-type">From&#8474;</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713707"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-217"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679713707"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-218"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/algebra-simple-0.1-e08841e4ef5e27130165fb6c9d8f3eecf612d07dfc2109640e7761e43538eddd/share/doc/html/src/Numeric.Algebra.Semifield.html/Numeric.Algebra.Semifield.html#Semifield"><span class="hs-identifier hs-type">Semifield</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713707"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-219"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679713707"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-220"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Data.Pace.html#SomePace"><span class="hs-identifier hs-type">SomePace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713707"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-222"></span><span id="somePaceParser"><span class="annot"><span class="annottext">somePaceParser :: forall a.
+(From&#8474; a, Ord a, Semifield a, Show a) =&gt;
+Parser (SomePace a)
+</span><a href="Pacer.Configuration.Utils.html#somePaceParser"><span class="hs-identifier hs-var hs-var">somePaceParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-223"></span><span>  </span><span class="annot"><span class="annottext">ReadM (SomePace a)
+-&gt; Mod OptionFields (SomePace a) -&gt; Parser (SomePace a)
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OA.option</span></a></span><span>
+</span><span id="line-224"></span><span>    </span><span class="annot"><span class="annottext">ReadM (SomePace a)
+forall a. Parser a =&gt; ReadM a
+</span><a href="Pacer.Configuration.Utils.html#readParseable"><span class="hs-identifier hs-var">readParseable</span></a></span><span>
+</span><span id="line-225"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Mod OptionFields (SomePace a)] -&gt; Mod OptionFields (SomePace a)
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-226"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (SomePace a)
+forall (f :: * -&gt; *) a. HasName f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OA.long</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;pace&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-227"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (SomePace a)
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; FilePath -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OA.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;TIME_STR (/UNIT)&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-228"></span><span>          </span><span class="annot"><span class="annottext">FilePath -&gt; Mod OptionFields (SomePace a)
+forall (f :: * -&gt; *) a. FilePath -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var">mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714038"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-229"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-230"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-231"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-232"></span><span>    </span><span id="local-6989586621679714038"><span class="annot"><span class="annottext">helpTxt :: FilePath
+</span><a href="#local-6989586621679714038"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;A pace e.g. '4m30s /km', '1h5m /mi'.&quot;</span></span><span>
+</span><span id="line-233"></span><span>
+</span><span id="line-234"></span><span class="annot"><a href="Pacer.Configuration.Utils.html#readOsPath"><span class="hs-identifier hs-type">readOsPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#ReadM"><span class="hs-identifier hs-type">ReadM</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span>
+</span><span id="line-235"></span><span id="readOsPath"><span class="annot"><span class="annottext">readOsPath :: ReadM OsPath
+</span><a href="Pacer.Configuration.Utils.html#readOsPath"><span class="hs-identifier hs-var hs-var">readOsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReadM FilePath
+forall s. IsString s =&gt; ReadM s
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#str"><span class="hs-identifier hs-var">OA.str</span></a></span><span> </span><span class="annot"><span class="annottext">ReadM FilePath -&gt; (FilePath -&gt; ReadM OsPath) -&gt; ReadM OsPath
+forall a b. ReadM a -&gt; (a -&gt; ReadM b) -&gt; ReadM b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; ReadM OsPath
+forall (m :: * -&gt; *).
+(HasCallStack, MonadFail m) =&gt;
+FilePath -&gt; m OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#encodeFail"><span class="hs-identifier hs-var">OsPath.encodeFail</span></a></span><span>
+</span><span id="line-236"></span><span>
+</span><span id="line-237"></span><span id="local-6989586621679713735"><span id="local-6989586621679713737"><span id="local-6989586621679713738"><span class="annot"><a href="Pacer.Configuration.Utils.html#readPath"><span class="hs-identifier hs-type">readPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="#local-6989586621679713735"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="#local-6989586621679713735"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><a href="#local-6989586621679713737"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713738"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#ReadM"><span class="hs-identifier hs-type">ReadM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><a href="#local-6989586621679713737"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713738"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-238"></span><span id="readPath"><span class="annot"><span class="annottext">readPath :: forall e b t.
+Exception e =&gt;
+(OsPath -&gt; Either e (Path b t)) -&gt; ReadM (Path b t)
+</span><a href="Pacer.Configuration.Utils.html#readPath"><span class="hs-identifier hs-var hs-var">readPath</span></a></span></span><span> </span><span id="local-6989586621679714049"><span class="annot"><span class="annottext">OsPath -&gt; Either e (Path b t)
+</span><a href="#local-6989586621679714049"><span class="hs-identifier hs-var">pathParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-239"></span><span>  </span><span id="local-6989586621679714050"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679714050"><span class="hs-identifier hs-var">osPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReadM OsPath
+</span><a href="Pacer.Configuration.Utils.html#readOsPath"><span class="hs-identifier hs-var">readOsPath</span></a></span><span>
+</span><span id="line-240"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Either e (Path b t)
+</span><a href="#local-6989586621679714049"><span class="hs-identifier hs-var">pathParser</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679714050"><span class="hs-identifier hs-var">osPath</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-241"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679714051"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679714051"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-242"></span><span>      </span><span class="annot"><span class="annottext">FilePath -&gt; ReadM (Path b t)
+forall a. FilePath -&gt; ReadM a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; FilePath -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-243"></span><span>        </span><span class="annot"><span class="annottext">(FilePath -&gt; ReadM (Path b t)) -&gt; FilePath -&gt; ReadM (Path b t)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[FilePath] -&gt; FilePath
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-244"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Failed making path '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-245"></span><span>            </span><span class="annot"><span class="annottext">OsPath -&gt; FilePath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.1-0348/fs-utils-0.1-98c482801d5ef5925933b0f33e814691f8f0113763e0f5183e0d5b691f3f61e1/share/doc/html/src/FileSystem.OsPath.html/FileSystem.OsPath.html#decodeLenient"><span class="hs-identifier hs-var">OsPath.decodeLenient</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679714050"><span class="hs-identifier hs-var">osPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-246"></span><span>            </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;' absolute: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-247"></span><span>            </span><span class="annot"><span class="annottext">e -&gt; FilePath
+forall e. Exception e =&gt; e -&gt; FilePath
+</span><span class="hs-identifier hs-var">displayException</span></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679714051"><span class="hs-identifier hs-var">ex</span></a></span><span>
+</span><span id="line-248"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-249"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679714054"><span class="annot"><span class="annottext">Path b t
+</span><a href="#local-6989586621679714054"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Path b t -&gt; ReadM (Path b t)
+forall a. a -&gt; ReadM a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Path b t
+</span><a href="#local-6989586621679714054"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-250"></span><span>
+</span><span id="line-251"></span><span class="hs-comment">-- In general, we want parseAll when parsing CLI args since we want any extra</span><span>
+</span><span id="line-252"></span><span class="hs-comment">-- characters to cause a parse failure.</span><span>
+</span><span id="line-253"></span><span>
+</span><span id="line-254"></span><span id="local-6989586621679713726"><span class="annot"><a href="Pacer.Configuration.Utils.html#readParseable"><span class="hs-identifier hs-type">readParseable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Pacer.Class.Parser.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713726"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#ReadM"><span class="hs-identifier hs-type">ReadM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713726"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-255"></span><span id="readParseable"><span class="annot"><span class="annottext">readParseable :: forall a. Parser a =&gt; ReadM a
+</span><a href="Pacer.Configuration.Utils.html#readParseable"><span class="hs-identifier hs-var hs-var">readParseable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-256"></span><span>  </span><span class="annot"><span class="annottext">ReadM Text
+forall s. IsString s =&gt; ReadM s
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#str"><span class="hs-identifier hs-var">OA.str</span></a></span><span>
+</span><span id="line-257"></span><span>    </span><span class="annot"><span class="annottext">ReadM Text -&gt; (Text -&gt; ReadM a) -&gt; ReadM a
+forall a b. ReadM a -&gt; (a -&gt; ReadM b) -&gt; ReadM b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ResultDefault a
+forall a. Parser a =&gt; Text -&gt; ResultDefault a
+</span><a href="Pacer.Class.Parser.html#parseAll"><span class="hs-identifier hs-var">P.parseAll</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ResultDefault a)
+-&gt; (ResultDefault a -&gt; ReadM a) -&gt; Text -&gt; ReadM a
+forall {k} (cat :: k -&gt; k -&gt; *) (a :: k) (b :: k) (c :: k).
+Category cat =&gt;
+cat a b -&gt; cat b c -&gt; cat a c
+</span><span class="hs-operator hs-var">&gt;&gt;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-258"></span><span>            </span><span class="annot"><a href="Pacer.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679714064"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679714064"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; ReadM a
+forall a. a -&gt; ReadM a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679714064"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-259"></span><span>            </span><span class="annot"><a href="Pacer.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679714065"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714065"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; ReadM a
+forall a. FilePath -&gt; ReadM a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; FilePath -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714065"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-260"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-261"></span><span>
+</span><span id="line-262"></span><span id="local-6989586621679713751"><span class="annot"><a href="Pacer.Configuration.Utils.html#mkCommand"><span class="hs-identifier hs-type">mkCommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713751"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#InfoMod"><span class="hs-identifier hs-type">InfoMod</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713751"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.Internal.html/Options.Applicative.Builder.Internal.html#Mod"><span class="hs-identifier hs-type">Mod</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.Internal.html/Options.Applicative.Builder.Internal.html#CommandFields"><span class="hs-identifier hs-type">CommandFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713751"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-263"></span><span id="mkCommand"><span class="annot"><span class="annottext">mkCommand :: forall a. FilePath -&gt; Parser a -&gt; InfoMod a -&gt; Mod CommandFields a
+</span><a href="Pacer.Configuration.Utils.html#mkCommand"><span class="hs-identifier hs-var hs-var">mkCommand</span></a></span></span><span> </span><span id="local-6989586621679714066"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714066"><span class="hs-identifier hs-var">cmdTxt</span></a></span></span><span> </span><span id="local-6989586621679714067"><span class="annot"><span class="annottext">Parser a
+</span><a href="#local-6989586621679714067"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span id="local-6989586621679714068"><span class="annot"><span class="annottext">InfoMod a
+</span><a href="#local-6989586621679714068"><span class="hs-identifier hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; ParserInfo a -&gt; Mod CommandFields a
+forall a. FilePath -&gt; ParserInfo a -&gt; Mod CommandFields a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">OA.command</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714066"><span class="hs-identifier hs-var">cmdTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser a -&gt; InfoMod a -&gt; ParserInfo a
+forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">OA.info</span></a></span><span> </span><span class="annot"><span class="annottext">Parser a
+</span><a href="#local-6989586621679714067"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">InfoMod a
+</span><a href="#local-6989586621679714068"><span class="hs-identifier hs-var">helpTxt</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-264"></span><span>
+</span><span id="line-265"></span><span id="local-6989586621679713657"><span id="local-6989586621679713658"><span class="annot"><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-type">mkHelp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.Internal.html/Options.Applicative.Builder.Internal.html#Mod"><span class="hs-identifier hs-type">Mod</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713657"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713658"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-266"></span><span id="mkHelp"><span class="annot"><span class="annottext">mkHelp :: forall (f :: * -&gt; *) a. FilePath -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkHelp"><span class="hs-identifier hs-var hs-var">mkHelp</span></a></span></span><span> </span><span id="local-6989586621679714071"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714071"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[FilePath] -&gt; Mod f a
+forall (f :: * -&gt; *) a. [FilePath] -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkMultiHelp"><span class="hs-identifier hs-var">mkMultiHelp</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679714071"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-267"></span><span>
+</span><span id="line-268"></span><span id="local-6989586621679713760"><span id="local-6989586621679713761"><span class="annot"><a href="Pacer.Configuration.Utils.html#mkMultiHelp"><span class="hs-identifier hs-type">mkMultiHelp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">List</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.Internal.html/Options.Applicative.Builder.Internal.html#Mod"><span class="hs-identifier hs-type">Mod</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713760"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713761"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-269"></span><span id="mkMultiHelp"><span class="annot"><span class="annottext">mkMultiHelp :: forall (f :: * -&gt; *) a. [FilePath] -&gt; Mod f a
+</span><a href="Pacer.Configuration.Utils.html#mkMultiHelp"><span class="hs-identifier hs-var hs-var">mkMultiHelp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-270"></span><span>  </span><span class="annot"><span class="annottext">Maybe (Doc AnsiStyle) -&gt; Mod f a
+forall (f :: * -&gt; *) a. Maybe (Doc AnsiStyle) -&gt; Mod f a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#helpDoc"><span class="hs-identifier hs-var">OA.helpDoc</span></a></span><span>
+</span><span id="line-271"></span><span>    </span><span class="annot"><span class="annottext">(Maybe (Doc AnsiStyle) -&gt; Mod f a)
+-&gt; ([FilePath] -&gt; Maybe (Doc AnsiStyle)) -&gt; [FilePath] -&gt; Mod f a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Doc AnsiStyle -&gt; Doc AnsiStyle)
+-&gt; Maybe (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle)
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle
+forall ann. Doc ann
+</span><a href="file:///nix/store/882avm4hgy6lkk2mmmpzj409pbfq5s7v-prettyprinter-1.7.1-doc/share/doc/prettyprinter-1.7.1/html/src/Prettyprinter.Internal.html/Prettyprinter.Internal.html#hardline"><span class="hs-identifier hs-var">Pretty.hardline</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-272"></span><span>    </span><span class="annot"><span class="annottext">(Maybe (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle))
+-&gt; ([FilePath] -&gt; Maybe (Doc AnsiStyle))
+-&gt; [FilePath]
+-&gt; Maybe (Doc AnsiStyle)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Chunk (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle)
+forall a. Chunk a -&gt; Maybe a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html#unChunk"><span class="hs-identifier hs-var">Chunk.unChunk</span></a></span><span>
+</span><span id="line-273"></span><span>    </span><span class="annot"><span class="annottext">(Chunk (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle))
+-&gt; ([FilePath] -&gt; Chunk (Doc AnsiStyle))
+-&gt; [FilePath]
+-&gt; Maybe (Doc AnsiStyle)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[Chunk (Doc AnsiStyle)] -&gt; Chunk (Doc AnsiStyle)
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html#vsepChunks"><span class="hs-identifier hs-var">Chunk.vsepChunks</span></a></span><span>
+</span><span id="line-274"></span><span>    </span><span class="annot"><span class="annottext">([Chunk (Doc AnsiStyle)] -&gt; Chunk (Doc AnsiStyle))
+-&gt; ([FilePath] -&gt; [Chunk (Doc AnsiStyle)])
+-&gt; [FilePath]
+-&gt; Chunk (Doc AnsiStyle)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; Chunk (Doc AnsiStyle))
+-&gt; [FilePath] -&gt; [Chunk (Doc AnsiStyle)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Chunk (Doc AnsiStyle)
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html#paragraph"><span class="hs-identifier hs-var">Chunk.paragraph</span></a></span><span>
+</span><span id="line-275"></span><span>
+</span><span id="line-276"></span><span id="local-6989586621679713778"><span class="annot"><a href="Pacer.Configuration.Utils.html#mkCommandDesc"><span class="hs-identifier hs-type">mkCommandDesc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#InfoMod"><span class="hs-identifier hs-type">InfoMod</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713778"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-277"></span><span id="mkCommandDesc"><span class="annot"><span class="annottext">mkCommandDesc :: forall a. FilePath -&gt; InfoMod a
+</span><a href="Pacer.Configuration.Utils.html#mkCommandDesc"><span class="hs-identifier hs-var hs-var">mkCommandDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Chunk (Doc AnsiStyle) -&gt; InfoMod a
+forall a. Chunk (Doc AnsiStyle) -&gt; InfoMod a
+</span><a href="Pacer.Configuration.Utils.html#mkCommandDescChunk"><span class="hs-identifier hs-var">mkCommandDescChunk</span></a></span><span> </span><span class="annot"><span class="annottext">(Chunk (Doc AnsiStyle) -&gt; InfoMod a)
+-&gt; (FilePath -&gt; Chunk (Doc AnsiStyle)) -&gt; FilePath -&gt; InfoMod a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Chunk (Doc AnsiStyle)
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html#paragraph"><span class="hs-identifier hs-var">Chunk.paragraph</span></a></span><span>
+</span><span id="line-278"></span><span>
+</span><span id="line-279"></span><span id="local-6989586621679713780"><span class="annot"><a href="Pacer.Configuration.Utils.html#mkCommandDescChunk"><span class="hs-identifier hs-type">mkCommandDescChunk</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html#Chunk"><span class="hs-identifier hs-type">Chunk</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Pretty.html/Options.Applicative.Help.Pretty.html#Doc"><span class="hs-identifier hs-type">Doc</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#InfoMod"><span class="hs-identifier hs-type">InfoMod</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679713780"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-280"></span><span id="mkCommandDescChunk"><span class="annot"><span class="annottext">mkCommandDescChunk :: forall a. Chunk (Doc AnsiStyle) -&gt; InfoMod a
+</span><a href="Pacer.Configuration.Utils.html#mkCommandDescChunk"><span class="hs-identifier hs-var hs-var">mkCommandDescChunk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-281"></span><span>  </span><span class="annot"><span class="annottext">Maybe (Doc AnsiStyle) -&gt; InfoMod a
+forall a. Maybe (Doc AnsiStyle) -&gt; InfoMod a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html/Options.Applicative.Builder.html#progDescDoc"><span class="hs-identifier hs-var">OA.progDescDoc</span></a></span><span>
+</span><span id="line-282"></span><span>    </span><span class="annot"><span class="annottext">(Maybe (Doc AnsiStyle) -&gt; InfoMod a)
+-&gt; (Chunk (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle))
+-&gt; Chunk (Doc AnsiStyle)
+-&gt; InfoMod a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Doc AnsiStyle -&gt; Doc AnsiStyle)
+-&gt; Maybe (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle)
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle
+forall ann. Doc ann
+</span><a href="file:///nix/store/882avm4hgy6lkk2mmmpzj409pbfq5s7v-prettyprinter-1.7.1-doc/share/doc/prettyprinter-1.7.1/html/src/Prettyprinter.Internal.html/Prettyprinter.Internal.html#hardline"><span class="hs-identifier hs-var">Pretty.hardline</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-283"></span><span>    </span><span class="annot"><span class="annottext">(Maybe (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle))
+-&gt; (Chunk (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle))
+-&gt; Chunk (Doc AnsiStyle)
+-&gt; Maybe (Doc AnsiStyle)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Chunk (Doc AnsiStyle) -&gt; Maybe (Doc AnsiStyle)
+forall a. Chunk a -&gt; Maybe a
+</span><a href="file:///nix/store/ywvaz3rqy5whnzr7jq8w82hiy42i3r0s-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html/Options.Applicative.Help.Chunk.html#unChunk"><span class="hs-identifier hs-var">Chunk.unChunk</span></a></span><span>
+</span><span id="line-284"></span></pre></body></html>
