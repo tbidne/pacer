@@ -87,7 +87,10 @@ testFindsConfigCurrDir = testCase desc $ do
     expectedConfig =
       MkConfigWithPath
         { dirPath = root <</>> [reldir|cwd_config/|],
-          config = MkConfig {chartConfig = Nothing, logLevel = Nothing, logVerbosity = Nothing}
+          config = MkConfig {
+            chartConfig = Nothing,
+            logConfig = Nothing
+          }
         }
 
     expectedCachedPaths =

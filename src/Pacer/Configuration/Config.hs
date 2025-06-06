@@ -3,6 +3,7 @@
 
 module Pacer.Configuration.Config
   ( Config (..),
+    LogConfig (..),
     ChartConfig (..),
     ConfigWithPath (..),
   )
@@ -37,30 +38,50 @@ data Config = MkConfig
   { -- | Chart config.
     chartConfig :: Maybe ChartConfig,
     -- | Optional logging.
-    logLevel :: Maybe LogLevelParam,
-    -- | Optional verbosity.
-    logVerbosity :: Maybe LogVerbosity
+    logConfig :: Maybe LogConfig
   }
   deriving stock (Eq, Show)
 
 instance Semigroup Config where
-  MkConfig x1 x2 x3 <> MkConfig y1 y2 y3 =
-    MkConfig (x1 <|> y1) (x2 <|> y2) (x3 <|> y3)
+  MkConfig x1 x2 <> MkConfig y1 y2 =
+    MkConfig (x1 <|> y1) (x2 <|> y2)
 
 instance Monoid Config where
-  mempty = MkConfig empty empty empty
+  mempty = MkConfig empty empty
 
 instance FromJSON Config where
   parseJSON = asnWithObject "Config" $ \v -> do
     chartConfig <- v .:? "chart"
-    logLevel <- v .:? "log-level"
-    logVerbosity <- v .:? "log-verbosity"
-    Utils.failUnknownFields "Config" ["chart", "log-level", "log-verbosity"] v
+    logConfig <- v .:? "log"
+    Utils.failUnknownFields "Config" ["chart", "log"] v
     pure
       $ MkConfig
         { chartConfig,
-          logLevel,
-          logVerbosity
+          logConfig
+        }
+
+data LogConfig = MkLogConfig
+  { level :: Maybe LogLevelParam,
+    verbosity :: Maybe LogVerbosity
+  }
+  deriving stock (Eq, Show)
+
+instance Semigroup LogConfig where
+  MkLogConfig x1 x2 <> MkLogConfig y1 y2 =
+    MkLogConfig (x1 <|> y1) (x2 <|> y2)
+
+instance Monoid LogConfig where
+  mempty = MkLogConfig empty empty
+
+instance FromJSON LogConfig where
+  parseJSON = asnWithObject "LogConfig" $ \v -> do
+    level <- v .:? "level"
+    verbosity <- v .:? "verbosity"
+    Utils.failUnknownFields "LogConfig" ["level", "verbosity"] v
+    pure
+      $ MkLogConfig
+        { level,
+          verbosity
         }
 
 data ChartConfig = MkChartConfig
@@ -125,4 +146,5 @@ instance FromJSON ChartConfig where
 
 makeFieldLabelsNoPrefix ''ConfigWithPath
 makeFieldLabelsNoPrefix ''Config
+makeFieldLabelsNoPrefix ''LogConfig
 makeFieldLabelsNoPrefix ''ChartConfig

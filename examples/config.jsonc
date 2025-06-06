@@ -1,6 +1,12 @@
+// All keys are optional.
 {
-  // Log level. Can be one of: none, debug, info, warn, error
-  "log-level": "none",
+  // Optional logging config.
+  "log": {
+    // Log level. Can be one of: none, debug, info, warn, error
+    "level": "none",
+    // Verbosity. Can be 0 or 1.
+    "verbosity": "0"
+  },
   // Optional chart config. Affects 'chart' command.
   "chart": {
     // Path to chart-requests file. Overrides 'data' field.
