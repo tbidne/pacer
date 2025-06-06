@@ -209,7 +209,7 @@ instance ToJSON ChartTheme where
       [ "background" .= ct.background,
         "grid" .= ct.grid,
         "name" .= ct.name,
-        "selectorBackground" .= ct.selectorBorder,
+        "selectorBorder" .= ct.selectorBorder,
         "text" .= ct.text,
         "tooltipBackground" .= ct.tooltipBackground,
         "tooltip" .= ct.tooltip,

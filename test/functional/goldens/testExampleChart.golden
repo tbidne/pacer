@@ -244,7 +244,7 @@ build/charts.json
         "background": "#320054",
         "grid": "#ff49dc",
         "name": "Pink",
-        "selectorBackground": "#ff49dc",
+        "selectorBorder": "#ff49dc",
         "text": "#ff49dc",
         "tooltip": "#ff49dc",
         "tooltipBackground": "#320054",

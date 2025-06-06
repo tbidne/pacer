@@ -33,7 +33,7 @@ const colorLiteralMap: Map<Color, ColorRgb> = new Map([
 type Theme = {
   background: Color;
   grid: Color;
-  name: "Light" | "Dark";
+  name: string;
   selectorBorder: Color;
   text: Color;
   tooltipBackground: Color;
@@ -56,13 +56,28 @@ const themeMap: ThemeMap = new Map([
       name: "Dark",
       selectorBorder: "#495057",
       text: "#c3c3c3",
-      tooltipBackground: "rgba(204, 204, 204, 0.75)",
-      tooltip: "#393939",
+      tooltipBackground: "#2e3032",
+      tooltip: "#c3c3c3",
       // NOTE: These are the default chartjs line colors, determined by
       // examining the values at runtime in setThemeKey.
       yBackground: "#36a2eb",
       y1Background: "#ff6384",
       zoomDragBackground: "#436dd0",
+    },
+  ],
+  [
+    "Dracula",
+    {
+      background: "#282a36",
+      grid: "#5f6e9d",
+      name: "Dark",
+      selectorBorder: "#5f6e9d",
+      text: "#9c7bcd",
+      tooltipBackground: "#21222c",
+      tooltip: "#898a8e",
+      yBackground: "#568292",
+      y1Background: "#b05d92",
+      zoomDragBackground: "#9c7bcd",
     },
   ],
   [
@@ -73,11 +88,41 @@ const themeMap: ThemeMap = new Map([
       name: "Light",
       selectorBorder: "#343b59",
       text: "#343b59",
-      tooltipBackground: "rgba(0, 0, 0, 0.75)",
+      tooltipBackground: "#000000",
       tooltip: "#c3c3c3",
       yBackground: "#36a2eb",
       y1Background: "#ff6384",
       zoomDragBackground: "#436dd0",
+    },
+  ],
+  [
+    "Solarized Dark",
+    {
+      background: "#002b36",
+      grid: "#218883",
+      name: "Solarized Dark",
+      selectorBorder: "#718688",
+      text: "#718688",
+      tooltipBackground: "#218883",
+      tooltip: "#002b36",
+      yBackground: "#1c72aa",
+      y1Background: "#9e441d",
+      zoomDragBackground: "#6e8609",
+    },
+  ],
+  [
+    "Tokyo Night",
+    {
+      background: "#1a1b26",
+      grid: "#3a3c4e",
+      name: "Tokyo Night",
+      selectorBorder: "#3a3c4e",
+      text: "#747894",
+      tooltipBackground: "#14141b",
+      tooltip: "#747894",
+      yBackground: "#6482c6",
+      y1Background: "#ad8fe6",
+      zoomDragBackground: "#15596b",
     },
   ],
 ]);
@@ -107,7 +152,7 @@ function setGlobalStyleProps(theme: Theme): void {
 
 type ColorRgb = { r: number; g: number; b: number };
 function mkColorRgb(r: number, g: number, b: number): ColorRgb {
-  return { r: r, g: g, b: b};
+  return { r: r, g: g, b: b };
 }
 
 // The result of parsing a color string.
@@ -190,6 +235,10 @@ function alpha50(color: Color): Color {
   return newAlpha(color, 0.5);
 }
 
+function alpha75(color: Color): Color {
+  return newAlpha(color, 0.75);
+}
+
 function setThemeKey(
   themeName: ThemeKey,
   charts: ChartElements,
@@ -215,7 +264,7 @@ function setThemeKey(
 
     plugins.legend.labels.color = theme.text;
     plugins.legend.title.color = theme.text;
-    plugins.tooltip.backgroundColor = theme.tooltipBackground;
+    plugins.tooltip.backgroundColor = alpha75(theme.tooltipBackground);
     plugins.tooltip.bodyColor = theme.tooltip;
     plugins.tooltip.titleColor = theme.tooltip;
 
@@ -317,14 +366,18 @@ function setup(config: ThemeConfig): [ThemeKey, ThemeMap, HTMLSelectElement] {
   // get selected.
   const selected = initialThemeKey(config);
 
+  const sortedThemes = new Map(
+    [...allThemes.entries()].sort((a, b) => a[0].localeCompare(b[0])),
+  );
+
   // populate selector.
-  addThemesToUI(selected, themeSelector, allThemes);
+  addThemesToUI(selected, themeSelector, sortedThemes);
 
   // set global css values.
-  const selectedTheme = allThemes.get(selected);
+  const selectedTheme = sortedThemes.get(selected);
   setGlobalStyleProps(selectedTheme);
 
-  return [selected, allThemes, themeSelector];
+  return [selected, sortedThemes, themeSelector];
 }
 
 export {
@@ -337,6 +390,7 @@ export {
   addThemeBtnOnClick,
   addThemesToUI,
   alpha50,
+  alpha75,
   getThemeSelector,
   setTheme,
   setThemeKey,

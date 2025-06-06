@@ -3,7 +3,7 @@ import { PYAxis } from "./pacer";
 import { CChartOpts, CDataSets, CTicks, CYAxis, CYOptT } from "./chartjs/types";
 import { YAxesT, YAxisLabel, mapYAxes } from "./common";
 import { formatOptsSeconds, formatSeconds } from "../utils";
-import { alpha50, Theme } from "../theme";
+import { alpha50, alpha75, Theme } from "../theme";
 
 const POINT_RADIUS = 20;
 const AXIS_FONT_SIZE = 16;
@@ -111,7 +111,7 @@ function makeChartOpts(
         text: title,
       },
       tooltip: {
-        backgroundColor: theme.tooltipBackground,
+        backgroundColor: alpha75(theme.tooltipBackground),
         bodyColor: theme.tooltip,
         titleColor: theme.tooltip,
       },
