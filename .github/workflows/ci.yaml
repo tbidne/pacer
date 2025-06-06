@@ -278,3 +278,4 @@ jobs:
           name: release-artifacts
           pattern: release-artifacts-*
           delete-merged: true
+          retention-days: 1
