@@ -10,6 +10,7 @@
   - [How does file discovery work?](#how-does-file-discovery-work)
   - [How do I use this with Garmin](#how-do-i-use-this-with-garmin)
   - [How do chart filters work?](#how-do-chart-filters-work)
+  - [What chart types are available?](#what-chart-types-are-available)
   - [What is smoothing?](#what-is-smoothing)
 
 ## General
@@ -571,6 +572,42 @@ xor
 >
 > The clearest way to write an expression is a matter of taste.
 
+### What chart types are available?
+
+There are two different available chart types.
+
+#### Default
+
+The first, the default, just plots each activity individually. It is a basic chart, and can be explicitly specified:
+
+```json
+{
+  "title": "Some activities",
+  "type": {
+    "name": "default"
+  },
+  "y-axis": "distance"
+},
+```
+
+This is the same as leaving the `type` key off altogether.
+
+#### Sum charts
+
+The other chart type allow for summing activities:
+
+```jsonc
+{
+  "title": "Runs by week",
+  "type": {
+    "name": "sum",
+    "period": "week"
+  },
+  "y-axis": "distance"
+},
+```
+
+For example, this request will add together all points together in a given calendar week, displaying one point for the entire week. The available options are `week`, `month`, `year`, and `N days` e.g. `15 days`.
 
 ### What is smoothing?
 
@@ -629,6 +666,20 @@ We then _smooth_ every **three** points, resulting in:
 | 2024-07-07 |       30 |     7200 |
 | 2024-07-09 |     23.3 |     5600 |
 
+The smoothing process is:
+
+1. Group (summed) activities into all possible 3-groups:
+
+    ```
+    - [2024-07-01, 2024-07-03, 2024-07-05]
+    - [2024-07-03, 2024-07-05, 2024-07-07]
+    - [2024-07-05, 2024-07-07, 2024-07-09]
+    ```
+
+2. Compute the average for each group.
+
+3. Set each group's date to the _last_ date in the group.
+
 #### Window average
 
 This is the same as before, except we now use the `window` average:
@@ -659,6 +710,8 @@ Following the same example as above, we end up with:
 | 2024-07-05 |       30 |     7200 |
 | 2024-07-07 |     23.3 |     5600 |
 
+Essentially, the difference is in step 3. Whereas the rolling average takes the last date in each group, the window average takes the median.
+
 #### Caveats
 
-Unlike the sum period, which is some unit of time, the smooth period is based on _points_ i.e. adjacent activities. Thus smoothing can produce strange results when the time axis is highly non-linear i.e. activities are dispersed randomly in time, with wide gaps in between them. Therefore smoothing makes the most sense with the scale is relatively linear e.g. activities are mostly evenly spaced.
+Unlike the sum period, which is some unit of time, the smooth period is based on _points_ i.e. adjacent activities. Thus smoothing can produce unexpected results when the time axis is highly non-linear i.e. activities are dispersed randomly in time, with wide gaps in between. Therefore smoothing makes the most sense with the scale is relatively linear e.g. activities are mostly evenly spaced.
