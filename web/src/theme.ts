@@ -211,6 +211,10 @@ function parseColor(color: Color): ColorParse {
   if (hexResult.result) {
     return hexResult;
   }
+  const literalResult = parseColorLiteral(color);
+  if (literalResult.result) {
+    return literalResult;
+  }
   return parseColorRgb(color);
 }
 
