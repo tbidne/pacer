@@ -1,0 +1,104 @@
+{
+  "activities": [
+    {
+      "datetime": "2024-06-01",
+      "distance": "5 km",
+      "duration": "20m"
+    },
+    {
+      "datetime": "2024-06-04",
+      "distance": "10 km",
+      "duration": "40m"
+    },
+    {
+      "datetime": "2024-06-07",
+      "distance": "7 km",
+      "duration": "30m"
+    },
+    {
+      "datetime": "2024-06-10",
+      "distance": "2 km",
+      "duration": "5m"
+    },
+    {
+      "datetime": "2024-06-13",
+      "distance": "15 km",
+      "duration": "70m"
+    },
+    {
+      "datetime": "2024-06-16",
+      "distance": "10 km",
+      "duration": "35m"
+    },
+    {
+      "datetime": "2024-06-19",
+      "distance": "25 km",
+      "duration": "2h"
+    },
+    {
+      "datetime": "2024-06-22",
+      "distance": "14 km",
+      "duration": "1h30s"
+    },
+    {
+      "datetime": "2024-06-25",
+      "distance": "8 km",
+      "duration": "30m"
+    },
+    {
+      "datetime": "2024-06-28",
+      "distance": "40 km",
+      "duration": "3h"
+    },
+    {
+      "datetime": "2024-07-01",
+      "distance": "5 km",
+      "duration": "20m"
+    },
+    {
+      "datetime": "2024-07-04",
+      "distance": "10 km",
+      "duration": "40m"
+    },
+    {
+      "datetime": "2024-07-07",
+      "distance": "7 km",
+      "duration": "30m"
+    },
+    {
+      "datetime": "2024-07-10",
+      "distance": "2 km",
+      "duration": "5m"
+    },
+    {
+      "datetime": "2024-07-13",
+      "distance": "15 km",
+      "duration": "70m"
+    },
+    {
+      "datetime": "2024-07-16",
+      "distance": "10 km",
+      "duration": "35m"
+    },
+    {
+      "datetime": "2024-07-19",
+      "distance": "25 km",
+      "duration": "2h"
+    },
+    {
+      "datetime": "2024-07-22",
+      "distance": "14 km",
+      "duration": "1h30s"
+    },
+    {
+      "datetime": "2024-07-25",
+      "distance": "8 km",
+      "duration": "30m"
+    },
+    {
+      "datetime": "2024-07-28",
+      "distance": "40 km",
+      "duration": "3h"
+    }
+  ]
+}

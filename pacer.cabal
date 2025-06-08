@@ -195,6 +195,7 @@ test-suite unit
     Unit.Pacer.Command.Chart
     Unit.Pacer.Command.Chart.Data.Activity
     Unit.Pacer.Command.Chart.Data.ActivityLabel
+    Unit.Pacer.Command.Chart.Data.ChartData
     Unit.Pacer.Command.Chart.Data.ChartRequest
     Unit.Pacer.Command.Chart.Data.Expr
     Unit.Pacer.Command.Chart.Data.Garmin

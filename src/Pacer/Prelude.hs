@@ -63,6 +63,10 @@ module Pacer.Prelude
 
     -- * Numeric
 
+    PInt,
+    PWord8,
+    PWord16,
+
     -- ** Positive
     mkPositiveFail,
 
@@ -559,6 +563,12 @@ type PDouble = Positive Double
 -- | Equality with epsilon check for floating points.
 ɛEq :: (MetricSpace a) => Double -> a -> a -> Bool
 ɛEq e x y = diffℝ x y < e
+
+type PInt = Positive Int
+
+type PWord8 = Positive Word8
+
+type PWord16 = Positive Word16
 
 mkPositiveFail ::
   forall m a.

@@ -1,0 +1,135 @@
+fromList
+  ( MkSomeActivity SKilometer
+    ( MkActivity
+      { atype = Nothing
+      , datetime = TimestampDate 2024-07-09
+      , distance = MkDistance
+        ( UnsafePositive 12.666666666666666 ) Kilometer
+      , duration = MkDuration
+        { unDuration = UnsafePositive 3000.0 }
+      , labels = fromList []
+      , title = Nothing
+      }
+    ) :|
+    [ MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-11
+        , distance = MkDistance
+          ( UnsafePositive 16.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 3600.0 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-17
+        , distance = MkDistance
+          ( UnsafePositive 15.666666666666666 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 3466.6666666666665 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-19
+        , distance = MkDistance
+          ( UnsafePositive 13.666666666666666 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 2833.3333333333335 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-21
+        , distance = MkDistance
+          ( UnsafePositive 9.333333333333334 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 1966.6666666666667 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-25
+        , distance = MkDistance
+          ( UnsafePositive 7.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 1466.6666666666667 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-27
+        , distance = MkDistance
+          ( UnsafePositive 5.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 933.3333333333334 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-31
+        , distance = MkDistance
+          ( UnsafePositive 28.333333333333332 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 5800.0 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-08-02
+        , distance = MkDistance
+          ( UnsafePositive 32.333333333333336 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 6433.333333333333 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-08-06
+        , distance = MkDistance
+          ( UnsafePositive 31.333333333333332 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 6333.333333333333 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-08-08
+        , distance = MkDistance
+          ( UnsafePositive 10.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 1900.0 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    ]
+  )

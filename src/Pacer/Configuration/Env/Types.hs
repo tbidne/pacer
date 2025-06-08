@@ -8,11 +8,15 @@ module Pacer.Configuration.Env.Types
 
     -- * Logging Env
     LogEnv (..),
+
+    -- ** Handlers
+    runLoggerMock,
+    runReaderLogEnvMock,
   )
 where
 
-import Effectful.Logger.Dynamic (LogLevel)
-import Pacer.Configuration.Logging (LogVerbosity)
+import Effectful.Logger.Dynamic (LogLevel, Logger (LoggerLog))
+import Pacer.Configuration.Logging (LogVerbosity (LogV0))
 import Pacer.Prelude
 
 -- | Holds cached paths, for ensuring we do not make unnecessary calls
@@ -89,3 +93,16 @@ data LogEnv = MkLogEnv
     logVerbosity :: LogVerbosity
   }
   deriving stock (Eq, Show)
+
+runLoggerMock :: Eff (Logger : es) a -> Eff es a
+runLoggerMock = interpret_ $ \case
+  LoggerLog _ _ _ _ -> pure ()
+
+runReaderLogEnvMock :: Eff (Reader LogEnv : es) a -> Eff es a
+runReaderLogEnvMock =
+  runReader
+    $ MkLogEnv
+      { logLevel = Nothing,
+        logNamespace = mempty,
+        logVerbosity = LogV0
+      }

@@ -10,6 +10,7 @@
   - [How does file discovery work?](#how-does-file-discovery-work)
   - [How do I use this with Garmin](#how-do-i-use-this-with-garmin)
   - [How do chart filters work?](#how-do-chart-filters-work)
+  - [What is smoothing?](#what-is-smoothing)
 
 ## General
 
@@ -569,3 +570,95 @@ xor
 > ```
 >
 > The clearest way to write an expression is a matter of taste.
+
+
+### What is smoothing?
+
+[Smoothing](https://en.wikipedia.org/wiki/Moving_average) is the process of taking some raw data and transforming each point to an "average" in some fashion. We provide two different smoothing methods, for use with the `sum` chart type.
+
+#### Rolling average
+
+The "rolling average" (also "moving average") for period `k` sets each point to the average of it and the previous `k` points. For instance, suppose we have the follwing chart request:
+
+```json
+{
+      "title": "Sum 2 days smooth 3 rolling",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "2 days",
+        "smooth": {
+          "type": "rolling",
+          "period": 3
+        }
+      }
+    },
+```
+
+with these activities:
+
+| date       | distance (km) | duration (seconds) |
+|-----------:|--------------:|-------------------:|
+| 2024-07-01 |             5 |               1200 |
+| 2024-07-02 |            10 |               2400 |
+| 2024-07-03 |            15 |               3600 |
+| 2024-07-04 |            20 |               4800 |
+| 2024-07-05 |            15 |               3600 |
+| 2024-07-06 |            10 |               2400 |
+| 2024-07-07 |            25 |               6000 |
+| 2024-07-08 |             5 |               1200 |
+| 2024-07-09 |            10 |               2400 |
+| 2024-07-10 |             5 |               1200 |
+
+We sum every two days, producing:
+
+| date       | distance  | duration |
+|-----------:|----------:|---------:|
+| 2024-07-01 |        15 |     3600 |
+| 2024-07-03 |        35 |     8400 |
+| 2024-07-05 |        25 |     6000 |
+| 2024-07-07 |        30 |     7200 |
+| 2024-07-09 |        15 |     3600 |
+
+We then _smooth_ every **three** points, resulting in:
+
+| date       | distance | duration |
+|-----------:|---------:|---------:|
+| 2024-07-05 |       25 |     6000 |
+| 2024-07-07 |       30 |     7200 |
+| 2024-07-09 |     23.3 |     5600 |
+
+#### Window average
+
+This is the same as before, except we now use the `window` average:
+
+```jsonc
+{
+      "title": "Sum 2 days smooth 3 window",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "2 days",
+        "smooth": {
+          "type": "window", // this is the change
+          "period": 3
+        }
+      }
+    },
+```
+
+This differs from the rolling average in that each point is averaged with previous and _next_ `k/2` points.
+
+Following the same example as above, we end up with:
+
+| date       | distance | duration |
+|-----------:|---------:|---------:|
+| 2024-07-03 |       25 |     6000 |
+| 2024-07-05 |       30 |     7200 |
+| 2024-07-07 |     23.3 |     5600 |
+
+#### Caveats
+
+Unlike the sum period, which is some unit of time, the smooth period is based on _points_ i.e. adjacent activities. Thus smoothing can produce strange results when the time axis is highly non-linear i.e. activities are dispersed randomly in time, with wide gaps in between them. Therefore smoothing makes the most sense with the scale is relatively linear e.g. activities are mostly evenly spaced.

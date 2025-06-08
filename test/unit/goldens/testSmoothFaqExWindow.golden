@@ -1,0 +1,39 @@
+fromList
+  ( MkSomeActivity SKilometer
+    ( MkActivity
+      { atype = Nothing
+      , datetime = TimestampDate 2024-07-03
+      , distance = MkDistance
+        ( UnsafePositive 25.0 ) Kilometer
+      , duration = MkDuration
+        { unDuration = UnsafePositive 6000.0 }
+      , labels = fromList []
+      , title = Nothing
+      }
+    ) :|
+    [ MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-05
+        , distance = MkDistance
+          ( UnsafePositive 30.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 7200.0 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-07
+        , distance = MkDistance
+          ( UnsafePositive 23.333333333333332 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 5600.0 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    ]
+  )

@@ -1,5 +1,5 @@
 import { Chart } from "chart.js/auto";
-import { PYAxis } from "./pacer";
+import { PChartExtra, PYAxis } from "./pacer";
 import { CChartOpts, CDataSets, CTicks, CYAxis, CYOptT } from "./chartjs/types";
 import { YAxesT, YAxisLabel, mapYAxes } from "./common";
 import { formatOptsSeconds, formatSeconds } from "../utils";
@@ -14,12 +14,17 @@ function getYTimePrefix(s: YAxisLabel): "duration" | "pace" | null {
   else return null;
 }
 
-function makeYAxis(theme: Theme, pYAxis: PYAxis): CYAxis {
+function makeYAxis(theme: Theme, extra: PChartExtra, pYAxis: PYAxis): CYAxis {
   let backgroundColor = alpha50(theme.yBackground);
   let borderColor = theme.yBackground;
   if (pYAxis.id == "y1") {
     backgroundColor = alpha50(theme.y1Background);
     borderColor = theme.y1Background;
+  }
+
+  let tension = 0;
+  if (extra.smoothCurve != null) {
+    tension = extra.smoothCurve;
   }
 
   const cYAxis: CYAxis = {
@@ -29,7 +34,7 @@ function makeYAxis(theme: Theme, pYAxis: PYAxis): CYAxis {
     fill: false,
     label: pYAxis.type,
     pointHoverRadius: POINT_RADIUS,
-    tension: 0,
+    tension: tension,
     yAxisID: pYAxis.id,
   };
 
@@ -49,8 +54,12 @@ function makeYAxis(theme: Theme, pYAxis: PYAxis): CYAxis {
   return cYAxis;
 }
 
-function makeYAxes(theme: Theme, yAxes: YAxesT<PYAxis>): YAxesT<CYAxis> {
-  return mapYAxes((y) => makeYAxis(theme, y), yAxes);
+function makeYAxes(
+  theme: Theme,
+  extra: PChartExtra,
+  yAxes: YAxesT<PYAxis>,
+): YAxesT<CYAxis> {
+  return mapYAxes((y) => makeYAxis(theme, extra, y), yAxes);
 }
 
 function makeChartOpts(
@@ -210,11 +219,12 @@ function createChart(
   theme: Theme,
   title: string,
   elemId: string,
+  extra: PChartExtra,
   xAxis: string[],
   yAxes: YAxesT<PYAxis>,
 ): Chart<"line"> {
   const chartOpts = makeChartOpts(theme, title, yAxes);
-  const cYAxes = makeYAxes(theme, yAxes);
+  const cYAxes = makeYAxes(theme, extra, yAxes);
 
   const datasets: CDataSets = [cYAxes.y];
   if (cYAxes.y1 != null) {

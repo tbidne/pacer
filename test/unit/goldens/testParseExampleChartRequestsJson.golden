@@ -140,7 +140,7 @@ MkChartRequests
         , y1Axis = Just YAxisPace
         }
       , MkChartRequest
-        { chartType = Just ( ChartTypeSum ChartSumWeek )
+        { chartType = Just ( ChartTypeSum ChartSumWeek Nothing )
         , description = Nothing
         , filters = []
         , title = "Runs by week"

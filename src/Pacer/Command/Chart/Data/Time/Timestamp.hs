@@ -106,7 +106,7 @@ roundTimestampWeek ts = TimestampDate newDay
 -- | Rounds the timestamp down to the start of its interval. That is,
 -- finds the interval containing the given timestamp, and returns the
 -- interval's start day.
-roundInterval :: Day -> Word16 -> Timestamp -> Timestamp
+roundInterval :: Day -> PWord16 -> Timestamp -> Timestamp
 roundInterval totalStart period =
   TimestampDate
     . (.start)
@@ -144,7 +144,7 @@ sameInterval ::
   -- | Start day d
   Day ->
   -- | Interval period (i.e. number of days) p
-  Word16 ->
+  PWord16 ->
   -- | ts1
   Timestamp ->
   -- | ts2
@@ -175,7 +175,7 @@ newtype Interval = MkInterval {start :: Day}
 -- * @e = d1 * p(k + 1)@
 --
 -- * @s <= d2 <= e@
-findInterval :: Day -> Word16 -> Timestamp -> Interval
+findInterval :: Day -> PWord16 -> Timestamp -> Interval
 findInterval totalStart period ts = MkInterval {start}
   where
     -- d1
@@ -185,7 +185,7 @@ findInterval totalStart period ts = MkInterval {start}
     tsDayℤ = (Internal.timestampToDay ts).toModifiedJulianDay
 
     -- p
-    periodℤ = fromIntegral @Word16 @Integer period
+    periodℤ = fromIntegral @Word16 @Integer period.unPositive
 
     -- k = (d2 - d1) / p i.e. largest k s.t. d1 + kp <= d2.
     k = (tsDayℤ - dayℤ) .%. periodℤ

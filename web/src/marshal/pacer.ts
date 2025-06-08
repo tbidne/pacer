@@ -31,6 +31,7 @@ type PChart = {
 
 type PChartExtra = {
   description?: string;
+  smoothCurve?: number;
 };
 
 type PYAxis = {

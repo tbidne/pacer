@@ -207,6 +207,21 @@ instance (Show a) => Show (SomeActivity a) where
           . withSingI s showsPrec 11 r
       )
 
+instance HasField "atype" (SomeActivity a) (Maybe ActivityType) where
+  getField (MkSomeActivity _ r) = r.atype
+
+instance HasField "datetime" (SomeActivity a) Timestamp where
+  getField (MkSomeActivity _ r) = r.datetime
+
+instance HasField "duration" (SomeActivity a) (Duration a) where
+  getField (MkSomeActivity _ r) = r.duration
+
+instance HasField "labels" (SomeActivity a) (Set Label) where
+  getField (MkSomeActivity _ r) = r.labels
+
+instance HasField "title" (SomeActivity a) (Maybe Text) where
+  getField (MkSomeActivity _ r) = r.title
+
 -------------------------------------------------------------------------------
 --                               Serialization                               --
 -------------------------------------------------------------------------------
@@ -347,6 +362,8 @@ someActivityIso =
 --                             SomeActivitiesKey                             --
 -------------------------------------------------------------------------------
 
+-- TODO: Rename this SomeActivityKey to better distinguish multiplicity.
+
 -- | Key for 'SomeActivities'. Eq/Ord use an equivalence class on the timestamp,
 -- used to enforce that timestamps are unique.
 newtype SomeActivitiesKey a
@@ -359,19 +376,19 @@ newtype SomeActivitiesKey a
 -------------------------------------------------------------------------------
 
 instance HasField "atype" (SomeActivitiesKey a) (Maybe ActivityType) where
-  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.atype
+  getField (MkSomeActivitiesKey r) = r.atype
 
 instance HasField "datetime" (SomeActivitiesKey a) Timestamp where
-  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.datetime
+  getField (MkSomeActivitiesKey r) = r.datetime
 
 instance HasField "duration" (SomeActivitiesKey a) (Duration a) where
-  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.duration
+  getField (MkSomeActivitiesKey r) = r.duration
 
 instance HasField "labels" (SomeActivitiesKey a) (Set Label) where
-  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.labels
+  getField (MkSomeActivitiesKey r) = r.labels
 
 instance HasField "title" (SomeActivitiesKey a) (Maybe Text) where
-  getField (MkSomeActivitiesKey (MkSomeActivity _ r)) = r.title
+  getField (MkSomeActivitiesKey r) = r.title
 
 instance Eq (SomeActivitiesKey a) where
   MkSomeActivitiesKey (MkSomeActivity _ r1)

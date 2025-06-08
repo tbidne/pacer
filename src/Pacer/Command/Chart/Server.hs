@@ -75,7 +75,7 @@ launchServer port webDistPath charts = addNamespace "launchServer" $ do
   where
     msg =
       mconcat
-        [ "Up! Please open your browser to http://localhost:",
+        [ "Pacer is running in your browser on http://localhost:",
           showt portInt,
           " :-)"
         ]

@@ -6,6 +6,7 @@ import Unit.Pacer.Class.Parser qualified
 import Unit.Pacer.Command.Chart qualified
 import Unit.Pacer.Command.Chart.Data.Activity qualified
 import Unit.Pacer.Command.Chart.Data.ActivityLabel qualified
+import Unit.Pacer.Command.Chart.Data.ChartData qualified
 import Unit.Pacer.Command.Chart.Data.ChartRequest qualified
 import Unit.Pacer.Command.Chart.Data.Expr qualified
 import Unit.Pacer.Command.Chart.Data.Garmin qualified
@@ -32,6 +33,7 @@ main =
         Unit.Pacer.Command.Chart.tests,
         Unit.Pacer.Command.Chart.Data.Activity.tests,
         Unit.Pacer.Command.Chart.Data.ActivityLabel.tests,
+        Unit.Pacer.Command.Chart.Data.ChartData.tests,
         Unit.Pacer.Command.Chart.Data.ChartRequest.tests,
         Unit.Pacer.Command.Chart.Data.Expr.tests,
         Unit.Pacer.Command.Chart.Data.Garmin.tests,

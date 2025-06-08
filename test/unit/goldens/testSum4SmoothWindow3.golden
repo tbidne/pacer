@@ -1,0 +1,75 @@
+fromList
+  ( MkSomeActivity SKilometer
+    ( MkActivity
+      { atype = Nothing
+      , datetime = TimestampDate 2024-07-09
+      , distance = MkDistance
+        ( UnsafePositive 26.333333333333332 ) Kilometer
+      , duration = MkDuration
+        { unDuration = UnsafePositive 5833.333333333333 }
+      , labels = fromList []
+      , title = Nothing
+      }
+    ) :|
+    [ MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-17
+        , distance = MkDistance
+          ( UnsafePositive 21.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 4566.666666666667 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-21
+        , distance = MkDistance
+          ( UnsafePositive 13.666666666666666 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 2766.6666666666665 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-25
+        , distance = MkDistance
+          ( UnsafePositive 29.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 5933.333333333333 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-07-29
+        , distance = MkDistance
+          ( UnsafePositive 34.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 6800.0 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    , MkSomeActivity SKilometer
+      ( MkActivity
+        { atype = Nothing
+        , datetime = TimestampDate 2024-08-02
+        , distance = MkDistance
+          ( UnsafePositive 34.0 ) Kilometer
+        , duration = MkDuration
+          { unDuration = UnsafePositive 6900.0 }
+        , labels = fromList []
+        , title = Nothing
+        }
+      )
+    ]
+  )

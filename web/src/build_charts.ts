@@ -112,6 +112,7 @@ function main(pacerCharts: PCharts) {
       initTheme,
       title,
       elemId,
+      pchart.extra,
       pchart.datasets.xAxis,
       pchart.datasets.yAxes,
     );

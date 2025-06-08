@@ -1,0 +1,193 @@
+{
+  "charts": [
+    {
+      "title": "Normal",
+      "y-axis": "distance",
+      "y1-axis": "duration"
+    },
+    {
+      "title": "Sum 1 days",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "1 days"
+      },
+      "description": "Verifying this is the same as normal."
+    },
+    {
+      "title": "Sum 1 days smooth 3 rolling",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "1 days",
+        "smooth": {
+          "type": "rolling",
+          "period": 3
+        }
+      }
+    },
+    {
+      "title": "Sum 1 days smooth 5 rolling",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "1 days",
+        "smooth": {
+          "type": "rolling",
+          "period": 5
+        }
+      }
+    },
+    {
+      "title": "Sum 1 days smooth 3 window",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "1 days",
+        "smooth": {
+          "type": "window",
+          "period": 3
+        }
+      }
+    },
+    {
+      "title": "Sum 1 days smooth 5 window",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "1 days",
+        "smooth": {
+          "type": "window",
+          "period": 5
+        }
+      }
+    },
+    {
+      "title": "Sum 5 days",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "5 days"
+      }
+    },
+    {
+      "title": "Sum 5 days smooth 3 rolling",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "5 days",
+        "smooth": {
+          "type": "rolling",
+          "period": 3
+        }
+      }
+    },
+    {
+      "title": "Sum 5 days smooth 5 rolling",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "5 days",
+        "smooth": {
+          "type": "rolling",
+          "period": 5
+        }
+      }
+    },
+    {
+      "title": "Sum 5 days smooth 3 window",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "5 days",
+        "smooth": {
+          "type": "window",
+          "period": 3
+        }
+      }
+    },
+    {
+      "title": "Sum 5 days smooth 5 window",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "5 days",
+        "smooth": {
+          "type": "window",
+          "period": 5
+        }
+      }
+    },
+    {
+      "title": "Sum 10 days",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "10 days"
+      }
+    },
+    {
+      "title": "Sum 10 days smooth 3 rolling",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "10 days",
+        "smooth": {
+          "type": "rolling",
+          "period": 3
+        }
+      }
+    },
+    {
+      "title": "Sum 10 days smooth 5 rolling",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "10 days",
+        "smooth": {
+          "type": "rolling",
+          "period": 5
+        }
+      }
+    },
+    {
+      "title": "Sum 10 days smooth 3 window",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "10 days",
+        "smooth": {
+          "type": "window",
+          "period": 3
+        }
+      }
+    },
+    {
+      "title": "Sum 10 days smooth 5 window",
+      "y-axis": "distance",
+      "y1-axis": "duration",
+      "type": {
+        "name": "sum",
+        "period": "10 days",
+        "smooth": {
+          "type": "window",
+          "period": 5
+        }
+      }
+    }
+  ]
+}

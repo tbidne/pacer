@@ -2,10 +2,17 @@
 {-# LANGUAGE NoScopedTypeVariables #-}
 
 module Pacer.Command.Chart.Data.ChartData
-  ( ChartData (..),
+  ( -- * Primary
+    ChartData (..),
     ChartY (..),
     ChartY1 (..),
     mkChartData,
+
+    -- * Misc
+    handleChartType,
+    smoothRolling,
+    smoothWindow,
+    allGroups,
   )
 where
 
@@ -15,6 +22,7 @@ import Data.Foldable1 (foldl1')
 import Data.List (all)
 import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
+import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Set (Set)
 import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
@@ -28,6 +36,8 @@ import Pacer.Command.Chart.Data.Activity
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
+    ChartSmooth (smoothPeriod, smoothType),
+    ChartSmoothType (ChartSmoothRolling, ChartSmoothWindow),
     ChartSumPeriod (ChartSumDays, ChartSumMonth, ChartSumWeek, ChartSumYear),
     ChartType (ChartTypeDefault, ChartTypeSum),
     YAxisType
@@ -217,7 +227,8 @@ handleChartType ::
 handleChartType @es @a mChartType someActivities = case mChartType of
   Nothing -> pure someActivities
   Just ChartTypeDefault -> pure someActivities
-  Just (ChartTypeSum period) -> sumPeriod (getStartDay someActivities) period
+  Just (ChartTypeSum period mSmooth) ->
+    runSmooth mSmooth <$> sumPeriod (getStartDay someActivities) period
   where
     getStartDay :: NESeq (SomeActivity a) -> Day
     getStartDay =
@@ -225,10 +236,20 @@ handleChartType @es @a mChartType someActivities = case mChartType of
         . Activity.someActivityApplyActivity (.datetime)
         . NESeq.head
 
+    runSmooth ::
+      Maybe ChartSmooth ->
+      NESeq (SomeActivity a) ->
+      NESeq (SomeActivity a)
+    runSmooth mSmooth xs = case mSmooth of
+      Nothing -> xs
+      Just cs -> case cs.smoothType of
+        ChartSmoothRolling -> smoothRolling cs.smoothPeriod xs
+        ChartSmoothWindow -> smoothWindow cs.smoothPeriod xs
+
     -- groupBy on Mapping to period
     sumPeriod :: Day -> ChartSumPeriod -> Eff es (NESeq (SomeActivity a))
     sumPeriod startDay period =
-      (fmap . fmap) sumActivities
+      (fmap . fmap) (sumActivities $ TimestampRound roundFn)
         . groupByPeriod
         $ someActivities
       where
@@ -249,47 +270,6 @@ handleChartType @es @a mChartType someActivities = case mChartType of
           ChartSumYear -> (TS.sameYear, TS.roundTimestampYear)
           ChartSumDays days ->
             (TS.sameInterval startDay days, TS.roundInterval startDay days)
-
-        sumActivities :: NESeq (SomeActivity a) -> SomeActivity a
-        sumActivities (MkSomeActivity sy y :<|| ys) = foldl1' go (init :<|| ys)
-          where
-            go :: SomeActivity a -> SomeActivity a -> SomeActivity a
-            go (MkSomeActivity sacc acc) (MkSomeActivity sr r) =
-              MkSomeActivity sacc
-                $ MkActivity
-                  { atype = acc.atype,
-                    -- Only need to add distance and time, since everything
-                    -- else is set in the initial value (init).
-                    datetime = acc.datetime,
-                    distance = newDist,
-                    duration = acc.duration .+. r.duration,
-                    labels = acc.labels,
-                    title = acc.title
-                  }
-              where
-                newDist =
-                  withSingI sacc
-                    $ withSingI sr
-                    $ Dist.liftDistLeft2
-                      (.+.)
-                      acc.distance
-                      r.distance
-
-            init =
-              MkSomeActivity sy
-                $ MkActivity
-                  { -- REVIEW: Should this be Nothing? Or something else e.g.
-                    -- first element, "Sum", or maybe logic to see if all
-                    -- all elements have the same type?
-                    atype = Nothing,
-                    datetime = roundFn y.datetime,
-                    -- NOTE: No need to convert the distance to the requested
-                    -- distance here, as mkChartDataSets will take care of it.
-                    distance = y.distance,
-                    duration = y.duration,
-                    labels = mempty,
-                    title = Nothing
-                  }
 
         groupByPeriod ::
           NESeq (SomeActivity a) ->
@@ -374,6 +354,183 @@ mkChartDataSets @a finalDistUnit request activities@(MkSomeActivity sd _ :<|| _)
         where
           activityToPace activityUnits =
             (Activity.derivePace activityUnits).unPace.unDuration
+
+-- | A moving window has the group representative be the median element.
+smoothWindow ::
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  PWord8 ->
+  NESeq (SomeActivity a) ->
+  NESeq (SomeActivity a)
+smoothWindow = smooth takeMedian
+  where
+    takeMedian xs = NESeq.index xs (length xs .%. 2)
+
+-- | Rolling average takes only historical data i.e. the group representative
+-- is always the latest.
+smoothRolling ::
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  PWord8 ->
+  NESeq (SomeActivity a) ->
+  NESeq (SomeActivity a)
+smoothRolling = smooth NESeq.last
+
+smooth ::
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  (NESeq Timestamp -> Timestamp) ->
+  PWord8 ->
+  NESeq (SomeActivity a) ->
+  NESeq (SomeActivity a)
+smooth @a sumTs k = sumChunks . allGroups k
+  where
+    sumChunks :: NESeq (NESeq (SomeActivity a)) -> NESeq (SomeActivity a)
+    sumChunks = fmap sumChunk
+      where
+        sumChunk :: NESeq (SomeActivity a) -> SomeActivity a
+        sumChunk xs =
+          divAct len $ sumActivities (TimestampAddAll sumTs) xs
+          where
+            -- Safe because len > 0
+            len =
+              unsafePositive
+                . fromℤ
+                . fromIntegral @Int @Integer
+                . length
+                $ xs
+
+        divAct :: Positive a -> SomeActivity a -> SomeActivity a
+        divAct numActs (MkSomeActivity sd a) =
+          MkSomeActivity
+            sd
+            ( a
+                { distance = a.distance .% numActs,
+                  duration = a.duration .% numActs
+                }
+            )
+
+-- | Like 'NESeq.chunksOf', except returns all (overlapping) groups e.g.
+--
+-- @
+--   allGroups 3 [1 .. 5]
+--     <=> [ [1,2,3], [2,3,4], [3,4,5] ]
+-- @
+allGroups :: (HasCallStack, Show a) => PWord8 -> NESeq a -> NESeq (NESeq a)
+allGroups @a k = go
+  where
+    go :: NESeq a -> NESeq (NESeq a)
+    go xs = case takeNAndRest k xs of
+      (ys, Seq.Empty) -> NESeq.singleton ys
+      (ys, z :<| zs) -> ys :<|| NESeq.toSeq (go (z :<|| zs))
+
+takeNAndRest :: (HasCallStack, Show a) => PWord8 -> NESeq a -> Tuple2 (NESeq a) (Seq a)
+takeNAndRest k ys@(_ :<|| xs)
+  | k' >= length ys = (ys, Seq.Empty)
+  | otherwise = (zs, xs)
+  where
+    k' = toInt k.unPositive
+    zs = case NESeq.take k' ys of
+      Seq.Empty ->
+        error
+          $ mconcat
+            [ "Took empty list for len ",
+              show k,
+              " and list: ",
+              show ys
+            ]
+      (w :<| ws) -> w :<|| ws
+
+    toInt = fromIntegral @Word8 @Int
+
+data TimestampMod
+  = -- | Function to apply to the _first_ timestamp in the group, which is
+    -- the group's timestamp.
+    TimestampRound (Timestamp -> Timestamp)
+  | -- | Function that calculates the group's timestamp based on _all_
+    -- timestamps (e.g. taking the median timestamp).
+    --
+    -- The 'AddAll' should be understood as general monoid add, not numeric
+    -- sum.
+    TimestampAddAll (NESeq Timestamp -> Timestamp)
+
+sumActivities ::
+  ( Fromℤ a,
+    Ord a,
+    Semifield a,
+    Show a
+  ) =>
+  -- | Timestamp modifier.
+  TimestampMod ->
+  NESeq (SomeActivity a) ->
+  SomeActivity a
+sumActivities @a timestampMod acts@(MkSomeActivity sy y :<|| ys) =
+  case foldl1' go (init :<|| ys) of
+    MkSomeActivity sd summedAct ->
+      -- Potentially modify the timestamp.
+      MkSomeActivity sd (over' #datetime finalTs summedAct)
+  where
+    -- Either take the first timestamp or combine all in some fashion,
+    -- per tsAddAll.
+    finalTs dt = tsAddAll dt ((.datetime) <$> acts)
+
+    tsRound :: Timestamp -> Timestamp
+    tsAddAll :: Timestamp -> NESeq Timestamp -> Timestamp
+
+    (tsRound, tsAddAll) = case timestampMod of
+      -- 1. We are applying a unary function to the first timestamp only,
+      --    hence the 'addAll' function merely takes the first argument.
+      TimestampRound g -> (g, const)
+      -- 2. We are using the 'allAll' function, hence we apply no special
+      --    behavior to the first element.
+      TimestampAddAll g -> (identity, const g)
+
+    go :: SomeActivity a -> SomeActivity a -> SomeActivity a
+    go (MkSomeActivity sacc acc) (MkSomeActivity sr r) =
+      MkSomeActivity sacc
+        $ MkActivity
+          { atype = acc.atype,
+            -- Only need to add distance and duration, since everything
+            -- else is set in the initial value (init).
+            datetime = acc.datetime,
+            distance = newDist,
+            duration = acc.duration .+. r.duration,
+            labels = acc.labels,
+            title = acc.title
+          }
+      where
+        newDist =
+          withSingI sacc
+            $ withSingI sr
+            $ Dist.liftDistLeft2
+              (.+.)
+              acc.distance
+              r.distance
+
+    init =
+      MkSomeActivity sy
+        $ MkActivity
+          { -- REVIEW: Should this be Nothing? Or something else e.g.
+            -- first element, "Sum", or maybe logic to see if all
+            -- all elements have the same type?
+            atype = Nothing,
+            datetime = tsRound y.datetime,
+            -- NOTE: No need to convert the distance to the requested
+            -- distance here, as mkChartDataSets will take care of it.
+            distance = y.distance,
+            duration = y.duration,
+            labels = mempty,
+            title = Nothing
+          }
 
 filterActivities ::
   forall a.

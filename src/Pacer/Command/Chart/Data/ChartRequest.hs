@@ -10,6 +10,10 @@ module Pacer.Command.Chart.Data.ChartRequest
     ChartType (..),
     ChartSumPeriod (..),
 
+    -- ** Smoothing
+    ChartSmoothType (..),
+    ChartSmooth (..),
+
     -- * Garmin
     GarminSettings (..),
 
@@ -60,7 +64,7 @@ instance ToJSON YAxisType where
 
 data ChartSumPeriod
   = -- | Arbitrary number of days.
-    ChartSumDays Word16
+    ChartSumDays PWord16
   | -- | Calendar week.
     ChartSumWeek
   | -- | Calendar month.
@@ -91,9 +95,51 @@ instance Parser ChartSumPeriod where
 instance FromJSON ChartSumPeriod where
   parseJSON = asnWithText "ChartSumPeriod" (failErr . P.parseAll)
 
+data ChartSmoothType
+  = ChartSmoothRolling
+  | ChartSmoothWindow
+  deriving stock (Bounded, Enum, Eq, Generic, Show)
+  deriving anyclass (NFData)
+
+instance FromJSON ChartSmoothType where
+  parseJSON = asnWithText "ChartSmoothType" $ \case
+    "rolling" -> pure ChartSmoothRolling
+    "window" -> pure ChartSmoothWindow
+    other ->
+      let msg = "Expected one of (rolling|windows), received: " <> other
+       in fail $ unpackText $ msg
+
+data ChartSmooth = MkChartSmooth
+  { smoothPeriod :: PWord8,
+    smoothType :: ChartSmoothType
+  }
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
+
+instance FromJSON ChartSmooth where
+  parseJSON = asnWithObject "ChartSmooth" $ \v -> do
+    -- FIXME: Consider renaming this. Period implies a unit (to me) e.g.
+    -- 4 days, but it's dimensionless. It's more like factor, or num.
+    -- Consult wiki
+    smoothPeriod <- mkPositiveFail =<< v .: "period"
+    smoothType <- v .: "type"
+
+    Utils.failUnknownFields
+      "ChartSmooth"
+      [ "period",
+        "type"
+      ]
+      v
+
+    pure
+      $ MkChartSmooth
+        { smoothPeriod,
+          smoothType
+        }
+
 data ChartType
   = ChartTypeDefault
-  | ChartTypeSum ChartSumPeriod
+  | ChartTypeSum ChartSumPeriod (Maybe ChartSmooth)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
@@ -106,8 +152,10 @@ instance FromJSON ChartType where
         pure ChartTypeDefault
       "sum" -> do
         period <- v .: "period"
-        Utils.failUnknownFields "ChartType" ["name", "period"] v
-        pure $ ChartTypeSum period
+        mSmooth <- v .:? "smooth"
+
+        Utils.failUnknownFields "ChartType" ["name", "period", "smooth"] v
+        pure $ ChartTypeSum period mSmooth
       other -> fail $ unpackText $ "Unrecognized chart type: " <> other
 
 -- | Chart request type.

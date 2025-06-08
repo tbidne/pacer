@@ -40,6 +40,7 @@ basicTests getTestDir =
       testBothChartOverlapError getTestDir,
       testUnknownKeyFailure getTestDir,
       testChartSum getTestDir,
+      testChartSmooth getTestDir,
       testUnmatchedActivityLabelWarning getTestDir
     ]
 
@@ -202,6 +203,11 @@ testChartSum :: IO OsPath -> TestTree
 testChartSum = testChart desc [osp|testChartSum|]
   where
     desc = "Uses chart sum"
+
+testChartSmooth :: IO OsPath -> TestTree
+testChartSmooth = testChart desc [osp|testChartSmooth|]
+  where
+    desc = "Uses chart sum with smooth"
 
 testUnmatchedActivityLabelWarning :: IO OsPath -> TestTree
 testUnmatchedActivityLabelWarning getTestDir = testCase desc $ do
