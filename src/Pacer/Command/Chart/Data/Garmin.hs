@@ -91,12 +91,18 @@ parseGarminRow ::
   NamedRecord ->
   Parser (GarminAct d a)
 parseGarminRow r = do
-  activityType <- MkActivityType <$> r .: "Activity Type"
+  rawActivityType <- r .: "Activity Type"
+  let activityType = MkActivityType rawActivityType
 
   title <- r .: "Title"
   datetime <- parseDatetime =<< r .: "Date"
   distance <- parseX =<< r .: "Distance"
-  duration <- parseDuration =<< r .: "Moving Time"
+
+  -- Prefer moving time, but fall back to others as needed.
+  duration <-
+    (parseDuration =<< r .: "Moving Time")
+      <|> (parseDuration =<< r .: "Elapsed Time")
+      <|> (parseDuration =<< r .: "Time")
 
   ts <- TS.fromLocalTime datetime
 
@@ -140,12 +146,13 @@ parseGarminRow r = do
 readActivitiesCsv ::
   ( HasCallStack,
     FileReader :> es,
-    Logger :> es
+    Logger :> es,
+    LoggerNS :> es
   ) =>
   DistanceUnit ->
   Path Abs File ->
   Eff es (SomeActivities Double)
-readActivitiesCsv @es inputDistUnit csvPath = do
+readActivitiesCsv @es inputDistUnit csvPath = addNamespace ns $ do
   -- 1. Read csv into bytestring.
   bs <- readBinaryFile csvOsPath
 
@@ -160,6 +167,7 @@ readActivitiesCsv @es inputDistUnit csvPath = do
   where
     csvOsPath = toOsPath csvPath
     bsToTxt = decodeUtf8Lenient . toStrictBS
+    ns = Utils.Show.showtPath csvPath
 
     bsToActivities ::
       forall (d :: DistanceUnit) ->
@@ -176,7 +184,6 @@ readActivitiesCsv @es inputDistUnit csvPath = do
           unless (posErrs == mempty) $ do
             $(Logger.logWarn)
               $ Utils.Show.mkNonPosErrMsg
-                csvPath
                 "on line(s)"
                 posErrs
 

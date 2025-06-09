@@ -131,11 +131,10 @@ showListLike = \case
         | cfg.spaces = ", "
         | otherwise = ","
 
-mkNonPosErrMsg :: (Eq a, Num a, Show a) => Path b t -> Text -> List a -> Text
-mkNonPosErrMsg path suffix posErrs =
+mkNonPosErrMsg :: (Eq a, Num a, Show a) => Text -> List a -> Text
+mkNonPosErrMsg suffix posErrs =
   mconcat
-    [ showtPath path,
-      ": Skipping non-positive values found ",
+    [ "Skipping non-positive values found ",
       suffix,
       ": ",
       -- The order is backwards, due to foldM being a left fold,

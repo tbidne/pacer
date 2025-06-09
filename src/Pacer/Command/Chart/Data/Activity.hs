@@ -462,11 +462,12 @@ readActivitiesJson ::
   forall es.
   ( HasCallStack,
     FileReader :> es,
-    Logger :> es
+    Logger :> es,
+    LoggerNS :> es
   ) =>
   Path Abs File ->
   Eff es (SomeActivities Double)
-readActivitiesJson activitiesPath = do
+readActivitiesJson activitiesPath = addNamespace ns $ do
   someActivitesParse <-
     Utils.readDecodeJson
       @(SomeActivitiesParse Double)
@@ -499,7 +500,6 @@ readActivitiesJson activitiesPath = do
     errs@(_ : _) ->
       $(Logger.logWarn)
         $ Show.mkNonPosErrMsg
-          activitiesPath
           "for chart(s)"
           errs
 
@@ -509,6 +509,7 @@ readActivitiesJson activitiesPath = do
     Err err -> throwM $ mkAesonE err
   where
     mkAesonE = MkAesonE (Just (toOsPath activitiesPath))
+    ns = Show.showtPath activitiesPath
 
 -------------------------------------------------------------------------------
 --                               SomeActivities                              --

@@ -56,11 +56,12 @@ testParseExampleActivitiesJson = testGoldenParams params
         }
     path = [relfilePathSep|examples/activities.jsonc|]
 
-runnerEff :: Eff [PathReader, Logger, FileReader, IOE] a -> IO a
+runnerEff :: Eff [PathReader, LoggerNS, Logger, FileReader, IOE] a -> IO a
 runnerEff =
   runEff
     . runFileReader
     . runLoggerMock
+    . runLoggerNS "unit"
     . runPathReader
 
 testParseSomeActivityRoundtrip :: TestTree
