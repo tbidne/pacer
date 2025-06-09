@@ -14,12 +14,16 @@ module Pacer.Data.Result
   )
 where
 
+import Control.DeepSeq (NFData)
 import Control.Exception (Exception)
 import Control.Monad.Catch (MonadThrow (throwM))
+import Data.Aeson (FromJSON (parseJSON))
+import Data.Aeson qualified as Asn
 import Data.Bifoldable (Bifoldable (bifoldMap))
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.Bitraversable (Bitraversable (bitraverse))
 import Data.String (IsString (fromString))
+import GHC.Generics (Generic)
 import GHC.Stack (HasCallStack)
 import Optics.Core (An_Iso, LabelOptic, iso)
 import Optics.Label (LabelOptic (labelOptic))
@@ -29,7 +33,8 @@ import Prelude
 data Result e a
   = Err e
   | Ok a
-  deriving stock (Eq, Functor, Show)
+  deriving stock (Eq, Functor, Generic, Show)
+  deriving anyclass (NFData)
 
 instance
   ( k ~ An_Iso,
@@ -75,6 +80,11 @@ instance Bifoldable Result where
 
 instance Bitraversable Result where
   bitraverse f g = onResult (fmap Err . f) (fmap Ok . g)
+
+instance (FromJSON a) => FromJSON (ResultDefault a) where
+  parseJSON v = pure $ case Asn.fromJSON v of
+    Asn.Success x -> Ok x
+    Asn.Error e -> Err e
 
 -- | Eliminates 'Err' via 'error'.
 errorErr :: (HasCallStack) => ResultDefault a -> a

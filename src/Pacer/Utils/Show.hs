@@ -13,9 +13,15 @@ module Pacer.Utils.Show
     ShowListTarget (..),
     ShowListInlineConfig (..),
     ShowListBracketStyle (..),
+
+    -- ** Sequences
+    mkNonPosErrMsg,
+    displaySummarizedSequences,
+    summarizeSequences,
   )
 where
 
+import Data.List qualified as L
 import FileSystem.OsPath qualified as OsPath
 import Pacer.Prelude
 
@@ -124,3 +130,51 @@ showListLike = \case
       sep
         | cfg.spaces = ", "
         | otherwise = ","
+
+mkNonPosErrMsg :: (Eq a, Num a, Show a) => Path b t -> Text -> List a -> Text
+mkNonPosErrMsg path suffix posErrs =
+  mconcat
+    [ showtPath path,
+      ": Skipping non-positive values found ",
+      suffix,
+      ": ",
+      -- The order is backwards, due to foldM being a left fold,
+      -- hence the reverse. The indexes appear correct, however.
+      displaySummarizedSequences (L.reverse posErrs)
+    ]
+
+-- Summarizes list of natural e.g.
+--
+-- λ. displaySummarizedSequences [1,2,3,5,8,10,11,14,15,16]
+-- "[1-3,5,8,10-11,14-16]"
+displaySummarizedSequences :: (Eq a, Num a, Show a) => List a -> Text
+displaySummarizedSequences = showFn . summarizeSequences
+  where
+    showFn xs =
+      showListLike
+        . ShowListInline (ShowListActual xs)
+        $ mempty {spaces = False}
+
+-- Summarizes list of natural e.g.
+--
+-- λ. summarizeSequences [1,2,3,5,8,10,11,14,15,16]
+-- ["1-3","5","8","10-11","14-16"]
+summarizeSequences :: forall a. (Eq a, Num a, Show a) => List a -> List Text
+summarizeSequences = fmap showGroup . groupSequential
+  where
+    showGroup :: List a -> Text
+    showGroup [] = ""
+    showGroup (start : es) = case L.unsnoc es of
+      Nothing -> showt start
+      Just (_, end) -> showt start <> "-" <> showt end
+
+    groupSequential :: List a -> List (List a)
+    groupSequential [] = []
+    groupSequential (x : xs) = case go 1 [x] xs of
+      (grp, []) -> [L.reverse grp]
+      (grp, rest) -> L.reverse grp : groupSequential rest
+      where
+        go _ acc [] = (acc, [])
+        go !cnt acc (y : ys)
+          | y - x == cnt = go (cnt + 1) (y : acc) ys
+          | otherwise = (acc, (y : ys))

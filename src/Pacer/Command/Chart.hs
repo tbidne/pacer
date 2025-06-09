@@ -235,7 +235,8 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
       Eff es (SomeActivities Double)
     readActivities mInputDistUnit activitiesPath =
       Garmin.getActivitiesType activitiesPath >>= \case
-        ActivitiesDefault -> Utils.readDecodeJson activitiesPath
+        ActivitiesDefault ->
+          Activity.readActivitiesJson activitiesPath
         ActivitiesGarmin -> do
           inputDistUnit <- case mInputDistUnit of
             Nothing -> throwM GarminUnitRequired

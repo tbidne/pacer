@@ -21,6 +21,7 @@ import Unit.Pacer.Data.Pace qualified
 import Unit.Pacer.Driver qualified
 import Unit.Pacer.Utils qualified
 import Unit.Pacer.Utils.FileSearch qualified
+import Unit.Pacer.Utils.Show qualified
 import Unit.Prelude
 
 main :: IO ()
@@ -47,5 +48,6 @@ main =
         Unit.Pacer.Data.Pace.tests,
         Unit.Pacer.Driver.tests,
         Unit.Pacer.Utils.tests,
-        Unit.Pacer.Utils.FileSearch.tests
+        Unit.Pacer.Utils.FileSearch.tests,
+        Unit.Pacer.Utils.Show.tests
       ]

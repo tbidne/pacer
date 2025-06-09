@@ -27,6 +27,7 @@ module Pacer.Utils
 
     -- * Misc
     PaceMetersErrMsg,
+    isNonPosError,
   )
 where
 
@@ -47,6 +48,7 @@ import Data.HashSet qualified as HSet
 import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
+import Data.Text qualified as T
 import FileSystem.OsPath (decodeLenient)
 import GHC.IsList (IsList (Item))
 import GHC.IsList qualified as IL
@@ -213,3 +215,7 @@ setMany' ::
   p ->
   p
 setMany' ls s = foldl' (\s' (MkSomeSetter l x) -> set' l x s') s ls
+
+-- | Detects if an error concerns non-positivity. Crude, but it works.
+isNonPosError :: Text -> Bool
+isNonPosError = T.isInfixOf "non-positive"

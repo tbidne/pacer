@@ -19,9 +19,13 @@ module Pacer.Command.Chart.Data.Activity
     deriveSomePace,
 
     -- * SomeActivities
-    SomeActivitiesKey (..),
-    someActivitiesKeyIso,
+    SomeActivityKey (..),
+    someActivityKeyIso,
     SomeActivities (..),
+
+    -- ** From JSON
+    SomeActivitiesParse (..),
+    readActivitiesJson,
 
     -- ** Construction
     mkSomeActivitiesFail,
@@ -48,6 +52,7 @@ import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
 import Data.Time.Relative qualified as RelTime
 import Data.Tuple (uncurry)
+import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
@@ -73,8 +78,9 @@ import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (unDuration))
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
 import Pacer.Prelude
-import Pacer.Utils ((.:?:))
+import Pacer.Utils (AesonE (MkAesonE), (.:?:))
 import Pacer.Utils qualified as Utils
+import Pacer.Utils.Show qualified as Show
 
 -------------------------------------------------------------------------------
 --                                 Activity                                  --
@@ -359,15 +365,13 @@ someActivityIso =
     hideDistance
 
 -------------------------------------------------------------------------------
---                             SomeActivitiesKey                             --
+--                              SomeActivityKey                              --
 -------------------------------------------------------------------------------
-
--- TODO: Rename this SomeActivityKey to better distinguish multiplicity.
 
 -- | Key for 'SomeActivities'. Eq/Ord use an equivalence class on the timestamp,
 -- used to enforce that timestamps are unique.
-newtype SomeActivitiesKey a
-  = MkSomeActivitiesKey {unSomeActivitiesKey :: SomeActivity a}
+newtype SomeActivityKey a
+  = MkSomeActivityKey {unSomeActivityKey :: SomeActivity a}
   deriving stock (Generic, Show)
   deriving anyclass (NFData)
 
@@ -375,44 +379,44 @@ newtype SomeActivitiesKey a
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
 
-instance HasField "atype" (SomeActivitiesKey a) (Maybe ActivityType) where
-  getField (MkSomeActivitiesKey r) = r.atype
+instance HasField "atype" (SomeActivityKey a) (Maybe ActivityType) where
+  getField (MkSomeActivityKey r) = r.atype
 
-instance HasField "datetime" (SomeActivitiesKey a) Timestamp where
-  getField (MkSomeActivitiesKey r) = r.datetime
+instance HasField "datetime" (SomeActivityKey a) Timestamp where
+  getField (MkSomeActivityKey r) = r.datetime
 
-instance HasField "duration" (SomeActivitiesKey a) (Duration a) where
-  getField (MkSomeActivitiesKey r) = r.duration
+instance HasField "duration" (SomeActivityKey a) (Duration a) where
+  getField (MkSomeActivityKey r) = r.duration
 
-instance HasField "labels" (SomeActivitiesKey a) (Set Label) where
-  getField (MkSomeActivitiesKey r) = r.labels
+instance HasField "labels" (SomeActivityKey a) (Set Label) where
+  getField (MkSomeActivityKey r) = r.labels
 
-instance HasField "title" (SomeActivitiesKey a) (Maybe Text) where
-  getField (MkSomeActivitiesKey r) = r.title
+instance HasField "title" (SomeActivityKey a) (Maybe Text) where
+  getField (MkSomeActivityKey r) = r.title
 
-instance Eq (SomeActivitiesKey a) where
-  MkSomeActivitiesKey (MkSomeActivity _ r1)
-    == MkSomeActivitiesKey (MkSomeActivity _ r2) =
+instance Eq (SomeActivityKey a) where
+  MkSomeActivityKey (MkSomeActivity _ r1)
+    == MkSomeActivityKey (MkSomeActivity _ r2) =
       r1.datetime == r2.datetime
 
-instance Ord (SomeActivitiesKey a) where
-  MkSomeActivitiesKey (MkSomeActivity _ r1)
-    <= MkSomeActivitiesKey (MkSomeActivity _ r2) =
+instance Ord (SomeActivityKey a) where
+  MkSomeActivityKey (MkSomeActivity _ r1)
+    <= MkSomeActivityKey (MkSomeActivity _ r2) =
       r1.datetime <= r2.datetime
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
 -------------------------------------------------------------------------------
 
-instance HasDistance (SomeActivitiesKey a) where
-  type DistanceVal (SomeActivitiesKey a) = SomeDistance a
-  type HideDistance (SomeActivitiesKey a) = SomeActivitiesKey a
+instance HasDistance (SomeActivityKey a) where
+  type DistanceVal (SomeActivityKey a) = SomeDistance a
+  type HideDistance (SomeActivityKey a) = SomeActivityKey a
 
-  distanceUnitOf :: SomeActivitiesKey a -> DistanceUnit
-  distanceUnitOf (MkSomeActivitiesKey sr) = distanceUnitOf sr
+  distanceUnitOf :: SomeActivityKey a -> DistanceUnit
+  distanceUnitOf (MkSomeActivityKey sr) = distanceUnitOf sr
 
-  distanceOf :: SomeActivitiesKey a -> SomeDistance a
-  distanceOf (MkSomeActivitiesKey sr) = distanceOf sr
+  distanceOf :: SomeActivityKey a -> SomeDistance a
+  distanceOf (MkSomeActivityKey sr) = distanceOf sr
 
   hideDistance = id
 
@@ -420,9 +424,91 @@ instance HasDistance (SomeActivitiesKey a) where
 --                                   Misc                                    --
 -------------------------------------------------------------------------------
 
--- | 'Iso' between 'SomeActivitiesKey' and 'SomeActivity'.
-someActivitiesKeyIso :: Iso' (SomeActivitiesKey a) (SomeActivity a)
-someActivitiesKeyIso = iso (\(MkSomeActivitiesKey x) -> x) MkSomeActivitiesKey
+-- | 'Iso' between 'SomeActivityKey' and 'SomeActivity'.
+someActivityKeyIso :: Iso' (SomeActivityKey a) (SomeActivity a)
+someActivityKeyIso = iso (\(MkSomeActivityKey x) -> x) MkSomeActivityKey
+
+-------------------------------------------------------------------------------
+--                             SomeActivitiesParse                           --
+-------------------------------------------------------------------------------
+
+-- | Collects json parse sucesses/failures.
+newtype SomeActivitiesParse a = MkSomeActivitiesParse
+  { unSomeActivitiesParse :: List (ResultDefault (SomeActivity a))
+  }
+  deriving stock (Generic, Show)
+  deriving anyclass (NFData)
+
+instance
+  ( Fromℚ a,
+    Ord a,
+    Semifield a,
+    Show a,
+    Parser a
+  ) =>
+  FromJSON (SomeActivitiesParse a)
+  where
+  parseJSON = asnWithObject "SomeActivities" $ \v -> do
+    actErrs <- v .: "activities"
+    Utils.failUnknownFields "SomeActivities" ["activities"] v
+    pure $ MkSomeActivitiesParse actErrs
+
+-- | Attempts to decode a json(c) file to SomeActivities. The semantics are:
+--
+-- 1. Non-positive values are a non-fatal warning.
+-- 3. Other individual activity errors are a non-fatal error.
+-- 2. Overlaps are a fatal error.
+readActivitiesJson ::
+  forall es.
+  ( HasCallStack,
+    FileReader :> es,
+    Logger :> es
+  ) =>
+  Path Abs File ->
+  Eff es (SomeActivities Double)
+readActivitiesJson activitiesPath = do
+  someActivitesParse <-
+    Utils.readDecodeJson
+      @(SomeActivitiesParse Double)
+      activitiesPath
+
+  -- Iterate through results, collecting successes and zero errors. Other
+  -- errors are logged as we encounter them.
+  let f ::
+        (List (SomeActivity Double), List Word8, Word8) ->
+        ResultDefault (SomeActivity Double) ->
+        Eff es (List (SomeActivity Double), List Word8, Word8)
+      f (as, es, !idx) = \case
+        Ok a -> pure (a : as, es, idx + 1)
+        Err err -> do
+          let errTxt = packText err
+          if Utils.isNonPosError errTxt
+            then pure (as, idx : es, idx + 1)
+            else do
+              $(Logger.logError)
+                $ "Json parse error: "
+                <> errTxt
+              pure (as, es, idx + 1)
+
+  (success, zeroErrs, _) <-
+    foldlM f ([], [], 1 :: Word8) someActivitesParse.unSomeActivitiesParse
+
+  -- print out a better message for zero errors.
+  case zeroErrs of
+    [] -> pure ()
+    errs@(_ : _) ->
+      $(Logger.logWarn)
+        $ Show.mkNonPosErrMsg
+          activitiesPath
+          "for chart(s)"
+          errs
+
+  -- Now make the activities e.g. handle overlaps.
+  case mkSomeActivitiesFail success of
+    Ok x -> pure x
+    Err err -> throwM $ mkAesonE err
+  where
+    mkAesonE = MkAesonE (Just (toOsPath activitiesPath))
 
 -------------------------------------------------------------------------------
 --                               SomeActivities                              --
@@ -430,7 +516,7 @@ someActivitiesKeyIso = iso (\(MkSomeActivitiesKey x) -> x) MkSomeActivitiesKey
 
 -- | Holds multiple activities.
 newtype SomeActivities a
-  = MkSomeActivities {unSomeActivities :: NESet (SomeActivitiesKey a)}
+  = MkSomeActivities {unSomeActivities :: NESet (SomeActivityKey a)}
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
@@ -461,20 +547,6 @@ mkSomeActivitiesFail xs = case xs of
   (y : ys) -> case mkSomeActivities (y :| ys) of
     Err err -> fail $ displayException err
     Ok x -> pure x
-
-instance
-  ( Fromℚ a,
-    Ord a,
-    Semifield a,
-    Show a,
-    Parser a
-  ) =>
-  FromJSON (SomeActivities a)
-  where
-  parseJSON = asnWithObject "SomeActivities" $ \v -> do
-    activities <- v .: "activities"
-    Utils.failUnknownFields "SomeActivities" ["activities"] v
-    mkSomeActivitiesFail activities
 
 data ActivityDatetimeOverlapE = MkActivityDatetimeOverlapE
   { r1 :: Tuple2 (Maybe Text) Timestamp,
@@ -513,7 +585,7 @@ mkSomeActivities (y@(MkSomeActivity _ r) :| ys) =
   where
     -- The logic here is:
     --
-    -- 1. Transform parsed @List -> NESet (SomeActivitiesKey a)@
+    -- 1. Transform parsed @List -> NESet (SomeActivityKey a)@
     -- 2. Simultaneously, accumulate a @Map Timestamp OverlapData@ to check
     --    for overlaps.
     --
@@ -540,7 +612,7 @@ mkSomeActivities (y@(MkSomeActivity _ r) :| ys) =
 
     initVal =
       Ok
-        ( NESet.singleton (MkSomeActivitiesKey y),
+        ( NESet.singleton (MkSomeActivityKey y),
           initOverlapData
         )
 
@@ -570,7 +642,7 @@ mkSomeActivities (y@(MkSomeActivity _ r) :| ys) =
     go someActivity@(MkSomeActivity _ q) (Ok (acc, foundKeys)) =
       case checkOverlap q foundKeys of
         Ok foundKeys' ->
-          let acc' = NESet.insert (MkSomeActivitiesKey someActivity) acc
+          let acc' = NESet.insert (MkSomeActivityKey someActivity) acc
            in Ok (acc', foundKeys')
         Err overlapped -> Err ((q.title, q.datetime), overlapped)
 
@@ -717,7 +789,7 @@ type TitleAndTime = Tuple2 (Maybe Text) Timestamp
 type SomeActivitiesAcc a =
   Result
     (Tuple2 TitleAndTime TitleAndTime)
-    (Tuple2 (NESet (SomeActivitiesKey a)) (HashMap Timestamp OverlapData))
+    (Tuple2 (NESet (SomeActivityKey a)) (HashMap Timestamp OverlapData))
 
 -------------------------------------------------------------------------------
 --                                    Misc                                   --
@@ -752,8 +824,8 @@ mapSomeActivities ::
   SomeActivities b
 mapSomeActivities f (MkSomeActivities s) = MkSomeActivities $ NESet.map g s
   where
-    g (MkSomeActivitiesKey (MkSomeActivity d r)) =
-      MkSomeActivitiesKey (MkSomeActivity d (f r))
+    g (MkSomeActivityKey (MkSomeActivity d r)) =
+      MkSomeActivityKey (MkSomeActivity d (f r))
 
 mapAccumSomeActivities ::
   forall a1 a2 b.
@@ -766,28 +838,28 @@ mapAccumSomeActivities f (MkSomeActivities s) = (MkSomeActivities newActivities,
     (newActivities, result) = Set.foldl' g init rest
 
     g ::
-      Tuple2 (NESet (SomeActivitiesKey a2)) b ->
-      SomeActivitiesKey a1 ->
-      Tuple2 (NESet (SomeActivitiesKey a2)) b
-    g (rs, bs) (MkSomeActivitiesKey (MkSomeActivity d r)) =
+      Tuple2 (NESet (SomeActivityKey a2)) b ->
+      SomeActivityKey a1 ->
+      Tuple2 (NESet (SomeActivityKey a2)) b
+    g (rs, bs) (MkSomeActivityKey (MkSomeActivity d r)) =
       let (newActivity, b) = f r
-       in ( NESet.insert (MkSomeActivitiesKey (MkSomeActivity d newActivity)) rs,
+       in ( NESet.insert (MkSomeActivityKey (MkSomeActivity d newActivity)) rs,
             b <> bs
           )
 
-    root :: SomeActivitiesKey a1
-    rest :: Set (SomeActivitiesKey a1)
+    root :: SomeActivityKey a1
+    rest :: Set (SomeActivityKey a1)
     (root, rest) = NESet.deleteFindMin s
 
-    initSet :: NESet (SomeActivitiesKey a2)
+    initSet :: NESet (SomeActivityKey a2)
     (initSet, initB) = case root of
-      MkSomeActivitiesKey (MkSomeActivity d r) ->
+      MkSomeActivityKey (MkSomeActivity d r) ->
         let (activity1, b1) = f r
-         in ( NESet.singleton (MkSomeActivitiesKey (MkSomeActivity d activity1)),
+         in ( NESet.singleton (MkSomeActivityKey (MkSomeActivity d activity1)),
               b1
             )
 
-    init :: Tuple2 (NESet (SomeActivitiesKey a2)) b
+    init :: Tuple2 (NESet (SomeActivityKey a2)) b
     init = (initSet, initB)
 
 unionSomeActivities ::
@@ -798,13 +870,13 @@ unionSomeActivities xs ys = mkSomeActivities (toListSR xs <> toListSR ys)
   where
     toListSR :: SomeActivities a -> NonEmpty (SomeActivity a)
     toListSR (MkSomeActivities rs) =
-      fmap (\(MkSomeActivitiesKey sr) -> sr)
+      fmap (\(MkSomeActivityKey sr) -> sr)
         . NESet.toList
         $ rs
 
 someActivitiesToNE :: SomeActivities a -> NonEmpty (SomeActivity a)
 someActivitiesToNE =
-  fmap (.unSomeActivitiesKey)
+  fmap (.unSomeActivityKey)
     . NESet.toList
     . (.unSomeActivities)
 

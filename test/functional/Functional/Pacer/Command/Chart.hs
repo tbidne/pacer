@@ -194,10 +194,14 @@ testBothChartOverlapError = testChart desc [osp|testBothChartOverlapError|]
   where
     desc = "Datetime overlap across multiple activity files errors"
 
+-- Previously, any error was an immediate error. To achieve consistency
+-- with garmin, individual activities are allowed to fail, and we continue.
+-- Hence this test now verifies that the bad activity is excluded, but
+-- the rest works.
 testUnknownKeyFailure :: IO OsPath -> TestTree
-testUnknownKeyFailure = testChartPosix True desc [osp|testUnknownKeyFailure|]
+testUnknownKeyFailure = testChart desc [osp|testUnknownKeyFailure|]
   where
-    desc = "Unknown key causes an error"
+    desc = "Skips activity with unknown key"
 
 testChartSum :: IO OsPath -> TestTree
 testChartSum = testChart desc [osp|testChartSum|]

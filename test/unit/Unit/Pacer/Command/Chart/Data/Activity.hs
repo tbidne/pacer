@@ -4,7 +4,6 @@ module Unit.Pacer.Command.Chart.Data.Activity (tests) where
 
 import Data.Set qualified as Set
 import Data.Text qualified as T
-import FileSystem.IO (readBinaryFileIO)
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as P
@@ -12,11 +11,12 @@ import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity),
     ActivityType (MkActivityType),
     Label (MkLabel),
-    SomeActivities,
     SomeActivity (MkSomeActivity),
   )
+import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.Activity qualified as R
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
+import Pacer.Configuration.Env.Types (runLoggerMock)
 import Pacer.Data.Distance
   ( Distance (MkDistance),
     DistanceUnit (Kilometer, Meter, Mile),
@@ -46,12 +46,22 @@ testParseExampleActivitiesJson = testGoldenParams params
         { testDesc = "Parses example activities.jsonc",
           testName = [osp|testParseExampleActivitiesJson|],
           runner = do
-            contents <- readBinaryFileIO path
-            case Utils.decodeJson @(SomeActivities Double) contents of
-              Ok result -> pure $ pShowBS result
-              Err err -> throwM err
+            -- Getting the current dir since we are using readActivitiesJson,
+            -- which requires an absolute path. Alternatively, we could
+            -- relax it to allow relative paths.
+            cwd <- runnerEff $ getCurrentDirectory
+
+            results <- runnerEff (Activity.readActivitiesJson $ cwd <</>> path)
+            pure $ pShowBS results
         }
-    path = [ospPathSep|examples/activities.jsonc|]
+    path = [relfilePathSep|examples/activities.jsonc|]
+
+runnerEff :: Eff [PathReader, Logger, FileReader, IOE] a -> IO a
+runnerEff =
+  runEff
+    . runFileReader
+    . runLoggerMock
+    . runPathReader
 
 testParseSomeActivityRoundtrip :: TestTree
 testParseSomeActivityRoundtrip = testPropertyNamed name desc $ property $ do

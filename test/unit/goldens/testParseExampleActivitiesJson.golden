@@ -1,7 +1,7 @@
 MkSomeActivities
   { unSomeActivities = fromList
-    ( MkSomeActivitiesKey
-      { unSomeActivitiesKey = MkSomeActivity SKilometer
+    ( MkSomeActivityKey
+      { unSomeActivityKey = MkSomeActivity SKilometer
         ( MkActivity
           { atype = Just
             ( MkActivityType
@@ -22,8 +22,8 @@ MkSomeActivities
           }
         )
       } :|
-      [ MkSomeActivitiesKey
-        { unSomeActivitiesKey = MkSomeActivity SKilometer
+      [ MkSomeActivityKey
+        { unSomeActivityKey = MkSomeActivity SKilometer
           ( MkActivity
             { atype = Just
               ( MkActivityType
@@ -39,8 +39,8 @@ MkSomeActivities
             }
           )
         }
-      , MkSomeActivitiesKey
-        { unSomeActivitiesKey = MkSomeActivity SMile
+      , MkSomeActivityKey
+        { unSomeActivityKey = MkSomeActivity SMile
           ( MkActivity
             { atype = Just
               ( MkActivityType
@@ -59,8 +59,8 @@ MkSomeActivities
             }
           )
         }
-      , MkSomeActivitiesKey
-        { unSomeActivitiesKey = MkSomeActivity SKilometer
+      , MkSomeActivityKey
+        { unSomeActivityKey = MkSomeActivity SKilometer
           ( MkActivity
             { atype = Just
               ( MkActivityType
@@ -81,8 +81,8 @@ MkSomeActivities
             }
           )
         }
-      , MkSomeActivitiesKey
-        { unSomeActivitiesKey = MkSomeActivity SKilometer
+      , MkSomeActivityKey
+        { unSomeActivityKey = MkSomeActivity SKilometer
           ( MkActivity
             { atype = Just
               ( MkActivityType
@@ -103,8 +103,8 @@ MkSomeActivities
             }
           )
         }
-      , MkSomeActivitiesKey
-        { unSomeActivitiesKey = MkSomeActivity SKilometer
+      , MkSomeActivityKey
+        { unSomeActivityKey = MkSomeActivity SKilometer
           ( MkActivity
             { atype = Just
               ( MkActivityType

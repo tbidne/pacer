@@ -210,6 +210,7 @@ test-suite unit
     Unit.Pacer.Driver
     Unit.Pacer.Utils
     Unit.Pacer.Utils.FileSearch
+    Unit.Pacer.Utils.Show
     Unit.Prelude
     Unit.TestUtils
 

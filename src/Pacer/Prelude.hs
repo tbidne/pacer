@@ -172,6 +172,7 @@ import Data.Eq as X (Eq ((/=), (==)))
 import Data.Foldable as X
   ( Foldable (fold, foldMap, foldl', foldr, toList),
     any,
+    foldlM,
     for_,
     length,
     traverse_,

@@ -56,7 +56,7 @@ import Pacer.Command.Chart.Data.Activity
       ),
     Label,
     SomeActivities (MkSomeActivities),
-    SomeActivitiesKey (MkSomeActivitiesKey),
+    SomeActivityKey (MkSomeActivityKey),
   )
 import Pacer.Command.Chart.Data.Activity qualified as R
 import Pacer.Command.Chart.Data.Chart (Chart (chartData), Charts (charts))
@@ -586,14 +586,14 @@ testUpdateLabels :: TestTree
 testUpdateLabels = testCase "Updates labels from map" $ do
   let (activitiesResults, unmatchedTsResults) =
         first
-          ( fmap (.unSomeActivitiesKey)
+          ( fmap (.unSomeActivityKey)
               . NE.toList
               . NESet.toList
               . (.unSomeActivities)
           )
           $ (Chart.updateLabels labelMap activities)
 
-  -- Need to compare SomeActivities NOT SomeActivitiesKey as the latter compares via
+  -- Need to compare SomeActivities NOT SomeActivityKey as the latter compares via
   -- timestamp only.
 
   length activitiesExpected @=? length activitiesResults
@@ -640,7 +640,7 @@ testUpdateLabels = testCase "Updates labels from map" $ do
           (unsafeTs "2024-08-15T14:00:00-0900", unsafeNESet ["tz_label"])
         ]
 
-    mkSrk title datetime = MkSomeActivitiesKey . mkSr title datetime
+    mkSrk title datetime = MkSomeActivityKey . mkSr title datetime
 
     mkSr title datetime labels =
       D.hideDistance

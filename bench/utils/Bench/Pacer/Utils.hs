@@ -23,7 +23,11 @@ import Data.Time (LocalTime (LocalTime), ZonedTime (ZonedTime))
 import Data.Time.Calendar qualified as Cal
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Activity (SomeActivities)
+import Pacer.Command.Chart.Data.Activity
+  ( SomeActivities,
+    SomeActivitiesParse (unSomeActivitiesParse),
+  )
+import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Command.Chart.Data.Time.Timestamp.Internal
   ( Timestamp
@@ -34,7 +38,7 @@ import Pacer.Command.Chart.Data.Time.Timestamp.Internal
   )
 import Pacer.Data.Result (onErr, onOk)
 import Pacer.Prelude hiding (Double)
-import Pacer.Utils (AesonE)
+import Pacer.Utils (AesonE (MkAesonE))
 import Pacer.Utils qualified as Utils
 import Prelude (Double)
 
@@ -43,16 +47,27 @@ genAndDecodeActivities :: Word -> SomeActivities Double
 genAndDecodeActivities = decodeActivities . genActivitiesJson
 
 -- | 'genOverlappedActivitiesJson' and 'decodeErrorActivities'.
-genAndDecodeOverlappedActivities :: Word -> AesonE
+genAndDecodeOverlappedActivities :: (HasCallStack) => Word -> AesonE
 genAndDecodeOverlappedActivities = decodeErrorActivities . genOverlappedActivitiesJson
 
 -- | Decodes activities json w/ expected error.
-decodeErrorActivities :: ByteString -> AesonE
-decodeErrorActivities = onOk (error "") . Utils.decodeJson @(SomeActivities Double)
+decodeErrorActivities :: (HasCallStack) => ByteString -> AesonE
+decodeErrorActivities = onOk (error "Parse succeeded") . parseSomeActivities
 
 -- | Decodes activities json.
-decodeActivities :: ByteString -> SomeActivities Double
-decodeActivities = onErr (error . displayException) . Utils.decodeJson
+decodeActivities :: (HasCallStack) => ByteString -> SomeActivities Double
+decodeActivities = onErr (error . displayException) . parseSomeActivities
+
+parseSomeActivities :: ByteString -> Result AesonE (SomeActivities Double)
+parseSomeActivities bs = do
+  -- Have to do this manually because the overlap error is no longer in the
+  -- FromJSON instance. It is in the mkSomeActivitiesFail function,
+  -- hence we need to explicitly use it to trigger the expected error.
+  parseResult <- Utils.decodeJson @(SomeActivitiesParse Double) bs
+  results <- first mkAesonE $ sequenceA parseResult.unSomeActivitiesParse
+  first mkAesonE $ Activity.mkSomeActivitiesFail results
+  where
+    mkAesonE = MkAesonE Nothing
 
 -- | Generate activities json with immediate overlap.
 genOverlappedActivitiesJson :: Word -> ByteString

@@ -30,8 +30,8 @@ import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity, datetime, distance, duration),
     SomeActivities (MkSomeActivities),
-    SomeActivitiesKey,
     SomeActivity (MkSomeActivity),
+    SomeActivityKey,
   )
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.ChartRequest
@@ -540,21 +540,21 @@ filterActivities ::
     Semifield a,
     Show a
   ) =>
-  NESeq (SomeActivitiesKey a) ->
+  NESeq (SomeActivityKey a) ->
   List (FilterExpr a) ->
   Seq (SomeActivity a)
-filterActivities @a rs filters = (.unSomeActivitiesKey) <$> NESeq.filter filterActivity rs
+filterActivities @a rs filters = (.unSomeActivityKey) <$> NESeq.filter filterActivity rs
   where
-    filterActivity :: SomeActivitiesKey a -> Bool
+    filterActivity :: SomeActivityKey a -> Bool
     filterActivity r = all (eval (applyFilter r)) filters
 
-    applyFilter :: SomeActivitiesKey a -> FilterType a -> Bool
+    applyFilter :: SomeActivityKey a -> FilterType a -> Bool
     applyFilter srk (FilterLabel lblSet) = applyFilterSet srk.labels lblSet
-    applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivitiesKey op m
-    applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivitiesKey op d
-    applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivitiesKey op d
-    applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivitiesKey op p
-    applyFilter srk (FilterType fe) = case srk.unSomeActivitiesKey of
+    applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivityKey op m
+    applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivityKey op d
+    applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivityKey op d
+    applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivityKey op p
+    applyFilter srk (FilterType fe) = case srk.unSomeActivityKey of
       MkSomeActivity _ r -> case r.atype of
         Just atype -> applyFilterElem atype fe
         Nothing -> False
