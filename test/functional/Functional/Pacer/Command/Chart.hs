@@ -118,7 +118,7 @@ testFilterEmptyError = testChart desc [osp|testFilterEmptyError|]
 
 testFilterParseExprError :: IO OsPath -> TestTree
 testFilterParseExprError =
-  testChartPosix True desc [osp|testFilterParseExprError|]
+  testChartOs True desc [osp|testFilterParseExprError|]
   where
     desc = "Filter parse expr error"
 
@@ -155,7 +155,7 @@ testFilterTypeEarly getTestDir = testGoldenParams getTestDir params
     dataDir = unsafeDecode [ospPathSep|test/functional/data/testFilterTypeEarly|]
 
 testDuplicateDateError :: IO OsPath -> TestTree
-testDuplicateDateError = testChartPosix True desc [osp|testDuplicateDateError|]
+testDuplicateDateError = testChartOs True desc [osp|testDuplicateDateError|]
   where
     desc = "Duplicate date error"
 

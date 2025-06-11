@@ -19,7 +19,7 @@ module Functional.Prelude
     GoldenParams (..),
     testGoldenParams,
     testChart,
-    testChartPosix,
+    testChartOs,
 
     -- * Env
     FuncEnv (..),
@@ -311,11 +311,11 @@ data GoldenOutput
 --
 -- testFoo is the 'test name'.
 testChart :: TestName -> OsPath -> IO OsPath -> TestTree
-testChart = testChartPosix False
+testChart = testChartOs False
 
 -- | Like 'testChart', except it includes to determine if we take the current
 -- OS into account.
-testChartPosix ::
+testChartOs ::
   -- | If true, we will append posix/windows to the end of the golden test
   -- path e.g. testName_posix.golden.
   Bool ->
@@ -326,7 +326,7 @@ testChartPosix ::
   -- | Retrieves the current directory.
   IO OsPath ->
   TestTree
-testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestDir params
+testChartOs osSwitch testDesc testName getTestDir = testGoldenParams getTestDir params
   where
     -- This is the path to the golden files. If osSwitch is false, then it
     -- is the same as testName e.g. testName.golden. If the switch is active,
