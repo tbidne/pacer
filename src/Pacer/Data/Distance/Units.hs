@@ -25,6 +25,8 @@ import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
 import Pacer.Class.Units (Units (baseFactor))
 import Pacer.Prelude
+import Pacer.Utils.Json (FromJSON (parseJSON), ToJSON (toJSON))
+import Pacer.Utils.Json qualified as Json
 
 -------------------------------------------------------------------------------
 --                                    Core                                   --
@@ -64,7 +66,7 @@ instance Parser DistanceUnit where
       ]
 
 instance FromJSON DistanceUnit where
-  parseJSON = asnWithText "DistanceUnit" (failErr . P.parse)
+  parseJSON = Json.withText "DistanceUnit" (failErr . P.parse)
 
 instance ToJSON DistanceUnit where
   toJSON Meter = "m"

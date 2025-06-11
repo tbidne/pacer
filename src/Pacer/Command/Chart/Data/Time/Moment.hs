@@ -15,6 +15,8 @@ import Pacer.Command.Chart.Data.Time.Timestamp
   )
 import Pacer.Command.Chart.Data.Time.Year (Year)
 import Pacer.Prelude
+import Pacer.Utils.Json (FromJSON (parseJSON))
+import Pacer.Utils.Json qualified as Json
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
@@ -124,7 +126,7 @@ instance Display Moment where
     MomentTimestamp x -> displayBuilder x
 
 instance FromJSON Moment where
-  parseJSON = asnWithText "Moment" (failErr . P.parseAll)
+  parseJSON = Json.withText "Moment" (failErr . P.parseAll)
 
 instance Parser Moment where
   parser = do

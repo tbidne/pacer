@@ -31,8 +31,15 @@ import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Data.Distance (DistanceUnit)
 import Pacer.Prelude
-import Pacer.Utils ((.:?:))
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json
+  ( FromJSON (parseJSON),
+    ToJSON (toJSON),
+    (.:),
+    (.:?),
+    (.:?:),
+    (.=),
+  )
+import Pacer.Utils.Json qualified as Json
 import Text.Megaparsec.Char qualified as MPC
 
 -- | Possibly y-axes.
@@ -44,7 +51,7 @@ data YAxisType
   deriving anyclass (NFData)
 
 instance FromJSON YAxisType where
-  parseJSON = asnWithText "YAxisType" $ \case
+  parseJSON = Json.withText "YAxisType" $ \case
     "distance" -> pure YAxisDistance
     "duration" -> pure YAxisDuration
     "pace" -> pure YAxisPace
@@ -93,7 +100,7 @@ instance Parser ChartSumPeriod where
       parseYear = ChartSumYear <$ MPC.string "year"
 
 instance FromJSON ChartSumPeriod where
-  parseJSON = asnWithText "ChartSumPeriod" (failErr . P.parseAll)
+  parseJSON = Json.withText "ChartSumPeriod" (failErr . P.parseAll)
 
 data ChartSmoothType
   = ChartSmoothRolling
@@ -102,7 +109,7 @@ data ChartSmoothType
   deriving anyclass (NFData)
 
 instance FromJSON ChartSmoothType where
-  parseJSON = asnWithText "ChartSmoothType" $ \case
+  parseJSON = Json.withText "ChartSmoothType" $ \case
     "rolling" -> pure ChartSmoothRolling
     "window" -> pure ChartSmoothWindow
     other ->
@@ -117,14 +124,14 @@ data ChartSmooth = MkChartSmooth
   deriving anyclass (NFData)
 
 instance FromJSON ChartSmooth where
-  parseJSON = asnWithObject "ChartSmooth" $ \v -> do
+  parseJSON = Json.withObject "ChartSmooth" $ \v -> do
     -- FIXME: Consider renaming this. Period implies a unit (to me) e.g.
     -- 4 days, but it's dimensionless. It's more like factor, or num.
     -- Consult wiki
     smoothPeriod <- mkPositiveFail =<< v .: "period"
     smoothType <- v .: "type"
 
-    Utils.failUnknownFields
+    Json.failUnknownFields
       "ChartSmooth"
       [ "period",
         "type"
@@ -144,17 +151,17 @@ data ChartType
   deriving anyclass (NFData)
 
 instance FromJSON ChartType where
-  parseJSON = asnWithObject "ChartType" $ \v -> do
+  parseJSON = Json.withObject "ChartType" $ \v -> do
     n :: Text <- v .: "name"
     case n of
       "default" -> do
-        Utils.failUnknownFields "ChartType" ["name"] v
+        Json.failUnknownFields "ChartType" ["name"] v
         pure ChartTypeDefault
       "sum" -> do
         period <- v .: "period"
         mSmooth <- v .:? "smooth"
 
-        Utils.failUnknownFields "ChartType" ["name", "period", "smooth"] v
+        Json.failUnknownFields "ChartType" ["name", "period", "smooth"] v
         pure $ ChartTypeSum period mSmooth
       other -> fail $ unpackText $ "Unrecognized chart type: " <> other
 
@@ -187,7 +194,7 @@ instance
   ) =>
   FromJSON (ChartRequest a)
   where
-  parseJSON = asnWithObject "ChartRequest" $ \v -> do
+  parseJSON = Json.withObject "ChartRequest" $ \v -> do
     chartType <- v .:? "type"
     description <- v .:? "description"
     filters <- v .:?: "filters"
@@ -196,7 +203,7 @@ instance
     yAxis <- v .: "y-axis"
     y1Axis <- v .:? "y1-axis"
 
-    Utils.failUnknownFields
+    Json.failUnknownFields
       "ChartRequest"
       [ "description",
         "filters",
@@ -228,9 +235,9 @@ newtype GarminSettings = MkGarminSettings
   deriving anyclass (NFData)
 
 instance FromJSON GarminSettings where
-  parseJSON = asnWithObject "GarminSettings" $ \v -> do
+  parseJSON = Json.withObject "GarminSettings" $ \v -> do
     distanceUnit <- v .:? "unit"
-    Utils.failUnknownFields "GarminSettings" ["unit"] v
+    Json.failUnknownFields "GarminSettings" ["unit"] v
     pure
       $ MkGarminSettings
         { distanceUnit
@@ -253,7 +260,7 @@ data ChartTheme = MkChartTheme
 
 instance ToJSON ChartTheme where
   toJSON ct =
-    asnObject
+    Json.object
       [ "background" .= ct.background,
         "grid" .= ct.grid,
         "name" .= ct.name,
@@ -267,7 +274,7 @@ instance ToJSON ChartTheme where
       ]
 
 instance FromJSON ChartTheme where
-  parseJSON = asnWithObject "ChartTheme" $ \v -> do
+  parseJSON = Json.withObject "ChartTheme" $ \v -> do
     background <- v .: "background"
     grid <- v .: "grid"
     name <- v .: "name"
@@ -279,7 +286,7 @@ instance FromJSON ChartTheme where
     y1Background <- v .: "y1Background"
     zoomDragBackground <- v .: "zoomDragBackground"
 
-    Utils.failUnknownFields
+    Json.failUnknownFields
       "ChartTheme"
       [ "background",
         "grid",
@@ -317,15 +324,15 @@ data ChartThemeConfig = MkChartThemeConfig
 
 instance ToJSON ChartThemeConfig where
   toJSON ct =
-    asnObject
-      $ Utils.encodeMaybe ("default", ct.defaultTheme)
-      ++ Utils.encodeMonoid ("themes", ct.themes)
+    Json.object
+      $ Json.encodeMaybe ("default", ct.defaultTheme)
+      ++ Json.encodeMonoid ("themes", ct.themes)
 
 instance FromJSON ChartThemeConfig where
-  parseJSON = asnWithObject "ChartThemes" $ \v -> do
+  parseJSON = Json.withObject "ChartThemes" $ \v -> do
     defaultTheme <- v .:? "default"
     themes <- v .:?: "themes"
-    Utils.failUnknownFields
+    Json.failUnknownFields
       "ChartThemeConfig"
       [ "default",
         "themes"
@@ -360,12 +367,12 @@ instance
   ) =>
   FromJSON (ChartRequests a)
   where
-  parseJSON = asnWithObject "ChartRequests" $ \v -> do
+  parseJSON = Json.withObject "ChartRequests" $ \v -> do
     garminSettings <- v .:? "garmin"
     chartRequests <- v .: "charts"
     filters <- v .:?: "filters"
     themeConfig <- v .:? "theme"
-    Utils.failUnknownFields
+    Json.failUnknownFields
       "ChartRequests"
       [ "charts",
         "filters",

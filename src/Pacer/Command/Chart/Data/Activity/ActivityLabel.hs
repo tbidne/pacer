@@ -13,7 +13,8 @@ import Data.Map.Strict qualified as MP
 import Pacer.Class.Parser (Parser)
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Prelude
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json (FromJSON (parseJSON), ToJSON, (.:))
+import Pacer.Utils.Json qualified as Json
 
 -- | Activity label.
 newtype Label = MkLabel {unLabel :: Text}
@@ -29,10 +30,10 @@ data ActivityLabel = MkActivityLabel
   deriving stock (Eq, Show)
 
 instance FromJSON ActivityLabel where
-  parseJSON = asnWithObject "ActivityLabel" $ \v -> do
+  parseJSON = Json.withObject "ActivityLabel" $ \v -> do
     datetime <- v .: "datetime"
     labels <- v .: "labels"
-    Utils.failUnknownFields "ActivityLabel" ["datetime", "labels"] v
+    Json.failUnknownFields "ActivityLabel" ["datetime", "labels"] v
     pure
       $ MkActivityLabel
         { datetime,
@@ -44,9 +45,9 @@ newtype ActivityLabels = MkActivityLabels
   deriving stock (Eq, Show)
 
 instance FromJSON ActivityLabels where
-  parseJSON = asnWithObject "ActivityLabels" $ \v -> do
+  parseJSON = Json.withObject "ActivityLabels" $ \v -> do
     xs <- v .: "activity-labels"
-    Utils.failUnknownFields "ActivityLabels" ["activity-labels"] v
+    Json.failUnknownFields "ActivityLabels" ["activity-labels"] v
     pure
       $ MkActivityLabels
         { unActivityLabels =

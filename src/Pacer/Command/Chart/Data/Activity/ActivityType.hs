@@ -5,6 +5,7 @@ where
 
 import Pacer.Class.Parser (Parser)
 import Pacer.Prelude
+import Pacer.Utils.Json (FromJSON, ToJSON)
 
 -- | Activity type.
 newtype ActivityType = MkActivityType {unActivityType :: Text}

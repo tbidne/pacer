@@ -46,7 +46,7 @@ import Pacer.Data.Distance qualified as Distance
 import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
 import Pacer.Data.Duration (Duration)
 import Pacer.Exception (GarminE (GarminDecode, GarminMeters, GarminOther))
-import Pacer.Prelude hiding ((.:))
+import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 import Pacer.Utils.Show qualified as Utils.Show
 import System.OsPath qualified as OsPath

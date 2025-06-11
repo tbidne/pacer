@@ -82,11 +82,6 @@ module Pacer.Prelude
     parseCanonicalAbsDir,
     parseCanonicalAbsFile,
 
-    -- * Aeson
-    asnObject,
-    asnWithObject,
-    asnWithText,
-
     -- * Dev / Debug
     todo,
     traceFile,
@@ -146,15 +141,6 @@ import Control.Monad.Catch as X
   )
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
-import Data.Aeson as X
-  ( FromJSON (parseJSON),
-    KeyValue ((.=)),
-    ToJSON (toJSON),
-    (.:),
-    (.:?),
-  )
-import Data.Aeson qualified as Asn
-import Data.Aeson.Types qualified as AsnT
 import Data.Bifunctor as X (Bifunctor (bimap, first, second))
 #if MIN_VERSION_base(4, 21, 0)
 import Data.Bitraversable as X (Bitraversable (bitraverse), firstA, secondA)
@@ -695,12 +681,3 @@ posixWindowsStr =
 
 identity :: a -> a
 identity x = x
-
-asnWithText :: String -> (Text -> AsnT.Parser a) -> Asn.Value -> AsnT.Parser a
-asnWithText = Asn.withText
-
-asnWithObject :: String -> (AsnT.Object -> AsnT.Parser a) -> AsnT.Value -> AsnT.Parser a
-asnWithObject = Asn.withObject
-
-asnObject :: [AsnT.Pair] -> AsnT.Value
-asnObject = Asn.object

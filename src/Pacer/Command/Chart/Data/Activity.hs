@@ -45,8 +45,6 @@ module Pacer.Command.Chart.Data.Activity
   )
 where
 
-import Data.Aeson qualified as Asn
-import Data.Aeson.Types qualified as AsnT
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
 import Data.List.NonEmpty qualified as NE
@@ -86,10 +84,19 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (unDuration))
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
-import Pacer.Data.Result qualified as R
 import Pacer.Prelude
-import Pacer.Utils (AesonE (MkAesonE), (.:?:))
 import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json
+  ( AesonE (MkAesonE),
+    JsonParser,
+    JsonValue,
+    ToJSON (toJSON),
+    (.:),
+    (.:?),
+    (.:?:),
+    (.=),
+  )
+import Pacer.Utils.Json qualified as Json
 import Pacer.Utils.Show qualified as Show
 
 -------------------------------------------------------------------------------
@@ -245,13 +252,13 @@ instance
   ToJSON (SomeActivity a)
   where
   toJSON (MkSomeActivity sz r) =
-    Asn.object
+    Json.object
       $ [ "datetime" .= r.datetime,
           "distance" .= withSingI sz display r.distance,
           "duration" .= durationTimeString,
           "labels" .= r.labels
         ]
-      ++ Utils.encodeMaybes
+      ++ Json.encodeMaybes
         [ ("title", r.title),
           ("type", fmap (.unActivityType) r.atype)
         ]
@@ -269,9 +276,9 @@ parseMSomeActivity ::
   (AMonoid a, Fromℚ a, Ord a, Parser a, Show a) =>
   -- | Optional filters. Only applies type filters.
   List (FilterExpr a) ->
-  Asn.Value ->
-  AsnT.Parser (Maybe (SomeActivity a))
-parseMSomeActivity globalFilters = asnWithObject "SomeActivity" $ \v -> do
+  JsonValue ->
+  JsonParser (Maybe (SomeActivity a))
+parseMSomeActivity globalFilters = Json.withObject "SomeActivity" $ \v -> do
   mAType <- v .:? "type"
 
   Expr.guardMActivityType globalFilters mAType $ do
@@ -286,7 +293,7 @@ parseMSomeActivity globalFilters = asnWithObject "SomeActivity" $ \v -> do
     labels <- v .:?: "labels"
     title <- v .:? "title"
 
-    Utils.failUnknownFields
+    Json.failUnknownFields
       "SomeActivity"
       [ "datetime",
         "distance",
@@ -441,26 +448,41 @@ parseSomeActivitiesParse ::
   forall a.
   (Fromℚ a, Ord a, Parser a, Semifield a, Show a) =>
   List (FilterExpr a) ->
-  Asn.Value ->
-  AsnT.Parser (SomeActivitiesParse a)
-parseSomeActivitiesParse globalFilters = asnWithObject "SomeActivities" $ \v -> do
-  actMErrs <- AsnT.explicitParseField parseActs v "activities"
+  JsonValue ->
+  JsonParser (SomeActivitiesParse a)
+parseSomeActivitiesParse globalFilters = Json.withObject "SomeActivities" $ \v -> do
+  actMErrs <- Json.explicitParseField parseActs v "activities"
 
   let actErrs = foldl' elimNothing [] actMErrs
 
-  Utils.failUnknownFields "SomeActivities" ["activities"] v
+  Json.failUnknownFields "SomeActivities" ["activities"] v
   pure $ MkSomeActivitiesParse actErrs
   where
-    parseAct :: Asn.Value -> AsnT.Parser (ResultDefault (Maybe (SomeActivity a)))
-    parseAct = pure . R.parseJson (parseMSomeActivity globalFilters)
+    -- Parses json into one of three values:
+    --
+    --   - Ok (Just act): Successful parse.
+    --   - Ok Nothing: Successfully parsed a type that is filtered out.
+    --   - Err err: Parser fail.
+    parseAct :: JsonValue -> JsonParser (ResultDefault (Maybe (SomeActivity a)))
+    parseAct = pure . Json.parseResult (parseMSomeActivity globalFilters)
 
-    parseActs :: Asn.Value -> AsnT.Parser (List (ResultDefault (Maybe (SomeActivity a))))
-    parseActs = AsnT.listParser parseAct
+    parseActs :: JsonValue -> JsonParser (List (ResultDefault (Maybe (SomeActivity a))))
+    parseActs = Json.listParser parseAct
 
     elimNothing xs = \case
       Ok Nothing -> xs
       Ok (Just y) -> Ok y : xs
       Err e -> Err e : xs
+
+type ParseAcc =
+  Tuple3
+    -- Successfully parsed activitites
+    (List (SomeActivity Double))
+    -- List of indexes where we encountered a non-positive error, for later
+    -- error reporting.
+    (List Word8)
+    -- Current index.
+    Word8
 
 -- | Attempts to decode a json(c) file to SomeActivities. The semantics are:
 --
@@ -479,18 +501,18 @@ readActivitiesJson ::
   Eff es (SomeActivities Double)
 readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
   someActivitesParse <-
-    Utils.readDecodeJsonP
+    Json.readDecodeJsonP
       (parseSomeActivitiesParse globalFilters)
       activitiesPath
 
   -- Iterate through results, collecting successes and zero errors. Other
   -- errors are logged as we encounter them.
-  let f ::
-        (List (SomeActivity Double), List Word8, Word8) ->
-        ResultDefault (SomeActivity Double) ->
-        Eff es (List (SomeActivity Double), List Word8, Word8)
-      f (as, es, !idx) = \case
+  let f :: ParseAcc -> ResultDefault (SomeActivity Double) -> Eff es ParseAcc
+      f (as, !es, !idx) = \case
+        -- Success, add to acc and inc index.
         Ok a -> pure (a : as, es, idx + 1)
+        -- Failure. if non-positive error, add to err acc. Otherwise log and
+        -- continue.
         Err err -> do
           let errTxt = packText err
           if Utils.isNonPosError errTxt

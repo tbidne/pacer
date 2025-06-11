@@ -9,13 +9,17 @@ module Pacer.Configuration.Config
   )
 where
 
-import Data.Aeson.Types qualified as AsnT
 import Data.Sequence (Seq (Empty))
 import FileSystem.OsPath qualified as OsPath
 import Pacer.Configuration.Logging (LogLevelParam, LogVerbosity)
 import Pacer.Prelude
-import Pacer.Utils ((.:?:))
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json
+  ( FromJSON (parseJSON),
+    JsonParser,
+    (.:?),
+    (.:?:),
+  )
+import Pacer.Utils.Json qualified as Json
 import System.IO (FilePath)
 
 -- | Config with its parent directory.
@@ -50,10 +54,10 @@ instance Monoid Config where
   mempty = MkConfig empty empty
 
 instance FromJSON Config where
-  parseJSON = asnWithObject "Config" $ \v -> do
+  parseJSON = Json.withObject "Config" $ \v -> do
     chartConfig <- v .:? "chart"
     logConfig <- v .:? "log"
-    Utils.failUnknownFields "Config" ["chart", "log"] v
+    Json.failUnknownFields "Config" ["chart", "log"] v
     pure
       $ MkConfig
         { chartConfig,
@@ -74,10 +78,10 @@ instance Monoid LogConfig where
   mempty = MkLogConfig empty empty
 
 instance FromJSON LogConfig where
-  parseJSON = asnWithObject "LogConfig" $ \v -> do
+  parseJSON = Json.withObject "LogConfig" $ \v -> do
     level <- v .:? "level"
     verbosity <- v .:? "verbosity"
-    Utils.failUnknownFields "LogConfig" ["level", "verbosity"] v
+    Json.failUnknownFields "LogConfig" ["level", "verbosity"] v
     pure
       $ MkLogConfig
         { level,
@@ -112,14 +116,14 @@ instance Monoid ChartConfig where
   mempty = MkChartConfig Nothing Empty Nothing Nothing Nothing
 
 instance FromJSON ChartConfig where
-  parseJSON = asnWithObject "ChartConfig" $ \v -> do
+  parseJSON = Json.withObject "ChartConfig" $ \v -> do
     activityLabelsPath <- parseOsPath $ v .:? "activity-labels"
     activityPaths <- parseOsPath $ v .:?: "activities"
     buildDir <- parseOsPath $ v .:? "build-dir"
     dataDir <- parseOsPath $ v .:? "data"
     chartRequestsPath <- parseOsPath $ v .:? "chart-requests"
 
-    Utils.failUnknownFields
+    Json.failUnknownFields
       "ChartConfig"
       [ "build-dir",
         "chart-requests",
@@ -140,8 +144,8 @@ instance FromJSON ChartConfig where
       parseOsPath ::
         forall f.
         (Traversable f) =>
-        AsnT.Parser (f FilePath) ->
-        AsnT.Parser (f OsPath)
+        JsonParser (f FilePath) ->
+        JsonParser (f OsPath)
       parseOsPath p = p >>= traverse OsPath.encodeValidFail
 
 makeFieldLabelsNoPrefix ''ConfigWithPath

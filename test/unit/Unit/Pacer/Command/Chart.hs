@@ -87,7 +87,7 @@ import Pacer.Configuration.Env.Types
 import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
 import Pacer.Data.Distance qualified as D
 import Pacer.Data.Duration (Duration (MkDuration))
-import Pacer.Utils qualified as U
+import Pacer.Utils.Json qualified as Json
 import Pacer.Utils.Show qualified as Utils.Show
 import System.OsPath qualified as OsPath
 import System.OsString qualified as OsString
@@ -533,7 +533,7 @@ testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
               fmap (.chartData)
                 . (.charts)
                 <$> runCreateChartSeqEff paths
-            pure $ toStrictBS $ U.encodePretty result
+            pure $ toStrictBS $ Json.encodePretty result
         }
 
     mkPaths = runEff $ runPathReader $ do

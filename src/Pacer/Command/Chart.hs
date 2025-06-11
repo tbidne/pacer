@@ -54,7 +54,7 @@ import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance.Units (DistanceUnit)
 import Pacer.Exception (GarminE (GarminUnitRequired))
 import Pacer.Prelude
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json qualified as Json
 import Pacer.Utils.Show qualified as Utils.Show
 import Pacer.Web qualified as Web
 import Pacer.Web.Paths qualified as WPaths
@@ -136,7 +136,7 @@ createChartsJsonFile ::
   Eff es ()
 createChartsJsonFile charts outJson =
   addNamespace "createChartsJsonFile" $ do
-    let bs = Utils.encodePretty charts
+    let bs = Json.encodePretty charts
         (dir, _) = OsPath.splitFileName outJsonOsPath
 
     createDirectoryIfMissing True dir
@@ -176,7 +176,7 @@ readChartInputs ::
   Eff es (Tuple2 (ChartRequests Double) (SomeActivities Double))
 readChartInputs chartPaths = addNamespace "readChartInputs" $ do
   chartRequests <-
-    Utils.readDecodeJson
+    Json.readDecodeJson
       @(ChartRequests Double)
       chartRequestsPath
 
@@ -199,7 +199,7 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
     case mActivityLabelsPath of
       Nothing -> pure allActivities
       Just activityLabelsPath -> do
-        MkActivityLabels activityLabels <- Utils.readDecodeJson activityLabelsPath
+        MkActivityLabels activityLabels <- Json.readDecodeJson activityLabelsPath
         let (newActivities, unusedTimestamps) =
               updateLabels activityLabels allActivities
 

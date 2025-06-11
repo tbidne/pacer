@@ -69,7 +69,7 @@ import Hedgehog as X
 import Pacer.Command.Chart.Server (ServerEff, runServerEffMock)
 import Pacer.Driver (displayInnerMatchKnown, runApp)
 import Pacer.Prelude as X hiding (IO)
-import Pacer.Utils (AesonE (MkAesonE))
+import Pacer.Utils.Json (AesonE (MkAesonE))
 import System.Environment (withArgs)
 import System.FilePath (FilePath)
 import System.IO as X (IO)

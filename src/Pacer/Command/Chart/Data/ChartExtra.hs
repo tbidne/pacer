@@ -4,7 +4,6 @@ module Pacer.Command.Chart.Data.ChartExtra
   )
 where
 
-import Data.Aeson qualified as Asn
 import Pacer.Command.Chart.Data.ChartRequest
   ( ChartRequest
       ( chartType,
@@ -13,7 +12,8 @@ import Pacer.Command.Chart.Data.ChartRequest
     ChartType (ChartTypeSum),
   )
 import Pacer.Prelude
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json (ToJSON (toJSON))
+import Pacer.Utils.Json qualified as Json
 
 -- | Extra chart data.
 data ChartExtra = MkChartExtra
@@ -24,9 +24,9 @@ data ChartExtra = MkChartExtra
 
 instance ToJSON ChartExtra where
   toJSON ce =
-    Asn.object
-      $ Utils.encodeMaybe ("description", ce.description)
-      ++ Utils.encodeMaybe ("smoothCurve", ce.smoothCurve)
+    Json.object
+      $ Json.encodeMaybe ("description", ce.description)
+      ++ Json.encodeMaybe ("smoothCurve", ce.smoothCurve)
 
 mkChartExtra :: ChartRequest a -> ChartExtra
 mkChartExtra r =

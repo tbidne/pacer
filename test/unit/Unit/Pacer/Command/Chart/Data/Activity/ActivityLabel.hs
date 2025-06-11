@@ -5,7 +5,7 @@ module Unit.Pacer.Command.Chart.Data.Activity.ActivityLabel (tests) where
 
 import FileSystem.IO (readBinaryFileIO)
 import Pacer.Command.Chart.Data.Activity.ActivityLabel (ActivityLabels)
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json qualified as Json
 import Unit.Prelude
 
 tests :: TestTree
@@ -24,7 +24,7 @@ testParseExampleActivityLabelsJson = testGoldenParams params
           testName = [osp|testParseExampleActivityLabelsJson|],
           runner = do
             contents <- readBinaryFileIO path
-            case Utils.decodeJson @ActivityLabels contents of
+            case Json.decodeJson @ActivityLabels contents of
               Ok result -> pure $ pShowBS result
               Err err -> throwM err
         }

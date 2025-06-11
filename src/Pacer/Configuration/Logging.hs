@@ -18,6 +18,8 @@ import Options.Applicative (Parser)
 import Options.Applicative qualified as OA
 import Pacer.Configuration.Utils qualified as Utils
 import Pacer.Prelude
+import Pacer.Utils.Json (FromJSON (parseJSON))
+import Pacer.Utils.Json qualified as Json
 
 data LogLevelParam
   = LogNone
@@ -25,7 +27,7 @@ data LogLevelParam
   deriving stock (Eq, Show)
 
 instance FromJSON LogLevelParam where
-  parseJSON = asnWithText "LogLevelParam" parseLogLevel
+  parseJSON = Json.withText "LogLevelParam" parseLogLevel
 
 parser :: Parser LogLevelParam
 parser =
@@ -70,7 +72,7 @@ instance Monoid LogVerbosity where
   mempty = LogV0
 
 instance FromJSON LogVerbosity where
-  parseJSON = asnWithText "LogVerbosity" parseLogVerbosity
+  parseJSON = Json.withText "LogVerbosity" parseLogVerbosity
 
 verbosityParser :: Parser LogVerbosity
 verbosityParser =

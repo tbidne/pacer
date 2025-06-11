@@ -65,12 +65,12 @@ import Pacer.Configuration.Logging
   )
 import Pacer.Exception qualified as PacerEx
 import Pacer.Prelude
-import Pacer.Utils qualified as Utils
 import Pacer.Utils.FileSearch
   ( FileAliases (MkFileAliases),
     FileSearch (SearchFileAliases),
   )
 import Pacer.Utils.FileSearch qualified as Utils.FileSearch
+import Pacer.Utils.Json qualified as Json
 import System.OsPath qualified as FP
 
 runApp ::
@@ -259,7 +259,7 @@ getEnv = do
 
       mConfigWithPath <- case mPath of
         Just path -> do
-          config <- Utils.readDecodeJson path
+          config <- Json.readDecodeJson path
           absConfigDir <- Path.parseAbsDir $ FP.takeDirectory (toOsPath path)
           let configWithPath = MkConfigWithPath absConfigDir config
           pure $ Just configWithPath
@@ -339,7 +339,7 @@ displayInnerMatchKnown e =
 
 knownExceptions :: List ExceptionProxy
 knownExceptions =
-  [ MkExceptionProxy @Utils.AesonE,
+  [ MkExceptionProxy @Json.AesonE,
     MkExceptionProxy @PacerEx.ChartFileMissingE,
     MkExceptionProxy @PacerEx.CommandConvertE,
     MkExceptionProxy @PacerEx.CommandDeriveE,

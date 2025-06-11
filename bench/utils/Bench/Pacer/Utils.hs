@@ -38,8 +38,8 @@ import Pacer.Command.Chart.Data.Time.Timestamp.Internal
   )
 import Pacer.Data.Result (onErr, onOk)
 import Pacer.Prelude hiding (Double)
-import Pacer.Utils (AesonE (MkAesonE))
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json (AesonE (MkAesonE))
+import Pacer.Utils.Json qualified as Json
 import Prelude (Double)
 
 -- | 'genActivitiesJson' and 'decodeActivities'.
@@ -63,7 +63,7 @@ parseSomeActivities bs = do
   -- Have to do this manually because the overlap error is no longer in the
   -- FromJSON instance. It is in the mkSomeActivitiesFail function,
   -- hence we need to explicitly use it to trigger the expected error.
-  parseResult <- Utils.decodeJsonP (Activity.parseSomeActivitiesParse []) bs
+  parseResult <- Json.decodeJsonP (Activity.parseSomeActivitiesParse []) bs
   results <- first mkAesonE $ sequenceA parseResult.unSomeActivitiesParse
   first mkAesonE $ Activity.mkSomeActivitiesFail results
   where

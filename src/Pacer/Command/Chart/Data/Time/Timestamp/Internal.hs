@@ -28,6 +28,7 @@ import Pacer.Class.Parser (Parser (parser))
 import Pacer.Command.Chart.Data.Time.Month (Month, mkMonth)
 import Pacer.Command.Chart.Data.Time.Year (Year, mkYear)
 import Pacer.Prelude
+import Pacer.Utils.Json (FromJSON (parseJSON), ToJSON (toJSON))
 import Text.Megaparsec qualified as MP
 
 -------------------------------------------------------------------------------

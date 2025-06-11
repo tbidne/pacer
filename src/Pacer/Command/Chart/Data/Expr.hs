@@ -28,6 +28,8 @@ import Pacer.Command.Chart.Data.Activity.ActivityType (ActivityType)
 import Pacer.Command.Chart.Data.Expr.Filter (FilterType (FilterType))
 import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Prelude
+import Pacer.Utils.Json (FromJSON (parseJSON))
+import Pacer.Utils.Json qualified as Json
 import Text.Megaparsec
   ( Parsec,
     PosState (PosState),
@@ -81,7 +83,7 @@ instance (Display a) => Display (Expr a) where
 type FilterExpr a = Expr (FilterType a)
 
 instance (Parser a) => FromJSON (Expr a) where
-  parseJSON = asnWithText "Expr" (failErr . lexParse)
+  parseJSON = Json.withText "Expr" (failErr . lexParse)
 
 eval :: (a -> Bool) -> Expr a -> Bool
 eval p = runIdentity . evalA (Identity . p)

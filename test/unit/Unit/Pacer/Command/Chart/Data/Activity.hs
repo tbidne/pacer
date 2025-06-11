@@ -25,11 +25,11 @@ import Pacer.Data.Distance
 import Pacer.Data.Distance qualified as D
 import Pacer.Data.Distance.Units (SDistanceUnit (SKilometer, SMeter, SMile))
 import Pacer.Data.Duration (Duration (MkDuration))
-import Pacer.Utils qualified as Utils
+import Pacer.Data.Result qualified as Result
+import Pacer.Utils.Json qualified as Json
 import Unit.Pacer.Data.Distance.Units qualified as Dist
 import Unit.Prelude
 import Unit.TestUtils qualified as UT
-import Pacer.Data.Result qualified as Result
 
 tests :: TestTree
 tests =
@@ -80,11 +80,11 @@ testParseBadDateError = testCase desc $ do
       -- Expecting exactly one error.
       Result.onResult
         displayExceptiont
-        ((.unSomeActivitiesParse) >>> \case
-          [Err e] -> packText e
-          other -> error $ "Unexpected: " ++ show other
+        ( (.unSomeActivitiesParse) >>> \case
+            [Err e] -> packText e
+            other -> error $ "Unexpected: " ++ show other
         )
-        . Utils.decodeJsonP (Activity.parseSomeActivitiesParse @Double [])
+        . Json.decodeJsonP (Activity.parseSomeActivitiesParse @Double [])
 
 runnerEff :: Eff [PathReader, LoggerNS, Logger, FileReader, IOE] a -> IO a
 runnerEff =
@@ -98,12 +98,12 @@ testParseSomeActivityRoundtrip :: TestTree
 testParseSomeActivityRoundtrip = testPropertyNamed name desc $ property $ do
   sr <- forAll genSomeActivity
 
-  let encoded = Utils.encodePretty sr
+  let encoded = Json.encodePretty sr
   annotateShow encoded
 
   let parseSomeActivity = Activity.parseMSomeActivity []
 
-  decoded <- case Utils.decodeJsonP parseSomeActivity (toStrictBS encoded) of
+  decoded <- case Json.decodeJsonP parseSomeActivity (toStrictBS encoded) of
     Ok (Just r) -> pure r
     Ok Nothing -> annotate "Filtered activity type" *> failure
     Err r -> annotate (displayException r) *> failure

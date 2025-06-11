@@ -16,8 +16,6 @@ module Pacer.Command.Chart.Data.ChartData
   )
 where
 
-import Data.Aeson (Value)
-import Data.Aeson qualified as Asn
 import Data.Foldable1 (foldl1')
 import Data.List (all)
 import Data.List qualified as L
@@ -80,6 +78,8 @@ import Pacer.Data.Pace (SomePace (MkSomePace))
 import Pacer.Exception (CreateChartE (CreateChartFilterEmpty))
 import Pacer.Prelude
 import Pacer.Utils qualified as U
+import Pacer.Utils.Json (JsonValue, ToJSON (toJSON), (.=))
+import Pacer.Utils.Json qualified as Json
 
 -- | Holds chart data.
 data ChartData
@@ -105,10 +105,10 @@ data ChartY = MkChartY
 
 instance ToJSON ChartY where
   toJSON c =
-    Asn.object
+    Json.object
       [ "xAxis" .= x,
         "yAxes"
-          .= Asn.object
+          .= Json.object
             [ "y" .= yAxis
             ]
       ]
@@ -134,10 +134,10 @@ data ChartY1 = MkChartY1
 
 instance ToJSON ChartY1 where
   toJSON c =
-    Asn.object
+    Json.object
       [ "xAxis" .= x,
         "yAxes"
-          .= Asn.object
+          .= Json.object
             [ "y" .= yAxis,
               "y1" .= y1Axis
             ]
@@ -147,9 +147,9 @@ instance ToJSON ChartY1 where
       yAxis = mkYJson c.yDistUnit y c.yType "y"
       y1Axis = mkYJson c.yDistUnit y1 c.y1Type "y1"
 
-mkYJson :: DistanceUnit -> [Double] -> YAxisType -> Text -> Value
+mkYJson :: DistanceUnit -> [Double] -> YAxisType -> Text -> JsonValue
 mkYJson dunit yVal yType yId =
-  Asn.object
+  Json.object
     [ "data" .= yVal,
       "label" .= mkYLabel yType, -- m, km, mi
       "type" .= yType, -- distance, duration, pace
@@ -290,7 +290,7 @@ handleChartType @es @a mChartType someActivities = case mChartType of
           logEnv <- ask @LogEnv
           case (logEnv.logLevel, logEnv.logVerbosity) of
             (Just LevelDebug, LogV1) -> do
-              let json = toStrictBS $ U.encodePretty xs
+              let json = toStrictBS $ Json.encodePretty xs
               jsonTxt <- decodeUtf8ThrowM json
               $(Logger.logDebug) jsonTxt
             _ -> pure ()

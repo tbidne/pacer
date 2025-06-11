@@ -5,7 +5,7 @@ module Unit.Pacer.Command.Chart.Data.ChartRequest (tests) where
 
 import FileSystem.IO (readBinaryFileIO)
 import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json qualified as Json
 import Unit.Prelude
 
 tests :: TestTree
@@ -24,7 +24,7 @@ testParseExampleChartRequestsJson = testGoldenParams params
           testName = [osp|testParseExampleChartRequestsJson|],
           runner = do
             contents <- readBinaryFileIO path
-            case Utils.decodeJson @(ChartRequests Double) contents of
+            case Json.decodeJson @(ChartRequests Double) contents of
               Ok result -> pure $ pShowBS result
               Err err -> throwM err
         }

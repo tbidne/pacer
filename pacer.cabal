@@ -124,6 +124,7 @@ library
     Pacer.Prelude
     Pacer.Utils
     Pacer.Utils.FileSearch
+    Pacer.Utils.Json
     Pacer.Utils.Show
     Pacer.Web
     Pacer.Web.Paths

@@ -6,7 +6,6 @@ module Pacer.Command.Chart.Data.Chart
   )
 where
 
-import Data.Aeson qualified as Asn
 import Pacer.Command.Chart.Data.Activity (SomeActivities)
 import Pacer.Command.Chart.Data.ChartData (ChartData)
 import Pacer.Command.Chart.Data.ChartData qualified as ChartData
@@ -22,7 +21,8 @@ import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance (DistanceUnit, HasDistance (distanceUnitOf))
 import Pacer.Exception (CreateChartE)
 import Pacer.Prelude
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json (ToJSON (toJSON), (.=))
+import Pacer.Utils.Json qualified as Json
 
 -- | Holds multiple charts.
 data Charts = MkCharts
@@ -35,10 +35,10 @@ data Charts = MkCharts
 
 instance ToJSON Charts where
   toJSON c =
-    Asn.object
+    Json.object
       $ [ "charts" .= c.charts
         ]
-      ++ Utils.encodeMaybe ("theme", c.theme)
+      ++ Json.encodeMaybe ("theme", c.theme)
 
 -- | Holds all data associated to a single chart.
 data Chart = MkChart
@@ -53,7 +53,7 @@ data Chart = MkChart
 
 instance ToJSON Chart where
   toJSON c =
-    Asn.object
+    Json.object
       [ "datasets" .= c.chartData,
         "extra" .= c.chartExtra,
         "title" .= c.title

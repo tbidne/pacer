@@ -8,7 +8,7 @@ import Data.ByteString.Char8 qualified as C8
 import GHC.Real (Integral (div))
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
-import Pacer.Utils qualified as Utils
+import Pacer.Utils.Json qualified as Json
 import Unit.Prelude
 import Unit.TestUtils qualified as TestUtils
 
@@ -29,7 +29,7 @@ testJsoncDecode = testPropMaxN 100_000 "testJsoncDecode" "Decodes jsonc" $ do
       annotate asnErr
       failure
     Ok asnResult ->
-      case Utils.decodeJson @Value jsonc of
+      case Json.decodeJson @Value jsonc of
         Err utilsResult -> do
           annotate "Json is valid but failed to parse jsonc."
           annotate (displayException utilsResult)
