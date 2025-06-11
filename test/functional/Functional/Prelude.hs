@@ -15,6 +15,7 @@ module Functional.Prelude
     runAppArgs,
 
     -- * Golden
+    GoldenOutput (..),
     GoldenParams (..),
     testGoldenParams,
     testChart,
@@ -274,13 +275,22 @@ data GoldenParams = MkGoldenParams
   { -- | Functions to make the CLI arguments. The parameter is the tmp test
     -- directory.
     mkArgs :: OsPath -> List String,
-    -- | Output file.
-    outFileName :: Maybe OsPath,
+    -- | Output.
+    outFileName :: GoldenOutput,
     -- | Test string description.
     testDesc :: TestName,
     -- | Test function name, for creating unique file paths.
     testName :: OsPath
   }
+
+-- | Golden test output.
+data GoldenOutput
+  = -- | The golden output is based on an output file.
+    GoldenOutputFile OsPath
+  | -- | The golden output is based on the logs.
+    GoldenOutputLogs
+  | -- | The golden output is based on logs and output file.
+    GoldenOutputFileLogs OsPath
 
 -- | Given a text description and testName OsPath, creates a golden test.
 -- Expects the following to exist:
@@ -337,7 +347,7 @@ testChartPosix osSwitch testDesc testName getTestDir = testGoldenParams getTestD
               buildDir p
             ],
           -- The chart tests will all write an output file charts.json
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc,
           testName = goldenName
         }
@@ -360,35 +370,15 @@ testGoldenParams getTestDir goldenParams =
       Right funcEnv ->
         case goldenParams.outFileName of
           -- No out file, golden test uses the logs (stdout)
-          Nothing -> do
-            bs <- encodeUtf8 <$> Ref.readIORef funcEnv.logsRef
-            writeActualFile bs
+          GoldenOutputLogs -> mkLogOutput funcEnv >>= writeActualFile
           -- We expect a file to have been written to a given path. This is
           -- what the golden test is based on.
-          Just expectedName -> do
-            outFilesMap <- Ref.readIORef funcEnv.outFilesMapRef
-            case Map.lookup expectedName outFilesMap of
-              -- Found the write attempt in our env's map. Write it to compare
-              -- it with the golden expectation.
-              Just bs -> do
-                let fileNameBs =
-                      encodeUtf8
-                        -- normalize slashes for windows
-                        . T.replace "\\" "/"
-                        . packText
-                        . decodeLenient
-                        $ expectedName
-                writeActualFile $ fileNameBs <> "\n\n" <> bs
-              -- Expected file not found, failure.
-              Nothing -> do
-                let msg =
-                      mconcat
-                        [ "functional.writeBinaryFile: Unexpected path: '",
-                          packText (decodeLenient expectedName),
-                          "'.\n\nKnown paths:\n\n",
-                          showt $ Map.keysSet outFilesMap
-                        ]
-                writeActualFile $ encodeUtf8 msg
+          GoldenOutputFile expectedName ->
+            mkFileOutput funcEnv expectedName >>= writeActualFile
+          GoldenOutputFileLogs expectedName -> do
+            logsBs <- mkLogOutput funcEnv
+            fileBs <- mkFileOutput funcEnv expectedName
+            writeActualFile $ logsBs <> "\n\n" <> fileBs
   where
     outputPathStart =
       FS.OsPath.unsafeDecode
@@ -404,6 +394,33 @@ testGoldenParams getTestDir goldenParams =
 
     actualPath = outputPathStart <> ".actual"
     goldenPath = outputPathStart <> ".golden"
+
+    mkLogOutput funcEnv = encodeUtf8 <$> Ref.readIORef funcEnv.logsRef
+
+    mkFileOutput funcEnv expectedName = do
+      outFilesMap <- Ref.readIORef funcEnv.outFilesMapRef
+      case Map.lookup expectedName outFilesMap of
+        -- Found the write attempt in our env's map. Write it to compare
+        -- it with the golden expectation.
+        Just bs -> do
+          let fileNameBs =
+                encodeUtf8
+                  -- normalize slashes for windows
+                  . T.replace "\\" "/"
+                  . packText
+                  . decodeLenient
+                  $ expectedName
+          pure $ fileNameBs <> "\n\n" <> bs
+        -- Expected file not found, failure.
+        Nothing -> do
+          let msg =
+                mconcat
+                  [ "functional.writeBinaryFile: Unexpected path: '",
+                    packText (decodeLenient expectedName),
+                    "'.\n\nKnown paths:\n\n",
+                    showt $ Map.keysSet outFilesMap
+                  ]
+          pure $ encodeUtf8 msg
 
 incIORef ::
   ( IORefE :> es,

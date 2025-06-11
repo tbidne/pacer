@@ -63,7 +63,7 @@ parseSomeActivities bs = do
   -- Have to do this manually because the overlap error is no longer in the
   -- FromJSON instance. It is in the mkSomeActivitiesFail function,
   -- hence we need to explicitly use it to trigger the expected error.
-  parseResult <- Utils.decodeJson @(SomeActivitiesParse Double) bs
+  parseResult <- Utils.decodeJsonP (Activity.parseSomeActivitiesParse []) bs
   results <- first mkAesonE $ sequenceA parseResult.unSomeActivitiesParse
   first mkAesonE $ Activity.mkSomeActivitiesFail results
   where

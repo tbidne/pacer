@@ -23,16 +23,16 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
 import Effectful.Logger.Dynamic qualified as Logger
-import Pacer.Command.Chart.Data.Activity
-  ( Activity,
-    Label,
-    SomeActivities,
-  )
+import Pacer.Command.Chart.Data.Activity (Activity, SomeActivities)
 import Pacer.Command.Chart.Data.Activity qualified as Activity
-import Pacer.Command.Chart.Data.ActivityLabel (ActivityLabels (MkActivityLabels))
+import Pacer.Command.Chart.Data.Activity.ActivityLabel
+  ( ActivityLabels (MkActivityLabels),
+    Label (unLabel),
+  )
 import Pacer.Command.Chart.Data.Chart (Charts)
 import Pacer.Command.Chart.Data.Chart qualified as Chart
-import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
+import Pacer.Command.Chart.Data.ChartRequest (ChartRequests (filters))
+import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
@@ -183,7 +183,9 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
   activitiesNE <- for activitiesPaths $ \rp -> do
     let mDistUnit =
           preview (#garminSettings %? #distanceUnit % _Just) chartRequests
-    readActivities mDistUnit rp
+
+        globalFilters = chartRequests.filters
+    readActivities mDistUnit globalFilters rp
 
   let combineActivities acc rs = acc >>= Activity.unionSomeActivities rs
 
@@ -231,17 +233,18 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
     -- If it is a custom activities (json) file, it is ignored.
     readActivities ::
       Maybe DistanceUnit ->
+      List (FilterExpr Double) ->
       Path Abs File ->
       Eff es (SomeActivities Double)
-    readActivities mInputDistUnit activitiesPath =
+    readActivities mInputDistUnit globalFilters activitiesPath =
       Garmin.getActivitiesType activitiesPath >>= \case
         ActivitiesDefault ->
-          Activity.readActivitiesJson activitiesPath
+          Activity.readActivitiesJson globalFilters activitiesPath
         ActivitiesGarmin -> do
           inputDistUnit <- case mInputDistUnit of
             Nothing -> throwM GarminUnitRequired
             Just du -> pure du
-          Garmin.readActivitiesCsv inputDistUnit activitiesPath
+          Garmin.readActivitiesCsv inputDistUnit globalFilters activitiesPath
 
 type ChartPaths =
   Tuple3

@@ -1,17 +1,17 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unit.Pacer.Command.Chart.Data.ActivityLabel (tests) where
+module Unit.Pacer.Command.Chart.Data.Activity.ActivityLabel (tests) where
 
 import FileSystem.IO (readBinaryFileIO)
-import Pacer.Command.Chart.Data.ActivityLabel (ActivityLabels)
+import Pacer.Command.Chart.Data.Activity.ActivityLabel (ActivityLabels)
 import Pacer.Utils qualified as Utils
 import Unit.Prelude
 
 tests :: TestTree
 tests =
   testGroup
-    "Pacer.Command.Chart.Data.ActivityLabel"
+    "Pacer.Command.Chart.Data.Activity.ActivityLabel"
     [ testParseExampleActivityLabelsJson
     ]
 

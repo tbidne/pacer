@@ -1,0 +1,32 @@
+
+
+build/charts.json
+
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-18T13:00:00",
+          "2024-10-20T13:00:00"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5,
+              5.48,
+              5.48
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
+        }
+      },
+      "extra": {},
+      "title": "Chart 1"
+    }
+  ]
+}
+

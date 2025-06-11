@@ -29,6 +29,7 @@ basicTests getTestDir =
       testFilterGlobalMultiTypes getTestDir,
       testFilterEmptyError getTestDir,
       testFilterParseExprError getTestDir,
+      testFilterTypeEarly getTestDir,
       testDuplicateDateError getTestDir,
       testGarminChart getTestDir,
       testDefaultAndGarminExamples getTestDir,
@@ -59,7 +60,7 @@ testExampleChart getTestDir = testGoldenParams getTestDir params
               "--build-dir",
               buildDir p
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "Generates example",
           testName = [osp|testExampleChart|]
         }
@@ -83,7 +84,7 @@ testSimpleBuildDir getTestDir = testGoldenParams getTestDir params
               dataDir,
               "--json"
             ],
-          outFileName = Just [ospPathSep|another-build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|another-build/charts.json|],
           testDesc = "Simple with build-dir",
           testName = [osp|testSimpleBuildDir|]
         }
@@ -121,6 +122,38 @@ testFilterParseExprError =
   where
     desc = "Filter parse expr error"
 
+-- Both activities files in testFilterTypeEarly contain errors, so normally
+-- this would log two messages (at the error level). However, because they
+-- are filtered out, we never see the error because the parse failure never
+-- occurs.
+--
+-- Hence this test verifies that we are correctly applying global type filters
+-- before a full parse.
+--
+-- We set the log level to error because the info level contains
+-- non-deterministic filepaths and timestamps.
+testFilterTypeEarly :: IO OsPath -> TestTree
+testFilterTypeEarly getTestDir = testGoldenParams getTestDir params
+  where
+    params =
+      MkGoldenParams
+        { mkArgs = \p ->
+            [ "--log-level",
+              "error",
+              "chart",
+              "--json",
+              "--data",
+              dataDir,
+              "--build-dir",
+              buildDir p
+            ],
+          outFileName = GoldenOutputFileLogs [ospPathSep|build/charts.json|],
+          testDesc = "Global type filters applied before full parse",
+          testName = [osp|testFilterTypeEarly|]
+        }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
+    dataDir = unsafeDecode [ospPathSep|test/functional/data/testFilterTypeEarly|]
+
 testDuplicateDateError :: IO OsPath -> TestTree
 testDuplicateDateError = testChartPosix True desc [osp|testDuplicateDateError|]
   where
@@ -144,7 +177,7 @@ testDefaultAndGarminExamples getTestDir = testGoldenParams getTestDir params
               "--build-dir",
               buildDir p
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "Generates example with default and garmin",
           testName = [osp|testDefaultAndGarminExamples|]
         }
@@ -282,7 +315,7 @@ testPathXdg getTestDir = testGoldenParams getTestDir params
               "--build-dir",
               buildDir p
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "No paths uses XDG config",
           testName = [osp|testPathXdg|]
         }
@@ -303,7 +336,7 @@ testPathChartRequestsOverrideData getTestDir = testGoldenParams getTestDir param
               "--build-dir",
               buildDir p
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "--chart-requests overrides --data",
           testName = [osp|testPathChartRequestsOverrideData|]
         }
@@ -330,7 +363,7 @@ testPathActivitiesOverrideData getTestDir = testGoldenParams getTestDir params
               "--build-dir",
               buildDir p
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "--activities overrides --data",
           testName = [osp|testPathActivitiesOverrideData|]
         }
@@ -353,7 +386,7 @@ testPathChartRequestsOverrideXdg getTestDir = testGoldenParams getTestDir params
               "--build-dir",
               buildDir p
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "--chart-requests overrides XDG",
           testName = [osp|testPathChartRequestsOverrideXdg|]
         }
@@ -375,7 +408,7 @@ testPathActivitiesOverrideXdg getTestDir = testGoldenParams getTestDir params
               "--build-dir",
               buildDir p
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "--activities overrides XDG",
           testName = [osp|testPathActivitiesOverrideXdg|]
         }
@@ -397,7 +430,7 @@ testPathConfig getTestDir = testGoldenParams getTestDir params
               "--config",
               configPath
             ],
-          outFileName = Just [ospPathSep|build/charts.json|],
+          outFileName = GoldenOutputFile [ospPathSep|build/charts.json|],
           testDesc = "Uses explicit config",
           testName = [osp|testPathConfig|]
         }

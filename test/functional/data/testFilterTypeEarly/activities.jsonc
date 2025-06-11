@@ -1,0 +1,21 @@
+{
+  "activities": [
+    {
+      "datetime": "2024-10-15",
+      "distance": "5 km",
+      "duration": "20m30s",
+      "type": "Running"
+    },
+    {
+      "datetime": "bad date",
+      "distance": "20 miles",
+      "duration": "1h",
+      "type": "Cycling"
+    },
+    {
+      "datetime": "2024-10-17",
+      "distance": "marathon",
+      "duration": "3h20m"
+    }
+  ]
+}

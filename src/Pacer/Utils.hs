@@ -14,8 +14,10 @@ module Pacer.Utils
     (.:?:),
     failUnknownFields,
     decodeJson,
+    decodeJsonP,
     AesonE (..),
     readDecodeJson,
+    readDecodeJsonP,
 
     -- * Seq
     seqGroupBy,
@@ -102,7 +104,7 @@ neSeqGroupBy p = go
 --
 -- 2. Optional path improves the error message.
 data AesonE = MkAesonE (Maybe OsPath) String
-  deriving stock (Generic, Show)
+  deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
 instance Exception AesonE where
@@ -126,11 +128,22 @@ readDecodeJson ::
   ) =>
   Path Abs File ->
   Eff es a
-readDecodeJson path = do
+readDecodeJson = readDecodeJsonP parseJSON
+
+-- | Decodes a json(c) file using the explicitly given parser.
+readDecodeJsonP ::
+  forall a es.
+  ( FileReader :> es,
+    HasCallStack
+  ) =>
+  (Asn.Value -> AsnT.Parser a) ->
+  Path Abs File ->
+  Eff es a
+readDecodeJsonP p path = do
   contents <- readBinaryFile osPath
   throwErr
     $ first toAesonPathE
-    $ decodeJson @a contents
+    $ decodeJsonP @a p contents
   where
     osPath = toOsPath path
     toAesonPathE (MkAesonE _ s) = MkAesonE (Just osPath) s
@@ -167,11 +180,22 @@ failUnknownFields name knownKeys kmap = do
 
 -- | Decodes json(c).
 decodeJson :: (FromJSON a) => ByteString -> Result AesonE a
-decodeJson =
-  first (MkAesonE Nothing)
-    <<< review #eitherIso
-    . Asn.eitherDecodeStrict
-    <=< P.stripComments
+decodeJson = decodeJsonP parseJSON
+
+-- | Decodes json(c) using the explicitly given parser.
+decodeJsonP :: (Asn.Value -> AsnT.Parser a) -> ByteString -> Result AesonE a
+decodeJsonP p bs = do
+  -- Strip comments.
+  bs' <- first mkAesonE $ P.stripComments bs
+  first mkAesonE $ review #eitherIso $ do
+    -- Decode to Value first. Obviously this is not the most efficient thing in
+    -- the world.
+    v <- Asn.eitherDecodeStrict @Asn.Value bs'
+    -- parseEither over parse, as the former formats the error message i.e.
+    -- includes location info, whereas parse does not.
+    AsnT.parseEither p v
+  where
+    mkAesonE = MkAesonE Nothing
 
 -- | Decodes a json list into an 'IsList'. Like '(.:?)', omitted keys are fine
 -- and decode to an empty list.

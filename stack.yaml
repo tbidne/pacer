@@ -20,6 +20,7 @@ ghc-options:
     -Wno-missing-import-lists
     -Wno-unticked-promoted-constructors
 extra-deps:
+  - cassava-0.5.4.0@sha256:01774b12f4d255a9722ce515a4465ba1a860b2065330a72aad95e56cfe439c47,4954
   - env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
   - gitrev-typed-0.1@sha256:905b696dec9c52486290cfef2d3156420de83f5b21bfb0821a37822f40ee1568,3783
   - regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319

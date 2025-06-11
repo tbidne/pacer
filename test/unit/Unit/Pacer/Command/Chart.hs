@@ -54,11 +54,11 @@ import Pacer.Command.Chart.Data.Activity
         labels,
         title
       ),
-    Label,
     SomeActivities (MkSomeActivities),
     SomeActivityKey (MkSomeActivityKey),
   )
 import Pacer.Command.Chart.Data.Activity qualified as R
+import Pacer.Command.Chart.Data.Activity.ActivityLabel (Label)
 import Pacer.Command.Chart.Data.Chart (Chart (chartData), Charts (charts))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params

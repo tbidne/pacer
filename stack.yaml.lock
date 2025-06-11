@@ -5,6 +5,13 @@
 
 packages:
 - completed:
+    hackage: cassava-0.5.4.0@sha256:01774b12f4d255a9722ce515a4465ba1a860b2065330a72aad95e56cfe439c47,4954
+    pantry-tree:
+      sha256: 3dde64d703805b517ef51dd6100066a3cb76053069326548f050c99c4a1016ed
+      size: 1614
+  original:
+    hackage: cassava-0.5.4.0@sha256:01774b12f4d255a9722ce515a4465ba1a860b2065330a72aad95e56cfe439c47,4954
+- completed:
     hackage: env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
     pantry-tree:
       sha256: 8775e6e349155fefc70b1d81394657dd1f2b85865125f7cf8d235c93dd8add89

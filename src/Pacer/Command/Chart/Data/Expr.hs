@@ -10,18 +10,23 @@ module Pacer.Command.Chart.Data.Expr
     exprParser,
 
     -- * Misc
+    guardActivityType,
+    guardMActivityType,
     lexParse,
   )
 where
 
 import Control.Monad.Combinators.Expr (Operator)
 import Control.Monad.Combinators.Expr qualified as Combs
+import Data.Foldable qualified as F
 import Data.Functor.Identity (Identity (Identity, runIdentity))
 import Data.List qualified as L
 import Data.Text qualified as T
 import Pacer.Class.Parser (MParser, Parser)
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Expr.Filter (FilterType)
+import Pacer.Command.Chart.Data.Activity.ActivityType (ActivityType)
+import Pacer.Command.Chart.Data.Expr.Filter (FilterType (FilterType))
+import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Prelude
 import Text.Megaparsec
   ( Parsec,
@@ -287,3 +292,38 @@ lexParse txt = do
 
     mFmt _ Nothing = ""
     mFmt hdr (Just x) = "\n\n" <> hdr <> ": " <> display x
+
+-- | Like 'guardActivityType', except the type may not exist. This will be
+-- filtered out, if any type filters are given.
+guardMActivityType ::
+  (Applicative f) =>
+  -- | Filters to run on the type.
+  List (Expr (FilterType a)) ->
+  -- | Possible Type.
+  Maybe ActivityType ->
+  -- | Action.
+  f b ->
+  f (Maybe b)
+guardMActivityType globalFilters mAType m = do
+  if F.all (eval filterType) globalFilters
+    then Just <$> m
+    else
+      pure Nothing
+  where
+    filterType (FilterType fe) = case mAType of
+      Nothing -> False
+      Just atype -> Set.applyFilterElem atype fe
+    filterType _ = True
+
+-- | Runs the given action iff the type is not filtered out.
+guardActivityType ::
+  (Applicative f) =>
+  -- | Filters to run on the type.
+  List (Expr (FilterType a)) ->
+  -- | Type.
+  ActivityType ->
+  -- | Action.
+  f b ->
+  f (Maybe b)
+guardActivityType globalFilters atype =
+  guardMActivityType globalFilters (Just atype)

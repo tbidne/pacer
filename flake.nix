@@ -94,6 +94,14 @@
                 path = hlib.dontCheck prev.path_0_9_6;
                 regression-simple = hlib.doJailbreak prev.regression-simple;
 
+                cassava = (
+                  final.callHackageDirect {
+                    pkg = "cassava";
+                    ver = "0.5.4.0";
+                    sha256 = "sha256-Bmd2NZ59nTX91vP5+MCAmN9YFGgwc33V837pQIetp0w=";
+                  } { }
+                );
+
                 gitrev-typed = (
                   final.callHackageDirect {
                     pkg = "gitrev-typed";

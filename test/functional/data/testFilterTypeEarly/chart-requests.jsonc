@@ -1,0 +1,14 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "filters": [
+    "type = Running"
+  ],
+  "charts": [
+    {
+      "title": "Chart 1",
+      "y-axis": "distance"
+    }
+  ]
+}

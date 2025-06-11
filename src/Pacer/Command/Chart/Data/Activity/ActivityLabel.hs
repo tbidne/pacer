@@ -1,19 +1,27 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Pacer.Command.Chart.Data.ActivityLabel
-  ( ActivityLabel (..),
+module Pacer.Command.Chart.Data.Activity.ActivityLabel
+  ( Label (..),
+    ActivityLabel (..),
     ActivityLabels (..),
   )
 where
 
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as MP
-import Pacer.Command.Chart.Data.Activity (Label)
+import Pacer.Class.Parser (Parser)
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Prelude
 import Pacer.Utils qualified as Utils
 
+-- | Activity label.
+newtype Label = MkLabel {unLabel :: Text}
+  deriving stock (Generic, Show)
+  deriving anyclass (Parser, NFData)
+  deriving newtype (Display, Eq, FromJSON, IsString, Ord, ToJSON)
+
+-- | Label defined in an external file, tied to a timestamp.
 data ActivityLabel = MkActivityLabel
   { datetime :: Timestamp,
     labels :: NESet Label

@@ -4,6 +4,7 @@ module Pacer.Command.Chart.Data.Expr.Set
     FilterElem (..),
     FilterElemOpSet (..),
     memberFun,
+    applyFilterElem,
 
     -- * FilterSet
     FilterSet (..),
@@ -220,6 +221,11 @@ instance Parser FilterElemOpSet where
 memberFun :: (Ord a) => FilterElemOpSet -> a -> Set a -> Bool
 memberFun FilterElemInSet = Set.member
 memberFun FilterElemNotInSet = Set.notMember
+
+applyFilterElem :: (Ord b) => b -> FilterElem p b -> Bool
+applyFilterElem actVal = \case
+  FilterElemEq op t -> Eq.toFun op actVal t
+  FilterElemExists op set -> memberFun op actVal set
 
 -------------------------------------------------------------------------------
 --                                 FilterSet                                 --

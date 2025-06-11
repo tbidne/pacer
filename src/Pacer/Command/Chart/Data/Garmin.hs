@@ -14,14 +14,10 @@ module Pacer.Command.Chart.Data.Garmin
 where
 
 import Data.ByteString.Lazy qualified as BSL
-import Data.Csv
-  ( FromNamedRecord (parseNamedRecord),
-    NamedRecord,
-    Parser,
-    (.:),
-  )
+import Data.Csv (NamedRecord, Parser, (.:))
+import Data.Csv qualified as Csv
 import Data.Csv.Streaming (Records (Cons, Nil))
-import Data.Csv.Streaming qualified as Csv
+import Data.Csv.Streaming qualified as CsvS
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Time.Format qualified as Format
@@ -31,11 +27,15 @@ import FileSystem.UTF8 (decodeUtf8Lenient)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity),
-    ActivityType (MkActivityType),
     SomeActivities,
     SomeActivity (MkSomeActivity),
   )
 import Pacer.Command.Chart.Data.Activity qualified as Activity
+import Pacer.Command.Chart.Data.Activity.ActivityType
+  ( ActivityType (MkActivityType),
+  )
+import Pacer.Command.Chart.Data.Expr (FilterExpr)
+import Pacer.Command.Chart.Data.Expr qualified as Expr
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Command.Chart.Params
@@ -62,18 +62,6 @@ data GarminAct d a = MkGarminAct
   }
   deriving stock (Eq, Show)
 
-instance
-  ( AMonoid a,
-    Fromℚ a,
-    Ord a,
-    P.Parser a,
-    Show a,
-    SingI d
-  ) =>
-  FromNamedRecord (GarminAct d a)
-  where
-  parseNamedRecord = parseGarminRow
-
 -- Example format:
 --
 -- Activity Type,Date,Favorite,Title,Distance,Calories,Time,Avg HR,Max HR,Aerobic TE,Avg Run Cadence,Max Run Cadence,Avg Pace,Best Pace,Total Ascent,Total Descent,Avg Stride Length,Avg Vertical Ratio,Avg Vertical Oscillation,Avg Ground Contact Time,Avg GAP,Normalized Power® (NP®),Training Stress Score®,Avg Power,Max Power,Steps,Total Reps,Total Sets,Decompression,Best Lap Time,Number of Laps,Moving Time,Elapsed Time,Min Elevation,Max Elevation
@@ -88,32 +76,33 @@ parseGarminRow ::
     Show a,
     SingI d
   ) =>
+  List (FilterExpr a) ->
   NamedRecord ->
-  Parser (GarminAct d a)
-parseGarminRow r = do
-  rawActivityType <- r .: "Activity Type"
-  let activityType = MkActivityType rawActivityType
+  Parser (Maybe (GarminAct d a))
+parseGarminRow globalFilters r = do
+  activityType <- MkActivityType <$> r .: "Activity Type"
 
-  title <- r .: "Title"
-  datetime <- parseDatetime =<< r .: "Date"
-  distance <- parseX =<< r .: "Distance"
+  Expr.guardActivityType globalFilters activityType $ do
+    title <- r .: "Title"
+    datetime <- parseDatetime =<< r .: "Date"
+    distance <- parseX =<< r .: "Distance"
 
-  -- Prefer moving time, but fall back to others as needed.
-  duration <-
-    (parseDuration =<< r .: "Moving Time")
-      <|> (parseDuration =<< r .: "Elapsed Time")
-      <|> (parseDuration =<< r .: "Time")
+    -- Prefer moving time, but fall back to others as needed.
+    duration <-
+      (parseDuration =<< r .: "Moving Time")
+        <|> (parseDuration =<< r .: "Elapsed Time")
+        <|> (parseDuration =<< r .: "Time")
 
-  ts <- TS.fromLocalTime datetime
+    ts <- TS.fromLocalTime datetime
 
-  pure
-    $ MkGarminAct
-      { atype = activityType,
-        datetime = ts,
-        distance,
-        duration,
-        title
-      }
+    pure
+      MkGarminAct
+        { atype = activityType,
+          datetime = ts,
+          distance,
+          duration,
+          title
+        }
   where
     parseDatetime :: String -> Parser LocalTime
     parseDatetime = Format.parseTimeM False Format.defaultTimeLocale timeFmt
@@ -150,9 +139,10 @@ readActivitiesCsv ::
     LoggerNS :> es
   ) =>
   DistanceUnit ->
+  List (FilterExpr Double) ->
   Path Abs File ->
   Eff es (SomeActivities Double)
-readActivitiesCsv @es inputDistUnit csvPath = addNamespace ns $ do
+readActivitiesCsv @es inputDistUnit globalFilters csvPath = addNamespace ns $ do
   -- 1. Read csv into bytestring.
   bs <- readBinaryFile csvOsPath
 
@@ -174,8 +164,9 @@ readActivitiesCsv @es inputDistUnit csvPath = addNamespace ns $ do
       (SingI d) =>
       ByteString ->
       Eff es (List (SomeActivity Double))
-    bsToActivities d bs =
-      case Csv.decodeByName @(GarminAct d Double) (fromStrictBS bs) of
+    bsToActivities d bs = do
+      let parseFn = parseGarminRow @_ @d globalFilters
+      case CsvS.decodeByNameWithP parseFn opts (fromStrictBS bs) of
         Left err -> throwM $ GarminDecode err
         -- idx starts at 2 because of the header
         Right (_, rs) -> do
@@ -188,6 +179,8 @@ readActivitiesCsv @es inputDistUnit csvPath = addNamespace ns $ do
                 posErrs
 
           pure acts
+
+    opts = Csv.defaultDecodeOptions
 
     toSomeActivity :: (SingI d) => GarminAct d Double -> SomeActivity Double
     toSomeActivity @d gr =
@@ -205,7 +198,7 @@ readActivitiesCsv @es inputDistUnit csvPath = addNamespace ns $ do
       forall d.
       (SingI d) =>
       GarminAcc ->
-      Records (GarminAct d Double) ->
+      Records (Maybe (GarminAct d Double)) ->
       Eff es GarminAcc
     foldGarmin (!idx, posErrs, activitiesList) = \case
       (Nil mErr leftover) -> do
@@ -226,8 +219,11 @@ readActivitiesCsv @es inputDistUnit csvPath = addNamespace ns $ do
         posErrs' <- handleErr posErrs idx err
 
         foldGarmin (idx + 1, posErrs', activitiesList) rs
-      Cons (Right r) rs ->
-        foldGarmin (idx + 1, posErrs, toSomeActivity @d r : activitiesList) rs
+      Cons (Right mr) rs -> case mr of
+        Just r ->
+          foldGarmin (idx + 1, posErrs, toSomeActivity @d r : activitiesList) rs
+        Nothing ->
+          foldGarmin (idx + 1, posErrs, activitiesList) rs
 
     -- Basically, handle known errors better than always printing out each
     -- one individually. At least for zero errors this is way too verbose.

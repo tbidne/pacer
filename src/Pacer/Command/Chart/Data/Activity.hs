@@ -4,8 +4,6 @@
 module Pacer.Command.Chart.Data.Activity
   ( -- * Activity
     Activity (..),
-    ActivityType (..),
-    Label (..),
 
     -- ** Functions
     derivePace,
@@ -14,6 +12,9 @@ module Pacer.Command.Chart.Data.Activity
     SomeActivity (..),
     someActivityIso,
     someActivityApplyActivity,
+
+    -- ** From JSON
+    parseMSomeActivity,
 
     -- ** Functions
     deriveSomePace,
@@ -25,6 +26,7 @@ module Pacer.Command.Chart.Data.Activity
 
     -- ** From JSON
     SomeActivitiesParse (..),
+    parseSomeActivitiesParse,
     readActivitiesJson,
 
     -- ** Construction
@@ -44,6 +46,7 @@ module Pacer.Command.Chart.Data.Activity
 where
 
 import Data.Aeson qualified as Asn
+import Data.Aeson.Types qualified as AsnT
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
 import Data.List.NonEmpty qualified as NE
@@ -55,6 +58,12 @@ import Data.Tuple (uncurry)
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
+import Pacer.Command.Chart.Data.Activity.ActivityLabel (Label)
+import Pacer.Command.Chart.Data.Activity.ActivityType
+  ( ActivityType (unActivityType),
+  )
+import Pacer.Command.Chart.Data.Expr (FilterExpr)
+import Pacer.Command.Chart.Data.Expr qualified as Expr
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Command.Derive qualified as Derive
@@ -77,6 +86,7 @@ import Pacer.Data.Distance.Units
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (unDuration))
 import Pacer.Data.Pace (Pace, PaceDistF, SomePace)
+import Pacer.Data.Result qualified as R
 import Pacer.Prelude
 import Pacer.Utils (AesonE (MkAesonE), (.:?:))
 import Pacer.Utils qualified as Utils
@@ -85,18 +95,6 @@ import Pacer.Utils.Show qualified as Show
 -------------------------------------------------------------------------------
 --                                 Activity                                  --
 -------------------------------------------------------------------------------
-
--- | Activity type.
-newtype ActivityType = MkActivityType {unActivityType :: Text}
-  deriving stock (Generic, Show)
-  deriving anyclass (Parser, NFData)
-  deriving newtype (Display, Eq, FromJSON, IsString, Ord, ToJSON)
-
--- | Activity label.
-newtype Label = MkLabel {unLabel :: Text}
-  deriving stock (Generic, Show)
-  deriving anyclass (Parser, NFData)
-  deriving newtype (Display, Eq, FromJSON, IsString, Ord, ToJSON)
 
 -- | Type for activities.
 type Activity :: DistanceUnit -> Type -> Type
@@ -265,16 +263,18 @@ instance
           . toℝ
           $ r.duration.unDuration.unPositive
 
-instance
-  ( Fromℚ a,
-    Ord a,
-    Parser a,
-    Semifield a,
-    Show a
-  ) =>
-  FromJSON (SomeActivity a)
-  where
-  parseJSON = asnWithObject "SomeActivity" $ \v -> do
+-- | Parse SomeActivity. Returns Nothing if we are given some type filters
+-- and the type does not match.
+parseMSomeActivity ::
+  (AMonoid a, Fromℚ a, Ord a, Parser a, Show a) =>
+  -- | Optional filters. Only applies type filters.
+  List (FilterExpr a) ->
+  Asn.Value ->
+  AsnT.Parser (Maybe (SomeActivity a))
+parseMSomeActivity globalFilters = asnWithObject "SomeActivity" $ \v -> do
+  mAType <- v .:? "type"
+
+  Expr.guardMActivityType globalFilters mAType $ do
     datetime <- v .: "datetime"
 
     someDistanceTxt <- v .: "distance"
@@ -285,8 +285,6 @@ instance
 
     labels <- v .:?: "labels"
     title <- v .:? "title"
-
-    atype <- v .:? "type"
 
     Utils.failUnknownFields
       "SomeActivity"
@@ -303,7 +301,7 @@ instance
       MkSomeDistance s distance ->
         MkSomeActivity s
           $ MkActivity
-            { atype,
+            { atype = mAType,
               datetime,
               distance,
               duration,
@@ -439,19 +437,30 @@ newtype SomeActivitiesParse a = MkSomeActivitiesParse
   deriving stock (Generic, Show)
   deriving anyclass (NFData)
 
-instance
-  ( Fromℚ a,
-    Ord a,
-    Semifield a,
-    Show a,
-    Parser a
-  ) =>
-  FromJSON (SomeActivitiesParse a)
+parseSomeActivitiesParse ::
+  forall a.
+  (Fromℚ a, Ord a, Parser a, Semifield a, Show a) =>
+  List (FilterExpr a) ->
+  Asn.Value ->
+  AsnT.Parser (SomeActivitiesParse a)
+parseSomeActivitiesParse globalFilters = asnWithObject "SomeActivities" $ \v -> do
+  actMErrs <- AsnT.explicitParseField parseActs v "activities"
+
+  let actErrs = foldl' elimNothing [] actMErrs
+
+  Utils.failUnknownFields "SomeActivities" ["activities"] v
+  pure $ MkSomeActivitiesParse actErrs
   where
-  parseJSON = asnWithObject "SomeActivities" $ \v -> do
-    actErrs <- v .: "activities"
-    Utils.failUnknownFields "SomeActivities" ["activities"] v
-    pure $ MkSomeActivitiesParse actErrs
+    parseAct :: Asn.Value -> AsnT.Parser (ResultDefault (Maybe (SomeActivity a)))
+    parseAct = pure . R.parseJson (parseMSomeActivity globalFilters)
+
+    parseActs :: Asn.Value -> AsnT.Parser (List (ResultDefault (Maybe (SomeActivity a))))
+    parseActs = AsnT.listParser parseAct
+
+    elimNothing xs = \case
+      Ok Nothing -> xs
+      Ok (Just y) -> Ok y : xs
+      Err e -> Err e : xs
 
 -- | Attempts to decode a json(c) file to SomeActivities. The semantics are:
 --
@@ -465,12 +474,13 @@ readActivitiesJson ::
     Logger :> es,
     LoggerNS :> es
   ) =>
+  List (FilterExpr Double) ->
   Path Abs File ->
   Eff es (SomeActivities Double)
-readActivitiesJson activitiesPath = addNamespace ns $ do
+readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
   someActivitesParse <-
-    Utils.readDecodeJson
-      @(SomeActivitiesParse Double)
+    Utils.readDecodeJsonP
+      (parseSomeActivitiesParse globalFilters)
       activitiesPath
 
   -- Iterate through results, collecting successes and zero errors. Other

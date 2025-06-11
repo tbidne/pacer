@@ -9,12 +9,13 @@ import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity),
-    ActivityType (MkActivityType),
-    Label (MkLabel),
     SomeActivity (MkSomeActivity),
   )
 import Pacer.Command.Chart.Data.Activity qualified as Activity
-import Pacer.Command.Chart.Data.Activity qualified as R
+import Pacer.Command.Chart.Data.Activity.ActivityLabel (Label (MkLabel))
+import Pacer.Command.Chart.Data.Activity.ActivityType
+  ( ActivityType (MkActivityType),
+  )
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Configuration.Env.Types (runLoggerMock)
 import Pacer.Data.Distance
@@ -28,6 +29,7 @@ import Pacer.Utils qualified as Utils
 import Unit.Pacer.Data.Distance.Units qualified as Dist
 import Unit.Prelude
 import Unit.TestUtils qualified as UT
+import Pacer.Data.Result qualified as Result
 
 tests :: TestTree
 tests =
@@ -35,6 +37,7 @@ tests =
     "Pacer.Command.Chart.Data.Activity"
     [ testParseExampleActivitiesJson,
       testParseSomeActivityRoundtrip,
+      testParseBadDateError,
       mkTests
     ]
 
@@ -51,10 +54,37 @@ testParseExampleActivitiesJson = testGoldenParams params
             -- relax it to allow relative paths.
             cwd <- runnerEff $ getCurrentDirectory
 
-            results <- runnerEff (Activity.readActivitiesJson $ cwd <</>> path)
+            results <- runnerEff (Activity.readActivitiesJson [] $ cwd <</>> path)
             pure $ pShowBS results
         }
     path = [relfilePathSep|examples/activities.jsonc|]
+
+testParseBadDateError :: TestTree
+testParseBadDateError = testCase desc $ do
+  -- Verifies that the error message includes the field name. Still could
+  -- probably be better.
+  "Error in $.datetime: empty" @=? p bs
+  where
+    desc = "Tests bad date parse error"
+
+    bs =
+      mconcat
+        [ "{",
+          "\"activities\": [{",
+          "\"datetime\": \"bad_date\"",
+          "}]}"
+        ]
+
+    p :: ByteString -> Text
+    p =
+      -- Expecting exactly one error.
+      Result.onResult
+        displayExceptiont
+        ((.unSomeActivitiesParse) >>> \case
+          [Err e] -> packText e
+          other -> error $ "Unexpected: " ++ show other
+        )
+        . Utils.decodeJsonP (Activity.parseSomeActivitiesParse @Double [])
 
 runnerEff :: Eff [PathReader, LoggerNS, Logger, FileReader, IOE] a -> IO a
 runnerEff =
@@ -71,8 +101,11 @@ testParseSomeActivityRoundtrip = testPropertyNamed name desc $ property $ do
   let encoded = Utils.encodePretty sr
   annotateShow encoded
 
-  decoded <- case Utils.decodeJson (toStrictBS encoded) of
-    Ok r -> pure r
+  let parseSomeActivity = Activity.parseMSomeActivity []
+
+  decoded <- case Utils.decodeJsonP parseSomeActivity (toStrictBS encoded) of
+    Ok (Just r) -> pure r
+    Ok Nothing -> annotate "Filtered activity type" *> failure
     Err r -> annotate (displayException r) *> failure
 
   sr === decoded
@@ -99,9 +132,9 @@ mkTests =
 
 testMkSomeActivitiesSuccess :: TestTree
 testMkSomeActivitiesSuccess = testCase "Successfully creates SomeActivities" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> assertFailure $ displayException err
-    Ok result -> expected @=? R.someActivitiesToList result
+    Ok result -> expected @=? Activity.someActivitiesToList result
   where
     activities = r1 :| [r2, r3, r4, r5, r6]
     expected = [r5, r6, r2, r1, r3, r4]
@@ -115,7 +148,7 @@ testMkSomeActivitiesSuccess = testCase "Successfully creates SomeActivities" $ d
 
 testMkSomeActivitiesDuplicateDate :: TestTree
 testMkSomeActivitiesDuplicateDate = testCase "Fails for duplicate date" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -134,7 +167,7 @@ testMkSomeActivitiesDuplicateDate = testCase "Fails for duplicate date" $ do
 
 testMkSomeActivitiesDuplicateTime :: TestTree
 testMkSomeActivitiesDuplicateTime = testCase "Fails for duplicate time" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -153,7 +186,7 @@ testMkSomeActivitiesDuplicateTime = testCase "Fails for duplicate time" $ do
 
 testMkSomeActivitiesDuplicateZoned :: TestTree
 testMkSomeActivitiesDuplicateZoned = testCase "Fails for duplicate zoned time" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -172,7 +205,7 @@ testMkSomeActivitiesDuplicateZoned = testCase "Fails for duplicate zoned time" $
 
 testMkSomeActivitiesDuplicateZonedConvert :: TestTree
 testMkSomeActivitiesDuplicateZonedConvert = testCase desc $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -192,7 +225,7 @@ testMkSomeActivitiesDuplicateZonedConvert = testCase desc $ do
 
 testMkSomeActivitiesDateTimeOverlap :: TestTree
 testMkSomeActivitiesDateTimeOverlap = testCase "Fails for date time overlap" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -214,7 +247,7 @@ testMkSomeActivitiesDateTimeOverlap = testCase "Fails for date time overlap" $ d
 -- necessarily trivial.
 testMkSomeActivitiesTimeDateOverlap :: TestTree
 testMkSomeActivitiesTimeDateOverlap = testCase "Fails for time date overlap" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -233,7 +266,7 @@ testMkSomeActivitiesTimeDateOverlap = testCase "Fails for time date overlap" $ d
 
 testMkSomeActivitiesDateZonedOverlap :: TestTree
 testMkSomeActivitiesDateZonedOverlap = testCase "Fails for date zoned overlap" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -252,7 +285,7 @@ testMkSomeActivitiesDateZonedOverlap = testCase "Fails for date zoned overlap" $
 
 testMkSomeActivitiesZonedDateOverlap :: TestTree
 testMkSomeActivitiesZonedDateOverlap = testCase "Fails for zoned date overlap" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -271,7 +304,7 @@ testMkSomeActivitiesZonedDateOverlap = testCase "Fails for zoned date overlap" $
 
 testMkSomeActivitiesTimeZonedOverlap :: TestTree
 testMkSomeActivitiesTimeZonedOverlap = testCase "Fails for time zoned overlap" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result
@@ -290,7 +323,7 @@ testMkSomeActivitiesTimeZonedOverlap = testCase "Fails for time zoned overlap" $
 
 testMkSomeActivitiesZonedTimeOverlap :: TestTree
 testMkSomeActivitiesZonedTimeOverlap = testCase "Fails for zoned time overlap" $ do
-  case R.mkSomeActivities activities of
+  case Activity.mkSomeActivities activities of
     Err err -> expected @=? displayExceptiont err
     Ok result ->
       assertFailure $ "Expected failure, received: " ++ show result

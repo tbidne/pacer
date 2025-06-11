@@ -5,7 +5,8 @@ module Pacer.Command.Chart.Data.Expr.Filter
 where
 
 import Pacer.Class.Parser (Parser (parser))
-import Pacer.Command.Chart.Data.Activity (ActivityType, Label)
+import Pacer.Command.Chart.Data.Activity.ActivityLabel (Label)
+import Pacer.Command.Chart.Data.Activity.ActivityType (ActivityType)
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
 import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Command.Chart.Data.Time.Moment (Moment)

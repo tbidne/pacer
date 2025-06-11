@@ -47,7 +47,6 @@ import Pacer.Command.Chart.Data.ChartRequest
       ),
   )
 import Pacer.Command.Chart.Data.Expr (FilterExpr, eval)
-import Pacer.Command.Chart.Data.Expr.Eq qualified as Eq
 import Pacer.Command.Chart.Data.Expr.Filter
   ( FilterType
       ( FilterDate,
@@ -61,6 +60,9 @@ import Pacer.Command.Chart.Data.Expr.Filter
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
 import Pacer.Command.Chart.Data.Expr.Ord qualified as Ord
 import Pacer.Command.Chart.Data.Expr.Set
+  ( FilterElem (FilterElemEq, FilterElemExists),
+    FilterSet (FilterSetComp, FilterSetElem, FilterSetHasElem),
+  )
 import Pacer.Command.Chart.Data.Expr.Set qualified as ESet
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
@@ -556,13 +558,8 @@ filterActivities @a rs filters = (.unSomeActivityKey) <$> NESeq.filter filterAct
     applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivityKey op p
     applyFilter srk (FilterType fe) = case srk.unSomeActivityKey of
       MkSomeActivity _ r -> case r.atype of
-        Just atype -> applyFilterElem atype fe
+        Just atype -> ESet.applyFilterElem atype fe
         Nothing -> False
-
-    applyFilterElem :: (Ord b) => b -> FilterElem p b -> Bool
-    applyFilterElem actVal = \case
-      FilterElemEq op t -> Eq.toFun op actVal t
-      FilterElemExists op set -> ESet.memberFun op actVal set
 
     applyFilterSet :: forall b p. (Ord b) => Set b -> FilterSet p b -> Bool
     applyFilterSet set = \case
