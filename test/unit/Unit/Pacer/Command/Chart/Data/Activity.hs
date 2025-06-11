@@ -80,11 +80,11 @@ testParseBadDateError = testCase desc $ do
       -- Expecting exactly one error.
       Result.onResult
         displayExceptiont
-        ( (.unSomeActivitiesParse) >>> \case
+        ( \case
             [Err e] -> packText e
             other -> error $ "Unexpected: " ++ show other
         )
-        . Json.decodeJsonP (Activity.parseSomeActivitiesParse @Double [])
+        . Json.decodeJsonP (Activity.parseSomeActivityListJson @Double [])
 
 runnerEff :: Eff [PathReader, LoggerNS, Logger, FileReader, IOE] a -> IO a
 runnerEff =
@@ -101,7 +101,7 @@ testParseSomeActivityRoundtrip = testPropertyNamed name desc $ property $ do
   let encoded = Json.encodePretty sr
   annotateShow encoded
 
-  let parseSomeActivity = Activity.parseMSomeActivity []
+  let parseSomeActivity = Activity.parseSomeActivityMaybeJson []
 
   decoded <- case Json.decodeJsonP parseSomeActivity (toStrictBS encoded) of
     Ok (Just r) -> pure r

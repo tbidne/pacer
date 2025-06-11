@@ -23,10 +23,7 @@ import Data.Time (LocalTime (LocalTime), ZonedTime (ZonedTime))
 import Data.Time.Calendar qualified as Cal
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Activity
-  ( SomeActivities,
-    SomeActivitiesParse (unSomeActivitiesParse),
-  )
+import Pacer.Command.Chart.Data.Activity (SomeActivities)
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Command.Chart.Data.Time.Timestamp.Internal
@@ -59,13 +56,17 @@ decodeActivities :: (HasCallStack) => ByteString -> SomeActivities Double
 decodeActivities = onErr (error . displayException) . parseSomeActivities
 
 parseSomeActivities :: ByteString -> Result AesonE (SomeActivities Double)
-parseSomeActivities bs = do
-  -- Have to do this manually because the overlap error is no longer in the
-  -- FromJSON instance. It is in the mkSomeActivitiesFail function,
-  -- hence we need to explicitly use it to trigger the expected error.
-  parseResult <- Json.decodeJsonP (Activity.parseSomeActivitiesParse []) bs
-  results <- first mkAesonE $ sequenceA parseResult.unSomeActivitiesParse
-  first mkAesonE $ Activity.mkSomeActivitiesFail results
+parseSomeActivities =
+  -- Have to manually call mkSomeActivitiesFail because the overlap error is
+  -- no longer in the json parser (previously FromJSON instance, now
+  -- parseSomeActivityListJson). It is in the mkSomeActivitiesFail
+  -- function, hence we need to explicitly use it to trigger the expected
+  -- error.
+  Json.decodeJsonP (Activity.parseSomeActivityListJson @Double [])
+    >>> fmap sequenceA
+    >>> second (first mkAesonE)
+    >>> join
+    >=> Activity.mkSomeActivitiesFail
   where
     mkAesonE = MkAesonE Nothing
 

@@ -14,7 +14,7 @@ module Pacer.Command.Chart.Data.Activity
     someActivityApplyActivity,
 
     -- ** From JSON
-    parseMSomeActivity,
+    parseSomeActivityMaybeJson,
 
     -- ** Functions
     deriveSomePace,
@@ -25,8 +25,7 @@ module Pacer.Command.Chart.Data.Activity
     SomeActivities (..),
 
     -- ** From JSON
-    SomeActivitiesParse (..),
-    parseSomeActivitiesParse,
+    parseSomeActivityListJson,
     readActivitiesJson,
 
     -- ** Construction
@@ -272,13 +271,13 @@ instance
 
 -- | Parse SomeActivity. Returns Nothing if we are given some type filters
 -- and the type does not match.
-parseMSomeActivity ::
+parseSomeActivityMaybeJson ::
   (AMonoid a, Fromℚ a, Ord a, Parser a, Show a) =>
   -- | Optional filters. Only applies type filters.
   List (FilterExpr a) ->
   JsonValue ->
   JsonParser (Maybe (SomeActivity a))
-parseMSomeActivity globalFilters = Json.withObject "SomeActivity" $ \v -> do
+parseSomeActivityMaybeJson globalFilters = Json.withObject "SomeActivity" $ \v -> do
   mAType <- v .:? "type"
 
   Expr.guardMActivityType globalFilters mAType $ do
@@ -434,29 +433,52 @@ someActivityKeyIso :: Iso' (SomeActivityKey a) (SomeActivity a)
 someActivityKeyIso = iso (\(MkSomeActivityKey x) -> x) MkSomeActivityKey
 
 -------------------------------------------------------------------------------
---                             SomeActivitiesParse                           --
+--                               SomeActivities                              --
 -------------------------------------------------------------------------------
 
--- | Collects json parse sucesses/failures.
-newtype SomeActivitiesParse a = MkSomeActivitiesParse
-  { unSomeActivitiesParse :: List (ResultDefault (SomeActivity a))
-  }
-  deriving stock (Generic, Show)
+-- | Holds multiple activities.
+newtype SomeActivities a
+  = MkSomeActivities {unSomeActivities :: NESet (SomeActivityKey a)}
+  deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
-parseSomeActivitiesParse ::
+-------------------------------------------------------------------------------
+--                                    Units                                  --
+-------------------------------------------------------------------------------
+
+instance HasDistance (SomeActivities a) where
+  type DistanceVal (SomeActivities a) = SomeDistance a
+  type HideDistance (SomeActivities a) = SomeActivities a
+
+  distanceUnitOf :: SomeActivities a -> DistanceUnit
+  distanceUnitOf (MkSomeActivities (SetToSeqNE (srk :<|| _))) =
+    distanceUnitOf srk
+
+  distanceOf :: SomeActivities a -> SomeDistance a
+  distanceOf (MkSomeActivities (SetToSeqNE (srk :<|| _))) = distanceOf srk
+
+  hideDistance = id
+
+-------------------------------------------------------------------------------
+--                               Serialization                               --
+-------------------------------------------------------------------------------
+
+-- | Parser for a json list of activities.
+parseSomeActivityListJson ::
   forall a.
   (Fromℚ a, Ord a, Parser a, Semifield a, Show a) =>
+  -- | Global filters to apply to activity types.
   List (FilterExpr a) ->
+  -- | Json value to decode.
   JsonValue ->
-  JsonParser (SomeActivitiesParse a)
-parseSomeActivitiesParse globalFilters = Json.withObject "SomeActivities" $ \v -> do
+  JsonParser (List (ResultDefault (SomeActivity a)))
+parseSomeActivityListJson globalFilters = Json.withObject "SomeActivities" $ \v -> do
   actMErrs <- Json.explicitParseField parseActs v "activities"
 
   let actErrs = foldl' elimNothing [] actMErrs
 
   Json.failUnknownFields "SomeActivities" ["activities"] v
-  pure $ MkSomeActivitiesParse actErrs
+  pure actErrs
   where
     -- Parses json into one of three values:
     --
@@ -464,7 +486,7 @@ parseSomeActivitiesParse globalFilters = Json.withObject "SomeActivities" $ \v -
     --   - Ok Nothing: Successfully parsed a type that is filtered out.
     --   - Err err: Parser fail.
     parseAct :: JsonValue -> JsonParser (ResultDefault (Maybe (SomeActivity a)))
-    parseAct = pure . Json.parseResult (parseMSomeActivity globalFilters)
+    parseAct = pure . Json.parseResult (parseSomeActivityMaybeJson globalFilters)
 
     parseActs :: JsonValue -> JsonParser (List (ResultDefault (Maybe (SomeActivity a))))
     parseActs = Json.listParser parseAct
@@ -500,9 +522,9 @@ readActivitiesJson ::
   Path Abs File ->
   Eff es (SomeActivities Double)
 readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
-  someActivitesParse <-
+  someActivitesList <-
     Json.readDecodeJsonP
-      (parseSomeActivitiesParse globalFilters)
+      (parseSomeActivityListJson globalFilters)
       activitiesPath
 
   -- Iterate through results, collecting successes and non-positive errors.
@@ -524,7 +546,7 @@ readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
               pure (as, es, idx + 1)
 
   (success, nonPosErrs, _) <-
-    foldlM f ([], [], 1 :: Word8) someActivitesParse.unSomeActivitiesParse
+    foldlM f ([], [], 1 :: Word8) someActivitesList
 
   -- print out a better message for non-positive errors.
   case nonPosErrs of
@@ -542,37 +564,6 @@ readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
   where
     mkAesonE = MkAesonE (Just (toOsPath activitiesPath))
     ns = Show.showtPath activitiesPath
-
--------------------------------------------------------------------------------
---                               SomeActivities                              --
--------------------------------------------------------------------------------
-
--- | Holds multiple activities.
-newtype SomeActivities a
-  = MkSomeActivities {unSomeActivities :: NESet (SomeActivityKey a)}
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (NFData)
-
--------------------------------------------------------------------------------
---                                    Units                                  --
--------------------------------------------------------------------------------
-
-instance HasDistance (SomeActivities a) where
-  type DistanceVal (SomeActivities a) = SomeDistance a
-  type HideDistance (SomeActivities a) = SomeActivities a
-
-  distanceUnitOf :: SomeActivities a -> DistanceUnit
-  distanceUnitOf (MkSomeActivities (SetToSeqNE (srk :<|| _))) =
-    distanceUnitOf srk
-
-  distanceOf :: SomeActivities a -> SomeDistance a
-  distanceOf (MkSomeActivities (SetToSeqNE (srk :<|| _))) = distanceOf srk
-
-  hideDistance = id
-
--------------------------------------------------------------------------------
---                               Serialization                               --
--------------------------------------------------------------------------------
 
 mkSomeActivitiesFail :: (MonadFail m) => List (SomeActivity a) -> m (SomeActivities a)
 mkSomeActivitiesFail xs = case xs of

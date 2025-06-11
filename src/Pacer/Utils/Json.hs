@@ -74,6 +74,7 @@ import Data.Aeson.Types qualified as AsnT
 import Data.HashMap.Strict qualified as HMap
 import Data.HashSet qualified as HSet
 import Data.List qualified as L
+import Data.String (IsString (fromString))
 import FileSystem.OsPath (decodeLenient)
 import GHC.IsList (IsList (Item))
 import GHC.IsList qualified as IL
@@ -122,6 +123,9 @@ instance Exception AesonE where
             s
           ]
       Nothing -> "Error decoding json: " ++ s
+
+instance IsString AesonE where
+  fromString = MkAesonE Nothing
 
 -- | Decodes a json(c) file.
 readDecodeJson ::
