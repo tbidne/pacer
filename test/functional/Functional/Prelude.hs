@@ -287,10 +287,13 @@ data GoldenParams = MkGoldenParams
 data GoldenOutput
   = -- | The golden output is based on an output file.
     GoldenOutputFile OsPath
-  | -- | The golden output is based on the logs.
-    GoldenOutputLogs
   | -- | The golden output is based on logs and output file.
     GoldenOutputFileLogs OsPath
+  | -- | The golden output is based on an output file, but we also run
+    -- an assertion on the logs. This is needed when the logs contain
+    -- data that is hard to test for exact equality e.g. non-deterministic
+    -- filepaths, timestamps.
+    GoldenOutputFileAssertLogs OsPath (Text -> Bool)
 
 -- | Given a text description and testName OsPath, creates a golden test.
 -- Expects the following to exist:
@@ -369,16 +372,21 @@ testGoldenParams getTestDir goldenParams =
       Left err -> writeActualFile $ exToBs err
       Right funcEnv ->
         case goldenParams.outFileName of
-          -- No out file, golden test uses the logs (stdout)
-          GoldenOutputLogs -> mkLogOutput funcEnv >>= writeActualFile
           -- We expect a file to have been written to a given path. This is
           -- what the golden test is based on.
           GoldenOutputFile expectedName ->
             mkFileOutput funcEnv expectedName >>= writeActualFile
           GoldenOutputFileLogs expectedName -> do
-            logsBs <- mkLogOutput funcEnv
+            logsBs <- encodeUtf8 <$> mkLogOutput funcEnv
             fileBs <- mkFileOutput funcEnv expectedName
             writeActualFile $ logsBs <> "\n\n" <> fileBs
+          GoldenOutputFileAssertLogs expectedName onLogs -> do
+            logsTxt <- mkLogOutput funcEnv
+            unless (onLogs logsTxt)
+              $ (throwText $ "Logs failed assertion: " <> logsTxt)
+
+            fileBs <- mkFileOutput funcEnv expectedName
+            writeActualFile fileBs
   where
     outputPathStart =
       FS.OsPath.unsafeDecode
@@ -395,7 +403,7 @@ testGoldenParams getTestDir goldenParams =
     actualPath = outputPathStart <> ".actual"
     goldenPath = outputPathStart <> ".golden"
 
-    mkLogOutput funcEnv = encodeUtf8 <$> Ref.readIORef funcEnv.logsRef
+    mkLogOutput funcEnv = Ref.readIORef funcEnv.logsRef
 
     mkFileOutput funcEnv expectedName = do
       outFilesMap <- Ref.readIORef funcEnv.outFilesMapRef

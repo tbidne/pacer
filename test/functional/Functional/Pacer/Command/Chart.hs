@@ -35,6 +35,7 @@ basicTests getTestDir =
       testDefaultAndGarminExamples getTestDir,
       testDefaultAndGarmin getTestDir,
       testDefaultAndGarminSameCase getTestDir,
+      testNonPosWarnings getTestDir,
       testActivitiesInfix getTestDir,
       testCaseInsensitive getTestDir,
       testGarminChartError getTestDir,
@@ -206,6 +207,40 @@ testDefaultAndGarminSameCase :: IO OsPath -> TestTree
 testDefaultAndGarminSameCase = testChart desc [osp|testDefaultAndGarminSameCase|]
   where
     desc = "Uses default and garmin activities files with same case"
+
+testNonPosWarnings :: IO OsPath -> TestTree
+testNonPosWarnings getTestDir = testGoldenParams getTestDir params
+  where
+    params =
+      MkGoldenParams
+        { mkArgs = \p ->
+            [ "--log-level",
+              "warn",
+              "chart",
+              "--json",
+              "--data",
+              dataDir,
+              "--build-dir",
+              buildDir p
+            ],
+          outFileName =
+            GoldenOutputFileAssertLogs
+              [ospPathSep|build/charts.json|]
+              checkWarnings,
+          testDesc = "Non-positive chart values are warned",
+          testName = [osp|testNonPosWarnings|]
+        }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
+    dataDir = unsafeDecode [ospPathSep|test/functional/data/testNonPosWarnings|]
+
+    checkWarnings logs =
+      csvMsg
+        `T.isInfixOf` logs
+        && jsonMsg
+        `T.isInfixOf` logs
+
+    csvMsg = "Skipping non-positive values found on line(s): [3-4]"
+    jsonMsg = "Skipping non-positive values found for activity(-ies): [2-3]"
 
 testActivitiesInfix :: IO OsPath -> TestTree
 testActivitiesInfix = testChart desc [osp|testActivitiesInfix|]

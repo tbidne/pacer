@@ -505,8 +505,8 @@ readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
       (parseSomeActivitiesParse globalFilters)
       activitiesPath
 
-  -- Iterate through results, collecting successes and zero errors. Other
-  -- errors are logged as we encounter them.
+  -- Iterate through results, collecting successes and non-positive errors.
+  -- Other errors are logged as we encounter them.
   let f :: ParseAcc -> ResultDefault (SomeActivity Double) -> Eff es ParseAcc
       f (as, !es, !idx) = \case
         -- Success, add to acc and inc index.
@@ -523,16 +523,16 @@ readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
                 <> errTxt
               pure (as, es, idx + 1)
 
-  (success, zeroErrs, _) <-
+  (success, nonPosErrs, _) <-
     foldlM f ([], [], 1 :: Word8) someActivitesParse.unSomeActivitiesParse
 
-  -- print out a better message for zero errors.
-  case zeroErrs of
+  -- print out a better message for non-positive errors.
+  case nonPosErrs of
     [] -> pure ()
     errs@(_ : _) ->
       $(Logger.logWarn)
         $ Show.mkNonPosErrMsg
-          "for chart(s)"
+          "for activity(-ies)"
           errs
 
   -- Now make the activities e.g. handle overlaps.

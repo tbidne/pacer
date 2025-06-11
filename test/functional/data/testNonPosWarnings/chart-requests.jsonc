@@ -1,0 +1,11 @@
+{
+  "garmin": {
+    "unit": "km"
+  },
+  "charts": [
+    {
+      "title": "Chart 1",
+      "y-axis": "distance"
+    }
+  ]
+}
