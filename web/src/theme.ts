@@ -96,6 +96,21 @@ const themeMap: ThemeMap = new Map([
     },
   ],
   [
+    "Purple Glass",
+    {
+      background: "#493c53",
+      grid: "#9a75b1",
+      name: "Purple Glass",
+      selectorBorder: "#747894",
+      text: "#e0a3c7",
+      tooltipBackground: "#e0a3c7",
+      tooltip: "#252526",
+      yBackground: "#c6ebfc",
+      y1Background: "#f1b099",
+      zoomDragBackground: "#f0eea6",
+    },
+  ],
+  [
     "Solarized Dark",
     {
       background: "#002b36",
