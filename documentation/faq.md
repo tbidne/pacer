@@ -10,6 +10,10 @@
   - [How does file discovery work?](#how-does-file-discovery-work)
   - [How do I use this with Garmin](#how-do-i-use-this-with-garmin)
   - [How do chart filters work?](#how-do-chart-filters-work)
+    - [Logical expressions](#logical-expressions)
+    - [Set operators](#set-operators)
+    - [Aliases](#aliases)
+    - [Complicated example](#complicated-example)
   - [What chart types are available?](#what-chart-types-are-available)
   - [What is smoothing?](#what-is-smoothing)
 
@@ -320,15 +324,148 @@ For instance, of the following, only `Race 1` will be selected.
 
 Race 2 is removed because it does not have label `official_race`. Race 3 is removed because it is not `> 2024`.
 
-#### Advanced filters
+#### Logical expressions
 
-We also provide more sophisticated ways to write filters e.g.
+Basic logical operators are supported:
 
-- Set operators.
-- Boolean logic.
-- Unicode versions of some operators.
+- `expr1 and expr2`: `expr1` and `expr2` must both be true.
+- `expr1 or expr2`: At least one of `expr1` or `expr2` must be true.
+- `expr1 xor expr2`: Exactly one of `expr1` and `expr2` must be true (not both).
+- `not expr1`: `expr1` must be false.
 
-For example, we can write:
+```jsonc
+{
+  "title": "Some title",
+  "filters": [
+    // Has label "offical_race" and/or label "marathon"
+    "label = official_race or label = marathon",
+    // Distance < 10km and pace is NOT < 5m/km (i.e. pace >= 5km/km).
+    "distance < 10km and (not (pace < 5m/km))"
+  ],
+  "y-axis": "distance"
+}
+```
+
+#### Set operators
+
+Some operators based on set theory are provided, allowing an alternative syntax. For example, the following filters are all equivalent:
+
+```jsonc
+{
+  "title": "Some title",
+  "filters": [
+    // Checking that the type is one of t1, t2, t3.
+    "type = t1 or type = t2 or type = t3",
+    // The symbol '∈' -- pronounced 'in' -- can be replaced by the word
+    // "in".
+    "type ∈ {t1, t2, t3}"
+  ],
+  "y-axis": "distance"
+}
+```
+
+Labels are a bit more involved, since an activity can have multiple e.g.
+
+```jsonc
+{
+  "activities": [
+    {
+      "datetime": "2025-03-20T14:30:00",
+      "distance": "20 miles",
+      "duration": "2h40m54s",
+      "labels": [
+        "l1",
+        "l2"
+      ],
+      "title": "Race 1",
+      "type": "Running"
+    }
+  ]
+}
+```
+
+If a filter is written using the singular **label**, it is taken to mean _some label_ in the entire labels set. For example, the following:
+
+```jsonc
+{
+  "title": "Some title",
+  "filters": [
+    // These are all equivalent.
+    "label = l1 or label = l2 or label = l3",
+    "label ∈ {l1, l2, l3}",
+    // Notice this is written in terms of the 'labels' set, rather than the
+    // singular above. Like the above, the symbol ∋ -- pronounced 'contains' --
+    // has an English alternative: "contains".
+    "labels ∋ l1 or labels ∋ l2 or labels ∋ l3"
+  ],
+  "y-axis": "distance"
+}
+```
+
+will take all activities that have at least one label `l1`, `l2`, or `l3` (and possibly more). Negation -- when applied to the singular **label** -- applies to the entire expression. The following are all equivalent:
+
+```jsonc
+{
+  "title": "Some title",
+  "filters": [
+    "label /= l1 and label /= l2 and label /= l3",
+    "(not (label = l1)) and (not (label = l2) and (not (label = l3))",
+    "not (label = l1 or label = l2 or label = l3)",
+    // The symbol ∉ can be replaced by the word "not_in".
+    "label ∉ {l1, l2, l3}",
+    "not (label ∈ {l1, l2, l3})",
+    // The symbol ∌ can be replaced by the word "not_contains".
+    "labels ∌ l1 and labels ∌ l2 and labels ∌ l3",
+    "not (labels ∋ l1 or labels ∋ l2 or labels ∋ l3)"
+  ],
+  "y-axis": "distance"
+}
+```
+
+On the other hand, we can refer to the entire labels set with the plural `labels`.
+
+```jsonc
+{
+  "title": "Some title",
+  "filters": [
+    // Similar to above, except we are using 'and' not 'or'.
+    "labels ∋ l1 and labels ∋ l2 and labels ∋ l3",
+    // True if labels is a superset of {l1, l2, 3} i.e. contains everything.
+    // Can also be written as ">=".
+    "labels ⊇ {l1, l2, l3}"
+  ],
+  "y-axis": "distance"
+}
+```
+
+#### Aliases
+
+Most operators have aliases i.e. multiple ways to write them:
+
+- Equality:
+  - `=`
+  - `≠`: `/=`
+- Order:
+  - `≤`: `<=`
+  - `<`
+  - `≥`: `>=`
+  - `>`
+- Logic:
+  - `and`: `&&`, `∧`
+  - `or`: `||`, `∨`
+  - `xor`: `⊕`
+  - `not`: `!`, `¬`
+- Set theory:
+  - `∈`: `in`
+  - `∉`: `not_in`
+  - `∋`: `contains`
+  - `∌`: `not_contains`
+  - `⊇`: `>=`
+  - `⊃`: `>`
+  - `⊆`: `<=`
+  - `⊂`: `<`
+
+#### Complicated example
 
 ```jsonc
 {
@@ -556,21 +693,6 @@ xor
   : 'xor'
   | '⊕'    ; alias for xor
 ```
-
-> [!NOTE]
->
-> There is considerable redundancy here, in the sense that there are multiple ways to write the same expression even beyond operator aliases. For instance:
->
-> ```
-> ["labels ∋ some_label"]
->   == ["label = some_label"]
->
-> ["labels ⊇ {evening, night}"]
->   == ["label = evening and label = night"]
->   == ["label = evening", "label = night"]
-> ```
->
-> The clearest way to write an expression is a matter of taste.
 
 ### What chart types are available?
 
