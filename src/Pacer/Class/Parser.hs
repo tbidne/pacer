@@ -47,6 +47,7 @@ import Data.ByteString qualified as BS
 import Data.Char qualified as Ch
 import Data.Coerce (Coercible, coerce)
 import Data.Set qualified as Set
+import Data.ByteString.Builder qualified as BSB
 import Data.Text qualified as T
 import Data.Time.Format (ParseTime)
 import Data.Time.Format qualified as Format
@@ -291,60 +292,68 @@ stripComments :: ByteString -> ResultDefault ByteString
 -- memory.
 stripComments = stripCommentsBS
 
+-- TODO: Benchmark with builder
+
 -- | Strips comment using ByteString's API.
 stripCommentsBS :: ByteString -> ResultDefault ByteString
-stripCommentsBS bs =
-  let (preComment, mWithFSlash) = BS.break (== fslashW8) bs
-   in case uncons2 mWithFSlash of
-        -- 1. Remaining text is either 1 char or a single fslash: It cannot
-        -- possibly start a comment, so return it.
-        Nothing -> Ok $ preComment <> mWithFSlash
-        -- 2. Some remaining text. Need to check for a comment start.
-        --
-        -- - fslashChar: a single fslash
-        -- - fslashNext: next char, need to check
-        -- - mPostCommentStart: The part after potential comment start.
-        Just (fslashChar, fslashNext, mPostCommentStart)
-          | fslashNext == fslashW8 ->
-              -- 2.1. Another fslash, we have started a line comment. Skip until
-              -- the next newline.
-              second
-                (preComment <>)
-                ((skipLineComment mPostCommentStart) >>= stripCommentsBS)
-          | fslashNext == starW8 ->
-              -- 2.2. A star, we have started a block comment. Skip until the
-              -- next '*/'.
-              second
-                (preComment <>)
-                (skipBlockComment mPostCommentStart >>= stripCommentsBS)
-          -- 2.3. No fslash or star i.e. not a comment start. Concat it back in,
-          -- and proceed with the rest of the string.
-          | otherwise ->
-              let start = preComment <> BS.pack [fslashChar, fslashNext]
-               in second (start <>) (stripCommentsBS mPostCommentStart)
+stripCommentsBS = fmap (toStrictBS . builderToLazyBS) . go
   where
-    -- es is the start of a line comment, w/o the opening '//'.
-    skipLineComment es =
-      let (_lineComment, mCommentEnd) = BS.break (== newlineW8) es
-       in case BS.uncons mCommentEnd of
-            -- Did not find a closing newline: error!
-            Nothing -> Err "Found line comment (//) without ending newline."
-            Just (_nl, rest) -> Ok rest
+    go :: ByteString -> ResultDefault ByteStringBuilder
+    go bs =
+      let (preComment, mWithFSlash) = BS.break (== fslashW8) bs
+          preCommentB = BSB.byteString preComment
+      in case uncons2 mWithFSlash of
+            -- 1. Remaining text is either 1 char or a single fslash: It cannot
+            -- possibly start a comment, so return it.
+            Nothing -> Ok $ BSB.byteString preComment <> BSB.byteString mWithFSlash
+            -- 2. Some remaining text. Need to check for a comment start.
+            --
+            -- - fslashChar: a single fslash
+            -- - fslashNext: next char, need to check
+            -- - mPostCommentStart: The part after potential comment start.
+            Just (fslashChar, fslashNext, mPostCommentStart)
+              | fslashNext == fslashW8 ->
+                  -- 2.1. Another fslash, we have started a line comment. Skip until
+                  -- the next newline.
+                  second
+                    (preCommentB <>)
+                    ((skipLineComment mPostCommentStart) >>= go)
+              | fslashNext == starW8 ->
+                  -- 2.2. A star, we have started a block comment. Skip until the
+                  -- next '*/'.
+                  second
+                    (preCommentB <>)
+                    (skipBlockComment mPostCommentStart >>= go)
+              -- 2.3. No fslash or star i.e. not a comment start. Concat it back in,
+              -- and proceed with the rest of the string.
+              | otherwise ->
+                  let start = preCommentB <> BSB.byteString (BS.pack [fslashChar, fslashNext])
+                  in second (start <>) (go mPostCommentStart)
+      where
+        -- es is the start of a line comment, w/o the opening '//'.
+        skipLineComment :: ByteString -> ResultDefault ByteString
+        skipLineComment es =
+          let (_lineComment, mCommentEnd) = BS.break (== newlineW8) es
+          in case BS.uncons mCommentEnd of
+                -- Did not find a closing newline: error!
+                Nothing -> Err "Found line comment (//) without ending newline."
+                Just (_nl, rest) -> Ok rest
 
-    -- es is the start of a block comment, w/o the opening '/*'.
-    skipBlockComment es =
-      let (_blockComment, mCommentEnd) = BS.break (== starW8) es
-       in case uncons2 mCommentEnd of
-            -- es had fewer than 2 chars, so it could not possibly end the
-            -- comment, error.
-            Nothing -> Err "Found block comment (/*) without ending (*/)."
-            -- If we get here we know we have found a star char and at least one
-            -- other char (starNext).
-            Just (_starChar, starNext, mPostCommentStart)
-              -- Found an ending slash, we have successfully ended the comment.
-              | starNext == fslashW8 -> Ok mPostCommentStart
-              -- starNext is something else. Search the rest of the string.
-              | otherwise -> skipBlockComment mPostCommentStart
+        -- es is the start of a block comment, w/o the opening '/*'.
+        skipBlockComment :: ByteString -> ResultDefault ByteString
+        skipBlockComment es =
+          let (_blockComment, mCommentEnd) = BS.break (== starW8) es
+          in case uncons2 mCommentEnd of
+                -- es had fewer than 2 chars, so it could not possibly end the
+                -- comment, error.
+                Nothing -> Err "Found block comment (/*) without ending (*/)."
+                -- If we get here we know we have found a star char and at least one
+                -- other char (starNext).
+                Just (_starChar, starNext, mPostCommentStart)
+                  -- Found an ending slash, we have successfully ended the comment.
+                  | starNext == fslashW8 -> Ok mPostCommentStart
+                  -- starNext is something else. Search the rest of the string.
+                  | otherwise -> skipBlockComment mPostCommentStart
 
 uncons2 :: ByteString -> Maybe (Word8, Word8, ByteString)
 uncons2 bs = case BS.uncons bs of

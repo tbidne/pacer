@@ -6,6 +6,7 @@ on: # yamllint disable-line rule:truthy rule:comments
     branches:
       - main
       - release
+      - bench-builder
 
   pull_request:
     branches:
