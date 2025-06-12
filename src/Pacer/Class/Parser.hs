@@ -310,18 +310,18 @@ stripCommentsBS bs =
               -- the next newline.
               second
                 (preComment <>)
-                ((skipLineComment mPostCommentStart) >>= stripComments)
+                ((skipLineComment mPostCommentStart) >>= stripCommentsBS)
           | fslashNext == starW8 ->
-              -- 2.2. A start, we have started a block comment. Skip until the
+              -- 2.2. A star, we have started a block comment. Skip until the
               -- next '*/'.
               second
                 (preComment <>)
-                (skipBlockComment mPostCommentStart >>= stripComments)
+                (skipBlockComment mPostCommentStart >>= stripCommentsBS)
           -- 2.3. No fslash or star i.e. not a comment start. Concat it back in,
           -- and proceed with the rest of the string.
           | otherwise ->
               let start = preComment <> BS.pack [fslashChar, fslashNext]
-               in second (start <>) (stripComments mPostCommentStart)
+               in second (start <>) (stripCommentsBS mPostCommentStart)
   where
     -- es is the start of a line comment, w/o the opening '//'.
     skipLineComment es =
