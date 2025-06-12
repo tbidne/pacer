@@ -5,7 +5,8 @@
   },
   // We can add global filters here that apply to every chart-request.
   "filters": [
-
+    // Activity type must be one of these, otherwise it is filtered out.
+    "type in {Running, Indoor Cycling, Trail Running}"
   ],
   // Optional theme configuration.
   "theme": {
@@ -29,6 +30,8 @@
       }
     ]
   },
+  // This is the primary data. Each request corresponds to exactly one
+  // generated chart. Must have at least one.
   "charts": [
     {
       "title": "Activities by distance",

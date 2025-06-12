@@ -179,7 +179,22 @@ MkChartRequests
         }
       ]
     )
-  , filters = []
+  , filters =
+    [ Atom
+      ( FilterType
+        ( FilterElemExists FilterElemInSet
+          ( fromList
+            [ MkActivityType
+              { unActivityType = "Indoor Cycling" }
+            , MkActivityType
+              { unActivityType = "Running" }
+            , MkActivityType
+              { unActivityType = "Trail Running" }
+            ]
+          )
+        )
+      )
+    ]
   , garminSettings = Just
     ( MkGarminSettings { distanceUnit = Just Kilometer } )
   , themeConfig = Just
