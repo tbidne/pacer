@@ -1,3 +1,5 @@
+{-# LANGUAGE MagicHash #-}
+
 -- | Provides parsing functionality.
 module Pacer.Class.Parser
   ( -- * Parsing
@@ -44,14 +46,16 @@ where
 
 import Control.Monad.Combinators.Expr (Operator (InfixL, Prefix))
 import Data.ByteString qualified as BS
+import Data.ByteString.Internal (ByteString (BS))
 import Data.Char qualified as Ch
 import Data.Coerce (Coercible, coerce)
 import Data.Set qualified as Set
-import Data.ByteString.Builder qualified as BSB
 import Data.Text qualified as T
+import Data.Text.Builder.Linear qualified as TBL
 import Data.Time.Format (ParseTime)
 import Data.Time.Format qualified as Format
 import Data.Time.Relative qualified as Rel
+import GHC.ForeignPtr (ForeignPtr (ForeignPtr))
 import Pacer.Prelude
 import Text.Megaparsec
   ( MonadParsec,
@@ -292,20 +296,18 @@ stripComments :: ByteString -> ResultDefault ByteString
 -- memory.
 stripComments = stripCommentsBS
 
--- TODO: Benchmark with builder
-
 -- | Strips comment using ByteString's API.
 stripCommentsBS :: ByteString -> ResultDefault ByteString
-stripCommentsBS = fmap (toStrictBS . builderToLazyBS) . go
+stripCommentsBS = fmap TBL.runBuilderBS . go
   where
-    go :: ByteString -> ResultDefault ByteStringBuilder
+    go :: ByteString -> ResultDefault TBL.Builder
     go bs =
       let (preComment, mWithFSlash) = BS.break (== fslashW8) bs
-          preCommentB = BSB.byteString preComment
-      in case uncons2 mWithFSlash of
+          preCommentB = bsToLB preComment
+       in case uncons2 mWithFSlash of
             -- 1. Remaining text is either 1 char or a single fslash: It cannot
             -- possibly start a comment, so return it.
-            Nothing -> Ok $ BSB.byteString preComment <> BSB.byteString mWithFSlash
+            Nothing -> Ok $ bsToLB preComment <> bsToLB mWithFSlash
             -- 2. Some remaining text. Need to check for a comment start.
             --
             -- - fslashChar: a single fslash
@@ -327,14 +329,16 @@ stripCommentsBS = fmap (toStrictBS . builderToLazyBS) . go
               -- 2.3. No fslash or star i.e. not a comment start. Concat it back in,
               -- and proceed with the rest of the string.
               | otherwise ->
-                  let start = preCommentB <> BSB.byteString (BS.pack [fslashChar, fslashNext])
-                  in second (start <>) (go mPostCommentStart)
+                  let start =
+                        preCommentB
+                          <> bsToLB (BS.pack [fslashChar, fslashNext])
+                   in second (start <>) (go mPostCommentStart)
       where
         -- es is the start of a line comment, w/o the opening '//'.
         skipLineComment :: ByteString -> ResultDefault ByteString
         skipLineComment es =
           let (_lineComment, mCommentEnd) = BS.break (== newlineW8) es
-          in case BS.uncons mCommentEnd of
+           in case BS.uncons mCommentEnd of
                 -- Did not find a closing newline: error!
                 Nothing -> Err "Found line comment (//) without ending newline."
                 Just (_nl, rest) -> Ok rest
@@ -343,7 +347,7 @@ stripCommentsBS = fmap (toStrictBS . builderToLazyBS) . go
         skipBlockComment :: ByteString -> ResultDefault ByteString
         skipBlockComment es =
           let (_blockComment, mCommentEnd) = BS.break (== starW8) es
-          in case uncons2 mCommentEnd of
+           in case uncons2 mCommentEnd of
                 -- es had fewer than 2 chars, so it could not possibly end the
                 -- comment, error.
                 Nothing -> Err "Found block comment (/*) without ending (*/)."
@@ -354,6 +358,10 @@ stripCommentsBS = fmap (toStrictBS . builderToLazyBS) . go
                   | starNext == fslashW8 -> Ok mPostCommentStart
                   -- starNext is something else. Search the rest of the string.
                   | otherwise -> skipBlockComment mPostCommentStart
+
+bsToLB :: ByteString -> TBL.Builder
+-- is this safe lol
+bsToLB (BS (ForeignPtr addr _) _) = TBL.fromAddr addr
 
 uncons2 :: ByteString -> Maybe (Word8, Word8, ByteString)
 uncons2 bs = case BS.uncons bs of
