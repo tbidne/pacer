@@ -125,9 +125,6 @@ data ChartSmooth = MkChartSmooth
 
 instance FromJSON ChartSmooth where
   parseJSON = Json.withObject "ChartSmooth" $ \v -> do
-    -- FIXME: Consider renaming this. Period implies a unit (to me) e.g.
-    -- 4 days, but it's dimensionless. It's more like factor, or num.
-    -- Consult wiki
     smoothPeriod <- mkPositiveFail =<< v .: "period"
     smoothType <- v .: "type"
 
