@@ -32,8 +32,13 @@ module Pacer.Class.Parser
     prefix,
     binary,
 
-    -- * Misc
+    -- * Comment stripping
     stripComments,
+
+    -- ** Low-level
+    stripCommentsBS,
+    stripCommentsMpAuto,
+    stripCommentsMpManual,
   )
 where
 
@@ -57,6 +62,7 @@ import Text.Megaparsec
   )
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Byte qualified as MPB
+import Text.Megaparsec.Byte.Lexer qualified as MPBL
 import Text.Megaparsec.Char qualified as MPC
 import Text.Megaparsec.Char.Lexer qualified as Lex
 import Text.Read qualified as TR
@@ -279,13 +285,98 @@ prefix t f = Prefix (f <$ MPC.string t)
 blexeme :: Parsec Void ByteString a -> Parsec Void ByteString a
 blexeme = Lex.lexeme MPB.space
 
--- REVIEW: I wrote a manual parser using just ByteString's API, and
--- megaparsec also provides skipBlockComment and skipLineComment helper
--- functions. It might be a good idea to benchmark all 3.
-
 -- | Strips a bytestring of line (//) and block (/* */) comments.
 stripComments :: ByteString -> ResultDefault ByteString
-stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
+-- Benchmarks on CI show stripCommentsBS to be the fastest and use the least
+-- memory.
+stripComments = stripCommentsBS
+
+-- | Strips comment using ByteString's API.
+stripCommentsBS :: ByteString -> ResultDefault ByteString
+stripCommentsBS bs =
+  let (preComment, mWithFSlash) = BS.break (== fslashW8) bs
+   in case uncons2 mWithFSlash of
+        -- 1. Remaining text is either 1 char or a single fslash: It cannot
+        -- possibly start a comment, so return it.
+        Nothing -> Ok $ preComment <> mWithFSlash
+        -- 2. Some remaining text. Need to check for a comment start.
+        --
+        -- - fslashChar: a single fslash
+        -- - fslashNext: next char, need to check
+        -- - mPostCommentStart: The part after potential comment start.
+        Just (fslashChar, fslashNext, mPostCommentStart)
+          | fslashNext == fslashW8 ->
+              -- 2.1. Another fslash, we have started a line comment. Skip until
+              -- the next newline.
+              second
+                (preComment <>)
+                ((skipLineComment mPostCommentStart) >>= stripComments)
+          | fslashNext == starW8 ->
+              -- 2.2. A start, we have started a block comment. Skip until the
+              -- next '*/'.
+              second
+                (preComment <>)
+                (skipBlockComment mPostCommentStart >>= stripComments)
+          -- 2.3. No fslash or star i.e. not a comment start. Concat it back in,
+          -- and proceed with the rest of the string.
+          | otherwise ->
+              let start = preComment <> BS.pack [fslashChar, fslashNext]
+               in second (start <>) (stripComments mPostCommentStart)
+  where
+    -- es is the start of a line comment, w/o the opening '//'.
+    skipLineComment es =
+      let (_lineComment, mCommentEnd) = BS.break (== newlineW8) es
+       in case BS.uncons mCommentEnd of
+            -- Did not find a closing newline: error!
+            Nothing -> Err "Found line comment (//) without ending newline."
+            Just (_nl, rest) -> Ok rest
+
+    -- es is the start of a block comment, w/o the opening '/*'.
+    skipBlockComment es =
+      let (_blockComment, mCommentEnd) = BS.break (== starW8) es
+       in case uncons2 mCommentEnd of
+            -- es had fewer than 2 chars, so it could not possibly end the
+            -- comment, error.
+            Nothing -> Err "Found block comment (/*) without ending (*/)."
+            -- If we get here we know we have found a star char and at least one
+            -- other char (starNext).
+            Just (_starChar, starNext, mPostCommentStart)
+              -- Found an ending slash, we have successfully ended the comment.
+              | starNext == fslashW8 -> Ok mPostCommentStart
+              -- starNext is something else. Search the rest of the string.
+              | otherwise -> skipBlockComment mPostCommentStart
+
+uncons2 :: ByteString -> Maybe (Word8, Word8, ByteString)
+uncons2 bs = case BS.uncons bs of
+  Nothing -> Nothing
+  Just (c1, rest1) -> case BS.uncons rest1 of
+    Nothing -> Nothing
+    Just (c2, rest2) -> Just (c1, c2, rest2)
+
+-- | Strips comment using megaparsec's built-in comment utilities.
+stripCommentsMpAuto :: ByteString -> ResultDefault ByteString
+stripCommentsMpAuto = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
+  where
+    bsParser :: Parsec Void ByteString (List ByteString)
+    bsParser =
+      many
+        $ asum
+          [ parseLineComment,
+            MPBL.skipBlockComment "/*" "*/" $> "",
+            parseNonComment,
+            parseOneFSlash
+          ]
+      where
+        parseLineComment :: Parsec Void ByteString ByteString
+        parseLineComment = do
+          _ <- MPBL.skipLineComment "//"
+          -- skipLineComment does not consume the newline, so we have to
+          _ <- MPB.char newlineW8
+          pure ""
+
+-- | Strips comment using hand-rolled megaparsec.
+stripCommentsMpManual :: ByteString -> ResultDefault ByteString
+stripCommentsMpManual = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
   where
     bsParser :: Parsec Void ByteString (List ByteString)
     bsParser =
@@ -297,20 +388,11 @@ stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
             parseOneFSlash
           ]
       where
-        parseNonComment :: Parsec Void ByteString ByteString
-        parseNonComment = MP.takeWhile1P (Just "text") (/= fslash)
-
-        parseOneFSlash :: Parsec Void ByteString ByteString
-        parseOneFSlash = do
-          c <- MPB.char fslash
-          MP.notFollowedBy $ MPB.char fslash <|> MPB.char star
-          pure $ BS.singleton c
-
         parseLineComment :: Parsec Void ByteString ByteString
         parseLineComment = do
           parseLineCommentStart
-          _ <- MP.takeWhileP (Just "text") (/= newline)
-          MPB.char newline
+          _ <- MP.takeWhileP (Just "text") (/= newlineW8)
+          MPB.char newlineW8
           pure ""
 
         parseLineCommentStart :: Parsec Void ByteString ()
@@ -332,14 +414,14 @@ stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
               ]
 
         parseNonStar :: Parsec Void ByteString ()
-        parseNonStar = void $ MP.takeWhile1P (Just "text") (/= star)
+        parseNonStar = void $ MP.takeWhile1P (Just "text") (/= starW8)
 
         -- We need to backtrack (hence try) in case the first star
         -- succeeds but the followedBy fails.
         parseOneStar :: Parsec Void ByteString ()
         parseOneStar = MP.try $ do
-          _ <- MPB.char star
-          MP.notFollowedBy $ MPB.char fslash
+          _ <- MPB.char starW8
+          MP.notFollowedBy $ MPB.char fslashW8
           pure ()
 
         parseStartBlock :: Parsec Void ByteString ()
@@ -348,8 +430,23 @@ stripComments = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
         parseEndBlock :: Parsec Void ByteString ()
         parseEndBlock = void $ MPC.string "*/"
 
-        fslash = i2w8 $ Ch.ord '/'
-        newline = i2w8 $ Ch.ord '\n'
-        star = i2w8 $ Ch.ord '*'
+parseOneFSlash :: Parsec Void ByteString ByteString
+parseOneFSlash = do
+  c <- MPB.char fslashW8
+  MP.notFollowedBy $ MPB.char fslashW8 <|> MPB.char starW8
+  pure $ BS.singleton c
 
-        i2w8 = fromIntegral @Int @Word8
+parseNonComment :: Parsec Void ByteString ByteString
+parseNonComment = MP.takeWhile1P (Just "text") (/= fslashW8)
+
+newlineW8 :: Word8
+newlineW8 = i2w8 $ Ch.ord '\n'
+
+starW8 :: Word8
+starW8 = i2w8 $ Ch.ord '*'
+
+fslashW8 :: Word8
+fslashW8 = i2w8 $ Ch.ord '/'
+
+i2w8 :: Int -> Word8
+i2w8 = fromIntegral

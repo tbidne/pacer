@@ -1,6 +1,8 @@
 module Main (main) where
 
 import Bench.Pacer.Utils qualified as Utils
+import Data.Tuple (uncurry)
+import Pacer.Class.Parser qualified as P
 import Pacer.Prelude hiding (IO)
 import Test.Tasty.Bench
   ( Benchmark,
@@ -15,7 +17,8 @@ main :: IO ()
 main =
   defaultMain
     [ benchMkSomeRuns,
-      benchMkSomeRunsError
+      benchMkSomeRunsError,
+      benchStripComments
     ]
 
 benchMkSomeRuns :: Benchmark
@@ -42,6 +45,26 @@ benchMkSomeRunsError =
       bench "1_000" $ nf Utils.decodeErrorActivities (Utils.genOverlappedActivitiesJson 1_000),
       bench "10_000" $ nf Utils.decodeErrorActivities (Utils.genOverlappedActivitiesJson 10_000)
     ]
+
+benchStripComments :: Benchmark
+benchStripComments =
+  bgroup
+    "strip_comments"
+    (uncurry mkBenches <$> bss)
+  where
+    mkBenches desc bs =
+      bgroup
+        desc
+        [ bench "bytestring" $ nf P.stripCommentsBS bs,
+          bench "megaparsec_auto" $ nf P.stripCommentsMpAuto bs,
+          bench "megaparsec_manual" $ nf P.stripCommentsMpManual bs
+        ]
+
+    bss =
+      [ ("100", Utils.genActivitiesJson 100),
+        ("1_000", Utils.genActivitiesJson 1_000),
+        ("10_000", Utils.genActivitiesJson 10_000)
+      ]
 
 data TestParams = MkTestParams
   { runs_100_bs :: ByteString,

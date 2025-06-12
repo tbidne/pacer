@@ -33,14 +33,16 @@ noCommentTests =
     ]
 
 testStripCommentNoneCases :: TestTree
-testStripCommentNoneCases = testCase "Unmodified cases" $ do
+testStripCommentNoneCases = testProp1 "testStripCommentNoneCases" desc $ do
   happyParse "" ""
   happyParse "some text" "some text"
+  where
+    desc = "Unmodified cases"
 
 testStripCommentNoneProps :: TestTree
 testStripCommentNoneProps = testStripProps name desc $ do
   bs <- forAll TestUtils.genNonComment
-  case P.stripComments bs of
+  runStripComments bs $ \case
     Err e -> do
       annotate e
       failure
@@ -58,12 +60,14 @@ lineCommentTests =
     ]
 
 testStripCommentLineCases :: TestTree
-testStripCommentLineCases = testCase "Line comment cases" $ do
+testStripCommentLineCases = testProp1 "testStripCommentLineCases" desc $ do
   happyParse "basicexample" "basic// should be removed\nexample"
   happyParse "basic  example" "basic // should be removed\n example"
   happyParse "more  stuff/ that here" "more //\n stuff/ that//blah\n here"
   happyParse "some / here" "some / ///* stuff */ /*\nhere"
   unhappyParse "unterminated // /* / */ blah"
+  where
+    desc = "Line comment cases"
 
 testStripLineCommentProps :: TestTree
 testStripLineCommentProps = testStripProps name desc $ do
@@ -89,12 +93,14 @@ blockCommentTests =
     ]
 
 testStripCommentBlockCases :: TestTree
-testStripCommentBlockCases = testCase "Block comment cases" $ do
+testStripCommentBlockCases = testProp1 "testStripCommentBlockCases" desc $ do
   happyParse "basicexample" "basic/*should be removed*/example"
   happyParse "basic  example" "basic /*should be removed*/ example"
   happyParse "more /  stuff/  here" "more / /**/ stuff/ /*that//blah*/ here"
   happyParse "blah  */ here" "blah /* foo */ */ here"
   unhappyParse "unterminated /* //\n blah"
+  where
+    desc = "Block comment cases"
 
 testStripBlockCommentProps :: TestTree
 testStripBlockCommentProps = testStripProps name desc $ do
@@ -117,14 +123,16 @@ allCommentTests =
     ]
 
 testStripAllCommentCases :: TestTree
-testStripAllCommentCases = testCase "All comment cases" $ do
+testStripAllCommentCases = testProp1 "testStripAllCommentCases" desc $ do
   happyParse "basicexample" "basic/*should // be removed*/example"
   happyParse "basicexample" "basic//should // /* be /* */ removed\nexample"
+  where
+    desc = "All comment cases"
 
 testStripAllCommentProps :: TestTree
 testStripAllCommentProps = testStripProps name desc $ do
   bs <- forAll TestUtils.genWithAllComments
-  case P.stripComments bs of
+  runStripComments bs $ \case
     Err e -> annotate e *> failure
     Ok r -> do
       annotateShow r
@@ -146,15 +154,37 @@ hasLineCommentStart = L.isInfixOf (s2W8List "//") . BS.unpack
 hasBlockCommentStart :: ByteString -> Bool
 hasBlockCommentStart = L.isInfixOf (s2W8List "/*") . BS.unpack
 
-happyParse :: ByteString -> ByteString -> Assertion
-happyParse expected txt = do
-  case P.stripComments txt of
-    Err e -> assertFailure $ "Expected success, received:\n" ++ e
-    Ok r -> expected @=? r
+happyParse :: ByteString -> ByteString -> PropertyT IO ()
+happyParse expected txt =
+  runStripComments txt $ \case
+    Err e -> do
+      annotate $ "Expected success, received:\n" ++ e
+      failure
+    Ok r -> expected === r
 
-unhappyParse :: ByteString -> Assertion
-unhappyParse txt = case P.stripComments txt of
-  -- It would be nice to verify that we get the nice megaparsec errors,
-  -- but testing equality directly is probably too flaky.
-  Err _ -> pure ()
-  Ok r -> assertFailure $ "Expected failure, received: " ++ show r
+unhappyParse :: ByteString -> PropertyT IO ()
+unhappyParse txt =
+  runStripComments txt $ \case
+    -- It would be nice to verify that we get the nice megaparsec errors,
+    -- but testing equality directly is probably too flaky.
+    Err _ -> pure ()
+    Ok r -> do
+      annotate $ "Expected failure, received: " ++ show r
+      failure
+
+runStripComments ::
+  ByteString ->
+  (ResultDefault ByteString -> PropertyT IO ()) ->
+  PropertyT IO ()
+runStripComments bs m = do
+  for_ stripCommentsFns $ \(a, p) -> do
+    annotateShow bs
+    annotate a
+    m (p bs)
+
+stripCommentsFns :: List (Tuple2 String (ByteString -> ResultDefault ByteString))
+stripCommentsFns =
+  [ ("ByteString", P.stripCommentsBS),
+    ("Megaparsec auto", P.stripCommentsMpAuto),
+    ("Megaparsec manual", P.stripCommentsMpManual)
+  ]
