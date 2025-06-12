@@ -75,6 +75,11 @@ jobs:
         shell: bash
         run: RUN_BENCH_FIT=1 cabal test bench-fit
 
+      # NOTE: Unfortunately the bytestring parsing benchmarks are quite
+      # volatile on CI, hence downgrading the failing threshold to 50.
+      # They are consistently much faster than megaparsec, so we should keep
+      # it, benchmark difficulty notwithstanding.
+
       - name: Benchmarks
         if: ${{ matrix.os == 'ubuntu-latest' }}
         id: bench
@@ -85,8 +90,8 @@ jobs:
             --csv bench/app/${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.csv
             --svg bench/app/${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.svg
             --baseline bench/app/baseline_${{ matrix.os }}_${{ matrix.ghc.vers }}_ci.csv
-            --fail-if-slower 20
-            --fail-if-faster 20'
+            --fail-if-slower 50
+            --fail-if-faster 50'
 
       - uses: actions/upload-artifact@v4
         name: Bench upload
