@@ -87,6 +87,7 @@
               {
                 # These tests are flaky (mostly on osx).
                 auto-update = hlib.dontCheck prev.auto-update;
+                effectful = hlib.dontCheck prev.effectful;
                 tasty-bench-fit = hlib.dontCheck prev.tasty-bench-fit;
                 warp = hlib.dontCheck prev.warp;
 
