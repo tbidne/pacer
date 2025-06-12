@@ -455,7 +455,7 @@ runCreateCharts coreEnv params = runMockChartIO coreEnv $ do
   params' <- ChartParams.evolvePhase params Nothing
   -- call handle since that is the actual entry point. createCharts
   -- merely creates the Charts, for later file writing or serving.
-  Chart.handle $ params'
+  Chart.handle Nothing params'
 
 -- NOTE: The Activities.csv file currently warns due to an activity (cycling)
 -- w/ distance 0.0. Previously this did nothing since we were throwing away
@@ -566,7 +566,7 @@ runCreateChartSeqEff paths =
     . runLoggerNS mempty
     . runLoggerMock
     . runFileReader
-    $ Chart.createChartSeq paths
+    $ Chart.createChartSeq Nothing paths
   where
     logEnv =
       MkLogEnv

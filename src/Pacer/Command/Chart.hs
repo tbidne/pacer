@@ -50,6 +50,7 @@ import Pacer.Command.Chart.Params
   )
 import Pacer.Command.Chart.Server (ServerEff)
 import Pacer.Command.Chart.Server qualified as Server
+import Pacer.Configuration.Config (ChartConfig)
 import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Data.Distance.Units (DistanceUnit)
 import Pacer.Exception (GarminE (GarminUnitRequired))
@@ -72,10 +73,11 @@ handle ::
     Reader LogEnv :> es,
     ServerEff :> es
   ) =>
+  Maybe ChartConfig ->
   ChartParamsFinal ->
   Eff es ()
-handle params = do
-  charts <- createCharts params
+handle mChartConfig params = do
+  charts <- createCharts mChartConfig params
 
   if params.json
     then do
@@ -102,9 +104,10 @@ createCharts ::
     LoggerNS :> es,
     Reader LogEnv :> es
   ) =>
+  Maybe ChartConfig ->
   ChartParamsFinal ->
   Eff es Charts
-createCharts params = addNamespace "createCharts" $ do
+createCharts mChartConfig params = addNamespace "createCharts" $ do
   $(Logger.logInfo)
     $ "Using chart-requests: "
     <> Utils.Show.showtPath params.chartRequestsPath
@@ -116,7 +119,7 @@ createCharts params = addNamespace "createCharts" $ do
     Just p ->
       $(Logger.logInfo) $ "Using activity-labels: " <> Utils.Show.showtPath p
 
-  createChartSeq chartPaths
+  createChartSeq mChartConfig chartPaths
   where
     chartPaths =
       (params.chartRequestsPath, params.activityLabelsPath, params.activityPaths)
@@ -158,11 +161,12 @@ createChartSeq ::
     LoggerNS :> es,
     Reader LogEnv :> es
   ) =>
+  Maybe ChartConfig ->
   ChartPaths ->
   Eff es Charts
-createChartSeq chartPaths = do
+createChartSeq mChartConfig chartPaths = do
   (chartRequests, activitiesWithLabels) <- readChartInputs chartPaths
-  throwErr =<< Chart.mkCharts activitiesWithLabels chartRequests
+  throwErr =<< Chart.mkCharts mChartConfig activitiesWithLabels chartRequests
 
 -- | Given file paths to activities and chart requests, reads the inputs.
 readChartInputs ::

@@ -17,10 +17,6 @@ module Pacer.Command.Chart.Data.ChartRequest
     -- * Garmin
     GarminSettings (..),
 
-    -- * Themes
-    ChartTheme (..),
-    ChartThemeConfig (..),
-
     -- * ChartRequests
     ChartRequests (..),
   )
@@ -29,6 +25,7 @@ where
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Expr (FilterExpr)
+import Pacer.Configuration.Config (ChartThemeConfig)
 import Pacer.Data.Distance (DistanceUnit)
 import Pacer.Prelude
 import Pacer.Utils.Json
@@ -37,7 +34,6 @@ import Pacer.Utils.Json
     (.:),
     (.:?),
     (.:?:),
-    (.=),
   )
 import Pacer.Utils.Json qualified as Json
 import Text.Megaparsec.Char qualified as MPC
@@ -204,7 +200,6 @@ instance
       "ChartRequest"
       [ "description",
         "filters",
-        "themes",
         "title",
         "type",
         "unit",
@@ -238,107 +233,6 @@ instance FromJSON GarminSettings where
     pure
       $ MkGarminSettings
         { distanceUnit
-        }
-
-data ChartTheme = MkChartTheme
-  { background :: Text,
-    grid :: Text,
-    name :: Text,
-    selectorBorder :: Text,
-    text :: Text,
-    tooltipBackground :: Text,
-    tooltip :: Text,
-    yBackground :: Text,
-    y1Background :: Text,
-    zoomDragBackground :: Text
-  }
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (NFData)
-
-instance ToJSON ChartTheme where
-  toJSON ct =
-    Json.object
-      [ "background" .= ct.background,
-        "grid" .= ct.grid,
-        "name" .= ct.name,
-        "selectorBorder" .= ct.selectorBorder,
-        "text" .= ct.text,
-        "tooltipBackground" .= ct.tooltipBackground,
-        "tooltip" .= ct.tooltip,
-        "yBackground" .= ct.yBackground,
-        "y1Background" .= ct.y1Background,
-        "zoomDragBackground" .= ct.zoomDragBackground
-      ]
-
-instance FromJSON ChartTheme where
-  parseJSON = Json.withObject "ChartTheme" $ \v -> do
-    background <- v .: "background"
-    grid <- v .: "grid"
-    name <- v .: "name"
-    selectorBorder <- v .: "selectorBorder"
-    text <- v .: "text"
-    tooltipBackground <- v .: "tooltipBackground"
-    tooltip <- v .: "tooltip"
-    yBackground <- v .: "yBackground"
-    y1Background <- v .: "y1Background"
-    zoomDragBackground <- v .: "zoomDragBackground"
-
-    Json.failUnknownFields
-      "ChartTheme"
-      [ "background",
-        "grid",
-        "name",
-        "selectorBorder",
-        "text",
-        "tooltipBackground",
-        "tooltip",
-        "yBackground",
-        "y1Background",
-        "zoomDragBackground"
-      ]
-      v
-
-    pure
-      $ MkChartTheme
-        { background,
-          grid,
-          name,
-          selectorBorder,
-          text,
-          tooltipBackground,
-          tooltip,
-          yBackground,
-          y1Background,
-          zoomDragBackground
-        }
-
-data ChartThemeConfig = MkChartThemeConfig
-  { defaultTheme :: Maybe Text,
-    themes :: List ChartTheme
-  }
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (NFData)
-
-instance ToJSON ChartThemeConfig where
-  toJSON ct =
-    Json.object
-      $ Json.encodeMaybe ("default", ct.defaultTheme)
-      ++ Json.encodeMonoid ("themes", ct.themes)
-
-instance FromJSON ChartThemeConfig where
-  parseJSON = Json.withObject "ChartThemes" $ \v -> do
-    defaultTheme <- v .:? "default"
-    themes <- v .:?: "themes"
-    Json.failUnknownFields
-      "ChartThemeConfig"
-      [ "default",
-        "themes"
-      ]
-      v
-    pure
-      $ MkChartThemeConfig
-        { defaultTheme,
-          themes
         }
 
 -- | List of chart requests.
@@ -387,6 +281,4 @@ instance
 
 makeFieldLabelsNoPrefix ''GarminSettings
 makeFieldLabelsNoPrefix ''ChartRequest
-makeFieldLabelsNoPrefix ''ChartTheme
-makeFieldLabelsNoPrefix ''ChartThemeConfig
 makeFieldLabelsNoPrefix ''ChartRequests

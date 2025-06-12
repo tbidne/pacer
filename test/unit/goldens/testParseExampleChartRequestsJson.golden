@@ -185,7 +185,7 @@ MkChartRequests
   , themeConfig = Just
     ( MkChartThemeConfig
       { defaultTheme = Just "Pink"
-      , themes =
+      , themes = fromList
         [ MkChartTheme
           { background = "#320054"
           , grid = "#ff49dc"

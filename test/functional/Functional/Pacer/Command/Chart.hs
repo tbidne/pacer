@@ -43,6 +43,7 @@ basicTests getTestDir =
       testUnknownKeyFailure getTestDir,
       testChartSum getTestDir,
       testChartSmooth getTestDir,
+      testChartThemes getTestDir,
       testUnmatchedActivityLabelWarning getTestDir
     ]
 
@@ -280,6 +281,35 @@ testChartSmooth :: IO OsPath -> TestTree
 testChartSmooth = testChart desc [osp|testChartSmooth|]
   where
     desc = "Uses chart sum with smooth"
+
+testChartThemes :: IO OsPath -> TestTree
+testChartThemes getTestDir = testGoldenParams getTestDir params
+  where
+    params =
+      MkGoldenParams
+        { mkArgs = \p ->
+            [ "--log-level",
+              "warn",
+              -- Have to manually specify the config path since the current
+              -- directory is wherever the tests are run from (generally the
+              -- top-level, NOT the data directory).
+              "--config",
+              configPath,
+              "chart",
+              "--json",
+              "--data",
+              dataDir,
+              "--build-dir",
+              buildDir p
+            ],
+          outFileName = GoldenOutputFileLogs [ospPathSep|build/charts.json|],
+          testDesc = "Combines custom chart themes",
+          testName = [osp|testChartThemes|]
+        }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
+    dataDirPath = [ospPathSep|test/functional/data/testChartThemes|]
+    dataDir = unsafeDecode dataDirPath
+    configPath = unsafeDecode $ dataDirPath </> [osp|config.json|]
 
 testUnmatchedActivityLabelWarning :: IO OsPath -> TestTree
 testUnmatchedActivityLabelWarning getTestDir = testCase desc $ do

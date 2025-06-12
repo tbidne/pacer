@@ -1,0 +1,82 @@
+[2022-02-08 10:20:05][main.createCharts][Warn] Overriding duplicate themes found in config with those from chart-requests: [Pink]
+
+
+build/charts.json
+
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-02"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          }
+        }
+      },
+      "extra": {},
+      "title": "Runs by distance"
+    }
+  ],
+  "theme": {
+    "default": "Pink",
+    "themes": [
+      {
+        "background": "blue_r_1",
+        "grid": "blue_r_2",
+        "name": "Blue",
+        "selectorBorder": "blue_r_3",
+        "text": "blue_r_4",
+        "tooltip": "blue_r_6",
+        "tooltipBackground": "blue_r_5",
+        "y1Background": "blue_r_8",
+        "yBackground": "blue_r_7",
+        "zoomDragBackground": "blue_r_9"
+      },
+      {
+        "background": "green_c_1",
+        "grid": "green_c_2",
+        "name": "Green",
+        "selectorBorder": "green_c_3",
+        "text": "green_c_4",
+        "tooltip": "green_c_6",
+        "tooltipBackground": "green_c_5",
+        "y1Background": "green_c_8",
+        "yBackground": "green_c_7",
+        "zoomDragBackground": "green_c_9"
+      },
+      {
+        "background": "orange_c_1",
+        "grid": "orange_c_2",
+        "name": "Orange",
+        "selectorBorder": "orange_c_3",
+        "text": "orange_c_4",
+        "tooltip": "orange_c_6",
+        "tooltipBackground": "orange_c_5",
+        "y1Background": "orange_c_8",
+        "yBackground": "orange_c_7",
+        "zoomDragBackground": "orange_c_9"
+      },
+      {
+        "background": "pink_r_1",
+        "grid": "pink_r_2",
+        "name": "Pink",
+        "selectorBorder": "pink_r_3",
+        "text": "pink_r_4",
+        "tooltip": "pink_r_6",
+        "tooltipBackground": "pink_r_5",
+        "y1Background": "pink_r_8",
+        "yBackground": "pink_r_7",
+        "zoomDragBackground": "pink_r_9"
+      }
+    ]
+  }
+}
+

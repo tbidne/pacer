@@ -1,0 +1,45 @@
+{
+  "chart": {
+    "theme": {
+      "default": "Green",
+      "themes": [
+        {
+          "name": "Pink",
+          "background": "pink_c_1",
+          "grid": "pink_c_2",
+          "selectorBorder": "pink_c_3",
+          "text": "pink_c_4",
+          "tooltipBackground": "pink_c_5",
+          "tooltip": "pink_c_6",
+          "yBackground": "pink_c_7",
+          "y1Background": "pink_c_8",
+          "zoomDragBackground": "pink_c_9"
+        },
+        {
+          "name": "Green",
+          "background": "green_c_1",
+          "grid": "green_c_2",
+          "selectorBorder": "green_c_3",
+          "text": "green_c_4",
+          "tooltipBackground": "green_c_5",
+          "tooltip": "green_c_6",
+          "yBackground": "green_c_7",
+          "y1Background": "green_c_8",
+          "zoomDragBackground": "green_c_9"
+        },
+        {
+          "name": "Orange",
+          "background": "orange_c_1",
+          "grid": "orange_c_2",
+          "selectorBorder": "orange_c_3",
+          "text": "orange_c_4",
+          "tooltipBackground": "orange_c_5",
+          "tooltip": "orange_c_6",
+          "yBackground": "orange_c_7",
+          "y1Background": "orange_c_8",
+          "zoomDragBackground": "orange_c_9"
+        }
+      ]
+    }
+  }
+}

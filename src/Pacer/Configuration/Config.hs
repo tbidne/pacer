@@ -2,22 +2,33 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Configuration.Config
-  ( Config (..),
-    LogConfig (..),
-    ChartConfig (..),
+  ( -- * Config
+    Config (..),
     ConfigWithPath (..),
+
+    -- * Logging
+    LogConfig (..),
+
+    -- * Chart
+    ChartConfig (..),
+    ChartThemeConfig (..),
+    ChartTheme (..),
   )
 where
 
 import Data.Sequence (Seq (Empty))
+import Data.Set (Set)
 import FileSystem.OsPath qualified as OsPath
 import Pacer.Configuration.Logging (LogLevelParam, LogVerbosity)
 import Pacer.Prelude
 import Pacer.Utils.Json
   ( FromJSON (parseJSON),
     JsonParser,
+    ToJSON (toJSON),
+    (.:),
     (.:?),
     (.:?:),
+    (.=),
   )
 import Pacer.Utils.Json qualified as Json
 import System.IO (FilePath)
@@ -95,25 +106,28 @@ data ChartConfig = MkChartConfig
     activityPaths :: Seq OsPath,
     -- | Build dir.
     buildDir :: Maybe OsPath,
+    -- | Optional path to chart-requests.json.
+    chartRequestsPath :: Maybe OsPath,
     -- | Optional path to directory with activities file(s) and
     -- chart-requests.json.
     dataDir :: Maybe OsPath,
-    -- | Optional path to chart-requests.json.
-    chartRequestsPath :: Maybe OsPath
+    -- | Optional theme config.
+    themeConfig :: Maybe ChartThemeConfig
   }
   deriving stock (Eq, Show)
 
 instance Semigroup ChartConfig where
-  MkChartConfig x1 x2 x3 x4 x5 <> MkChartConfig y1 y2 y3 y4 y5 =
+  MkChartConfig x1 x2 x3 x4 x5 x6 <> MkChartConfig y1 y2 y3 y4 y5 y6 =
     MkChartConfig
       (x1 <|> y1)
       (x2 <> y2)
       (x3 <|> y3)
       (x4 <|> y4)
       (x5 <|> y5)
+      (x6 <|> y6)
 
 instance Monoid ChartConfig where
-  mempty = MkChartConfig Nothing Empty Nothing Nothing Nothing
+  mempty = MkChartConfig Nothing Empty Nothing Nothing Nothing Nothing
 
 instance FromJSON ChartConfig where
   parseJSON = Json.withObject "ChartConfig" $ \v -> do
@@ -122,14 +136,16 @@ instance FromJSON ChartConfig where
     buildDir <- parseOsPath $ v .:? "build-dir"
     dataDir <- parseOsPath $ v .:? "data"
     chartRequestsPath <- parseOsPath $ v .:? "chart-requests"
+    themeConfig <- v .:? "theme"
 
     Json.failUnknownFields
       "ChartConfig"
-      [ "build-dir",
+      [ "activity-labels",
+        "activities",
+        "build-dir",
         "chart-requests",
         "data",
-        "activity-labels",
-        "activities"
+        "theme"
       ]
       v
     pure
@@ -137,8 +153,9 @@ instance FromJSON ChartConfig where
         { activityLabelsPath,
           activityPaths,
           buildDir,
+          chartRequestsPath,
           dataDir,
-          chartRequestsPath
+          themeConfig
         }
     where
       parseOsPath ::
@@ -148,7 +165,116 @@ instance FromJSON ChartConfig where
         JsonParser (f OsPath)
       parseOsPath p = p >>= traverse OsPath.encodeValidFail
 
+data ChartTheme = MkChartTheme
+  { background :: Text,
+    grid :: Text,
+    name :: Text,
+    selectorBorder :: Text,
+    text :: Text,
+    tooltipBackground :: Text,
+    tooltip :: Text,
+    yBackground :: Text,
+    y1Background :: Text,
+    zoomDragBackground :: Text
+  }
+  deriving stock (Generic, Show)
+  deriving anyclass (NFData)
+
+instance Eq ChartTheme where
+  x == y = x.name == y.name
+
+instance Ord ChartTheme where
+  x <= y = x.name <= y.name
+
+instance ToJSON ChartTheme where
+  toJSON ct =
+    Json.object
+      [ "background" .= ct.background,
+        "grid" .= ct.grid,
+        "name" .= ct.name,
+        "selectorBorder" .= ct.selectorBorder,
+        "text" .= ct.text,
+        "tooltipBackground" .= ct.tooltipBackground,
+        "tooltip" .= ct.tooltip,
+        "yBackground" .= ct.yBackground,
+        "y1Background" .= ct.y1Background,
+        "zoomDragBackground" .= ct.zoomDragBackground
+      ]
+
+instance FromJSON ChartTheme where
+  parseJSON = Json.withObject "ChartTheme" $ \v -> do
+    background <- v .: "background"
+    grid <- v .: "grid"
+    name <- v .: "name"
+    selectorBorder <- v .: "selectorBorder"
+    text <- v .: "text"
+    tooltipBackground <- v .: "tooltipBackground"
+    tooltip <- v .: "tooltip"
+    yBackground <- v .: "yBackground"
+    y1Background <- v .: "y1Background"
+    zoomDragBackground <- v .: "zoomDragBackground"
+
+    Json.failUnknownFields
+      "ChartTheme"
+      [ "background",
+        "grid",
+        "name",
+        "selectorBorder",
+        "text",
+        "tooltipBackground",
+        "tooltip",
+        "yBackground",
+        "y1Background",
+        "zoomDragBackground"
+      ]
+      v
+
+    pure
+      $ MkChartTheme
+        { background,
+          grid,
+          name,
+          selectorBorder,
+          text,
+          tooltipBackground,
+          tooltip,
+          yBackground,
+          y1Background,
+          zoomDragBackground
+        }
+
+data ChartThemeConfig = MkChartThemeConfig
+  { defaultTheme :: Maybe Text,
+    themes :: Set ChartTheme
+  }
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (NFData)
+
+instance ToJSON ChartThemeConfig where
+  toJSON ct =
+    Json.object
+      $ Json.encodeMaybe ("default", ct.defaultTheme)
+      ++ Json.encodeMonoid ("themes", ct.themes)
+
+instance FromJSON ChartThemeConfig where
+  parseJSON = Json.withObject "ChartThemes" $ \v -> do
+    defaultTheme <- v .:? "default"
+    themes <- v .:?: "themes"
+    Json.failUnknownFields
+      "ChartThemeConfig"
+      [ "default",
+        "themes"
+      ]
+      v
+    pure
+      $ MkChartThemeConfig
+        { defaultTheme,
+          themes
+        }
+
 makeFieldLabelsNoPrefix ''ConfigWithPath
 makeFieldLabelsNoPrefix ''Config
 makeFieldLabelsNoPrefix ''LogConfig
 makeFieldLabelsNoPrefix ''ChartConfig
+makeFieldLabelsNoPrefix ''ChartThemeConfig
+makeFieldLabelsNoPrefix ''ChartTheme

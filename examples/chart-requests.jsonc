@@ -9,9 +9,11 @@
   ],
   // Optional theme configuration.
   "theme": {
-    // We can select the default theme.
+    // We can select the default theme. Overrides the default from the
+    // config file.
     "default": "Pink",
-    // We can also add custom themes.
+    // We can also add custom themes. Combines with those from the config
+    // file, overriding duplicates.
     "themes": [
       {
         "name": "Pink",

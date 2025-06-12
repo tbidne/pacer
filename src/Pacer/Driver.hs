@@ -104,7 +104,9 @@ runCommand ::
 runCommand (cmd, mConfig, cachedPaths, logEnv) = runner $ logAndRethrow $ do
   command <- Command.evolvePhase cmd mConfig
   case command of
-    Chart params -> Chart.handle params
+    Chart params -> do
+      let mChartConfig = preview (_Just % #config % #chartConfig % _Just) mConfig
+      Chart.handle mChartConfig params
     Convert params -> Convert.handle params
     Derive params -> Derive.handle params
     Scale params -> Scale.handle params
@@ -252,7 +254,12 @@ getEnv = do
             @Maybe
             "config"
             configSearchFiles
-            [ Utils.FileSearch.findFilePath args.configPath,
+            [ -- Unlike the other files, we do _not_ search the data directory,
+              -- because that partially comes from the config file, so it's
+              -- a chicken-and-egg problem. Finding and parsing the config file
+              -- should be wholly independent of the chart command's arguments,
+              -- hence it cannot rely on data directory.
+              Utils.FileSearch.findFilePath args.configPath,
               Utils.FileSearch.findCurrentDirectoryPath,
               Utils.FileSearch.findXdgPath
             ]

@@ -9,11 +9,32 @@
   },
   // Optional chart config. Affects 'chart' command.
   "chart": {
+    // Path to activities file(s). Overrides 'data' field.
+    "activities": ["./activities.jsonc"],
     // Path to chart-requests file. Overrides 'data' field.
     "chart-requests": "./chart-requests.jsonc",
     // Data directory where we expect to find the chart-requests and activity files.
     "data": "./",
-    // Path to activities file(s). Overrides 'data' field.
-    "activities": ["./activities.jsonc"]
+    // Optional theme configuration.
+    "theme": {
+      // We can select the default theme to a built-in theme or a custom one
+      // below.
+      "default": "Pink",
+      // We can also add custom themes.
+      "themes": [
+        {
+          "name": "Pink",
+          "background": "#320054",
+          "grid": "#ff49dc",
+          "selectorBorder": "#ff49dc",
+          "text": "#ff49dc",
+          "tooltipBackground": "#320054",
+          "tooltip": "#ff49dc",
+          "yBackground": "#36a2eb",
+          "y1Background": "#ff6384",
+          "zoomDragBackground": "#436dd0"
+        }
+      ]
+    }
   }
 }

@@ -1,0 +1,41 @@
+{
+  "theme": {
+    "default": "Pink",
+    "themes": [
+      {
+        "name": "Pink",
+        "background": "pink_r_1",
+        "grid": "pink_r_2",
+        "selectorBorder": "pink_r_3",
+        "text": "pink_r_4",
+        "tooltipBackground": "pink_r_5",
+        "tooltip": "pink_r_6",
+        "yBackground": "pink_r_7",
+        "y1Background": "pink_r_8",
+        "zoomDragBackground": "pink_r_9"
+      },
+      {
+        "name": "Blue",
+        "background": "blue_r_1",
+        "grid": "blue_r_2",
+        "selectorBorder": "blue_r_3",
+        "text": "blue_r_4",
+        "tooltipBackground": "blue_r_5",
+        "tooltip": "blue_r_6",
+        "yBackground": "blue_r_7",
+        "y1Background": "blue_r_8",
+        "zoomDragBackground": "blue_r_9"
+      }
+    ]
+  },
+  "charts": [
+    {
+      "title": "Runs by distance",
+      "y-axis": "distance",
+      "type": {
+        "name": "default"
+      }
+    }
+  ]
+}
+

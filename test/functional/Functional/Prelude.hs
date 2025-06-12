@@ -31,6 +31,13 @@ import Data.List qualified as L
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
+import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
+import Data.Time.LocalTime
+  ( LocalTime (LocalTime),
+    TimeOfDay (TimeOfDay),
+    ZonedTime (ZonedTime),
+    utc,
+  )
 import Effectful.FileSystem.FileWriter.Dynamic
   ( FileWriter (WriteBinaryFile),
   )
@@ -46,6 +53,7 @@ import Effectful.FileSystem.PathReader.Dynamic
   )
 import Effectful.FileSystem.PathReader.Static qualified as PRS
 import Effectful.Terminal.Dynamic (Terminal (PutBinary, PutStr, PutStrLn))
+import Effectful.Time.Dynamic (Time (GetSystemZonedTime))
 import FileSystem.IO (writeBinaryFileIO)
 import FileSystem.OsPath (decodeLenient, unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
@@ -140,7 +148,7 @@ runTestEff env m = do
   runEff
     . runReader @FuncEnv env
     . runConcurrent
-    . runTime
+    . runTimeMock
     . runIORef
     . runTerminalMock
     . runServerEffMock
@@ -167,6 +175,22 @@ runTestEff env m = do
         . runEff
         . PRS.runPathReader
         . PRS.makeRelativeToCurrentDirectory
+
+runTimeMock ::
+  Eff (Time : es) a ->
+  Eff es a
+runTimeMock = interpret $ \_ -> \case
+  GetSystemZonedTime -> pure zonedTime
+  other -> error $ "runTimeMock: unimplemented: " ++ showEffectCons other
+  where
+    localTime :: LocalTime
+    localTime = LocalTime day tod
+      where
+        day = fromOrdinalDate 2022 39
+        tod = TimeOfDay 10 20 5
+
+    zonedTime :: ZonedTime
+    zonedTime = ZonedTime localTime utc
 
 runFuncIO :: Eff TestEffects a -> IO FuncEnv
 runFuncIO m = do

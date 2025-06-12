@@ -269,6 +269,8 @@ test-suite functional
     , tasty-hunit
     , terminal-effectful
     , text
+    , time
+    , time-effectful
 
   hs-source-dirs: test/functional
   ghc-options:    -threaded
