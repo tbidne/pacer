@@ -606,8 +606,6 @@ strings
 
 ##### Expressions
 
-Basic boolean expressions are also supported:
-
 ```
 ; An expression is either an atom or a boolean combination of expressions.
 expr
