@@ -552,7 +552,7 @@ set_ops
 ; Operators for set membership e.g. 'A ∋ x' means "Set A has member x".
 set_op_elem
   : '∋'
-  | 'contains'  ; alias for ∋
+  | 'includes'  ; alias for ∋
 
 ; Operators for set comparisons.
 set_op_set
