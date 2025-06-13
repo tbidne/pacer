@@ -196,23 +196,17 @@ parseSet name = do
 data FilterElemOpSet
   = -- | Membership.
     FilterElemInSet
-  | -- | Not membership.
-    FilterElemNotInSet
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
 instance Display FilterElemOpSet where
-  displayBuilder = \case
-    FilterElemInSet -> "∈"
-    FilterElemNotInSet -> "∉"
+  displayBuilder FilterElemInSet = "∈"
 
 instance Parser FilterElemOpSet where
   parser =
     asum
       [ P.char '∈' $> FilterElemInSet,
-        P.string "in" $> FilterElemInSet,
-        P.char '∉' $> FilterElemNotInSet,
-        P.string "not_in" $> FilterElemNotInSet
+        P.string "in" $> FilterElemInSet
       ]
 
 -------------------------------------------------------------------------------
@@ -221,7 +215,6 @@ instance Parser FilterElemOpSet where
 
 memberFun :: (Ord a) => FilterElemOpSet -> a -> Set a -> Bool
 memberFun FilterElemInSet = Set.member
-memberFun FilterElemNotInSet = Set.notMember
 
 applyFilterElem :: (Ord b) => b -> FilterElem p b -> Bool
 applyFilterElem actVal = \case
@@ -242,11 +235,7 @@ applyFilterElem actVal = \case
 -- "there exists an l in labels s.t. l == foo".
 type FilterSet :: Symbol -> Type -> Type
 data FilterSet p a
-  = -- | Operations on an arbitrary element in X. Not only does this allow
-    -- alternative syntax for @X ∋ a@ -- i.e. @x = a@, it also allows
-    -- encoding "OR" e.g. @x ∈ {a, b}@ for any x in X.
-    FilterSetElem (FilterElem p a)
-  | -- | Set membership.
+  = -- | Set membership.
     FilterSetHasElem FilterSetOpElem a
   | -- | Set comparisons e.g. @labels ⊇ {label_1, label_2}@. This tests that
     -- all labels exist within labels ("AND").
@@ -256,7 +245,6 @@ data FilterSet p a
 
 instance (Display a, Eq a, KnownSymbol s) => Display (FilterSet s a) where
   displayBuilder = \case
-    FilterSetElem e -> displayBuilder e
     FilterSetHasElem op t ->
       mconcat
         [ symsStrSpc,
@@ -280,12 +268,7 @@ instance (Display a, Eq a, KnownSymbol s) => Display (FilterSet s a) where
 -------------------------------------------------------------------------------
 
 instance (KnownSymbol s, Ord a, Parser a) => Parser (FilterSet s a) where
-  parser =
-    asum
-      [ -- plural needs to precede singular.
-        parseFilterSet symsStr <?> symsStr,
-        FilterSetElem <$> parser <?> symStr
-      ]
+  parser = parseFilterSet symsStr <?> symsStr
     where
       symStr = symbolVal (Proxy :: Proxy s)
       symsStr = symStr <> "s"
@@ -321,23 +304,18 @@ parseFilterSet symsStr = do
 data FilterSetOpElem
   = -- | Membership.
     FilterSetContainsElem
-  | -- | Not membership.
-    FilterSetNContainsElem
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
 instance Display FilterSetOpElem where
-  displayBuilder = \case
-    FilterSetContainsElem -> "∋"
-    FilterSetNContainsElem -> "∌"
+  displayBuilder FilterSetContainsElem = "∋"
 
 instance Parser FilterSetOpElem where
   parser =
     asum
       [ P.char '∋' $> FilterSetContainsElem,
-        P.string "contains" $> FilterSetContainsElem,
-        P.char '∌' $> FilterSetNContainsElem,
-        P.string "not_contains" $> FilterSetNContainsElem
+        -- Singular because LHS is always plural e.g. "labels include".
+        P.string "include" $> FilterSetContainsElem
       ]
 
 -- | Operator for set comparisons.
@@ -429,8 +407,6 @@ instance Parser FilterSetOpSet where
 
 applyFilterSet :: forall b p. (Ord b) => Set b -> FilterSet p b -> Bool
 applyFilterSet set = \case
-  FilterSetElem (FilterElemEq op t) -> existsElemFun op set t
-  FilterSetElem (FilterElemExists op t) -> existsSetFun op set t
   FilterSetHasElem op t -> hasElemFun op set t
   FilterSetComp op t -> compFun op set t
 
@@ -442,11 +418,9 @@ existsElemFun FilterOpEqNEq = flip Set.notMember
 
 existsSetFun :: (Ord a) => FilterElemOpSet -> Set a -> Set a -> Bool
 existsSetFun FilterElemInSet ls rs = Set.intersection ls rs /= mempty
-existsSetFun FilterElemNotInSet ls rs = Set.intersection ls rs == mempty
 
 hasElemFun :: (Ord a) => FilterSetOpElem -> Set a -> a -> Bool
 hasElemFun FilterSetContainsElem = flip Set.member
-hasElemFun FilterSetNContainsElem = flip Set.notMember
 
 compFun :: (Ord b) => FilterSetOpSet -> (Set b -> Set b -> Bool)
 compFun (FilterSetOpSetEq op) = Eq.toFun op

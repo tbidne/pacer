@@ -9,5 +9,5 @@ Error: Pacer.Class.Parser.parseWith:1:1:
 1 | unknown <= 4m24s
   | ^^^^^^^^
 unexpected "unknown "
-expecting datetime, distance, duration, label, labels, pace, or type
+expecting datetime, distance, duration, labels, pace, or type
 

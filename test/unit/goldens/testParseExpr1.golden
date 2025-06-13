@@ -1,1 +1,13 @@
-label = foo and pace ≤ 4'24" /km
+Text: 'label = foo and pace <= 4m24s /km'
+
+Tokens: [label,=,foo,and,pace,<=,4m24s,/km]
+
+Expr Text: label = foo and pace <= 4m24s /km
+
+Error: Pacer.Class.Parser.parseWith:1:1:
+  |
+1 | label = foo
+  | ^^^^^^^^
+unexpected "label = "
+expecting datetime, distance, duration, labels, pace, or type
+

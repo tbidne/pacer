@@ -42,44 +42,19 @@ atomTests =
               runner = pure $ parseExpr "duration /= 3h20m"
             },
           MkGoldenParams
-            { testDesc = "Label eq",
-              testName = [osp|testParseExprAtomLabelEq|],
-              runner = pure $ parseExpr "label = some label"
-            },
-          MkGoldenParams
-            { testDesc = "Label neq",
-              testName = [osp|testParseExprAtomLabelNeq|],
-              runner = pure $ parseExpr "label /= some label"
-            },
-          MkGoldenParams
-            { testDesc = "Label member",
-              testName = [osp|testParseExprAtomLabelMember|],
-              runner = pure $ parseExpr "label ∈ {l1, l2}"
-            },
-          MkGoldenParams
-            { testDesc = "Label nmember",
-              testName = [osp|testParseExprAtomLabelNMember|],
-              runner = pure $ parseExpr "label ∉ {l1, l2}"
-            },
-          MkGoldenParams
             { testDesc = "Labels member",
               testName = [osp|testParseExprAtomLabelsMember|],
               runner = pure $ parseExpr "labels ∋ some label"
             },
           MkGoldenParams
+            { testDesc = "Labels member word",
+              testName = [osp|testParseExprAtomLabelsMemberWord|],
+              runner = pure $ parseExpr "labels include some label"
+            },
+          MkGoldenParams
             { testDesc = "Labels member fail",
               testName = [osp|testParseExprAtomLabelsMemberFail|],
               runner = pure $ parseExpr "labels ∋ {some label}"
-            },
-          MkGoldenParams
-            { testDesc = "Labels nmember",
-              testName = [osp|testParseExprAtomLabelsNmember|],
-              runner = pure $ parseExpr "labels ∌ some label"
-            },
-          MkGoldenParams
-            { testDesc = "Labels nmember fail",
-              testName = [osp|testParseExprAtomLabelsNmemberFail|],
-              runner = pure $ parseExpr "labels ∌ {a}"
             },
           MkGoldenParams
             { testDesc = "Labels eq",
@@ -170,16 +145,6 @@ atomTests =
             { testDesc = "Type member fail",
               testName = [osp|testParseExprAtomTypeMemberFail|],
               runner = pure $ parseExpr "type ∈ t1"
-            },
-          MkGoldenParams
-            { testDesc = "Type nmember",
-              testName = [osp|testParseExprAtomTypeNmember|],
-              runner = pure $ parseExpr "type ∉ {t1, t2}"
-            },
-          MkGoldenParams
-            { testDesc = "Type nmember fail",
-              testName = [osp|testParseExprAtomTypeNmemberFail|],
-              runner = pure $ parseExpr "type ∉ t1"
             },
           MkGoldenParams
             { testDesc = "Pace",

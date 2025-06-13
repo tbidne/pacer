@@ -1,1 +1,13 @@
-label ∉ {l1, l2}
+Text: 'label ∉ {l1, l2}'
+
+Tokens: [label,∉,{l1,,l2}]
+
+Expr Text: label ∉ {l1, l2}
+
+Error: Pacer.Class.Parser.parseWith:1:1:
+  |
+1 | label ∉ {l1, l2}
+  | ^^^^^^^^
+unexpected "label ∉ "
+expecting datetime, distance, duration, labels, pace, or type
+

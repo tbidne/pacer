@@ -33,11 +33,9 @@ MkChartRequests
         , filters =
           [ Atom
             ( FilterLabel
-              ( FilterSetElem
-                ( FilterElemEq FilterOpEqEq
-                  ( MkLabel
-                    { unLabel = "marathon" }
-                  )
+              ( FilterSetHasElem FilterSetContainsElem
+                ( MkLabel
+                  { unLabel = "marathon" }
                 )
               )
             )
@@ -64,18 +62,16 @@ MkChartRequests
         , filters =
           [ Atom
             ( FilterLabel
-              ( FilterSetElem
-                ( FilterElemEq FilterOpEqEq
-                  ( MkLabel
-                    { unLabel = "official" }
-                  )
+              ( FilterSetHasElem FilterSetContainsElem
+                ( MkLabel
+                  { unLabel = "official" }
                 )
               )
             )
-          , Atom
-            ( FilterLabel
-              ( FilterSetElem
-                ( FilterElemEq FilterOpEqNEq
+          , Not
+            ( Atom
+              ( FilterLabel
+                ( FilterSetHasElem FilterSetContainsElem
                   ( MkLabel
                     { unLabel = "marathon" }
                   )
@@ -95,22 +91,18 @@ MkChartRequests
           [ Or
             ( Atom
               ( FilterLabel
-                ( FilterSetElem
-                  ( FilterElemEq FilterOpEqEq
-                    ( MkLabel
-                      { unLabel = "half-marathon" }
-                    )
+                ( FilterSetHasElem FilterSetContainsElem
+                  ( MkLabel
+                    { unLabel = "half-marathon" }
                   )
                 )
               )
             )
             ( Atom
               ( FilterLabel
-                ( FilterSetElem
-                  ( FilterElemEq FilterOpEqEq
-                    ( MkLabel
-                      { unLabel = "marathon" }
-                    )
+                ( FilterSetHasElem FilterSetContainsElem
+                  ( MkLabel
+                    { unLabel = "marathon" }
                   )
                 )
               )

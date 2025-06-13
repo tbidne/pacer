@@ -217,7 +217,7 @@ There are some caveats:
     // chart-requests.json
     {
       "title": "Marathons",
-      "filters": ["label = marathon"],
+      "filters": ["labels include marathon"],
       "y-axis": "duration"
     }
     ```
@@ -259,7 +259,7 @@ Chart requests allow us to filter activities based on some criteria. In general,
       "title": "Races and long runs",
       // Local filters, applies only to this chart.
       "filters": [
-        "label = official_race",
+        "labels include official_race",
         "distance >= 25 km",
         "datetime > 2024"
       ],
@@ -338,7 +338,7 @@ Basic logical operators are supported:
   "title": "Some title",
   "filters": [
     // Has label "offical_race" and/or label "marathon"
-    "label = official_race or label = marathon",
+    "labels include official_race or labels include marathon",
     // Distance < 10km and pace is NOT < 5m/km (i.e. pace >= 5km/km).
     "distance < 10km and (not (pace < 5m/km))"
   ],
@@ -384,54 +384,15 @@ Labels are a bit more involved, since an activity can have multiple e.g.
 }
 ```
 
-If a filter is written using the singular **label**, it is taken to mean _some label_ in the entire labels set. For example, the following:
+The following takes activities that have _all_ of the labels `l1`, `l2`, and `l3`.
 
 ```jsonc
 {
   "title": "Some title",
   "filters": [
-    // These are all equivalent.
-    "label = l1 or label = l2 or label = l3",
-    "label ∈ {l1, l2, l3}",
-    // Notice this is written in terms of the 'labels' set, rather than the
-    // singular above. Like the above, the symbol ∋ -- pronounced 'contains' --
-    // has an English alternative: "contains".
-    "labels ∋ l1 or labels ∋ l2 or labels ∋ l3"
-  ],
-  "y-axis": "distance"
-}
-```
-
-will take all activities that have at least one label `l1`, `l2`, or `l3` (and possibly more). Negation -- when applied to the singular **label** -- applies to the entire expression. The following are all equivalent:
-
-```jsonc
-{
-  "title": "Some title",
-  "filters": [
-    "label /= l1 and label /= l2 and label /= l3",
-    "(not (label = l1)) and (not (label = l2) and (not (label = l3))",
-    "not (label = l1 or label = l2 or label = l3)",
-    // The symbol ∉ can be replaced by the word "not_in".
-    "label ∉ {l1, l2, l3}",
-    "not (label ∈ {l1, l2, l3})",
-    // The symbol ∌ can be replaced by the word "not_contains".
-    "labels ∌ l1 and labels ∌ l2 and labels ∌ l3",
-    "not (labels ∋ l1 or labels ∋ l2 or labels ∋ l3)"
-  ],
-  "y-axis": "distance"
-}
-```
-
-On the other hand, we can refer to the entire labels set with the plural `labels`.
-
-```jsonc
-{
-  "title": "Some title",
-  "filters": [
-    // Similar to above, except we are using 'and' not 'or'.
+    // The following are equivalent. The operator '∋' is an alias for
+    // the word "include".
     "labels ∋ l1 and labels ∋ l2 and labels ∋ l3",
-    // True if labels is a superset of {l1, l2, 3} i.e. contains everything.
-    // Can also be written as ">=".
     "labels ⊇ {l1, l2, l3}"
   ],
   "y-axis": "distance"
@@ -440,7 +401,7 @@ On the other hand, we can refer to the entire labels set with the plural `labels
 
 #### Aliases
 
-Most operators have aliases i.e. multiple ways to write them:
+Many operators have aliases i.e. multiple ways to write them:
 
 - Equality:
   - `=`
@@ -457,9 +418,7 @@ Most operators have aliases i.e. multiple ways to write them:
   - `not`: `!`, `¬`
 - Set theory:
   - `∈`: `in`
-  - `∉`: `not_in`
-  - `∋`: `contains`
-  - `∌`: `not_contains`
+  - `∋`: `include`
   - `⊇`: `>=`
   - `⊃`: `>`
   - `⊆`: `<=`
@@ -471,8 +430,8 @@ Most operators have aliases i.e. multiple ways to write them:
 {
   "title": "Some title",
   "filters": [
-    "label = official_race or label = marathon",
-    "labels ∌ casual",
+    "labels include official_race or labels include marathon",
+    "not (labels ∋ casual)",
     "labels ⊇ {evening, night}",
     "distance ≥ 25 km xor distance < 5 km",
     "datetime > 2024",
@@ -504,7 +463,6 @@ atom
   | 'distance' op             distance
   | 'duration' op             duration
   | 'pace'     op             pace
-  | 'label'    elem_ops
   | 'labels'   set_ops
   | 'type'     elem_ops
 
@@ -553,49 +511,21 @@ op_lte
 ;
 ;   type = some_type ; Tests that the activity type is some_type.
 ;   type ∈ {t1, t2}  ; Tests that the activity type is t1 or t2.
-;
-; When the LHS refers to an arbitrary element in an actual set (e.g. 'label'
-; as an element in 'labels' set), we have the following:
-;
-;   label =  some_label ; Tests that some_label exists in the labels set.
-;   label /= some_label ; Tests that some_label does _not_ exist in the labels set.
-;
-; In other words, this is equivalent to membership; respectively:
-;
-;   labels ∋ some_label
-;   labels ∌ some_label
-;
-; We also have
-;
-;   label ∈ {l1, l2} ; Tests that either l1 or l2 exists in the labels set.
-;   label ∉ {l1, l2} ; Tests that l1 _and_ l2 do not exist in the labels set.
-;
-; These are equivalent to intersection. Respectively:
-;
-;   labels ∩ {l1, l2} ≠ ∅
-;   labels ∩ {l1, l2} = ∅
 elem_ops
   : op_eqs       string
   | elem_op_set  set_strings
 
 elem_op_set
   : elem_op_in
-  | elem_op_not_in
 
 elem_op_in
   : ∈
   | 'in'  ; alias for ∈
 
-elem_op_not_in
-  : ∉
-  | 'not_in'  ; alias for ∉
-
-
 ; Operators where LHS is a set (e.g. labels) and the RHS is either an
 ; individual element or another set.
 ;
-;   labels ∋ some_label ; Tests that labels has an element some_label.
-;   labels ∌ some_label ; Tests that labels does _not_ have element some_label.
+;   labels ∋ some_label ; Tests that labels have an element some_label.
 ;
 ;   labels ⊇ {l1, l2} ; Tests that labels has elements l1 and l2.
 set_ops
@@ -603,18 +533,9 @@ set_ops
   | set_op_set set_strings
 
 ; Operators for set membership e.g. 'A ∋ x' means "Set A has member x".
-; 'A ∌ x' means "Set A does not have member x".
 set_op_elem
-  : set_op_contains
-  | set_op_not_contains
-
-set_op_contains
   : '∋'
   | 'contains'  ; alias for ∋
-
-set_op_not_contains
-  : '∌'
-  | 'not_contains'  ; alias for ∌
 
 ; Operators for set comparisons.
 set_op_set
