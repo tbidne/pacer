@@ -117,6 +117,21 @@ atomTests =
               runner = pure $ parseExpr "labels ⊆ { a, b }"
             },
           MkGoldenParams
+            { testDesc = "Labels intersects",
+              testName = [osp|testParseExprAtomLabelsIntersects|],
+              runner = pure $ parseExpr "labels ∩ { a, b }"
+            },
+          MkGoldenParams
+            { testDesc = "Labels intersects word",
+              testName = [osp|testParseExprAtomLabelsIntersectsWord|],
+              runner = pure $ parseExpr "labels intersects { a, b }"
+            },
+          MkGoldenParams
+            { testDesc = "Not Labels intersects",
+              testName = [osp|testParseExprAtomLabelsNotIntersects|],
+              runner = pure $ parseExpr "not (labels ∩ { a, b })"
+            },
+          MkGoldenParams
             { testDesc = "Type eq",
               testName = [osp|testParseExprAtomTypeEq|],
               runner = pure $ parseExpr "type = some type"

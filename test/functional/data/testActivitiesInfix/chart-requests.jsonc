@@ -43,7 +43,7 @@
       // Takes half-marathon and marathon
       "title": "Marathons and half-marathons",
       "filters": [
-        "labels include half-marathon or labels include marathon"
+        "labels intersects {half-marathon, marathon}"
       ],
       "y-axis": "pace"
     },

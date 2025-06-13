@@ -11,9 +11,6 @@ module Pacer.Command.Chart.Data.Expr.Set
     FilterSetOpElem (..),
     FilterSetOpSet (..),
     applyFilterSet,
-    existsElemFun,
-    existsSetFun,
-    hasElemFun,
     compFun,
 
     -- * Misc
@@ -28,9 +25,7 @@ import Data.Text.Builder.Linear (Builder)
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
 import Pacer.Class.Parser (MParser, Parser (parser))
 import Pacer.Class.Parser qualified as P
-import Pacer.Command.Chart.Data.Expr.Eq
-  ( FilterOpEq (FilterOpEqEq, FilterOpEqNEq),
-  )
+import Pacer.Command.Chart.Data.Expr.Eq (FilterOpEq)
 import Pacer.Command.Chart.Data.Expr.Eq qualified as Eq
 import Pacer.Prelude
 import Pacer.Utils.Show qualified as Utils.Show
@@ -38,43 +33,34 @@ import Text.Megaparsec ((<?>))
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MPC
 
+-- NOTE: While we could (and did, at one point) include negation for some
+-- operators, we choose to only allow "not equals" (/=). Examples of
+-- negative operators we currently do not allow:
+--
+--   ∉, ∌, ⊈, etc.
+--
+-- We do this for:
+--
+--   - Consistency: Not all operators have a negative variant (intersects),
+--     and others look poor (≯).
+--
+--   - Avoid awkward words: We generally try to include a familiar operator
+--     (<= for ⊆) or english word ("include" for ∋), and this can lead to
+--     awkward phrasing (what is the english for ∌? "does_not_include"?)
+
 -------------------------------------------------------------------------------
 --                                 FilterElem                                --
 -------------------------------------------------------------------------------
 
--- | @FilterSet X@ tests set operations on some element x e.g.
+-- | @FilterSet X@ compares a LHS element against RHS element or set e.g.
 --
 -- - @x = y@
 -- - @x ∈ Y@
 --
--- X can be a single value (e.g. type) or a set itself (e.g. labels set,
--- written as singular \'label\') e.g.
+-- For instance:
 --
 -- - @"type = some_type"@
 -- - @"type ∈ {t1, t2}"@
---
--- When X is a set, the element x should be understood to be an arbitrary
--- @x ∈ X@ i.e. we are dealing with existence:
---
--- - @∃x ∈ X s.t. x = y@
--- - @∃x ∈ X s.t. x ∈ Y@
---
--- E.g.
---
--- - @"label = some_label" ≣ ∃l ∈ activity.labels s.t. l = "some_label"@
--- - @"label ∈ {l1, l2}"   ≣ ∃l ∈ activity.labels s.t. l ∈ {"l1", "l2"}@
---
--- The second allows us to encode disjunction (OR) at the operator level.
--- Note that negation applies to the _entire_ expression i.e. the above
--- becomes:
---
--- - @∄x ∈ X s.t. x = y ≣ ∀x ∈ X, x ≠ y@
--- - @∄x ∈ X s.t. x ∈ Y ≣ ∀x ∈ X, x ∉ Y@
---
--- E.g.
---
--- - @"label ≠ some_label" ≣ ∀l ∈ activity.labels, l ≠ "some_label"@
--- - @"label ∉ {l1, l2}"   ≣ ∀l ∈ activity.labels, l ∉ {"l1", "l2"}@
 type FilterElem :: Symbol -> Type -> Type
 data FilterElem p a
   = -- | Equality test.
@@ -225,14 +211,7 @@ applyFilterElem actVal = \case
 --                                 FilterSet                                 --
 -------------------------------------------------------------------------------
 
--- | @FilterSet X@ tests set operations on the set @X@ e.g. X = "labels".
--- Note that, wrt the operators, the LHS is always a set (e.g. labels set),
--- so operators where the LHS is expected to be an element --
--- FilterOpEq used by FilterSetExistsElem -- the LHS is considered to be
--- an arbitrary element in the set.
---
--- For instance, @label = foo@ means
--- "there exists an l in labels s.t. l == foo".
+-- | @FilterSet X@ compares a LHS set against RHS element or set.
 type FilterSet :: Symbol -> Type -> Type
 data FilterSet p a
   = -- | Set membership.
@@ -330,6 +309,8 @@ data FilterSetOpSet
     FilterSetOpSetPSub
   | -- | Activity set X must be a subset of given set.
     FilterSetOpSetSub
+  | -- | Activity set X must intersect the given set.
+    FilterSetOpSetIntersects
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
@@ -386,6 +367,7 @@ instance Display FilterSetOpSet where
     FilterSetOpSetSuper -> "⊇"
     FilterSetOpSetPSub -> "⊂"
     FilterSetOpSetSub -> "⊆"
+    FilterSetOpSetIntersects -> "∩"
 
 instance Parser FilterSetOpSet where
   parser =
@@ -398,7 +380,9 @@ instance Parser FilterSetOpSet where
         P.string "<=" $> FilterSetOpSetSub,
         P.char '⊆' $> FilterSetOpSetSub,
         P.char '<' $> FilterSetOpSetPSub,
-        P.char '⊂' $> FilterSetOpSetPSub
+        P.char '⊂' $> FilterSetOpSetPSub,
+        P.char '∩' $> FilterSetOpSetIntersects,
+        P.string "intersects" $> FilterSetOpSetIntersects
       ]
 
 -------------------------------------------------------------------------------
@@ -412,13 +396,6 @@ applyFilterSet set = \case
 
 -- LHS always set i.e. FilterSet functions.
 
-existsElemFun :: (Ord a) => FilterOpEq -> Set a -> a -> Bool
-existsElemFun FilterOpEqEq = flip Set.member
-existsElemFun FilterOpEqNEq = flip Set.notMember
-
-existsSetFun :: (Ord a) => FilterElemOpSet -> Set a -> Set a -> Bool
-existsSetFun FilterElemInSet ls rs = Set.intersection ls rs /= mempty
-
 hasElemFun :: (Ord a) => FilterSetOpElem -> Set a -> a -> Bool
 hasElemFun FilterSetContainsElem = flip Set.member
 
@@ -428,6 +405,7 @@ compFun FilterSetOpSetSuper = isSuperSetOf
 compFun FilterSetOpSetPSuper = isProperSuperSetOf
 compFun FilterSetOpSetSub = Set.isSubsetOf
 compFun FilterSetOpSetPSub = Set.isProperSubsetOf
+compFun FilterSetOpSetIntersects = \ls rs -> Set.intersection ls rs /= mempty
 
 isSuperSetOf :: forall a. (Ord a) => Set a -> Set a -> Bool
 isSuperSetOf = flip Set.isSubsetOf

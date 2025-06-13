@@ -354,10 +354,11 @@ Some operators based on set theory are provided, allowing an alternative syntax.
 {
   "title": "Some title",
   "filters": [
-    // Checking that the type is one of t1, t2, t3.
+    // Checking that the type is one of t1, t2, or t3.
     "type = t1 or type = t2 or type = t3",
-    // The symbol '∈' -- pronounced 'in' -- can be replaced by the word
-    // "in".
+    // The symbol '∈' is an alias for the word "in", and means the element
+    // on the left-hand-side (LHS) exists in the set on the right-hand-side
+    // (RHS).
     "type ∈ {t1, t2, t3}"
   ],
   "y-axis": "distance"
@@ -384,7 +385,7 @@ Labels are a bit more involved, since an activity can have multiple e.g.
 }
 ```
 
-The following takes activities that have _all_ of the labels `l1`, `l2`, and `l3`.
+Hence the LHS of the filter references the entire set. The following takes activities that have _all_ of the labels `l1`, `l2`, and `l3`.
 
 ```jsonc
 {
@@ -393,7 +394,25 @@ The following takes activities that have _all_ of the labels `l1`, `l2`, and `l3
     // The following are equivalent. The operator '∋' is an alias for
     // the word "include".
     "labels ∋ l1 and labels ∋ l2 and labels ∋ l3",
+    // This operator is pronounced "superset", and means all of the
+    // RHS is contained within the LHS.
     "labels ⊇ {l1, l2, l3}"
+  ],
+  "y-axis": "distance"
+}
+```
+
+We can instead take activities that have (at least) _one_ of the labels:
+
+```jsonc
+{
+  "title": "Some title",
+  "filters": [
+    // The following are equivalent.
+    "labels ∋ l1 or labels ∋ l2 or labels ∋ l3",
+    // The operator '∩' is an alias for the word "intersects", and means
+    // the two sets have some element(s) in common.
+    "labels ∩ {l1, l2, l3}"
   ],
   "y-axis": "distance"
 }
@@ -401,7 +420,7 @@ The following takes activities that have _all_ of the labels `l1`, `l2`, and `l3
 
 #### Aliases
 
-Many operators have aliases i.e. multiple ways to write them:
+The full list of operators and their aliases is:
 
 - Equality:
   - `=`
@@ -423,6 +442,7 @@ Many operators have aliases i.e. multiple ways to write them:
   - `⊃`: `>`
   - `⊆`: `<=`
   - `⊂`: `<`
+  - `∩`: `intersects`
 
 #### Complicated example
 
@@ -430,7 +450,7 @@ Many operators have aliases i.e. multiple ways to write them:
 {
   "title": "Some title",
   "filters": [
-    "labels include official_race or labels include marathon",
+    "labels ∩ {official_race, marathon}",
     "not (labels ∋ casual)",
     "labels ⊇ {evening, night}",
     "distance ≥ 25 km xor distance < 5 km",
@@ -516,9 +536,6 @@ elem_ops
   | elem_op_set  set_strings
 
 elem_op_set
-  : elem_op_in
-
-elem_op_in
   : ∈
   | 'in'  ; alias for ∈
 
@@ -544,6 +561,7 @@ set_op_set
   | set_op_gt
   | set_op_lte
   | set_op_lt
+  | set_op_intersects
 
 ; 'A >= B' and 'A ⊇ B' both mean A is a superset of B i.e. all of B is
 ; contained within A.
@@ -568,6 +586,11 @@ set_op_lte
 set_op_lt
   : '⊂'
   | '<'  ; alias for ⊂
+
+; 'A ∩ B' means A "intersects" B i.e. A and B have some common element(s).
+set_op_intersects
+  : '∩'
+  | 'intersects'  ; alias for ∩
 
 ; A label_set is either the empty set ({} or ∅) or a set with elements e.g.
 ; {a, b, c}
