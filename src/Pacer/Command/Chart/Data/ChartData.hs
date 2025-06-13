@@ -22,7 +22,6 @@ import Data.List qualified as L
 import Data.Sequence (Seq (Empty))
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
-import Data.Set (Set)
 import Effectful.Logger.Dynamic (LogLevel (LevelDebug))
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Command.Chart.Data.Activity
@@ -57,10 +56,6 @@ import Pacer.Command.Chart.Data.Expr.Filter
   )
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
 import Pacer.Command.Chart.Data.Expr.Ord qualified as Ord
-import Pacer.Command.Chart.Data.Expr.Set
-  ( FilterElem (FilterElemEq, FilterElemExists),
-    FilterSet (FilterSetComp, FilterSetElem, FilterSetHasElem),
-  )
 import Pacer.Command.Chart.Data.Expr.Set qualified as ESet
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
@@ -551,7 +546,7 @@ filterActivities @a rs filters = (.unSomeActivityKey) <$> NESeq.filter filterAct
     filterActivity r = all (eval (applyFilter r)) filters
 
     applyFilter :: SomeActivityKey a -> FilterType a -> Bool
-    applyFilter srk (FilterLabel lblSet) = applyFilterSet srk.labels lblSet
+    applyFilter srk (FilterLabel lblSet) = ESet.applyFilterSet srk.labels lblSet
     applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivityKey op m
     applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivityKey op d
     applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivityKey op d
@@ -560,13 +555,6 @@ filterActivities @a rs filters = (.unSomeActivityKey) <$> NESeq.filter filterAct
       MkSomeActivity _ r -> case r.atype of
         Just atype -> ESet.applyFilterElem atype fe
         Nothing -> False
-
-    applyFilterSet :: forall b p. (Ord b) => Set b -> FilterSet p b -> Bool
-    applyFilterSet set = \case
-      FilterSetElem (FilterElemEq op t) -> ESet.existsElemFun op set t
-      FilterSetElem (FilterElemExists op t) -> ESet.existsSetFun op set t
-      FilterSetHasElem op t -> ESet.hasElemFun op set t
-      FilterSetComp op t -> ESet.compFun op set t
 
     applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
     applyDate (MkSomeActivity _ r) op m = Ord.toIFun op activityMoment m

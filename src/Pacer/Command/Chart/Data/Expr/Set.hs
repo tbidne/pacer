@@ -10,6 +10,7 @@ module Pacer.Command.Chart.Data.Expr.Set
     FilterSet (..),
     FilterSetOpElem (..),
     FilterSetOpSet (..),
+    applyFilterSet,
     existsElemFun,
     existsSetFun,
     hasElemFun,
@@ -425,6 +426,13 @@ instance Parser FilterSetOpSet where
 -------------------------------------------------------------------------------
 --                                 Functions                                 --
 -------------------------------------------------------------------------------
+
+applyFilterSet :: forall b p. (Ord b) => Set b -> FilterSet p b -> Bool
+applyFilterSet set = \case
+  FilterSetElem (FilterElemEq op t) -> existsElemFun op set t
+  FilterSetElem (FilterElemExists op t) -> existsSetFun op set t
+  FilterSetHasElem op t -> hasElemFun op set t
+  FilterSetComp op t -> compFun op set t
 
 -- LHS always set i.e. FilterSet functions.
 
