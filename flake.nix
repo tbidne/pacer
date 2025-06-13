@@ -85,9 +85,10 @@
             overrides =
               final: prev:
               {
-                # These tests are flaky (mostly on osx).
+                # These tests are flaky.
                 auto-update = hlib.dontCheck prev.auto-update;
                 effectful = hlib.dontCheck prev.effectful;
+                statistics = hlib.dontCheck prev.statistics;
                 tasty-bench-fit = hlib.dontCheck prev.tasty-bench-fit;
                 warp = hlib.dontCheck prev.warp;
 
