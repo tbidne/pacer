@@ -45,7 +45,7 @@ import Text.Megaparsec.Char qualified as MPC
 --     and others look poor (≯).
 --
 --   - Avoid awkward words: We generally try to include a familiar operator
---     (<= for ⊆) or english word ("include" for ∋), and this can lead to
+--     (<= for ⊆) or english word ("includes" for ∋), and this can lead to
 --     awkward phrasing (what is the english for ∌? "does_not_include"?)
 
 -------------------------------------------------------------------------------
@@ -293,8 +293,13 @@ instance Parser FilterSetOpElem where
   parser =
     asum
       [ P.char '∋' $> FilterSetContainsElem,
-        -- Singular because LHS is always plural e.g. "labels include".
-        P.string "include" $> FilterSetContainsElem
+        -- While plural is slightly jarring given that the set name is plural
+        -- ("labels includes ..."), it is consistent with intersects
+        -- ("labels intersect ..." does not sound right), and singular arguably
+        -- makes sense because sets are really a single entity ("set X"),
+        -- so the fact that the name X may itself be pluralized does not
+        -- change the singular/plural distinction.
+        P.string "includes" $> FilterSetContainsElem
       ]
 
 -- | Operator for set comparisons.

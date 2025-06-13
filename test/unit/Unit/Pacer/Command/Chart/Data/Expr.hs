@@ -49,7 +49,7 @@ atomTests =
           MkGoldenParams
             { testDesc = "Labels member word",
               testName = [osp|testParseExprAtomLabelsMemberWord|],
-              runner = pure $ parseExpr "labels include some label"
+              runner = pure $ parseExpr "labels includes some label"
             },
           MkGoldenParams
             { testDesc = "Labels member fail",

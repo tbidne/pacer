@@ -9,30 +9,30 @@
       "y-axis": "duration",
       "y1-axis": "distance",
       "filters": [
-        "labels include label1"
+        "labels includes label1"
       ]
     },
     {
       "title": "Chart 3",
       "y-axis": "pace",
       "filters": [
-        "labels include label1",
-        "labels include label2 or labels include label3"
+        "labels includes label1",
+        "labels includes label2 or labels includes label3"
       ]
     },
     {
       "title": "Chart 4",
       "y-axis": "pace",
       "filters": [
-        "labels include label3",
-        "not (labels include label4)"
+        "labels includes label3",
+        "not (labels includes label4)"
       ]
     },
     {
       "title": "Chart 5",
       "y-axis": "pace",
       "filters": [
-        "labels include label3 xor labels include label4"
+        "labels includes label3 xor labels includes label4"
       ]
     }
   ]

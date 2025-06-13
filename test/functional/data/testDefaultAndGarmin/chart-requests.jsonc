@@ -24,7 +24,7 @@
       // Only takes activities with label 'marathon'
       "title": "Marathons",
       "filters": [
-        "labels include marathon",
+        "labels includes marathon",
         "datetime >= 2024"
       ],
       "y-axis": "duration",
@@ -34,8 +34,8 @@
       // Takes activities w/ label 'official' but _not_ marathon.
       "title": "Official non-marathons",
       "filters": [
-        "labels include official",
-        "not (labels include marathon)"
+        "labels includes official",
+        "not (labels includes marathon)"
       ],
       "y-axis": "pace"
     },
@@ -43,7 +43,7 @@
       // Takes half-marathon and marathon
       "title": "Marathons and half-marathons",
       "filters": [
-        "labels include half-marathon or labels include marathon"
+        "labels includes half-marathon or labels includes marathon"
       ],
       "y-axis": "pace"
     },

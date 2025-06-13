@@ -217,7 +217,7 @@ There are some caveats:
     // chart-requests.json
     {
       "title": "Marathons",
-      "filters": ["labels include marathon"],
+      "filters": ["labels includes marathon"],
       "y-axis": "duration"
     }
     ```
@@ -259,7 +259,7 @@ Chart requests allow us to filter activities based on some criteria. In general,
       "title": "Races and long runs",
       // Local filters, applies only to this chart.
       "filters": [
-        "labels include official_race",
+        "labels includes official_race",
         "distance >= 25 km",
         "datetime > 2024"
       ],
@@ -338,7 +338,7 @@ Basic logical operators are supported:
   "title": "Some title",
   "filters": [
     // Has label "offical_race" and/or label "marathon"
-    "labels include official_race or labels include marathon",
+    "labels includes official_race or labels includes marathon",
     // Distance < 10km and pace is NOT < 5m/km (i.e. pace >= 5km/km).
     "distance < 10km and (not (pace < 5m/km))"
   ],
@@ -392,7 +392,7 @@ Hence the LHS of the filter references the entire set. The following takes activ
   "title": "Some title",
   "filters": [
     // The following are equivalent. The operator '∋' is an alias for
-    // the word "include".
+    // the word "includes".
     "labels ∋ l1 and labels ∋ l2 and labels ∋ l3",
     // This operator is pronounced "superset", and means all of the
     // RHS is contained within the LHS.
@@ -437,7 +437,7 @@ The full list of operators and their aliases is:
   - `not`: `!`, `¬`
 - Set theory:
   - `∈`: `in`
-  - `∋`: `include`
+  - `∋`: `includes`
   - `⊇`: `>=`
   - `⊃`: `>`
   - `⊆`: `<=`
