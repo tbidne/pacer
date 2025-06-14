@@ -20,12 +20,11 @@ module Pacer.Command.Derive
 where
 
 import Pacer.Command.Derive.Params
-  ( DeriveParams (quantity, unit),
-    DeriveParamsFinal,
+  ( DeriveParamsFinal,
     DeriveQuantity (DeriveDistance, DeriveDuration, DerivePace),
   )
 import Pacer.Data.Distance
-  ( Distance (MkDistance, unDistance),
+  ( Distance (MkDistance),
     HasDistance (hideDistance),
     SomeDistance (MkSomeDistance),
   )
@@ -59,17 +58,17 @@ handle ::
   ) =>
   DeriveParamsFinal a ->
   Eff es ()
-handle params = case params.quantity of
+handle params = case params ^. #quantity of
   DeriveDistance duration pace -> do
     let dist = deriveSomeDistance duration pace
-    case params.unit of
+    case params ^. #unit of
       Nothing -> putTextLn $ display dist
       Just unit -> case toSing unit of
         SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
           let dist' = DistU.convertDistance e dist
           putTextLn $ display dist'
   DeriveDuration paceOptUnits dist -> do
-    when (isJust params.unit)
+    when (is (#unit % _Just) params)
       $ throwM PEx.CommandDeriveDurationUnit
 
     let duration = case paceOptUnits of
@@ -85,7 +84,7 @@ handle params = case params.quantity of
     putTextLn $ display duration
   DerivePace duration dist -> do
     let pace = deriveSomePace dist duration
-    case params.unit of
+    case params ^. #unit of
       Nothing -> putTextLn $ display pace
       Just unit -> case unit of
         Meter -> throwM PEx.CommandDerivePaceMeters
@@ -105,7 +104,7 @@ derivePace ::
   -- | Pace.
   Pace d a
 derivePace distance duration =
-  mkPace $ duration .% distance.unDistance
+  mkPace $ duration .% distance ^. #unDistance
 
 -- | Given an existentially-quantified distance and a duration, derives
 -- the pace.
@@ -137,7 +136,7 @@ deriveDuration ::
   Pace d a ->
   -- | Duration.
   Duration a
-deriveDuration distance pace = pace.unPace .* distance.unDistance
+deriveDuration distance pace = pace ^. #unPace .* distance ^. #unDistance
 
 -- | Given existentially-quantified distance and pace, derives the duration.
 -- Different distance units are converted.
@@ -178,7 +177,7 @@ deriveDistance duration (MkPace (MkDuration paceDuration)) =
   where
     -- monomorphic on Second so that we have to use toSeconds
     scaleDuration :: Duration a -> Positive a
-    scaleDuration = (.unDuration) . (.% paceDuration)
+    scaleDuration = (view #unDuration) . (.% paceDuration)
 
 -- | Given a duration and existentially-quantified pace, derives the
 -- distance.

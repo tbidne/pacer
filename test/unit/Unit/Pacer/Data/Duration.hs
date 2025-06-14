@@ -103,7 +103,7 @@ testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
     desc = "Tests equality equivalence class"
 
     unsafeSub n =
-      Duration.liftDuration (\x -> unsafePositive $ x.unPositive - n)
+      Duration.liftDuration (\x -> unsafePositive $ (x ^. #unPositive) - n)
 
 testEqualityCases :: TestTree
 testEqualityCases = testCase "Tests expected equality cases" $ do

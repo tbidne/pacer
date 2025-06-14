@@ -419,9 +419,12 @@ import Numeric.Data.Positive.Internal as X
       ),
   )
 import Optics.Core as X
-  ( A_Setter,
+  ( A_Getter,
+    A_Lens,
+    A_Setter,
     AffineTraversal',
     An_AffineTraversal,
+    An_Iso,
     Getter,
     Is,
     Iso,
@@ -435,6 +438,8 @@ import Optics.Core as X
     Prism,
     Prism',
     iso,
+    lens,
+    lensVL,
     over',
     preview,
     review,
@@ -444,6 +449,7 @@ import Optics.Core as X
     (%),
     (%?),
     (^.),
+    (^?),
     _Just,
     _Nothing,
   )

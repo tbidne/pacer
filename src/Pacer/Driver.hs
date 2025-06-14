@@ -49,11 +49,8 @@ import Pacer.Command.Chart.Server (ServerEff)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
-import Pacer.Configuration.Args
-  ( Args (command, configPath, logLevel, logVerbosity),
-    parserInfo,
-  )
-import Pacer.Configuration.Config (ConfigWithPath (MkConfigWithPath, config))
+import Pacer.Configuration.Args (parserInfo)
+import Pacer.Configuration.Config (ConfigWithPath (MkConfigWithPath))
 import Pacer.Configuration.Env qualified as Env
 import Pacer.Configuration.Env.Types
   ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
@@ -224,7 +221,7 @@ getEnv = do
   --
   -- Therefore, we use the Args' LogLevel for Config creation, then use the
   -- combined version for everything else.
-  let cfgLogLvl = case args.logLevel of
+  let cfgLogLvl = case args ^. #logLevel of
         -- 1. User specifed no logging, turn it off.
         Just LogNone -> Nothing
         -- 2. User did not specify; default to info.
@@ -232,10 +229,10 @@ getEnv = do
         -- 3. User specified something; use it.
         Just (LogSome lvl) -> Just lvl
 
-      cfgLogVerbosity = fromMaybe mempty args.logVerbosity
+      cfgLogVerbosity = fromMaybe mempty (args ^. #logVerbosity)
 
   -- Get Config and xdg config dir, if necessary.
-  (cachedPaths, mConfig) <- case args.command of
+  (cachedPaths, mConfig) <- case args ^. #command of
     -- Because the config (currently) only affects the chart command,
     -- searching for it is pointless for other commands, hence skip it.
     --
@@ -259,7 +256,7 @@ getEnv = do
               -- a chicken-and-egg problem. Finding and parsing the config file
               -- should be wholly independent of the chart command's arguments,
               -- hence it cannot rely on data directory.
-              Utils.FileSearch.findFilePath args.configPath,
+              Utils.FileSearch.findFilePath (args ^. #configPath),
               Utils.FileSearch.findCurrentDirectoryPath,
               Utils.FileSearch.findXdgPath
             ]
@@ -277,9 +274,9 @@ getEnv = do
     -- 2. Non-chart command, skip config.
     _ -> pure (mempty, Nothing)
 
-  let logEnv = Env.mkLogEnv args (mConfig <&> (.config))
+  let logEnv = Env.mkLogEnv args (mConfig <&> (view #config))
 
-  pure (args.command, mConfig, cachedPaths, logEnv)
+  pure (args ^. #command, mConfig, cachedPaths, logEnv)
   where
     configRunner cfgLogLvl logVerbosity =
       runReader (configLogEnv cfgLogLvl logVerbosity)
@@ -317,12 +314,12 @@ runLogger ::
 runLogger = interpret_ $ \case
   LoggerLog loc _logSrc lvl msg -> do
     logEnv <- ask @LogEnv
-    mLogLevel <- asks @LogEnv (.logLevel)
+    mLogLevel <- asks @LogEnv (view #logLevel)
     case mLogLevel of
       Nothing -> pure ()
       Just logLevel -> do
         Logger.guardLevel logLevel lvl $ do
-          let locStrategy = case logEnv.logVerbosity of
+          let locStrategy = case logEnv ^. #logVerbosity of
                 LogV0 -> LocNone
                 LogV1 -> LocPartial loc
 

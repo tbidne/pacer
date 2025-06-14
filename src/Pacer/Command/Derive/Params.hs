@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Derive parameters.
@@ -16,15 +17,10 @@ module Pacer.Command.Derive.Params
   )
 where
 
-import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
-import Pacer.Configuration.Utils
-  ( DistanceDurationPaceArgs
-      ( mDuration,
-        mPaceOptUnits,
-        mSomeDistance
-      ),
-    PaceOptUnits,
+import Pacer.Configuration.Phase
+  ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
   )
+import Pacer.Configuration.Utils (DistanceDurationPaceArgs, PaceOptUnits)
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Duration)
 import Pacer.Data.Pace (SomePace)
@@ -60,6 +56,8 @@ data DeriveParams p a = MkDeriveParams
     unit :: Maybe DistanceUnit
   }
 
+makeFieldLabelsNoPrefix ''DeriveParams
+
 type DeriveParamsArgs a = DeriveParams ConfigPhaseArgs a
 
 type DeriveParamsFinal a = DeriveParams ConfigPhaseFinal a
@@ -78,22 +76,23 @@ evolvePhase ::
   DeriveParamsArgs a ->
   m (DeriveParamsFinal a)
 evolvePhase args =
-  case ( ddpArgs.mDuration,
-         ddpArgs.mPaceOptUnits,
-         ddpArgs.mSomeDistance
+  case ( ddpArgs ^. #mDuration,
+         ddpArgs ^. #mPaceOptUnits,
+         ddpArgs ^. #mSomeDistance
        ) of
     (Just _, Just _, Just _) -> throwM CommandDeriveArgs3
     (Nothing, Nothing, Nothing) -> throwM CommandDeriveArgs0
     -- Duration x Pace -> Distance
     (Just a, Just b, Nothing) -> case b of
-      Left pace -> pure $ MkDeriveParams (DeriveDistance a pace) args.unit
+      Left pace -> pure $ MkDeriveParams (DeriveDistance a pace) unit
       Right _ -> throwM CommandDeriveNoPaceUnit
     -- PaceOptUnits x Distance -> Duration
     (Nothing, Just b, Just c) ->
-      pure $ MkDeriveParams (DeriveDuration b c) args.unit
+      pure $ MkDeriveParams (DeriveDuration b c) unit
     -- Duration x Distance -> Pace
     (Just a, Nothing, Just c) ->
-      pure $ MkDeriveParams (DerivePace a c) args.unit
+      pure $ MkDeriveParams (DerivePace a c) unit
     _ -> throwM CommandDeriveArgs1
   where
-    ddpArgs = args.quantity
+    ddpArgs = args ^. #quantity
+    unit = args ^. #unit

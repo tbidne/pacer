@@ -151,10 +151,10 @@ instance TraversableStream (List ExprToken) where
       pst' =
         PosState
           { pstateInput = post,
-            pstateOffset = max o pst.pstateOffset,
-            pstateSourcePos = pst.pstateSourcePos,
-            pstateTabWidth = pst.pstateTabWidth,
-            pstateLinePrefix = pst.pstateLinePrefix
+            pstateOffset = max o $ pst ^. #pstateOffset,
+            pstateSourcePos = pst ^. #pstateSourcePos,
+            pstateTabWidth = pst ^. #pstateTabWidth,
+            pstateLinePrefix = pst ^. #pstateLinePrefix
           }
 
       str =
@@ -163,7 +163,7 @@ instance TraversableStream (List ExprToken) where
           $ display
           <$> post
 
-      (_, post) = L.splitAt (o - pst.pstateOffset) pst.pstateInput
+      (_, post) = L.splitAt (o - pst ^. #pstateOffset) (pst ^. #pstateInput)
 
 instance VisualStream (List ExprToken) where
   showTokens _ = L.unwords . toList . fmap showTok

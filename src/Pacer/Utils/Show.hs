@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Utils.Show
   ( -- * Paths
     showOsPath,
@@ -60,11 +63,13 @@ data ShowListInlineConfig = MkShowListInlineConfig
     brackets :: ShowListBracketStyle
   }
 
+makeFieldLabelsNoPrefix ''ShowListInlineConfig
+
 instance Semigroup ShowListInlineConfig where
   l <> r =
     MkShowListInlineConfig
-      { spaces = l.spaces && r.spaces,
-        brackets = l.brackets <> r.brackets
+      { spaces = l ^. #spaces && r ^. #spaces,
+        brackets = l ^. #brackets <> r ^. #brackets
       }
 
 instance Monoid ShowListInlineConfig where
@@ -122,13 +127,13 @@ showListLike = \case
         ShowListActual xs -> toList xs
         ShowListMap f xs -> f <$> toList xs
 
-      (l, r) = case cfg.brackets of
+      (l, r) = case cfg ^. #brackets of
         ShowListBracketsSquare -> ("[", "]")
         ShowListBracketsCurly -> ("{", "}")
         ShowListBracketsNone -> ("", "")
 
       sep
-        | cfg.spaces = ", "
+        | cfg ^. #spaces = ", "
         | otherwise = ","
 
 mkNonPosErrMsg :: (Eq a, Num a, Show a) => Text -> List a -> Text

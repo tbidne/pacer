@@ -31,21 +31,12 @@ import Pacer.Command.Chart.Data.Activity.ActivityLabel
   )
 import Pacer.Command.Chart.Data.Chart (Charts)
 import Pacer.Command.Chart.Data.Chart qualified as Chart
-import Pacer.Command.Chart.Data.ChartRequest (ChartRequests (filters))
+import Pacer.Command.Chart.Data.ChartRequest (ChartRequests)
 import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
   ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
-    ChartParams
-      ( activityLabelsPath,
-        activityPaths,
-        buildDir,
-        chartRequestsPath,
-        cleanInstall,
-        json,
-        port
-      ),
     ChartParamsFinal,
   )
 import Pacer.Command.Chart.Server (ServerEff)
@@ -79,21 +70,21 @@ handle ::
 handle mChartConfig params = do
   charts <- createCharts mChartConfig params
 
-  if params.json
+  if params ^. #json
     then do
       $(Logger.logInfo)
         $ "Using build-dir: "
-        <> Utils.Show.showtPath params.buildDir
+        <> Utils.Show.showtPath (params ^. #buildDir)
 
       -- params.json is active, so stop after json generation
-      let jsonPath = params.buildDir <</>> jsonName
+      let jsonPath = params ^. #buildDir <</>> jsonName
       createChartsJsonFile charts jsonPath
     else do
       webDir <- WPaths.getWebPath
-      Web.ensureWebDirExists webDir params.cleanInstall
+      Web.ensureWebDirExists webDir (params ^. #cleanInstall)
 
       Server.launchServer
-        params.port
+        (params ^. #port)
         (webDir <</>> [reldir|dist|])
         charts
 
@@ -110,11 +101,11 @@ createCharts ::
 createCharts mChartConfig params = addNamespace "createCharts" $ do
   $(Logger.logInfo)
     $ "Using chart-requests: "
-    <> Utils.Show.showtPath params.chartRequestsPath
-  for params.activityPaths $ \r ->
+    <> Utils.Show.showtPath (params ^. #chartRequestsPath)
+  for (params ^. #activityPaths) $ \r ->
     $(Logger.logInfo) $ "Using activities: " <> Utils.Show.showtPath r
 
-  case params.activityLabelsPath of
+  case params ^. #activityLabelsPath of
     Nothing -> $(Logger.logDebug) "No activity-labels given"
     Just p ->
       $(Logger.logInfo) $ "Using activity-labels: " <> Utils.Show.showtPath p
@@ -122,7 +113,10 @@ createCharts mChartConfig params = addNamespace "createCharts" $ do
   createChartSeq mChartConfig chartPaths
   where
     chartPaths =
-      (params.chartRequestsPath, params.activityLabelsPath, params.activityPaths)
+      ( params ^. #chartRequestsPath,
+        params ^. #activityLabelsPath,
+        params ^. #activityPaths
+      )
 
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.
@@ -188,7 +182,7 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
     let mDistUnit =
           preview (#garminSettings %? #distanceUnit % _Just) chartRequests
 
-        globalFilters = chartRequests.filters
+        globalFilters = chartRequests ^. #filters
     readActivities mDistUnit globalFilters rp
 
   let combineActivities acc rs = acc >>= Activity.unionSomeActivities rs
@@ -230,7 +224,7 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
       mconcat
         [ display ts,
           ": ",
-          Utils.Show.showMapListInline (.unLabel) (toList $ NESet.toList labels)
+          Utils.Show.showMapListInline (view #unLabel) (toList $ NESet.toList labels)
         ]
 
     -- DistanceUnit should be set if this is a garmin (csv) file.
@@ -277,11 +271,11 @@ updateLabels activityLabels rs = (newActivities, unmatched)
       forall d a.
       Activity d a ->
       Tuple2 (Activity d a) (Set Timestamp)
-    updateActivityLabels r = case MP.lookup r.datetime activityLabels of
+    updateActivityLabels r = case MP.lookup (r ^. #datetime) activityLabels of
       Nothing -> (r, Set.empty)
       Just labels ->
         ( over' #labels (Set.union $ NESet.toSet labels) r,
-          Set.singleton r.datetime
+          Set.singleton (r ^. #datetime)
         )
 
 jsonName :: Path Rel File

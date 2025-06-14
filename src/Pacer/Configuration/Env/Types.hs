@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Configuration.Env.Types
   ( -- * Cached paths
     CachedPaths (..),
@@ -27,6 +30,8 @@ data CachedPaths = MkCachedPaths
   }
   deriving stock (Eq, Show)
 
+makeFieldLabelsNoPrefix ''CachedPaths
+
 instance Semigroup CachedPaths where
   MkCachedPaths x1 x2 <> MkCachedPaths y1 y2 =
     MkCachedPaths (x1 <|> y1) (x2 <|> y2)
@@ -44,8 +49,8 @@ getCachedXdgConfigPath ::
   Eff es (Path Abs Dir)
 getCachedXdgConfigPath =
   getCachedPath
-    (.xdgConfigPath)
-    (\p c -> c {xdgConfigPath = Just p})
+    (view #xdgConfigPath)
+    (\p -> set' #xdgConfigPath (Just p))
     getXdgConfigPath
 
 -- | Retrieves the current directory, updating the cache if necessary.
@@ -60,8 +65,8 @@ getCachedCurrentDirectory ::
   Eff es (Path Abs Dir)
 getCachedCurrentDirectory =
   getCachedPath
-    (.currentDirectory)
-    (\p c -> c {currentDirectory = Just p})
+    (view #currentDirectory)
+    (\p -> set' #currentDirectory (Just p))
     getCurrentDirectory
 
 -- | Retrieves the cached path, updating the cache if necessary.
@@ -93,6 +98,8 @@ data LogEnv = MkLogEnv
     logVerbosity :: LogVerbosity
   }
   deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''LogEnv
 
 runLoggerMock :: Eff (Logger : es) a -> Eff es a
 runLoggerMock = interpret_ $ \case

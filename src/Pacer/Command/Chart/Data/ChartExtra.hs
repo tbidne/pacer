@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Command.Chart.Data.ChartExtra
   ( ChartExtra (..),
     mkChartExtra,
@@ -5,10 +8,7 @@ module Pacer.Command.Chart.Data.ChartExtra
 where
 
 import Pacer.Command.Chart.Data.ChartRequest
-  ( ChartRequest
-      ( chartType,
-        description
-      ),
+  ( ChartRequest,
     ChartType (ChartTypeSum),
   )
 import Pacer.Prelude
@@ -22,21 +22,23 @@ data ChartExtra = MkChartExtra
   }
   deriving stock (Eq, Show)
 
+makeFieldLabelsNoPrefix ''ChartExtra
+
 instance ToJSON ChartExtra where
   toJSON ce =
     Json.object
-      $ Json.encodeMaybe ("description", ce.description)
-      ++ Json.encodeMaybe ("smoothCurve", ce.smoothCurve)
+      $ Json.encodeMaybe ("description", ce ^. #description)
+      ++ Json.encodeMaybe ("smoothCurve", ce ^. #smoothCurve)
 
 mkChartExtra :: ChartRequest a -> ChartExtra
 mkChartExtra r =
   MkChartExtra
-    { description = r.description,
+    { description = r ^. #description,
       smoothCurve
     }
   where
     -- If there is any smoothing going on, hardcode 0.25.
-    smoothCurve = case r.chartType of
+    smoothCurve = case r ^. #chartType of
       Just (ChartTypeSum _ mSmooth) -> case mSmooth of
         Just _ -> Just 0.25
         Nothing -> Nothing

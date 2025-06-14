@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Unit.Pacer.Command.Chart (tests) where
@@ -59,7 +61,7 @@ import Pacer.Command.Chart.Data.Activity
   )
 import Pacer.Command.Chart.Data.Activity qualified as R
 import Pacer.Command.Chart.Data.Activity.ActivityLabel (Label)
-import Pacer.Command.Chart.Data.Chart (Chart (chartData), Charts (charts))
+import Pacer.Command.Chart.Data.Chart (Charts)
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Params
   ( ChartParams
@@ -93,6 +95,28 @@ import System.OsPath qualified as OsPath
 import System.OsString qualified as OsString
 import Test.Tasty.HUnit (assertEqual)
 import Unit.Prelude
+
+data CoreEnv = MkCoreEnv
+  { cachedPaths :: CachedPaths
+  }
+
+makeFieldLabelsNoPrefix ''CoreEnv
+
+data RefsEnv = MkRefsEnv
+  { numFileWriterCalls :: IORef Word8,
+    numRemoveDirectoryCalls :: IORef Word8,
+    numXdgCacheCalls :: IORef Word8,
+    numXdgConfigCalls :: IORef Word8
+  }
+
+makeFieldLabelsNoPrefix ''RefsEnv
+
+data ChartEnv = MkChartEnv
+  { coreEnv :: CoreEnv,
+    refsEnv :: RefsEnv
+  }
+
+makeFieldLabelsNoPrefix ''ChartEnv
 
 tests :: TestTree
 tests =
@@ -191,10 +215,10 @@ assertEnvRefs refsEnv expecteds = do
     vals = zipWith (\(d, r) e -> (d, r, e)) refs expecteds
 
     refs =
-      [ ("numFileWriterCalls", refsEnv.numFileWriterCalls),
-        ("numRemoveDirectoryCalls", refsEnv.numRemoveDirectoryCalls),
-        ("numXdgCacheCalls", refsEnv.numXdgCacheCalls),
-        ("numXdgConfigCalls", refsEnv.numXdgConfigCalls)
+      [ ("numFileWriterCalls", refsEnv ^. #numFileWriterCalls),
+        ("numRemoveDirectoryCalls", refsEnv ^. #numRemoveDirectoryCalls),
+        ("numXdgCacheCalls", refsEnv ^. #numXdgCacheCalls),
+        ("numXdgConfigCalls", refsEnv ^. #numXdgConfigCalls)
       ]
 
 assertRefs :: (Eq a, Show a) => List (Tuple3 String (IORef a) a) -> IO ()
@@ -209,22 +233,6 @@ assertRefs xs = for_ xs $ \(desc, ref, expected) -> do
             show result
           ]
   assertEqual msg expected result
-
-data CoreEnv = MkCoreEnv
-  { cachedPaths :: CachedPaths
-  }
-
-data RefsEnv = MkRefsEnv
-  { numFileWriterCalls :: IORef Word8,
-    numRemoveDirectoryCalls :: IORef Word8,
-    numXdgCacheCalls :: IORef Word8,
-    numXdgConfigCalls :: IORef Word8
-  }
-
-data ChartEnv = MkChartEnv
-  { coreEnv :: CoreEnv,
-    refsEnv :: RefsEnv
-  }
 
 runFileReaderMock :: (IOE :> es) => Eff (FileReader : es) a -> Eff es a
 runFileReaderMock = interpret_ $ \case
@@ -251,7 +259,7 @@ runFileWriterMock ::
   Eff (FileWriter : es) a ->
   Eff es a
 runFileWriterMock = interpret_ $ \case
-  WriteBinaryFile _ _ -> incIORef (.refsEnv.numFileWriterCalls)
+  WriteBinaryFile _ _ -> incIORef (view (#refsEnv % #numFileWriterCalls))
   other -> error $ "runFileWriterMock: unimplemented: " ++ (showEffectCons other)
 
 runPathReaderMock ::
@@ -333,10 +341,10 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   GetCurrentDirectory -> pure [osp|cwd|]
   GetXdgDirectory xdg p -> case xdg of
     XdgCache ->
-      incIORef (.refsEnv.numXdgCacheCalls)
+      incIORef (view (#refsEnv % #numXdgCacheCalls))
         $> ([ospPathSep|test/unit/data/xdg/cache|] </> p)
     XdgConfig ->
-      incIORef (.refsEnv.numXdgConfigCalls)
+      incIORef (view (#refsEnv % #numXdgConfigCalls))
         $> ([ospPathSep|test/unit/data/xdg/config|] </> p)
     other ->
       error $ "getXdgDirectory: unexpected: " ++ show other
@@ -362,7 +370,7 @@ runPathWriterMock ::
 runPathWriterMock = interpret_ $ \case
   CreateDirectory _ -> pure ()
   CreateDirectoryIfMissing _ _ -> pure ()
-  RemovePathForcibly _ -> incIORef (.refsEnv.numRemoveDirectoryCalls)
+  RemovePathForcibly _ -> incIORef (view (#refsEnv % #numRemoveDirectoryCalls))
   SetCurrentDirectory _ -> pure ()
   other -> error $ "runPathWriterMock: unimplemented: " ++ (showEffectCons other)
 
@@ -403,7 +411,7 @@ type TestEffects =
 runTestEff :: ChartEnv -> Eff TestEffects a -> IO a
 runTestEff env m =
   runEff
-    . evalState env.coreEnv.cachedPaths
+    . evalState (env ^. #coreEnv % #cachedPaths)
     . runReader logEnv
     . runReader env
     . runIORef
@@ -530,8 +538,8 @@ testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
           runner = do
             paths <- mkPaths
             result <-
-              fmap (.chartData)
-                . (.charts)
+              fmap (view #chartData)
+                . (view #charts)
                 <$> runCreateChartSeqEff paths
             pure $ toStrictBS $ Json.encodePretty result
         }
@@ -586,10 +594,10 @@ testUpdateLabels :: TestTree
 testUpdateLabels = testCase "Updates labels from map" $ do
   let (activitiesResults, unmatchedTsResults) =
         first
-          ( fmap (.unSomeActivityKey)
+          ( fmap (view #unSomeActivityKey)
               . NE.toList
               . NESet.toList
-              . (.unSomeActivities)
+              . (view #unSomeActivities)
           )
           $ (Chart.updateLabels labelMap activities)
 

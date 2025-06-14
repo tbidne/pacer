@@ -1,5 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Unit.Prelude
   ( module X,
@@ -86,6 +88,14 @@ import Test.Tasty.HUnit as X
   )
 import Test.Tasty.Hedgehog as X (HedgehogTestLimit (HedgehogTestLimit), testPropertyNamed)
 import Text.Pretty.Simple qualified as Pretty
+
+data GoldenParams = MkGoldenParams
+  { testDesc :: TestName,
+    testName :: OsPath,
+    runner :: IO ByteString
+  }
+
+makeFieldLabelsNoPrefix ''GoldenParams
 
 -- | Concise alias for @testPropertyNamed . property@
 testProp :: TestName -> PropertyName -> PropertyT IO () -> TestTree
@@ -214,31 +224,25 @@ mkPaceD = MkPace . MkDuration . unsafePositive
 mkSomePaceD :: forall d. (PaceDistF d) => SDistanceUnit d -> Double -> SomePace Double
 mkSomePaceD s = MkSomePace s . mkPaceD
 
-data GoldenParams = MkGoldenParams
-  { testDesc :: TestName,
-    testName :: OsPath,
-    runner :: IO ByteString
-  }
-
 testGoldenParamsOs :: GoldenParams -> TestTree
 testGoldenParamsOs goldenParams = testGoldenParams goldenParams'
   where
     goldenParams' =
       goldenParams
-        { testName = goldenParams.testName <> ([osp|_|] <> posixWindowsOsPath)
+        { testName = goldenParams ^. #testName <> ([osp|_|] <> posixWindowsOsPath)
         }
 
 testGoldenParams :: GoldenParams -> TestTree
 testGoldenParams goldenParams =
-  goldenDiff goldenParams.testDesc goldenPath actualPath $ do
-    trySync goldenParams.runner >>= \case
+  goldenDiff (goldenParams ^. #testDesc) goldenPath actualPath $ do
+    trySync (goldenParams ^. #runner) >>= \case
       Left err -> writeActualFile $ exToBs err
       Right bs -> writeActualFile bs
   where
     outputPathStart =
       FS.OsPath.unsafeDecode
         $ [ospPathSep|test/unit/goldens|]
-        </> goldenParams.testName
+        </> (goldenParams ^. #testName)
 
     exToBs = encodeUtf8 . displayExceptiont
 

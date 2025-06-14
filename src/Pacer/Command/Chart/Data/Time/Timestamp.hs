@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Command.Chart.Data.Time.Timestamp
   ( -- * Timestamp
     Timestamp,
@@ -31,7 +34,7 @@ module Pacer.Command.Chart.Data.Time.Timestamp
 where
 
 import Data.Time (LocalTime (LocalTime), ZonedTime (ZonedTime))
-import Data.Time.Calendar (Day (ModifiedJulianDay))
+import Data.Time.Calendar (Day (ModifiedJulianDay, toModifiedJulianDay))
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.WeekDate qualified as Week
 import Data.Time.Format qualified as Format
@@ -46,6 +49,18 @@ import Pacer.Command.Chart.Data.Time.Timestamp.Internal
 import Pacer.Command.Chart.Data.Time.Timestamp.Internal qualified as Internal
 import Pacer.Command.Chart.Data.Time.Year (Year)
 import Pacer.Prelude
+
+-- Start day for an interval. Naturally this should be associated with an
+-- end date (either on the data or derived from a period), but because
+-- this type is internal and we do need actually need the end date for
+-- anything, we do not have it.
+--
+-- If we ever _do_ need the end date, either add @end :: Date@ or maybe add
+-- the period in the type i.e. @Interval (p :: Nat)@.
+newtype Interval = MkInterval {start :: Day}
+  deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''Interval
 
 fmtTimestamp :: Timestamp -> Text
 fmtTimestamp =
@@ -109,7 +124,7 @@ roundTimestampWeek ts = TimestampDate newDay
 roundInterval :: Day -> PWord16 -> Timestamp -> Timestamp
 roundInterval totalStart period =
   TimestampDate
-    . (.start)
+    . (view #start)
     . findInterval totalStart period
 
 -------------------------------------------------------------------------------
@@ -158,16 +173,6 @@ sameInterval totalStart period ts1 ts2 =
 --                                    Misc                                   --
 -------------------------------------------------------------------------------
 
--- Start day for an interval. Naturally this should be associated with an
--- end date (either on the data or derived from a period), but because
--- this type is internal and we do need actually need the end date for
--- anything, we do not have it.
---
--- If we ever _do_ need the end date, either add @end :: Date@ or maybe add
--- the period in the type i.e. @Interval (p :: Nat)@.
-newtype Interval = MkInterval {start :: Day}
-  deriving stock (Eq, Show)
-
 -- | For @findInterval d1 p d2, d1 <= d2@, returns interval @[s, e]@ s.t.
 --
 -- * @s = d1 * pk@
@@ -179,13 +184,13 @@ findInterval :: Day -> PWord16 -> Timestamp -> Interval
 findInterval totalStart period ts = MkInterval {start}
   where
     -- d1
-    dayℤ = totalStart.toModifiedJulianDay
+    dayℤ = totalStart ^. #toModifiedJulianDay
 
     -- d2
-    tsDayℤ = (Internal.timestampToDay ts).toModifiedJulianDay
+    tsDayℤ = (Internal.timestampToDay ts) ^. #toModifiedJulianDay
 
     -- p
-    periodℤ = fromIntegral @Word16 @Integer period.unPositive
+    periodℤ = fromIntegral @Word16 @Integer (period ^. #unPositive)
 
     -- k = (d2 - d1) / p i.e. largest k s.t. d1 + kp <= d2.
     k = (tsDayℤ - dayℤ) .%. periodℤ

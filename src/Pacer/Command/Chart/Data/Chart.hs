@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Command.Chart.Data.Chart
   ( Charts (..),
@@ -15,18 +16,12 @@ import Pacer.Command.Chart.Data.ChartData (ChartData)
 import Pacer.Command.Chart.Data.ChartData qualified as ChartData
 import Pacer.Command.Chart.Data.ChartExtra (ChartExtra)
 import Pacer.Command.Chart.Data.ChartExtra qualified as ChartExtra
-import Pacer.Command.Chart.Data.ChartRequest
-  ( ChartRequest (title, unit),
-    ChartRequests (chartRequests, filters),
-  )
+import Pacer.Command.Chart.Data.ChartRequest (ChartRequest, ChartRequests)
 import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Configuration.Config
   ( ChartConfig,
-    ChartTheme (name),
     ChartThemeConfig
-      ( MkChartThemeConfig,
-        defaultTheme,
-        themes
+      ( MkChartThemeConfig
       ),
   )
 import Pacer.Configuration.Env.Types (LogEnv)
@@ -36,22 +31,6 @@ import Pacer.Prelude
 import Pacer.Utils.Json (ToJSON (toJSON), (.=))
 import Pacer.Utils.Json qualified as Json
 import Pacer.Utils.Show qualified as Show
-
--- | Holds multiple charts.
-data Charts = MkCharts
-  { -- | Individual charts.
-    charts :: NESeq Chart,
-    -- | Optional theme config.
-    theme :: Maybe ChartThemeConfig
-  }
-  deriving stock (Eq, Show)
-
-instance ToJSON Charts where
-  toJSON c =
-    Json.object
-      $ [ "charts" .= c.charts
-        ]
-      ++ Json.encodeMaybe ("theme", c.theme)
 
 -- | Holds all data associated to a single chart.
 data Chart = MkChart
@@ -64,13 +43,33 @@ data Chart = MkChart
   }
   deriving stock (Eq, Show)
 
+makeFieldLabelsNoPrefix ''Chart
+
 instance ToJSON Chart where
   toJSON c =
     Json.object
-      [ "datasets" .= c.chartData,
-        "extra" .= c.chartExtra,
-        "title" .= c.title
+      [ "datasets" .= (c ^. #chartData),
+        "extra" .= (c ^. #chartExtra),
+        "title" .= (c ^. #title)
       ]
+
+-- | Holds multiple charts.
+data Charts = MkCharts
+  { -- | Individual charts.
+    charts :: NESeq Chart,
+    -- | Optional theme config.
+    theme :: Maybe ChartThemeConfig
+  }
+  deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''Charts
+
+instance ToJSON Charts where
+  toJSON c =
+    Json.object
+      $ [ "charts" .= (c ^. #charts)
+        ]
+      ++ Json.encodeMaybe ("theme", c ^. #theme)
 
 -- | Given activities and chart requests, generates a series of charts, or the
 mkCharts ::
@@ -91,8 +90,8 @@ mkCharts ::
   Eff es (Result CreateChartE Charts)
 mkCharts mConfig activities requests =
   (>>= toCharts)
-    . traverse (mkChart requests.filters activities)
-    . (.chartRequests)
+    . traverse (mkChart (requests ^. #filters) activities)
+    . (view #chartRequests)
     $ requests
   where
     toCharts ::
@@ -105,23 +104,23 @@ mkCharts mConfig activities requests =
         (Nothing, Just rCfg) -> pure $ Just rCfg
         (Just cCfg, Just rCfg) -> do
           -- 1. Get the default theme.
-          defaultTheme <- case rCfg.defaultTheme of
+          defaultTheme <- case rCfg ^. #defaultTheme of
             -- 1.1. Requests defaultTheme takes priority.
             Just rDefault -> pure $ Just rDefault
             -- 1.2. Requests defaultTheme does not exist; Take the chart config,
             --      if it exists.
-            _ -> pure $ cCfg.defaultTheme
+            _ -> pure $ cCfg ^. #defaultTheme
 
           -- Combine duplicates; warn about duplicates.
-          let dupes = cCfg.themes `Set.intersection` rCfg.themes
+          let dupes = (cCfg ^. #themes) `Set.intersection` (rCfg ^. #themes)
               -- Chart requests on LHS since we want it to get priority.
-              themes = rCfg.themes `Set.union` cCfg.themes
+              themes = (rCfg ^. #themes) `Set.union` (cCfg ^. #themes)
           unless (Set.null dupes) $ do
             let msg =
                   mconcat
                     [ "Overriding duplicate themes found in config with ",
                       "those from chart-requests: ",
-                      Show.showMapListInline (.name) dupes
+                      Show.showMapListInline (view #name) dupes
                     ]
             $(Logger.logWarn) msg
 
@@ -163,8 +162,8 @@ mkChart globalFilters someActivities request = fmap toChart <$> eChartData
       MkChart
         { chartData,
           chartExtra,
-          title = request.title
+          title = request ^. #title
         }
 
     finalDistUnit :: DistanceUnit
-    finalDistUnit = fromMaybe (distanceUnitOf someActivities) request.unit
+    finalDistUnit = fromMaybe (distanceUnitOf someActivities) (request ^. #unit)

@@ -207,7 +207,7 @@ testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
 
     unsafeSub n =
       Dist.liftSomeDist
-        (Dist.liftDist (\x -> unsafePositive $ x.unPositive - n))
+        (Dist.liftDist (\x -> unsafePositive $ (x ^. #unPositive) - n))
 
 testEqualityCases :: TestTree
 testEqualityCases = testCase "Tests expected equality cases" $ do

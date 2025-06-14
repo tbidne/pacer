@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Utils.FileSearch
   ( -- * High-level
@@ -46,7 +47,7 @@ import FileSystem.Path qualified as Path
 import Pacer.Class.FromAlt (FromAlt (listToAlt), isNonEmpty)
 import Pacer.Configuration.Env.Types
   ( CachedPaths,
-    LogEnv (logLevel, logVerbosity),
+    LogEnv,
     getCachedCurrentDirectory,
     getCachedXdgConfigPath,
   )
@@ -54,6 +55,75 @@ import Pacer.Configuration.Logging (LogVerbosity (LogV1))
 import Pacer.Prelude
 import Pacer.Utils.Show qualified as Show
 import System.OsPath qualified as OsP
+
+-- | Represents searching for a particular file.
+data FileSearch
+  = -- | Search for a file by aliases.
+    SearchFileAliases FileAliases
+  | -- | Search for a file by infix pattern, optionally filtering
+    -- by known extensions. For example, searching for "activities"
+    -- and {"json", "csv"} will find all files with (case-insensitive)
+    -- infix "activities" and extensions "json" or "csv".
+    SearchFileInfix (Path Rel File) (Set OsPath)
+  deriving stock (Eq, Show)
+
+-- | Represents a single file for which we want to search. Holds multiple
+-- aliases for the case where the file can have multiple names.
+-- For instance, both chart-requests.json and chart-requests.jsonc are valid
+-- expected names for the chart-requests file, so we search for both, even
+-- though we want at most one.
+data FileAliases = MkFileAliases
+  { aliases :: NonEmpty (Path Rel File),
+    extensions :: Set OsPath
+  }
+  deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''FileAliases
+
+-- | FileSearchStrategy represents a single strategy for finding a single
+-- "type" of file(s), e.g. searching the current directory for the
+-- chart-requests file, or searching xdg for multiple activities files.
+--
+-- The semigroup instance takes the first "non-empty", per the FromAlt
+-- instance. In practice empty is generally Nothing (Maybe, for a single file),
+-- or [] (List/Seq, for multiple results).
+--
+-- In other words, a strategy amount to searching for some file(s) in a
+-- singular location. After we have a "success" (which be one or more files),
+-- we stop.
+type FileSearchStrategy :: (Type -> Type) -> List Effect -> Type
+newtype FileSearchStrategy f es
+  = MkFileSearchStrategy
+  { unFileSearchStrategy :: FileSearch -> (Eff es (f (Path Abs File)))
+  }
+
+makeFieldLabelsNoPrefix ''FileSearchStrategy
+
+instance (FromAlt f) => Semigroup (FileSearchStrategy f es) where
+  MkFileSearchStrategy f <> g = MkFileSearchStrategy $ \files -> do
+    l <- f files
+
+    if isNonEmpty l
+      then pure l
+      else (g ^. #unFileSearchStrategy) files
+
+instance (FromAlt f) => Monoid (FileSearchStrategy f es) where
+  mempty = MkFileSearchStrategy $ \_ -> pure empty
+
+-- | File match comparison.
+data MatchResult = MkMatchResult
+  { -- | The result for pattern comparisons i.e. file names.
+    patternResult :: Bool,
+    -- | The result for file extension comparisons.
+    extensionResult :: Maybe Bool,
+    -- | Log message for pattern result.
+    patternLog :: Text,
+    -- | Log message for extension result.
+    extensionLog :: Text
+  }
+  deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''MatchResult
 
 -- | Attempts to resolve a file, based on the expected file names and
 -- search strategies. The strategies are tried in order, returning the
@@ -73,7 +143,7 @@ resolveFilePath ::
   Eff es (f (Path Abs File))
 resolveFilePath desc fileNames strategies =
   addNamespace "resolveFilePath" $ addNamespace desc $ do
-    (fold strategies).unFileSearchStrategy fileNames
+    ((fold strategies) ^. #unFileSearchStrategy) fileNames
 
 -- | General exception for when a file at an expected path does not exist.
 -- We would normally use IOException for this, except we want a custom type
@@ -88,34 +158,6 @@ instance Exception FileNotFoundE where
       [ "File not found: ",
         decodeLenient p
       ]
-
--- | FileSearchStrategy represents a single strategy for finding a single
--- "type" of file(s), e.g. searching the current directory for the
--- chart-requests file, or searching xdg for multiple activities files.
---
--- The semigroup instance takes the first "non-empty", per the FromAlt
--- instance. In practice empty is generally Nothing (Maybe, for a single file),
--- or [] (List/Seq, for multiple results).
---
--- In other words, a strategy amount to searching for some file(s) in a
--- singular location. After we have a "success" (which be one or more files),
--- we stop.
-type FileSearchStrategy :: (Type -> Type) -> List Effect -> Type
-newtype FileSearchStrategy f es
-  = MkFileSearchStrategy
-  { unFileSearchStrategy :: FileSearch -> (Eff es (f (Path Abs File)))
-  }
-
-instance (FromAlt f) => Semigroup (FileSearchStrategy f es) where
-  MkFileSearchStrategy f <> g = MkFileSearchStrategy $ \files -> do
-    l <- f files
-
-    if isNonEmpty l
-      then pure l
-      else g.unFileSearchStrategy files
-
-instance (FromAlt f) => Monoid (FileSearchStrategy f es) where
-  mempty = MkFileSearchStrategy $ \_ -> pure empty
 
 -- | 'findDirectoryPath' specialized to the current directory.
 findCurrentDirectoryPath ::
@@ -132,7 +174,7 @@ findCurrentDirectoryPath ::
 findCurrentDirectoryPath =
   MkFileSearchStrategy $ \fileNames -> addNamespace "findCurrentDirectoryPath" $ do
     dir <- getCachedCurrentDirectory
-    ((findDirectoryPath (Just $ toOsPath dir)).unFileSearchStrategy) fileNames
+    ((findDirectoryPath (Just $ toOsPath dir)) ^. #unFileSearchStrategy) fileNames
 
 -- | If the parameter is not empty, parses to an absolute file(s). Ignores
 -- the parameter to searchFiles.
@@ -285,7 +327,6 @@ searchFileInfix ::
   Eff es (f (Path Abs File))
 searchFileInfix dataDir pat exts = addNamespace "searchFileInfix" $ do
   runSearch T.isInfixOf dataDir pat exts
-  where
 
 -- | Searches for a single file with potentially multiple aliases. Returns
 -- at most one result.
@@ -360,28 +401,16 @@ runSearch compFn dataDir pat exts = addNamespace "runSearch" $ do
       let matchResult = satisfiesPattern' p
 
       logEnv <- ask @LogEnv
-      case (logEnv.logLevel, logEnv.logVerbosity) of
+      case (logEnv ^. #logLevel, logEnv ^. #logVerbosity) of
         (Just LevelDebug, LogV1) -> do
-          $(Logger.logDebug) matchResult.patternLog
-          $(Logger.logDebug) matchResult.extensionLog
+          $(Logger.logDebug) (matchResult ^. #patternLog)
+          $(Logger.logDebug) (matchResult ^. #extensionLog)
         _ -> pure ()
 
       pure
-        $ matchResult.patternResult
-        && fromMaybe True matchResult.extensionResult
-
--- | File match comparison.
-data MatchResult = MkMatchResult
-  { -- | The result for pattern comparisons i.e. file names.
-    patternResult :: Bool,
-    -- | The result for file extension comparisons.
-    extensionResult :: Maybe Bool,
-    -- | Log message for pattern result.
-    patternLog :: Text,
-    -- | Log message for extension result.
-    extensionLog :: Text
-  }
-  deriving stock (Eq, Show)
+        $ matchResult
+        ^. #patternResult
+        && fromMaybe True (matchResult ^. #extensionResult)
 
 -- | Returns the result of comparing a discovered file against a given
 -- pattern and possible extension set. For extension comparisons, we
@@ -503,31 +532,9 @@ mkDirExistsMsg d =
       "' exists."
     ]
 
--- | Represents searching for a particular file.
-data FileSearch
-  = -- | Search for a file by aliases.
-    SearchFileAliases FileAliases
-  | -- | Search for a file by infix pattern, optionally filtering
-    -- by known extensions. For example, searching for "activities"
-    -- and {"json", "csv"} will find all files with (case-insensitive)
-    -- infix "activities" and extensions "json" or "csv".
-    SearchFileInfix (Path Rel File) (Set OsPath)
-  deriving stock (Eq, Show)
-
--- | Represents a single file for which we want to search. Holds multiple
--- aliases for the case where the file can have multiple names.
--- For instance, both chart-requests.json and chart-requests.jsonc are valid
--- expected names for the chart-requests file, so we search for both, even
--- though we want at most one.
-data FileAliases = MkFileAliases
-  { aliases :: NonEmpty (Path Rel File),
-    extensions :: Set OsPath
-  }
-  deriving stock (Eq, Show)
-
 searchFilesToList :: FileSearch -> Tuple2 (List (Path Rel File)) (Set OsPath)
 searchFilesToList = f
   where
     f :: FileSearch -> Tuple2 (List (Path Rel File)) (Set OsPath)
-    f (SearchFileAliases as) = (NE.toList as.aliases, as.extensions)
+    f (SearchFileAliases as) = (NE.toList (as ^. #aliases), as ^. #extensions)
     f (SearchFileInfix p exts) = ([p], exts)

@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provide distance types.
 module Pacer.Data.Distance
   ( -- * Distance
@@ -60,6 +63,8 @@ newtype Distance d a = MkDistance {unDistance :: Positive a}
   deriving stock (Generic)
   deriving newtype (MetricSpace)
   deriving anyclass (NFData)
+
+makeFieldLabelsNoPrefix ''Distance
 
 -------------------------------------------------------------------------------
 --                                Base Classes                               --
@@ -131,7 +136,7 @@ instance
   type ToConstraints (Distance d a) _ = ()
 
   convertDistance_ :: forall e. (SingI e) => Distance d a -> Distance e a
-  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . (.unDistance)
+  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . (view #unDistance)
     where
       toBase = singFactor @_ @d
       fromBase = singFactor @_ @e

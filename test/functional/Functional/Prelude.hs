@@ -1,5 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-missing-methods #-}
 
 module Functional.Prelude
@@ -93,6 +95,33 @@ import Test.Tasty.HUnit as X
   )
 import Test.Tasty.Hedgehog as X (testPropertyNamed)
 
+-- | Golden test output.
+data GoldenOutput
+  = -- | The golden output is based on an output file.
+    GoldenOutputFile OsPath
+  | -- | The golden output is based on logs and output file.
+    GoldenOutputFileLogs OsPath
+  | -- | The golden output is based on an output file, but we also run
+    -- an assertion on the logs. This is needed when the logs contain
+    -- data that is hard to test for exact equality e.g. non-deterministic
+    -- filepaths, timestamps.
+    GoldenOutputFileAssertLogs OsPath (Text -> Bool)
+
+-- | Parameters for golden tests.
+data GoldenParams = MkGoldenParams
+  { -- | Functions to make the CLI arguments. The parameter is the tmp test
+    -- directory.
+    mkArgs :: OsPath -> List String,
+    -- | Output.
+    outFileName :: GoldenOutput,
+    -- | Test string description.
+    testDesc :: TestName,
+    -- | Test function name, for creating unique file paths.
+    testName :: OsPath
+  }
+
+makeFieldLabelsNoPrefix ''GoldenParams
+
 (<@=?>) :: (Eq a, Show a) => a -> IO a -> Assertion
 x <@=?> my = do
   y <- my
@@ -105,6 +134,8 @@ data FuncEnv = MkFuncEnv
     outFilesMapRef :: IORef (Map OsPath ByteString),
     xdgConfigCallsRef :: IORef Word8
   }
+
+makeFieldLabelsNoPrefix ''FuncEnv
 
 runPathReaderMock ::
   ( IOE :> es,
@@ -120,7 +151,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
   GetCurrentDirectory -> PRS.getCurrentDirectory
   GetXdgDirectory d p -> case d of
     XdgConfig -> do
-      incIORef (.xdgConfigCallsRef)
+      incIORef (view #xdgConfigCallsRef)
       pure $ baseName </> [osp|config|] </> p
     other -> error $ "Unexpected xdg type: " ++ show other
     where
@@ -226,7 +257,7 @@ runFileWriterMock ::
   Eff es a
 runFileWriterMock = interpret_ $ \case
   WriteBinaryFile path bs -> do
-    outFilesMapRef <- asks @FuncEnv (.outFilesMapRef)
+    outFilesMapRef <- asks @FuncEnv (view #outFilesMapRef)
     modifyIORef' outFilesMapRef (Map.insert path' bs)
     where
       path' = takeParentAndName path
@@ -240,13 +271,13 @@ runTerminalMock ::
   Eff es a
 runTerminalMock = interpret_ $ \case
   PutStr s -> do
-    logsRef <- asks @FuncEnv (.logsRef)
+    logsRef <- asks @FuncEnv (view #logsRef)
     modifyIORef' logsRef (<> packText s)
   PutStrLn s -> do
-    logsRef <- asks @FuncEnv (.logsRef)
+    logsRef <- asks @FuncEnv (view #logsRef)
     modifyIORef' logsRef (<> packText s)
   PutBinary bs -> do
-    logsRef <- asks @FuncEnv (.logsRef)
+    logsRef <- asks @FuncEnv (view #logsRef)
     modifyIORef' logsRef (<> (UTF8.decodeUtf8Lenient bs))
   other -> error $ "runTerminalMock: unimplemented: " ++ showEffectCons other
 
@@ -261,7 +292,7 @@ runMultiArgs mkArgs vals =
 runArgs :: Maybe Word8 -> List String -> Text -> IO ()
 runArgs mIdx args expected = do
   funcEnv <- runAppArgs args
-  result <- Ref.readIORef funcEnv.logsRef
+  result <- Ref.readIORef (funcEnv ^. #logsRef)
 
   let (idxTxt, indentTxt) = case mIdx of
         Just idx -> (showt idx <> ". ", "   ")
@@ -284,7 +315,7 @@ runArgs mIdx args expected = do
 runException :: forall e. (Exception e) => TestName -> Text -> List String -> TestTree
 runException desc expected args = testCase desc $ do
   eFuncEnv <- try @_ @e $ withArgs args $ runFuncIO runApp
-  eResult <- secondA (\x -> Ref.readIORef x.logsRef) eFuncEnv
+  eResult <- secondA (\x -> Ref.readIORef (x ^. #logsRef)) eFuncEnv
 
   case eResult of
     Right r -> assertFailure $ unpackText $ "Expected exception, received: " <> r
@@ -293,31 +324,6 @@ runException desc expected args = testCase desc $ do
 -- | Low level runner. Does nothing except runs pacer w/ the args.
 runAppArgs :: List String -> IO FuncEnv
 runAppArgs args = withArgs args $ runFuncIO runApp
-
--- | Parameters for golden tests.
-data GoldenParams = MkGoldenParams
-  { -- | Functions to make the CLI arguments. The parameter is the tmp test
-    -- directory.
-    mkArgs :: OsPath -> List String,
-    -- | Output.
-    outFileName :: GoldenOutput,
-    -- | Test string description.
-    testDesc :: TestName,
-    -- | Test function name, for creating unique file paths.
-    testName :: OsPath
-  }
-
--- | Golden test output.
-data GoldenOutput
-  = -- | The golden output is based on an output file.
-    GoldenOutputFile OsPath
-  | -- | The golden output is based on logs and output file.
-    GoldenOutputFileLogs OsPath
-  | -- | The golden output is based on an output file, but we also run
-    -- an assertion on the logs. This is needed when the logs contain
-    -- data that is hard to test for exact equality e.g. non-deterministic
-    -- filepaths, timestamps.
-    GoldenOutputFileAssertLogs OsPath (Text -> Bool)
 
 -- | Given a text description and testName OsPath, creates a golden test.
 -- Expects the following to exist:
@@ -387,15 +393,15 @@ testChartOs osSwitch testDesc testName getTestDir = testGoldenParams getTestDir 
 
 testGoldenParams :: IO OsPath -> GoldenParams -> TestTree
 testGoldenParams getTestDir goldenParams =
-  goldenDiff goldenParams.testDesc goldenPath actualPath $ do
+  goldenDiff (goldenParams ^. #testDesc) goldenPath actualPath $ do
     testDir <- getTestDir
 
-    let args = goldenParams.mkArgs testDir
+    let args = (goldenParams ^. #mkArgs) testDir
     eFuncEnv <- trySync $ withArgs args $ runFuncIO runApp
     case eFuncEnv of
       Left err -> writeActualFile $ exToBs err
       Right funcEnv ->
-        case goldenParams.outFileName of
+        case goldenParams ^. #outFileName of
           -- We expect a file to have been written to a given path. This is
           -- what the golden test is based on.
           GoldenOutputFile expectedName ->
@@ -415,7 +421,7 @@ testGoldenParams getTestDir goldenParams =
     outputPathStart =
       FS.OsPath.unsafeDecode
         $ [ospPathSep|test/functional/goldens|]
-        </> goldenParams.testName
+        </> (goldenParams ^. #testName)
 
     exToBs = encodeUtf8 . packText . displayInnerMatchKnown
 
@@ -427,10 +433,10 @@ testGoldenParams getTestDir goldenParams =
     actualPath = outputPathStart <> ".actual"
     goldenPath = outputPathStart <> ".golden"
 
-    mkLogOutput funcEnv = Ref.readIORef funcEnv.logsRef
+    mkLogOutput funcEnv = Ref.readIORef $ funcEnv ^. #logsRef
 
     mkFileOutput funcEnv expectedName = do
-      outFilesMap <- Ref.readIORef funcEnv.outFilesMapRef
+      outFilesMap <- Ref.readIORef $ funcEnv ^. #outFilesMapRef
       case Map.lookup expectedName outFilesMap of
         -- Found the write attempt in our env's map. Write it to compare
         -- it with the golden expectation.
