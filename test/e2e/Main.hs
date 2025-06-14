@@ -6,7 +6,6 @@ module Main (main) where
 import Effectful.Concurrent qualified as CC
 import Effectful.Concurrent.Async qualified as Async
 import Effectful.Environment qualified as Env
-import Network.HTTP.Client (Response (responseBody))
 import Network.HTTP.Client qualified as HttpClient
 import Pacer.Command.Chart.Server qualified as Server
 import Pacer.Driver qualified as Driver
@@ -80,7 +79,7 @@ testServerHealthCheck = do
 
     getResponse m r = liftIO $ HttpClient.httpLbs r m
 
-    toBS = toStrictBS . (.responseBody)
+    toBS = toStrictBS . HttpClient.responseBody
 
 -- For simplicity, eliminate all effects except for IO and concurrency.
 runServer ::

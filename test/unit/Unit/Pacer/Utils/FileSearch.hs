@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Unit.Pacer.Utils.FileSearch (tests) where
 
@@ -16,12 +18,31 @@ import Pacer.Configuration.Env.Types (LogEnv (MkLogEnv))
 import Pacer.Utils.FileSearch
   ( FileAliases (MkFileAliases),
     FileSearch (SearchFileAliases, SearchFileInfix),
-    MatchResult (extensionResult, patternResult),
+    MatchResult,
   )
 import Pacer.Utils.FileSearch qualified as FileSearch
 import System.OsPath qualified as OsP
 import System.OsPath qualified as OsPath
 import Unit.Prelude
+
+data PathData = MkPathData
+  { dirs :: List OsPath,
+    name :: OsPath,
+    exts :: List OsPath
+  }
+  deriving stock (Show)
+
+makeFieldLabelsNoPrefix ''PathData
+
+toPath :: PathData -> OsPath
+toPath pd =
+  dirPath
+    </> (pd ^. #name)
+    <> exts
+  where
+    dirPath = OsP.joinPath (pd ^. #dirs)
+
+    exts = concatExts (pd ^. #exts)
 
 tests :: TestTree
 tests =
@@ -600,43 +621,43 @@ testInfixSatisfiesPattern = testCase desc $ do
 
 assertPatSuccessNoExt :: String -> MatchResult -> Assertion
 assertPatSuccessNoExt str r = do
-  assertBoolMsg str True r.patternResult
-  case r.extensionResult of
+  assertBoolMsg str True $ r ^. #patternResult
+  case r ^. #extensionResult of
     Nothing -> pure ()
     other -> assertFailure $ str ++ ": Expected Nothing, received: " ++ show other
 
 assertPatSuccessExtSuccess :: String -> MatchResult -> Assertion
 assertPatSuccessExtSuccess str r = do
-  assertBoolMsg str True r.patternResult
-  case r.extensionResult of
+  assertBoolMsg str True $ r ^. #patternResult
+  case r ^. #extensionResult of
     Just True -> pure ()
     other -> assertFailure $ str ++ ": Expected True, received: " ++ show other
 
 assertPatSuccessExtFail :: String -> MatchResult -> Assertion
 assertPatSuccessExtFail str r = do
-  assertBoolMsg str True r.patternResult
-  case r.extensionResult of
+  assertBoolMsg str True $ r ^. #patternResult
+  case r ^. #extensionResult of
     Just False -> pure ()
     other -> assertFailure $ str ++ ": Expected False, received: " ++ show other
 
 assertPatFailNoExt :: String -> MatchResult -> Assertion
 assertPatFailNoExt str r = do
-  assertBoolMsg str False r.patternResult
-  case r.extensionResult of
+  assertBoolMsg str False $ r ^. #patternResult
+  case r ^. #extensionResult of
     Nothing -> pure ()
     other -> assertFailure $ str ++ ": Expected Nothing, received: " ++ show other
 
 assertPatFailExtSuccess :: String -> MatchResult -> Assertion
 assertPatFailExtSuccess str r = do
-  assertBoolMsg str False r.patternResult
-  case r.extensionResult of
+  assertBoolMsg str False $ r ^. #patternResult
+  case r ^. #extensionResult of
     Just True -> pure ()
     other -> assertFailure $ str ++ ": Expected True, received: " ++ show other
 
 assertPatFailExtFail :: String -> MatchResult -> Assertion
 assertPatFailExtFail str r = do
-  assertBoolMsg str False r.patternResult
-  case r.extensionResult of
+  assertBoolMsg str False $ r ^. #patternResult
+  case r ^. #extensionResult of
     Just False -> pure ()
     other -> assertFailure $ str ++ ": Expected False, received: " ++ show other
 
@@ -676,38 +697,21 @@ testOsPathToNameExtsProps = testProp "testOsPathToNameExtsProps" desc $ do
   annotateShow result
 
   -- assert name
-  pd.name === name
+  pd ^. #name === name
 
   -- assert extension
-  case L.unsnoc pd.exts of
+  case L.unsnoc (pd ^. #exts) of
     Nothing -> do
       ext === mempty
       exts === mempty
     Just (_, last) -> do
-      concatExts pd.exts === exts
+      concatExts (pd ^. #exts) === exts
       dot <> last === ext
 
   -- assert full name (no dirs)
-  pd.name <> concatExts pd.exts === name <> exts
+  pd ^. #name <> concatExts (pd ^. #exts) === name <> exts
   where
     desc = "Parses filepath to specified parts properties"
-
-data PathData = MkPathData
-  { dirs :: List OsPath,
-    name :: OsPath,
-    exts :: List OsPath
-  }
-  deriving stock (Show)
-
-toPath :: PathData -> OsPath
-toPath pd =
-  dirPath
-    </> pd.name
-    <> exts
-  where
-    dirPath = OsP.joinPath pd.dirs
-
-    exts = concatExts pd.exts
 
 concatExts :: List OsString -> OsString
 concatExts [] = mempty

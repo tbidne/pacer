@@ -319,7 +319,7 @@ testUnmatchedActivityLabelWarning getTestDir = testCase desc $ do
 
   funcEnv <- runAppArgs args
 
-  logs <- Ref.readIORef funcEnv.logsRef
+  logs <- Ref.readIORef (funcEnv ^. #logsRef)
 
   let mkErr e =
         unpackText

@@ -21,7 +21,6 @@ module Pacer.Command.Chart.Data.Activity
 
     -- * SomeActivities
     SomeActivityKey (..),
-    someActivityKeyIso,
     SomeActivities (..),
 
     -- ** From JSON
@@ -56,9 +55,7 @@ import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Activity.ActivityLabel (Label)
-import Pacer.Command.Chart.Data.Activity.ActivityType
-  ( ActivityType (unActivityType),
-  )
+import Pacer.Command.Chart.Data.Activity.ActivityType (ActivityType)
 import Pacer.Command.Chart.Data.Expr (FilterExpr)
 import Pacer.Command.Chart.Data.Expr qualified as Expr
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
@@ -125,6 +122,8 @@ data Activity dist a = MkActivity
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 
+makeFieldLabelsNoPrefix ''Activity
+
 -------------------------------------------------------------------------------
 --                                    Units                                  --
 -------------------------------------------------------------------------------
@@ -146,12 +145,12 @@ instance
 
   convertDistance_ r =
     MkActivity
-      { atype = r.atype,
-        datetime = r.datetime,
-        distance = convertDistance_ r.distance,
-        duration = r.duration,
-        labels = r.labels,
-        title = r.title
+      { atype = r ^. #atype,
+        datetime = r ^. #datetime,
+        distance = convertDistance_ $ r ^. #distance,
+        duration = r ^. #duration,
+        labels = r ^. #labels,
+        title = r ^. #title
       }
 
 instance (SingI dist) => HasDistance (Activity dist a) where
@@ -160,7 +159,7 @@ instance (SingI dist) => HasDistance (Activity dist a) where
 
   distanceUnitOf _ = fromSingI @_ @dist
 
-  distanceOf = (.distance)
+  distanceOf = (view #distance)
 
   hideDistance = MkSomeActivity (sing @dist)
 
@@ -177,8 +176,8 @@ derivePace ::
   Pace d a
 derivePace r =
   Derive.derivePace
-    r.distance
-    r.duration
+    (r ^. #distance)
+    (r ^. #duration)
 
 -------------------------------------------------------------------------------
 --                                SomeActivity                               --
@@ -217,20 +216,65 @@ instance (Show a) => Show (SomeActivity a) where
           . withSingI s showsPrec 11 r
       )
 
-instance HasField "atype" (SomeActivity a) (Maybe ActivityType) where
-  getField (MkSomeActivity _ r) = r.atype
+instance
+  ( k ~ A_Lens,
+    x ~ Maybe ActivityType,
+    y ~ Maybe ActivityType
+  ) =>
+  LabelOptic "atype" k (SomeActivity a) (SomeActivity a) x y
+  where
+  labelOptic =
+    lens
+      (\(MkSomeActivity _ a) -> a ^. #atype)
+      (\(MkSomeActivity s a) b -> MkSomeActivity s (set' #atype b a))
 
-instance HasField "datetime" (SomeActivity a) Timestamp where
-  getField (MkSomeActivity _ r) = r.datetime
+instance
+  ( k ~ A_Lens,
+    x ~ Timestamp,
+    y ~ Timestamp
+  ) =>
+  LabelOptic "datetime" k (SomeActivity a) (SomeActivity a) x y
+  where
+  labelOptic =
+    lens
+      (\(MkSomeActivity _ a) -> a ^. #datetime)
+      (\(MkSomeActivity s a) b -> MkSomeActivity s (set' #datetime b a))
 
-instance HasField "duration" (SomeActivity a) (Duration a) where
-  getField (MkSomeActivity _ r) = r.duration
+instance
+  ( k ~ A_Lens,
+    x ~ Duration a,
+    y ~ Duration a
+  ) =>
+  LabelOptic "duration" k (SomeActivity a) (SomeActivity a) x y
+  where
+  labelOptic =
+    lens
+      (\(MkSomeActivity _ a) -> a ^. #duration)
+      (\(MkSomeActivity s a) b -> MkSomeActivity s (set' #duration b a))
 
-instance HasField "labels" (SomeActivity a) (Set Label) where
-  getField (MkSomeActivity _ r) = r.labels
+instance
+  ( k ~ A_Lens,
+    x ~ Set Label,
+    y ~ Set Label
+  ) =>
+  LabelOptic "labels" k (SomeActivity a) (SomeActivity a) x y
+  where
+  labelOptic =
+    lens
+      (\(MkSomeActivity _ a) -> a ^. #labels)
+      (\(MkSomeActivity s a) b -> MkSomeActivity s (set' #labels b a))
 
-instance HasField "title" (SomeActivity a) (Maybe Text) where
-  getField (MkSomeActivity _ r) = r.title
+instance
+  ( k ~ A_Lens,
+    x ~ Maybe Text,
+    y ~ Maybe Text
+  ) =>
+  LabelOptic "title" k (SomeActivity a) (SomeActivity a) x y
+  where
+  labelOptic =
+    lens
+      (\(MkSomeActivity _ a) -> a ^. #title)
+      (\(MkSomeActivity s a) b -> MkSomeActivity s (set' #title b a))
 
 -------------------------------------------------------------------------------
 --                               Serialization                               --
@@ -252,14 +296,14 @@ instance
   where
   toJSON (MkSomeActivity sz r) =
     Json.object
-      $ [ "datetime" .= r.datetime,
-          "distance" .= withSingI sz display r.distance,
+      $ [ "datetime" .= (r ^. #datetime),
+          "distance" .= withSingI sz display (r ^. #distance),
           "duration" .= durationTimeString,
-          "labels" .= r.labels
+          "labels" .= (r ^. #labels)
         ]
       ++ Json.encodeMaybes
-        [ ("title", r.title),
-          ("type", fmap (.unActivityType) r.atype)
+        [ ("title", r ^. #title),
+          ("type", (view #unActivityType) <$> r ^. #atype)
         ]
     where
       durationTimeString =
@@ -267,7 +311,8 @@ instance
           . RelTime.fromSeconds
           . floor
           . toℝ
-          $ r.duration.unDuration.unPositive
+          $ r
+          ^. (#duration % #unDuration % #unPositive)
 
 -- | Parse SomeActivity. Returns Nothing if we are given some type filters
 -- and the type does not match.
@@ -383,30 +428,15 @@ newtype SomeActivityKey a
 --                                Base Classes                               --
 -------------------------------------------------------------------------------
 
-instance HasField "atype" (SomeActivityKey a) (Maybe ActivityType) where
-  getField (MkSomeActivityKey r) = r.atype
-
-instance HasField "datetime" (SomeActivityKey a) Timestamp where
-  getField (MkSomeActivityKey r) = r.datetime
-
-instance HasField "duration" (SomeActivityKey a) (Duration a) where
-  getField (MkSomeActivityKey r) = r.duration
-
-instance HasField "labels" (SomeActivityKey a) (Set Label) where
-  getField (MkSomeActivityKey r) = r.labels
-
-instance HasField "title" (SomeActivityKey a) (Maybe Text) where
-  getField (MkSomeActivityKey r) = r.title
-
 instance Eq (SomeActivityKey a) where
   MkSomeActivityKey (MkSomeActivity _ r1)
     == MkSomeActivityKey (MkSomeActivity _ r2) =
-      r1.datetime == r2.datetime
+      r1 ^. #datetime == r2 ^. #datetime
 
 instance Ord (SomeActivityKey a) where
   MkSomeActivityKey (MkSomeActivity _ r1)
     <= MkSomeActivityKey (MkSomeActivity _ r2) =
-      r1.datetime <= r2.datetime
+      r1 ^. #datetime <= r2 ^. #datetime
 
 -------------------------------------------------------------------------------
 --                                    Units                                  --
@@ -423,14 +453,6 @@ instance HasDistance (SomeActivityKey a) where
   distanceOf (MkSomeActivityKey sr) = distanceOf sr
 
   hideDistance = id
-
--------------------------------------------------------------------------------
---                                   Misc                                    --
--------------------------------------------------------------------------------
-
--- | 'Iso' between 'SomeActivityKey' and 'SomeActivity'.
-someActivityKeyIso :: Iso' (SomeActivityKey a) (SomeActivity a)
-someActivityKeyIso = iso (\(MkSomeActivityKey x) -> x) MkSomeActivityKey
 
 -------------------------------------------------------------------------------
 --                               SomeActivities                              --
@@ -668,7 +690,7 @@ mkSomeActivities (y@(MkSomeActivity _ r) :| ys) =
         Ok foundKeys' ->
           let acc' = NESet.insert (MkSomeActivityKey someActivity) acc
            in Ok (acc', foundKeys')
-        Err overlapped -> Err ((q.title, q.datetime), overlapped)
+        Err overlapped -> Err ((q ^. #title, q ^. #datetime), overlapped)
 
 -- REVIEW: Now that I think about it, this elaborate overlap detection might
 -- not be worth it. First, note that Timestamp's Eq/Ord is lawful exactly
@@ -755,15 +777,19 @@ checkOverlap ::
   HashMap Timestamp OverlapData ->
   -- | Error or new map, with the timestamp (and overlaps) inserted.
   Result TitleAndTime (HashMap Timestamp OverlapData)
-checkOverlap activity map = case HMap.lookup activity.datetime map of
+checkOverlap activity map = case HMap.lookup (activity ^. #datetime) map of
   -- 1. The timestamp exists in the map, error.
   Just (OverlapPrimary origTs mTitle) -> Err (mTitle, origTs)
   Just (OverlapSecondary origTs mTitle) -> Err (mTitle, origTs)
   -- 2. Timestamp does not exist in the map, check its overlaps for a
   --    match.
   Nothing ->
-    let overlaps = TS.strictOverlaps activity.datetime
-        init = activityToOverlapMap' activity.datetime activity.title overlaps
+    let overlaps = TS.strictOverlaps (activity ^. #datetime)
+        init =
+          activityToOverlapMap'
+            (activity ^. #datetime)
+            (activity ^. #title)
+            overlaps
      in HMap.union map <$> foldr go (Ok init) overlaps
   where
     go ::
@@ -783,9 +809,9 @@ checkOverlap activity map = case HMap.lookup activity.datetime map of
 activityToOverlapMap :: Activity d a -> HashMap Timestamp OverlapData
 activityToOverlapMap activity =
   activityToOverlapMap'
-    activity.datetime
-    activity.title
-    (TS.strictOverlaps activity.datetime)
+    (activity ^. #datetime)
+    (activity ^. #title)
+    (TS.strictOverlaps $ activity ^. #datetime)
 
 -- | Helper for 'activityToOverlapMap'. This exists entirely so we do not have
 -- to calculate the overlaps twice in some places. It is intended to always
@@ -900,11 +926,11 @@ unionSomeActivities xs ys = mkSomeActivities (toListSR xs <> toListSR ys)
 
 someActivitiesToNE :: SomeActivities a -> NonEmpty (SomeActivity a)
 someActivitiesToNE =
-  fmap (.unSomeActivityKey)
+  fmap (view #unSomeActivityKey)
     . NESet.toList
-    . (.unSomeActivities)
+    . (view #unSomeActivities)
 
 someActivitiesToList :: SomeActivities a -> List (SomeActivity a)
 someActivitiesToList = NE.toList . someActivitiesToNE
 
-makeFieldLabelsNoPrefix ''Activity
+makeFieldLabelsNoPrefix ''SomeActivityKey

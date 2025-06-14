@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Convert parameters.
@@ -14,13 +15,10 @@ module Pacer.Command.Convert.Params
   )
 where
 
-import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
-import Pacer.Configuration.Utils
-  ( DistancePaceArgs
-      ( mSomeDistance,
-        mSomePace
-      ),
+import Pacer.Configuration.Phase
+  ( ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal),
   )
+import Pacer.Configuration.Utils (DistancePaceArgs)
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Pace (SomePace)
 import Pacer.Exception
@@ -44,6 +42,8 @@ data ConvertParams p a = MkConvertParams
     unit :: DistanceUnit
   }
 
+makeFieldLabelsNoPrefix ''ConvertParams
+
 type ConvertParamsArgs a = ConvertParams ConfigPhaseArgs a
 
 type ConvertParamsFinal a = ConvertParams ConfigPhaseFinal a
@@ -60,12 +60,12 @@ evolvePhase ::
   ConvertParamsArgs a ->
   m (ConvertParamsFinal a)
 evolvePhase args =
-  case ( dpArgs.mSomeDistance,
-         dpArgs.mSomePace
+  case ( dpArgs ^. #mSomeDistance,
+         dpArgs ^. #mSomePace
        ) of
     (Just _, Just _) -> throwM CommandConvertArgs2
     (Nothing, Nothing) -> throwM CommandConvertArgs0
-    (Just a, Nothing) -> pure $ MkConvertParams (Left a) args.unit
-    (Nothing, Just b) -> pure $ MkConvertParams (Right b) args.unit
+    (Just a, Nothing) -> pure $ MkConvertParams (Left a) (args ^. #unit)
+    (Nothing, Just b) -> pure $ MkConvertParams (Right b) (args ^. #unit)
   where
-    dpArgs = args.quantity
+    dpArgs = args ^. #quantity

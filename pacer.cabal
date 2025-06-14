@@ -44,9 +44,9 @@ common common-lang
     DuplicateRecordFields
     LexicalNegation
     MultiWayIf
+    NoFieldSelectors
     NoImplicitPrelude
     OverloadedLabels
-    OverloadedRecordDot
     OverloadedStrings
     PatternSynonyms
     RequiredTypeArguments

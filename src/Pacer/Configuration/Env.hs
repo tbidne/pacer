@@ -4,7 +4,7 @@ module Pacer.Configuration.Env
 where
 
 import Effectful.Logger.Dynamic (LogLevel (LevelInfo))
-import Pacer.Configuration.Args (Args (logLevel, logVerbosity))
+import Pacer.Configuration.Args (Args)
 import Pacer.Configuration.Config (Config)
 import Pacer.Configuration.Env.Types
   ( LogEnv
@@ -25,7 +25,7 @@ mkLogEnv args mConfig =
       logVerbosity
     }
   where
-    logLevel = case args.logLevel <|> (preview logLevelAT mConfig) of
+    logLevel = case args ^. #logLevel <|> (preview logLevelAT mConfig) of
       Nothing -> Just LevelInfo
       Just LogNone -> Nothing
       Just (LogSome l) -> Just l
@@ -35,7 +35,8 @@ mkLogEnv args mConfig =
 
     logVerbosity =
       fromMaybe mempty
-        $ args.logVerbosity
+        $ args
+        ^. #logVerbosity
         <|> (preview logVerbosityAT mConfig)
 
     logVerbosityAT :: AffineTraversal' (Maybe Config) LogVerbosity

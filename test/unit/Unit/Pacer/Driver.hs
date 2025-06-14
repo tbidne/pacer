@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Unit.Pacer.Driver (tests) where
 
@@ -41,6 +43,10 @@ import Pacer.Configuration.Phase
 import Pacer.Driver (Env)
 import Pacer.Driver qualified as Driver
 import Unit.Prelude
+
+data TestEnv = MkTestEnv {cwd :: Maybe OsPath}
+
+makeFieldLabelsNoPrefix ''TestEnv
 
 tests :: TestTree
 tests =
@@ -100,10 +106,8 @@ testFindsConfigCurrDir = testCase desc $ do
           xdgConfigPath = Nothing
         }
 
-data TestEnv = MkTestEnv {cwd :: Maybe OsPath}
-
 instance Semigroup TestEnv where
-  l <> r = MkTestEnv (l.cwd <|> r.cwd)
+  l <> r = MkTestEnv (l ^. #cwd <|> r ^. #cwd)
 
 instance Monoid TestEnv where
   mempty = MkTestEnv mempty
@@ -160,7 +164,7 @@ runPathReaderMock = reinterpret_ runPathReader $ \case
       | p == rootOsPath </> [ospPathSep|cwd_config/config.jsonc|] -> pure False
       | otherwise -> error $ "Unexpected file: " ++ show p
   GetCurrentDirectory ->
-    asks @TestEnv (.cwd) <&> \case
+    asks @TestEnv (view #cwd) <&> \case
       Nothing -> rootOsPath </> [osp|cwd|]
       Just p -> p
   GetXdgDirectory XdgConfig p -> pure $ rootOsPath </> xdgConfigOsPath </> p

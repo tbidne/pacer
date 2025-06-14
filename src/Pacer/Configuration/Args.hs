@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Configuration.Args
   ( Args (..),
@@ -38,6 +39,15 @@ import Pacer.Prelude
 import Paths_pacer qualified as Paths
 import System.Info qualified as Info
 
+data VersionInfo = MkVersionInfo
+  { gitCommitDate :: OsString,
+    ghc :: String,
+    gitHash :: OsString,
+    gitShortHash :: OsString
+  }
+
+makeFieldLabelsNoPrefix ''VersionInfo
+
 -- | CLI args.
 data Args a = MkArgs
   { -- | Command to run.
@@ -50,6 +60,8 @@ data Args a = MkArgs
     logVerbosity :: Maybe LogVerbosity
   }
   deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''Args
 
 -- | Optparse-Applicative info.
 parserInfo ::
@@ -122,7 +134,7 @@ versShort =
     [ "Version: ",
       showVersion Paths.version,
       " (",
-      OsString.decodeLenient versionInfo.gitShortHash,
+      OsString.decodeLenient $ versionInfo ^. #gitShortHash,
       ")"
     ]
 
@@ -131,17 +143,10 @@ versLong =
   L.intercalate
     "\n"
     [ "Pacer: " <> showVersion Paths.version,
-      " - Git revision: " <> OsString.decodeLenient versionInfo.gitHash,
-      " - Commit date:  " <> OsString.decodeLenient versionInfo.gitCommitDate,
-      " - GHC version:  " <> versionInfo.ghc
+      " - Git revision: " <> OsString.decodeLenient (versionInfo ^. #gitHash),
+      " - Commit date:  " <> OsString.decodeLenient (versionInfo ^. #gitCommitDate),
+      " - GHC version:  " <> versionInfo ^. #ghc
     ]
-
-data VersionInfo = MkVersionInfo
-  { gitCommitDate :: OsString,
-    ghc :: String,
-    gitHash :: OsString,
-    gitShortHash :: OsString
-  }
 
 versionInfo :: VersionInfo
 versionInfo =

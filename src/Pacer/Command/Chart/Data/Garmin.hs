@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Pacer.Command.Chart.Data.Garmin
   ( -- * Types
@@ -61,6 +62,8 @@ data GarminAct d a = MkGarminAct
     title :: Text
   }
   deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''GarminAct
 
 -- Example format:
 --
@@ -186,12 +189,12 @@ readActivitiesCsv @es inputDistUnit globalFilters csvPath = addNamespace ns $ do
     toSomeActivity @d gr =
       MkSomeActivity (sing @d)
         $ MkActivity
-          { atype = Just gr.atype,
-            datetime = gr.datetime,
-            distance = Distance.forceUnit gr.distance,
-            duration = gr.duration,
+          { atype = Just $ gr ^. #atype,
+            datetime = gr ^. #datetime,
+            distance = Distance.forceUnit $ gr ^. #distance,
+            duration = gr ^. #duration,
             labels = Set.fromList [],
-            title = Just gr.title
+            title = Just $ gr ^. #title
           }
 
     foldGarmin ::

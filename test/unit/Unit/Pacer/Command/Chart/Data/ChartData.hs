@@ -194,7 +194,7 @@ testAllGroupsProps = testProp "testAllGroupsProps" desc $ do
   k <- forAll genPWord8
 
   let result = ChartData.allGroups k seq
-      k' = toInt k.unPositive
+      k' = toInt $ k ^. #unPositive
 
   annotateShow result
 
@@ -205,7 +205,7 @@ testAllGroupsProps = testProp "testAllGroupsProps" desc $ do
       prevGroupRef <- liftIO $ IORef.newIORef Nothing
       for_ result $ \g -> do
         annotateShow g
-        toInt k.unPositive === length g
+        toInt (k ^. #unPositive) === length g
 
         -- This prop relies on the fact that the generated list is a sequence
         -- e.g. [1,2,3,4,5,6,7,8].

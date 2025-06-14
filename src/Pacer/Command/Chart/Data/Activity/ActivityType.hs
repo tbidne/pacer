@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Command.Chart.Data.Activity.ActivityType
   ( ActivityType (..),
   )
@@ -12,3 +15,5 @@ newtype ActivityType = MkActivityType {unActivityType :: Text}
   deriving stock (Generic, Show)
   deriving anyclass (Parser, NFData)
   deriving newtype (Display, Eq, FromJSON, IsString, Ord, ToJSON)
+
+makeFieldLabelsNoPrefix ''ActivityType

@@ -804,14 +804,14 @@ runPathReaderMock ::
 runPathReaderMock = interpret_ $ \case
   CanonicalizePath p -> pure $ rootOsPath </> p
   DoesDirectoryExist p -> do
-    knownDirs <- asks @MockEnv (.knownDirectories)
-    knownDirsFalse <- asks @MockEnv (.knownDirectoriesFalse)
+    knownDirs <- asks @MockEnv (view #knownDirectories)
+    knownDirsFalse <- asks @MockEnv (view #knownDirectoriesFalse)
     if
       | p `Map.member` knownDirs -> pure True
       | p `Set.member` knownDirsFalse -> pure False
       | otherwise -> error $ "doesDirectoryExist: unexpected dir: " ++ show p
   DoesFileExist p -> do
-    knownDirs <- asks @MockEnv (.knownDirectories)
+    knownDirs <- asks @MockEnv (view #knownDirectories)
     let (d, fn) = OsP.splitFileName p
 
     case Map.lookup d knownDirs of
@@ -823,7 +823,7 @@ runPathReaderMock = interpret_ $ \case
       -- explicitly given (e.g. --chart-requests). Check if it is a known
       -- explicit path.
       Nothing -> do
-        knownFiles <- asks @MockEnv (.knownFiles)
+        knownFiles <- asks @MockEnv (view #knownFiles)
         pure $ p `Set.member` knownFiles
   GetCurrentDirectory -> pure $ toOsPath cwdPath
   GetXdgDirectory d p ->
@@ -831,7 +831,7 @@ runPathReaderMock = interpret_ $ \case
       XdgConfig -> pure $ toOsPath xdgConfig </> p
       _ -> error $ "runPathReaderMock: unexpected xdg type: " <> show d
   ListDirectory p -> do
-    knownDirs <- asks @MockEnv (.knownDirectories)
+    knownDirs <- asks @MockEnv (view #knownDirectories)
     case Map.lookup p knownDirs of
       Nothing -> error $ "ListDirectory: unexpected dir: " ++ show p
       Just contents -> pure $ Set.toList contents

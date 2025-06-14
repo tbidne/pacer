@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Scale parameters.
@@ -17,14 +18,7 @@ module Pacer.Command.Scale.Params
 where
 
 import Pacer.Configuration.Phase (ConfigPhase (ConfigPhaseArgs, ConfigPhaseFinal))
-import Pacer.Configuration.Utils
-  ( DistanceDurationPaceArgs
-      ( mDuration,
-        mPaceOptUnits,
-        mSomeDistance
-      ),
-    PaceOptUnits,
-  )
+import Pacer.Configuration.Utils (DistanceDurationPaceArgs, PaceOptUnits)
 import Pacer.Data.Distance (DistanceUnit, SomeDistance)
 import Pacer.Data.Duration (Duration)
 import Pacer.Exception
@@ -57,6 +51,8 @@ data ScaleParams p a = MkScaleParams
     unit :: Maybe DistanceUnit
   }
 
+makeFieldLabelsNoPrefix ''ScaleParams
+
 type ScaleParamsArgs a = ScaleParams ConfigPhaseArgs a
 
 type ScaleParamsFinal a = ScaleParams ConfigPhaseFinal a
@@ -75,18 +71,20 @@ evolvePhase ::
   ScaleParamsArgs a ->
   m (ScaleParamsFinal a)
 evolvePhase args =
-  case ( ddpArgs.mSomeDistance,
-         ddpArgs.mDuration,
-         ddpArgs.mPaceOptUnits
+  case ( ddpArgs ^. #mSomeDistance,
+         ddpArgs ^. #mDuration,
+         ddpArgs ^. #mPaceOptUnits
        ) of
     (Just _, Just _, Just _) -> throwM CommandScaleArgs3
     (Nothing, Nothing, Nothing) -> throwM CommandScaleArgs0
     (Just a, Nothing, Nothing) ->
-      pure $ MkScaleParams args.factor (ScaleDistance a) args.unit
+      pure $ MkScaleParams factor (ScaleDistance a) unit
     (Nothing, Just b, Nothing) ->
-      pure $ MkScaleParams args.factor (ScaleDuration b) args.unit
+      pure $ MkScaleParams factor (ScaleDuration b) unit
     (Nothing, Nothing, Just c) ->
-      pure $ MkScaleParams args.factor (ScalePace c) args.unit
+      pure $ MkScaleParams factor (ScalePace c) unit
     _ -> throwM CommandScaleArgs2
   where
-    ddpArgs = args.quantity
+    ddpArgs = args ^. #quantity
+    factor = args ^. #factor
+    unit = args ^. #unit

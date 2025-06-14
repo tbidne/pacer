@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Command.Chart.Data.Time.Year
   ( -- * Type
     Year (..),
@@ -26,16 +29,18 @@ newtype Year = MkYear
   deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (NFData)
 
+makeFieldLabelsNoPrefix ''Year
+
 instance Bounded Year where
   minBound = MkYear $ Interval.unsafeInterval 1950
   maxBound = MkYear $ Interval.unsafeInterval 2099
 
 instance Enum Year where
-  fromEnum = fromIntegral . (.unInterval) . (.unYear)
+  fromEnum = fromIntegral . view (#unYear % #unInterval)
   toEnum = MkYear . Interval.unsafeInterval . fromIntegral
 
 instance Display Year where
-  displayBuilder = displayBuilder . Interval.unInterval . unYear
+  displayBuilder = displayBuilder . view (#unYear % #unInterval)
 
 instance Parser Year where
   parser = do
@@ -44,7 +49,7 @@ instance Parser Year where
 
 -- | Eliminates 'Year' to "Data.Time" compatible 'Integer'.
 yearToTime :: Year -> Integer
-yearToTime y = toℤ y.unYear.unInterval
+yearToTime = toℤ . view (#unYear % #unInterval)
 
 -- | Creates a 'Year' in the expected range or fails.
 mkYear :: (MonadFail m, Show a, Toℤ a) => a -> m Year

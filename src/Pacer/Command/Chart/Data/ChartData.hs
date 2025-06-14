@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoScopedTypeVariables #-}
 
 module Pacer.Command.Chart.Data.ChartData
@@ -32,7 +33,7 @@ import Pacer.Command.Chart.Data.Activity
   )
 import Pacer.Command.Chart.Data.Activity qualified as Activity
 import Pacer.Command.Chart.Data.ChartRequest
-  ( ChartRequest (chartType, filters, title, y1Axis, yAxis),
+  ( ChartRequest,
     ChartSmooth (smoothPeriod, smoothType),
     ChartSmoothType (ChartSmoothRolling, ChartSmoothWindow),
     ChartSumPeriod (ChartSumDays, ChartSumMonth, ChartSumWeek, ChartSumYear),
@@ -60,87 +61,21 @@ import Pacer.Command.Chart.Data.Expr.Set qualified as ESet
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
-import Pacer.Configuration.Env.Types (LogEnv (logLevel, logVerbosity))
+import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Configuration.Logging (LogVerbosity (LogV1))
-import Pacer.Data.Distance (Distance (unDistance), SomeDistance)
+import Pacer.Data.Distance (Distance, SomeDistance)
 import Pacer.Data.Distance qualified as Dist
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
   )
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration (Duration (unDuration))
-import Pacer.Data.Pace (SomePace (MkSomePace))
+import Pacer.Data.Pace (PaceDistF, SomePace (MkSomePace))
 import Pacer.Exception (CreateChartE (CreateChartFilterEmpty))
 import Pacer.Prelude
 import Pacer.Utils qualified as U
 import Pacer.Utils.Json (JsonValue, ToJSON (toJSON), (.=))
 import Pacer.Utils.Json qualified as Json
-
--- | Holds chart data.
-data ChartData
-  = ChartDataY ChartY
-  | ChartDataY1 ChartY1
-  deriving stock (Eq, Show)
-
-instance ToJSON ChartData where
-  toJSON (ChartDataY x) = toJSON x
-  toJSON (ChartDataY1 x) = toJSON x
-
--- | Data for a chart with a single Y axis.
-data ChartY = MkChartY
-  { -- | X and Y axis data.
-    values :: NESeq (Tuple2 Timestamp Double),
-    -- | Y axis type. This is used for the label on the line itself, __not__
-    -- the y-axis (that label is on ChartOptions).
-    yType :: YAxisType,
-    -- | Distance unit for y-axis, if it used.
-    yDistUnit :: DistanceUnit
-  }
-  deriving stock (Eq, Show)
-
-instance ToJSON ChartY where
-  toJSON c =
-    Json.object
-      [ "xAxis" .= x,
-        "yAxes"
-          .= Json.object
-            [ "y" .= yAxis
-            ]
-      ]
-    where
-      (x, y) = L.unzip $ toList c.values
-
-      yAxis = mkYJson c.yDistUnit y c.yType "y"
-
--- See NOTE: [Numeric Type]
-
--- | Data for a chart with two Y axes.
-data ChartY1 = MkChartY1
-  { -- | Data for a chart with two y Axes.
-    values :: NESeq (Tuple3 Timestamp Double Double),
-    -- | Type of first Y axis.
-    yType :: YAxisType,
-    -- | Type of second Y axis.
-    y1Type :: YAxisType,
-    -- | Distance unit for y-axis, if it used.
-    yDistUnit :: DistanceUnit
-  }
-  deriving stock (Eq, Show)
-
-instance ToJSON ChartY1 where
-  toJSON c =
-    Json.object
-      [ "xAxis" .= x,
-        "yAxes"
-          .= Json.object
-            [ "y" .= yAxis,
-              "y1" .= y1Axis
-            ]
-      ]
-    where
-      (x, y, y1) = L.unzip3 $ toList c.values
-      yAxis = mkYJson c.yDistUnit y c.yType "y"
-      y1Axis = mkYJson c.yDistUnit y1 c.y1Type "y1"
 
 mkYJson :: DistanceUnit -> [Double] -> YAxisType -> Text -> JsonValue
 mkYJson dunit yVal yType yId =
@@ -159,16 +94,81 @@ mkYJson dunit yVal yType yId =
       where
         dstTxt = display dunit
 
+-- | Data for a chart with a single Y axis.
+data ChartY = MkChartY
+  { -- | X and Y axis data.
+    values :: NESeq (Tuple2 Timestamp Double),
+    -- | Y axis type. This is used for the label on the line itself, __not__
+    -- the y-axis (that label is on ChartOptions).
+    yType :: YAxisType,
+    -- | Distance unit for y-axis, if it used.
+    yDistUnit :: DistanceUnit
+  }
+  deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''ChartY
+
+instance ToJSON ChartY where
+  toJSON c =
+    Json.object
+      [ "xAxis" .= x,
+        "yAxes"
+          .= Json.object
+            [ "y" .= yAxis
+            ]
+      ]
+    where
+      (x, y) = L.unzip $ toList $ c ^. #values
+
+      yAxis = mkYJson (c ^. #yDistUnit) y (c ^. #yType) "y"
+
+-- See NOTE: [Numeric Type]
+
+-- | Data for a chart with two Y axes.
+data ChartY1 = MkChartY1
+  { -- | Data for a chart with two y Axes.
+    values :: NESeq (Tuple3 Timestamp Double Double),
+    -- | Type of first Y axis.
+    yType :: YAxisType,
+    -- | Type of second Y axis.
+    y1Type :: YAxisType,
+    -- | Distance unit for y-axis, if it used.
+    yDistUnit :: DistanceUnit
+  }
+  deriving stock (Eq, Show)
+
+makeFieldLabelsNoPrefix ''ChartY1
+
+instance ToJSON ChartY1 where
+  toJSON c =
+    Json.object
+      [ "xAxis" .= x,
+        "yAxes"
+          .= Json.object
+            [ "y" .= yAxis,
+              "y1" .= y1Axis
+            ]
+      ]
+    where
+      (x, y, y1) = L.unzip3 $ toList $ c ^. #values
+      yAxis = mkYJson (c ^. #yDistUnit) y (c ^. #yType) "y"
+      y1Axis = mkYJson (c ^. #yDistUnit) y1 (c ^. #y1Type) "y1"
+
+-- | Holds chart data.
+data ChartData
+  = ChartDataY ChartY
+  | ChartDataY1 ChartY1
+  deriving stock (Eq, Show)
+
+instance ToJSON ChartData where
+  toJSON (ChartDataY x) = toJSON x
+  toJSON (ChartDataY1 x) = toJSON x
+
 -- | Accumulator for chart with a single Y axis.
 type AccY = NESeq (Tuple2 Timestamp Double)
 
 -- | Accumulator for chart with two Y axes.
 type AccY1 = NESeq (Tuple3 Timestamp Double Double)
-
--- NOTE: HLint incorrectly thinks some brackets are unnecessary.
--- See NOTE: [Brackets with OverloadedRecordDot].
---
-{- HLINT ignore "Redundant bracket" -}
 
 -- | Turns a sequence of activities and a chart request into a chart.
 mkChartData ::
@@ -195,16 +195,16 @@ mkChartData ::
   Eff es (Result CreateChartE ChartData)
 mkChartData finalDistUnit globalFilters as request = do
   case filteredActivities of
-    Empty -> pure $ Err $ CreateChartFilterEmpty request.title
+    Empty -> pure $ Err $ CreateChartFilterEmpty $ request ^. #title
     r :<| rs -> do
-      activities <- handleChartType request.chartType (r :<|| rs)
+      activities <- handleChartType (request ^. #chartType) (r :<|| rs)
       pure $ Ok $ mkChartDataSets finalDistUnit request activities
   where
     (MkSomeActivities (SetToSeqNE someActivities)) = as
     filteredActivities =
       filterActivities
         someActivities
-        (globalFilters ++ request.filters)
+        (globalFilters ++ request ^. #filters)
 
 -- | Transforms the activities based on the chart type.
 handleChartType ::
@@ -230,7 +230,7 @@ handleChartType @es @a mChartType someActivities = case mChartType of
     getStartDay :: NESeq (SomeActivity a) -> Day
     getStartDay =
       TS.timestampToDay
-        . Activity.someActivityApplyActivity (.datetime)
+        . Activity.someActivityApplyActivity (view #datetime)
         . NESeq.head
 
     runSmooth ::
@@ -239,9 +239,9 @@ handleChartType @es @a mChartType someActivities = case mChartType of
       NESeq (SomeActivity a)
     runSmooth mSmooth xs = case mSmooth of
       Nothing -> xs
-      Just cs -> case cs.smoothType of
-        ChartSmoothRolling -> smoothRolling cs.smoothPeriod xs
-        ChartSmoothWindow -> smoothWindow cs.smoothPeriod xs
+      Just cs -> case cs ^. #smoothType of
+        ChartSmoothRolling -> smoothRolling (cs ^. #smoothPeriod) xs
+        ChartSmoothWindow -> smoothWindow (cs ^. #smoothPeriod) xs
 
     -- groupBy on Mapping to period
     sumPeriod :: Day -> ChartSumPeriod -> Eff es (NESeq (SomeActivity a))
@@ -283,7 +283,7 @@ handleChartType @es @a mChartType someActivities = case mChartType of
           -- unnecessarily decode the json to text, unless we are actually
           -- going to use it.
           logEnv <- ask @LogEnv
-          case (logEnv.logLevel, logEnv.logVerbosity) of
+          case (logEnv ^. #logLevel, logEnv ^. #logVerbosity) of
             (Just LevelDebug, LogV1) -> do
               let json = toStrictBS $ Json.encodePretty xs
               jsonTxt <- decodeUtf8ThrowM json
@@ -293,7 +293,7 @@ handleChartType @es @a mChartType someActivities = case mChartType of
           pure xs
 
     toDatetime :: SomeActivity a -> Timestamp
-    toDatetime (MkSomeActivity _ rs) = rs.datetime
+    toDatetime = view #datetime
 
 mkChartDataSets ::
   forall a.
@@ -308,49 +308,54 @@ mkChartDataSets ::
   NESeq (SomeActivity a) ->
   ChartData
 mkChartDataSets @a finalDistUnit request activities@(MkSomeActivity sd _ :<|| _) =
-  case request.y1Axis of
+  case request ^. #y1Axis of
     Nothing ->
       let vals = withSingI sd $ foldMap1 toAccY activities
-          yType = request.yAxis
+          yType = request ^. #yAxis
        in ChartDataY (MkChartY vals yType finalDistUnit)
     Just y1Type ->
       let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) activities
-          yType = request.yAxis
+          yType = request ^. #yAxis
        in ChartDataY1 (MkChartY1 vals yType y1Type finalDistUnit)
   where
     toAccY :: SomeActivity a -> AccY
-    toAccY sr@(MkSomeActivity _ r) = NESeq.singleton (r.datetime, toY sr)
+    toAccY sr@(MkSomeActivity _ r) = NESeq.singleton (r ^. #datetime, toY sr)
 
     toAccY1 :: YAxisType -> SomeActivity a -> AccY1
     toAccY1 yAxisType sr@(MkSomeActivity _ r) =
-      NESeq.singleton (r.datetime, toY sr, toYHelper yAxisType sr)
+      NESeq.singleton (r ^. #datetime, toY sr, toYHelper yAxisType sr)
 
     toY :: SomeActivity a -> Double
-    toY = toYHelper request.yAxis
+    toY = toYHelper $ request ^. #yAxis
 
     toYHelper :: YAxisType -> SomeActivity a -> Double
     toYHelper axisType (MkSomeActivity s r) = case axisType of
       YAxisDistance ->
-        withSingI s $ toℝ $ case finalDistUnit of
-          -- NOTE: [Brackets with OverloadedRecordDot]
+        withSingI s $ case finalDistUnit of
           -- REVIEW: Should this be (DistU.convertDistance Meter)? Or do we
           -- only allow km/mi in charts?
-          Meter -> (DistU.convertToKilometers r).distance.unDistance
-          Kilometer -> (DistU.convertToKilometers r).distance.unDistance
-          Mile -> (DistU.convertDistance Mile r).distance.unDistance
-      YAxisDuration -> toℝ r.duration.unDuration
+          Meter -> toDistRaw (DistU.convertToKilometers r)
+          Kilometer -> toDistRaw (DistU.convertToKilometers r)
+          Mile -> toDistRaw (DistU.convertDistance Mile r)
+      YAxisDuration -> toDurRaw r
       YAxisPace ->
-        withSingI s $ toℝ $ case finalDistUnit of
+        withSingI s $ case finalDistUnit of
           -- REVIEW: Ideally this would error, not convert. But probably we
           -- already throw errors somewhere, and the Meters are only here
           -- because we haven't proven to GHC that it is impossible. It would
           -- be nice to come up with something more robust.
-          Meter -> activityToPace (DistU.convertToKilometers r)
-          Kilometer -> activityToPace (DistU.convertToKilometers r)
-          Mile -> activityToPace (DistU.convertDistance Mile r)
-        where
-          activityToPace activityUnits =
-            (Activity.derivePace activityUnits).unPace.unDuration
+          Meter -> toPaceRaw (DistU.convertToKilometers r)
+          Kilometer -> toPaceRaw (DistU.convertToKilometers r)
+          Mile -> toPaceRaw (DistU.convertDistance Mile r)
+
+    toPaceRaw :: (PaceDistF d) => Activity d a -> Double
+    toPaceRaw = toℝ . view (#unPace % #unDuration) . Activity.derivePace
+
+    toDistRaw :: Activity d a -> Double
+    toDistRaw = toℝ . view (#distance % #unDistance)
+
+    toDurRaw :: Activity d a -> Double
+    toDurRaw = toℝ . view (#duration % #unDuration)
 
 -- | A moving window has the group representative be the median element.
 smoothWindow ::
@@ -411,8 +416,8 @@ smooth @a sumTs k = sumChunks . allGroups k
           MkSomeActivity
             sd
             ( a
-                { distance = a.distance .% numActs,
-                  duration = a.duration .% numActs
+                { distance = a ^. #distance .% numActs,
+                  duration = a ^. #duration .% numActs
                 }
             )
 
@@ -435,7 +440,7 @@ takeNAndRest k ys@(_ :<|| xs)
   | k' >= length ys = (ys, Seq.Empty)
   | otherwise = (zs, xs)
   where
-    k' = toInt k.unPositive
+    k' = toInt $ k ^. #unPositive
     zs = case NESeq.take k' ys of
       Seq.Empty ->
         error
@@ -478,7 +483,7 @@ sumActivities @a timestampMod acts@(MkSomeActivity sy y :<|| ys) =
   where
     -- Either take the first timestamp or combine all in some fashion,
     -- per tsAddAll.
-    finalTs dt = tsAddAll dt ((.datetime) <$> acts)
+    finalTs dt = tsAddAll dt ((view #datetime) <$> acts)
 
     tsRound :: Timestamp -> Timestamp
     tsAddAll :: Timestamp -> NESeq Timestamp -> Timestamp
@@ -495,14 +500,14 @@ sumActivities @a timestampMod acts@(MkSomeActivity sy y :<|| ys) =
     go (MkSomeActivity sacc acc) (MkSomeActivity sr r) =
       MkSomeActivity sacc
         $ MkActivity
-          { atype = acc.atype,
+          { atype = acc ^. #atype,
             -- Only need to add distance and duration, since everything
             -- else is set in the initial value (init).
-            datetime = acc.datetime,
+            datetime = acc ^. #datetime,
             distance = newDist,
-            duration = acc.duration .+. r.duration,
-            labels = acc.labels,
-            title = acc.title
+            duration = acc ^. #duration .+. r ^. #duration,
+            labels = acc ^. #labels,
+            title = acc ^. #title
           }
       where
         newDist =
@@ -510,8 +515,8 @@ sumActivities @a timestampMod acts@(MkSomeActivity sy y :<|| ys) =
             $ withSingI sr
             $ Dist.liftDistLeft2
               (.+.)
-              acc.distance
-              r.distance
+              (acc ^. #distance)
+              (r ^. #distance)
 
     init =
       MkSomeActivity sy
@@ -520,11 +525,11 @@ sumActivities @a timestampMod acts@(MkSomeActivity sy y :<|| ys) =
             -- first element, "Sum", or maybe logic to see if all
             -- all elements have the same type?
             atype = Nothing,
-            datetime = tsRound y.datetime,
+            datetime = tsRound $ y ^. #datetime,
             -- NOTE: No need to convert the distance to the requested
             -- distance here, as mkChartDataSets will take care of it.
-            distance = y.distance,
-            duration = y.duration,
+            distance = y ^. #distance,
+            duration = y ^. #duration,
             labels = mempty,
             title = Nothing
           }
@@ -540,36 +545,42 @@ filterActivities ::
   NESeq (SomeActivityKey a) ->
   List (FilterExpr a) ->
   Seq (SomeActivity a)
-filterActivities @a rs filters = (.unSomeActivityKey) <$> NESeq.filter filterActivity rs
+filterActivities @a rs filters =
+  (view #unSomeActivityKey) <$> NESeq.filter filterActivity rs
   where
     filterActivity :: SomeActivityKey a -> Bool
     filterActivity r = all (eval (applyFilter r)) filters
 
     applyFilter :: SomeActivityKey a -> FilterType a -> Bool
-    applyFilter srk (FilterLabel lblSet) = ESet.applyFilterSet srk.labels lblSet
-    applyFilter srk (FilterDate op m) = applyDate srk.unSomeActivityKey op m
-    applyFilter srk (FilterDistance op d) = applyDist srk.unSomeActivityKey op d
-    applyFilter srk (FilterDuration op d) = applyDur srk.unSomeActivityKey op d
-    applyFilter srk (FilterPace op p) = applyPace srk.unSomeActivityKey op p
-    applyFilter srk (FilterType fe) = case srk.unSomeActivityKey of
-      MkSomeActivity _ r -> case r.atype of
+    applyFilter srk (FilterLabel lblSet) =
+      ESet.applyFilterSet (srk ^. (#unSomeActivityKey % #labels)) lblSet
+    applyFilter srk (FilterDate op m) =
+      applyDate (srk ^. #unSomeActivityKey) op m
+    applyFilter srk (FilterDistance op d) =
+      applyDist (srk ^. #unSomeActivityKey) op d
+    applyFilter srk (FilterDuration op d) =
+      applyDur (srk ^. #unSomeActivityKey) op d
+    applyFilter srk (FilterPace op p) =
+      applyPace (srk ^. #unSomeActivityKey) op p
+    applyFilter srk (FilterType fe) = case srk ^. #unSomeActivityKey of
+      MkSomeActivity _ r -> case r ^. #atype of
         Just atype -> ESet.applyFilterElem atype fe
         Nothing -> False
 
     applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
     applyDate (MkSomeActivity _ r) op m = Ord.toIFun op activityMoment m
       where
-        activityMoment = MomentTimestamp r.datetime
+        activityMoment = MomentTimestamp $ r ^. #datetime
 
     applyDist :: SomeActivity a -> FilterOpOrd -> SomeDistance a -> Bool
     applyDist (MkSomeActivity @activityDist sr r) op fDist =
-      withSingI sr $ Ord.toFun op r.distance fDist'
+      withSingI sr $ Ord.toFun op (r ^. #distance) fDist'
       where
         fDist' :: Distance activityDist a
         fDist' = withSingI sr $ DistU.convertDistance activityDist fDist
 
     applyDur :: SomeActivity a -> FilterOpOrd -> Duration a -> Bool
-    applyDur (MkSomeActivity _ r) op = Ord.toFun op r.duration
+    applyDur (MkSomeActivity _ r) op = Ord.toFun op (r ^. #duration)
 
     applyPace :: SomeActivity a -> FilterOpOrd -> SomePace a -> Bool
     applyPace someActivity@(MkSomeActivity _ _) op (MkSomePace sfp fPace) =

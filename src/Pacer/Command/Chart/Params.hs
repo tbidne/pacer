@@ -32,11 +32,7 @@ import Pacer.Class.FromAlt
   ( FromAlt (Alt1, toAlt1),
     (<+<|>+>),
   )
-import Pacer.Configuration.Config
-  ( ChartConfig (dataDir),
-    Config (chartConfig),
-    ConfigWithPath (config, dirPath),
-  )
+import Pacer.Configuration.Config (Config, ConfigWithPath)
 import Pacer.Configuration.Env.Types (CachedPaths, LogEnv, getCachedXdgConfigPath)
 import Pacer.Configuration.Env.Types qualified as Types
 import Pacer.Configuration.Phase
@@ -141,6 +137,8 @@ type ChartParamsArgs = ChartParams ConfigPhaseArgs
 
 type ChartParamsFinal = ChartParams ConfigPhaseFinal
 
+makeFieldLabelsNoPrefix ''ChartParams
+
 deriving stock instance
   ( Eq (ActivityPathsF p),
     Eq (BuildDirF p),
@@ -185,7 +183,7 @@ evolvePhase @es params mConfigWithPath = do
   for_ activityLabelsPath assertExists
 
   buildDir <-
-    case params.buildDir of
+    case params ^. #buildDir of
       Just d -> do
         -- --build-dir exists, parse absolute or resolve relative to cwd
         cwdPath <- Types.getCachedCurrentDirectory
@@ -195,22 +193,22 @@ evolvePhase @es params mConfigWithPath = do
           case preview (#config % #chartConfig %? #buildDir % _Just) t of
             -- config.build-dir exists, parse absolute or resolve relative to
             -- config path.
-            Just d -> customBuildDir t.dirPath d
+            Just d -> customBuildDir (t ^. #dirPath) d
             -- otherwise use default, cwd/build
             Nothing -> defaultBuildDir
         Nothing -> defaultBuildDir
 
-  let port = fromMaybe 3000 params.port
+  let port = fromMaybe 3000 (params ^. #port)
 
   pure
     $ MkChartParams
       { activityLabelsPath,
         activityPaths,
         buildDir,
-        cleanInstall = params.cleanInstall,
+        cleanInstall = params ^. #cleanInstall,
         chartRequestsPath,
         dataDir = (),
-        json = params.json,
+        json = params ^. #json,
         port
       }
   where
@@ -258,7 +256,7 @@ getChartInputs params mConfigWithPath = do
       mConfigWithPath
       "chart-requests"
       chartRequestsSearch
-      params.chartRequestsPath
+      (params ^. #chartRequestsPath)
       (#chartConfig %? #chartRequestsPath)
 
   activityPaths <-
@@ -268,7 +266,7 @@ getChartInputs params mConfigWithPath = do
       mConfigWithPath
       "activities"
       activitiesSearch
-      params.activityPaths
+      (params ^. #activityPaths)
       (#chartConfig %? #activityPaths)
 
   activityLabelsPath <-
@@ -278,7 +276,7 @@ getChartInputs params mConfigWithPath = do
       mConfigWithPath
       "activity-labels"
       activityLabelsSearch
-      params.activityLabelsPath
+      (params ^. #activityLabelsPath)
       (#chartConfig %? #activityLabelsPath)
 
   pure (chartRequestsPath, activityLabelsPath, activityPaths)
@@ -364,7 +362,7 @@ resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
     desc
     fileNames
     [ Utils.FileSearch.findFilePath mInputOsPath,
-      Utils.FileSearch.findDirectoryPath params.dataDir,
+      Utils.FileSearch.findDirectoryPath $ params ^. #dataDir,
       findConfigPath configSel mConfigWithPath,
       Utils.FileSearch.findCurrentDirectoryPath,
       Utils.FileSearch.findXdgPath
@@ -407,7 +405,7 @@ findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNam
       for mPath
         $ handleUnknownPath
           (Just (MkFileNotFoundE, PR.doesFileExist))
-          configWithPath.dirPath
+          (configWithPath ^. #dirPath)
           Path.parseAbsFile
           Path.parseRelFile
 
@@ -416,7 +414,7 @@ findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNam
         configDataDirPath <-
           handleUnknownPath
             (Just (MkDirNotFoundE, PR.doesDirectoryExist))
-            configWithPath.dirPath
+            (configWithPath ^. #dirPath)
             Path.parseAbsDir
             Path.parseRelDir
             dataDir
@@ -521,15 +519,13 @@ throwIfMissing params mConfigWithPath fileNames mVal = case toAlt1 mVal of
     currentDir <- Types.getCachedCurrentDirectory
     throwM
       $ MkChartFileMissingE
-        { cliDataDir = params.dataDir,
+        { cliDataDir = params ^. #dataDir,
           expectedFiles = fileNames',
           expectedExts = exts,
           configDataDir =
-            mConfigWithPath >>= \t -> t.config.chartConfig >>= (.dataDir),
+            mConfigWithPath ^? (_Just % #config % #chartConfig %? #dataDir % _Just),
           currentDir,
           xdgDir
         }
   where
     (fileNames', exts) = Utils.FileSearch.searchFilesToList fileNames
-
-makeFieldLabelsNoPrefix ''ChartParams

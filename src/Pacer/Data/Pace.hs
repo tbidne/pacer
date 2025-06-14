@@ -70,8 +70,16 @@ data Pace d a where
 instance (NFData a) => NFData (Pace d a) where
   rnf (MkPace d) = d `deepseq` ()
 
-instance HasField "unPace" (Pace d a) (Duration a) where
-  getField = unPace
+-- Getter just so we do not have to add PaceDistF to a bunch of functions that
+-- only require elimination.
+instance
+  ( k ~ A_Getter,
+    x ~ (Duration a),
+    y ~ (Duration a)
+  ) =>
+  LabelOptic "unPace" k (Pace d a) (Pace d a) x y
+  where
+  labelOptic = to unPace
 
 -- NOTE:
 --
@@ -95,7 +103,7 @@ instance
   ) =>
   Eq (Pace d a)
   where
-  x == y = x.unPace == y.unPace
+  x == y = x ^. #unPace == y ^. #unPace
 
 instance
   ( Fromℤ a,
@@ -106,7 +114,7 @@ instance
   ) =>
   Ord (Pace d a)
   where
-  x <= y = x.unPace <= y.unPace
+  x <= y = x ^. #unPace <= y ^. #unPace
 
 instance (Show a, SingI d) => Show (Pace d a) where
   showsPrec i (MkPace p) =
@@ -155,6 +163,7 @@ instance (MGroup a) => MSpace (Pace d a) (Positive a) where
 instance
   ( Fromℤ a,
     Ord a,
+    PaceDistF d,
     Semifield a,
     Show a,
     SingI d
@@ -167,7 +176,7 @@ instance
   convertDistance_ :: (PaceDistF e, SingI e) => Pace d a -> Pace e a
   -- Note this is backwards from distance (.% fromBase) . (.* toBase) because
   -- our units are a divisor, not a multiplier (i.e. 4 /km vs. 4 km).
-  convertDistance_ @e = MkPace . (.* fromBase) . (.% toBase) . (.unPace)
+  convertDistance_ @e = MkPace . (.* fromBase) . (.% toBase) . (view #unPace)
     where
       toBase = singFactor @_ @d
       fromBase = singFactor @_ @e

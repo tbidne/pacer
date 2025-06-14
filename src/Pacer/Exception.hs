@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Exception
   ( -- * Exceptions
     ChartFileMissingE (..),
@@ -136,32 +139,37 @@ data ChartFileMissingE = MkChartFileMissingE
   }
   deriving stock (Show)
 
+makeFieldLabelsNoPrefix ''ChartFileMissingE
+
 instance Exception ChartFileMissingE where
   displayException e =
     mconcat
       [ "Required chart file not found. Searched for paths(s) ",
-        Utils.Show.showMapListInline Utils.Show.showPath e.expectedFiles,
+        Utils.Show.showMapListInline Utils.Show.showPath expectedFiles,
         extsStr,
         " in directories:",
         dirsStr
       ]
     where
+      expectedExts = e ^. #expectedExts
+      expectedFiles = e ^. #expectedFiles
+
       dirsStr =
         mconcat
           $ filter
             (not . L.null)
-            [ displayDir e.cliDataDir,
-              displayDir e.configDataDir,
-              displayDir (Just $ toOsPath e.currentDir),
-              displayDir (Just $ toOsPath e.xdgDir)
+            [ displayDir $ e ^. #cliDataDir,
+              displayDir $ e ^. #configDataDir,
+              displayDir (Just $ toOsPath $ e ^. #currentDir),
+              displayDir (Just $ toOsPath $ e ^. #xdgDir)
             ]
 
       extsStr
-        | F.null e.expectedExts = ""
+        | F.null expectedExts = ""
         | otherwise =
             mconcat
               [ " with extension(s) ",
-                Utils.Show.showMapListInline Utils.Show.showOsPath e.expectedExts
+                Utils.Show.showMapListInline Utils.Show.showOsPath expectedExts
               ]
 
       displayDir Nothing = ""

@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pacer.Configuration.Utils
   ( -- * Custom types and parsers
     DistancePaceArgs (..),
@@ -281,3 +284,6 @@ mkCommandDescChunk =
   OA.progDescDoc
     . fmap (<> Pretty.hardline)
     . Chunk.unChunk
+
+makeFieldLabelsNoPrefix ''DistancePaceArgs
+makeFieldLabelsNoPrefix ''DistanceDurationPaceArgs

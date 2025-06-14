@@ -27,7 +27,7 @@ handle ::
   ) =>
   ConvertParamsFinal a ->
   Eff es ()
-handle params = case params.quantity of
+handle params = case params ^. #quantity of
   Left dist ->
     case toSing unit of
       SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
@@ -38,4 +38,4 @@ handle params = case params.quantity of
     Kilometer -> putTextLn $ display $ DistU.convertDistance Kilometer pace
     Mile -> putTextLn $ display $ DistU.convertDistance Mile pace
   where
-    unit = params.unit
+    unit = params ^. #unit

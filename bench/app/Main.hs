@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Main (main) where
 
 import Bench.Pacer.Utils qualified as Utils
@@ -13,6 +16,14 @@ import Test.Tasty.Bench
   )
 import Prelude (IO)
 
+data TestParams = MkTestParams
+  { runs_100_bs :: ByteString,
+    runs_1_000_bs :: ByteString,
+    runs_10_000_bs :: ByteString
+  }
+
+makeFieldLabelsNoPrefix ''TestParams
+
 main :: IO ()
 main =
   defaultMain
@@ -25,9 +36,9 @@ benchMkSomeRuns :: Benchmark
 benchMkSomeRuns =
   bgroup
     "decode_runs"
-    [ bench "100" $ nf Utils.decodeActivities params.runs_100_bs,
-      bench "1_000" $ nf Utils.decodeActivities params.runs_1_000_bs,
-      bench "10_000" $ nf Utils.decodeActivities params.runs_10_000_bs
+    [ bench "100" $ nf Utils.decodeActivities (params ^. #runs_100_bs),
+      bench "1_000" $ nf Utils.decodeActivities (params ^. #runs_1_000_bs),
+      bench "10_000" $ nf Utils.decodeActivities (params ^. #runs_10_000_bs)
     ]
   where
     params =
@@ -65,9 +76,3 @@ benchStripComments =
         ("1_000", Utils.genActivitiesJson 1_000),
         ("10_000", Utils.genActivitiesJson 10_000)
       ]
-
-data TestParams = MkTestParams
-  { runs_100_bs :: ByteString,
-    runs_1_000_bs :: ByteString,
-    runs_10_000_bs :: ByteString
-  }
