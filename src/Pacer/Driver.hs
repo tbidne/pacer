@@ -274,7 +274,7 @@ getEnv = do
     -- 2. Non-chart command, skip config.
     _ -> pure (mempty, Nothing)
 
-  let logEnv = Env.mkLogEnv args (mConfig <&> (view #config))
+  let logEnv = Env.mkLogEnv args (mConfig <&> view #config)
 
   pure (args ^. #command, mConfig, cachedPaths, logEnv)
   where
@@ -297,9 +297,9 @@ getEnv = do
         exts
     exts =
       Set.fromList
-        $ [ [osp|.json|],
-            [osp|.jsonc|]
-          ]
+        [ [osp|.json|],
+          [osp|.jsonc|]
+        ]
 
 runLogger ::
   ( HasCallStack,

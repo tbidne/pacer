@@ -52,7 +52,7 @@ testParseExampleActivitiesJson = testGoldenParams params
             -- Getting the current dir since we are using readActivitiesJson,
             -- which requires an absolute path. Alternatively, we could
             -- relax it to allow relative paths.
-            cwd <- runnerEff $ getCurrentDirectory
+            cwd <- runnerEff getCurrentDirectory
 
             results <- runnerEff (Activity.readActivitiesJson [] $ cwd <</>> path)
             pure $ pShowBS results

@@ -136,7 +136,7 @@ deriveDuration ::
   Pace d a ->
   -- | Duration.
   Duration a
-deriveDuration distance pace = pace ^. #unPace .* distance ^. #unDistance
+deriveDuration distance = (.* distance ^. #unDistance) . view #unPace
 
 -- | Given existentially-quantified distance and pace, derives the duration.
 -- Different distance units are converted.
@@ -177,7 +177,7 @@ deriveDistance duration (MkPace (MkDuration paceDuration)) =
   where
     -- monomorphic on Second so that we have to use toSeconds
     scaleDuration :: Duration a -> Positive a
-    scaleDuration = (view #unDuration) . (.% paceDuration)
+    scaleDuration = view #unDuration . (.% paceDuration)
 
 -- | Given a duration and existentially-quantified pace, derives the
 -- distance.

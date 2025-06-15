@@ -50,14 +50,12 @@ smoothTests =
     (testSmoothFaqEx ++ ts)
   where
     ts =
-      (uncurry3 (mkSmoothTest defActivities Nothing))
+      uncurry3 (mkSmoothTest defActivities Nothing)
         <$> [ (x, y, z)
             | x <- [2, 4],
               y <- [minBound .. maxBound],
               z <- [3, 5]
             ]
-
-    uncurry3 f (a, b, c) = f a b c
 
 testSmoothFaqEx :: List TestTree
 testSmoothFaqEx =
@@ -209,7 +207,7 @@ testAllGroupsProps = testProp "testAllGroupsProps" desc $ do
 
         -- This prop relies on the fact that the generated list is a sequence
         -- e.g. [1,2,3,4,5,6,7,8].
-        (liftIO $ IORef.readIORef prevGroupRef) >>= \case
+        liftIO (IORef.readIORef prevGroupRef) >>= \case
           Nothing -> pure ()
           Just prevGroup -> do
             fmap (+ 1) prevGroup === g

@@ -493,7 +493,7 @@ runLoggerMock = interpret_ $ \case
   LoggerLog {} -> pure ()
 
 fileSearchDir :: OsPath
-fileSearchDir = toOsPath $ [reldirPathSep|test/unit/data/file-search|]
+fileSearchDir = toOsPath [reldirPathSep|test/unit/data/file-search|]
 
 miscTests :: TestTree
 miscTests =
@@ -735,16 +735,15 @@ genPathData = do
         name,
         exts
       }
-  where
 
 genPathElem :: Gen OsPath
-genPathElem = unsafeEncode . unpackText <$> (G.text r g)
+genPathElem = unsafeEncode . unpackText <$> G.text r g
   where
     r = R.linearFrom 1 1 5
     g = G.filterT goodChar G.ascii
 
 genFileName :: Gen OsPath
-genFileName = unsafeEncode . unpackText <$> (G.text r g)
+genFileName = unsafeEncode . unpackText <$> G.text r g
   where
     r = R.linearFrom 1 1 5
     g = G.filterT goodChar' G.ascii
@@ -752,7 +751,7 @@ genFileName = unsafeEncode . unpackText <$> (G.text r g)
     goodChar' c = goodChar c && c /= '.'
 
 genExt :: Gen OsPath
-genExt = unsafeEncode . unpackText <$> (G.text r g)
+genExt = unsafeEncode . unpackText <$> G.text r g
   where
     r = R.linearFrom 1 1 5
     g = G.filterT goodChar' G.ascii

@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Pacer.Utils.Show (tests) where
 
@@ -116,31 +115,27 @@ displaySummarizedSequencesProps = testProp "displaySummarizedSequences" desc $ d
     case mPrevEnd of
       Nothing -> pure ()
       Just prevEnd ->
-        if not (s > prevEnd + 1)
-          then do
-            annotate
-              $ mconcat
-                [ "Start '",
-                  show s,
-                  "' and previous end '",
-                  show prevEnd,
-                  "' failed invariant 'start > prevEnd + 1'."
-                ]
-            failure
-          else pure ()
+        unless (s > prevEnd + 1) $ do
+          annotate
+            $ mconcat
+              [ "Start '",
+                show s,
+                "' and previous end '",
+                show prevEnd,
+                "' failed invariant 'start > prevEnd + 1'."
+              ]
+          failure
 
-    if not (s <= e)
-      then do
-        annotate
-          $ mconcat
-            [ "Start '",
-              show s,
-              "' and end '",
-              show e,
-              "' failed invariant 'start <= end'."
-            ]
-        failure
-      else pure ()
+    unless (s <= e) $ do
+      annotate
+        $ mconcat
+          [ "Start '",
+            show s,
+            "' and end '",
+            show e,
+            "' failed invariant 'start <= end'."
+          ]
+      failure
 
     liftIO $ IORef.writeIORef prevEndRef (Just e)
 
@@ -152,9 +147,10 @@ displaySummarizedSequencesProps = testProp "displaySummarizedSequences" desc $ d
     case Map.lookupLE n rangeMap of
       Nothing -> annotate (show n ++ " not found in results") *> failure
       Just (s, e) ->
-        if
-          | s <= n && e >= n -> pure ()
-          | otherwise -> annotate ("bad range for: " ++ show n) *> failure
+        ( if s <= n && e >= n
+            then pure ()
+            else annotate ("bad range for: " ++ show n) *> failure
+        )
   where
     desc = "Satisfies properties"
 
@@ -178,7 +174,7 @@ parseElem t = case T.break (== '-') t of
 parseNum :: Text -> Result String Natural
 parseNum t = case TR.readMaybe (unpackText t) of
   Just n -> Ok n
-  Nothing -> Err $ "Could not read ℕ: " ++ (unpackText t)
+  Nothing -> Err $ "Could not read ℕ: " ++ unpackText t
 
 genList :: Gen (List Natural)
 genList = gnats <&> Set.toList . Set.fromList

@@ -310,7 +310,7 @@ stripCommentsBS bs =
               -- the next newline.
               second
                 (preComment <>)
-                ((skipLineComment mPostCommentStart) >>= stripCommentsBS)
+                (skipLineComment mPostCommentStart >>= stripCommentsBS)
           | fslashNext == starW8 ->
               -- 2.2. A star, we have started a block comment. Skip until the
               -- next '*/'.

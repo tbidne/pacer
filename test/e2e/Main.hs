@@ -1,5 +1,4 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Main (main) where
 
@@ -88,7 +87,7 @@ runServer ::
     IOE :> es
   ) =>
   Eff es ()
-runServer = run $ Env.withArgs args $ Driver.runApp
+runServer = run $ Env.withArgs args Driver.runApp
   where
     args =
       [ "--log-level",

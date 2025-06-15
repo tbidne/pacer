@@ -44,7 +44,7 @@ import Pacer.Driver (Env)
 import Pacer.Driver qualified as Driver
 import Unit.Prelude
 
-data TestEnv = MkTestEnv {cwd :: Maybe OsPath}
+newtype TestEnv = MkTestEnv {cwd :: Maybe OsPath}
 
 makeFieldLabelsNoPrefix ''TestEnv
 
@@ -113,7 +113,7 @@ instance Monoid TestEnv where
   mempty = MkTestEnv mempty
 
 runGetEnv :: TestEnv -> List String -> IO Env
-runGetEnv testEnv args = run $ Env.withArgs args $ Driver.getEnv
+runGetEnv testEnv args = run $ Env.withArgs args Driver.getEnv
   where
     run =
       runEff
@@ -127,14 +127,13 @@ runGetEnv testEnv args = run $ Env.withArgs args $ Driver.getEnv
         . runTime
 
 runFileReaderMock ::
-  (Eff (FileReader : es) a) ->
+  Eff (FileReader : es) a ->
   Eff es a
 runFileReaderMock = interpret_ $ \case
   ReadBinaryFile p ->
-    if
-      | p == rootOsPath </> [ospPathSep|cwd_config/config.json|] ->
-          pure "{}"
-      | otherwise -> error $ "Unexpected read file: " ++ show p
+    if p == rootOsPath </> [ospPathSep|cwd_config/config.json|]
+      then pure "{}"
+      else error $ "Unexpected read file: " ++ show p
 
 runPathReaderMock ::
   (IOE :> es, Reader TestEnv :> es) =>
@@ -173,11 +172,11 @@ runPathReaderMock = reinterpret_ runPathReader $ \case
     | p == rootOsPath </> [ospPathSep|cwd_config/|] ->
         pure [[ospPathSep|config.json|]]
     | otherwise -> PR.listDirectory p
-  other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runPathReaderMock: unimplemented: " ++ showEffectCons other
 
 runTerminalMock :: Eff (Terminal : es) a -> Eff es a
 runTerminalMock = interpret_ $ \case
-  other -> error $ "runTerminalMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runTerminalMock: unimplemented: " ++ showEffectCons other
 
 baseChart :: Command ConfigPhaseArgs Double
 baseChart = Chart baseChartParams

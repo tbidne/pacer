@@ -50,7 +50,6 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NESet
 import Data.Time.Relative qualified as RelTime
-import Data.Tuple (uncurry)
 import Effectful.Logger.Dynamic qualified as Logger
 import Pacer.Class.Parser (Parser)
 import Pacer.Class.Parser qualified as P
@@ -159,7 +158,7 @@ instance (SingI dist) => HasDistance (Activity dist a) where
 
   distanceUnitOf _ = fromSingI @_ @dist
 
-  distanceOf = (view #distance)
+  distanceOf = view #distance
 
   hideDistance = MkSomeActivity (sing @dist)
 
@@ -303,7 +302,7 @@ instance
         ]
       ++ Json.encodeMaybes
         [ ("title", r ^. #title),
-          ("type", (view #unActivityType) <$> r ^. #atype)
+          ("type", view #unActivityType <$> r ^. #atype)
         ]
     where
       durationTimeString =
@@ -928,7 +927,7 @@ someActivitiesToNE :: SomeActivities a -> NonEmpty (SomeActivity a)
 someActivitiesToNE =
   fmap (view #unSomeActivityKey)
     . NESet.toList
-    . (view #unSomeActivities)
+    . view #unSomeActivities
 
 someActivitiesToList :: SomeActivities a -> List (SomeActivity a)
 someActivitiesToList = NE.toList . someActivitiesToNE

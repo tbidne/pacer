@@ -124,7 +124,7 @@ parseFilterElem symStr = do
 parseSetElem :: (Parser a) => MParser a
 parseSetElem = do
   txt <- parseTextNonEmpty
-  case (T.find (\c -> c == '{' || c == '}') txt) of
+  case T.find (\c -> c == '{' || c == '}') txt of
     Just c ->
       fail
         $ mconcat
@@ -172,7 +172,7 @@ parseSet name = do
                 "trailing/consecutive commas."
               ]
 
-          Set.fromList <$> (failErr $ traverse P.parseAll xs)
+          Set.fromList <$> failErr (traverse P.parseAll xs)
 
 -------------------------------------------------------------------------------
 --                                  Operators                                --

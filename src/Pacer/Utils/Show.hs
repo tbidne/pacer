@@ -181,4 +181,4 @@ summarizeSequences = fmap showGroup . groupSequential
         go _ acc [] = (acc, [])
         go !cnt acc (y : ys)
           | y - x == cnt = go (cnt + 1) (y : acc) ys
-          | otherwise = (acc, (y : ys))
+          | otherwise = (acc, y : ys)

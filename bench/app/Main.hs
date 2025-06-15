@@ -4,7 +4,6 @@
 module Main (main) where
 
 import Bench.Pacer.Utils qualified as Utils
-import Data.Tuple (uncurry)
 import Pacer.Class.Parser qualified as P
 import Pacer.Prelude hiding (IO)
 import Test.Tasty.Bench

@@ -136,7 +136,7 @@ instance
   type ToConstraints (Distance d a) _ = ()
 
   convertDistance_ :: forall e. (SingI e) => Distance d a -> Distance e a
-  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . (view #unDistance)
+  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . view #unDistance
     where
       toBase = singFactor @_ @d
       fromBase = singFactor @_ @e

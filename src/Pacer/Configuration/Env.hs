@@ -25,7 +25,7 @@ mkLogEnv args mConfig =
       logVerbosity
     }
   where
-    logLevel = case args ^. #logLevel <|> (preview logLevelAT mConfig) of
+    logLevel = case args ^. #logLevel <|> preview logLevelAT mConfig of
       Nothing -> Just LevelInfo
       Just LogNone -> Nothing
       Just (LogSome l) -> Just l
@@ -37,7 +37,7 @@ mkLogEnv args mConfig =
       fromMaybe mempty
         $ args
         ^. #logVerbosity
-        <|> (preview logVerbosityAT mConfig)
+        <|> preview logVerbosityAT mConfig
 
     logVerbosityAT :: AffineTraversal' (Maybe Config) LogVerbosity
     logVerbosityAT = _Just % #logConfig %? #verbosity % _Just

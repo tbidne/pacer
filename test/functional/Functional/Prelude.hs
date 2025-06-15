@@ -278,7 +278,7 @@ runTerminalMock = interpret_ $ \case
     modifyIORef' logsRef (<> packText s)
   PutBinary bs -> do
     logsRef <- asks @FuncEnv (view #logsRef)
-    modifyIORef' logsRef (<> (UTF8.decodeUtf8Lenient bs))
+    modifyIORef' logsRef (<> UTF8.decodeUtf8Lenient bs)
   other -> error $ "runTerminalMock: unimplemented: " ++ showEffectCons other
 
 runMultiArgs :: (a -> List String) -> List (Word8, (a, Text)) -> IO ()
@@ -412,8 +412,7 @@ testGoldenParams getTestDir goldenParams =
             writeActualFile $ logsBs <> "\n\n" <> fileBs
           GoldenOutputFileAssertLogs expectedName onLogs -> do
             logsTxt <- mkLogOutput funcEnv
-            unless (onLogs logsTxt)
-              $ (throwText $ "Logs failed assertion: " <> logsTxt)
+            unless (onLogs logsTxt) (throwText $ "Logs failed assertion: " <> logsTxt)
 
             fileBs <- mkFileOutput funcEnv expectedName
             writeActualFile fileBs

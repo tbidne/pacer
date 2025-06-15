@@ -102,7 +102,7 @@ createCharts mChartConfig params = addNamespace "createCharts" $ do
   $(Logger.logInfo)
     $ "Using chart-requests: "
     <> Utils.Show.showtPath (params ^. #chartRequestsPath)
-  for (params ^. #activityPaths) $ \r ->
+  for_ (params ^. #activityPaths) $ \r ->
     $(Logger.logInfo) $ "Using activities: " <> Utils.Show.showtPath r
 
   case params ^. #activityLabelsPath of

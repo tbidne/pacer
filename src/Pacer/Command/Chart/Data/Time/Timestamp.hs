@@ -124,7 +124,7 @@ roundTimestampWeek ts = TimestampDate newDay
 roundInterval :: Day -> PWord16 -> Timestamp -> Timestamp
 roundInterval totalStart period =
   TimestampDate
-    . (view #start)
+    . view #start
     . findInterval totalStart period
 
 -------------------------------------------------------------------------------

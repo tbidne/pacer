@@ -50,7 +50,7 @@ getCachedXdgConfigPath ::
 getCachedXdgConfigPath =
   getCachedPath
     (view #xdgConfigPath)
-    (\p -> set' #xdgConfigPath (Just p))
+    (set' #xdgConfigPath . Just)
     getXdgConfigPath
 
 -- | Retrieves the current directory, updating the cache if necessary.
@@ -66,7 +66,7 @@ getCachedCurrentDirectory ::
 getCachedCurrentDirectory =
   getCachedPath
     (view #currentDirectory)
-    (\p -> set' #currentDirectory (Just p))
+    (set' #currentDirectory . Just)
     getCurrentDirectory
 
 -- | Retrieves the cached path, updating the cache if necessary.
@@ -103,7 +103,7 @@ makeFieldLabelsNoPrefix ''LogEnv
 
 runLoggerMock :: Eff (Logger : es) a -> Eff es a
 runLoggerMock = interpret_ $ \case
-  LoggerLog _ _ _ _ -> pure ()
+  LoggerLog {} -> pure ()
 
 runReaderLogEnvMock :: Eff (Reader LogEnv : es) a -> Eff es a
 runReaderLogEnvMock =

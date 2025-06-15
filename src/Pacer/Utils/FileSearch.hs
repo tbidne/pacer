@@ -94,7 +94,7 @@ makeFieldLabelsNoPrefix ''FileAliases
 type FileSearchStrategy :: (Type -> Type) -> List Effect -> Type
 newtype FileSearchStrategy f es
   = MkFileSearchStrategy
-  { unFileSearchStrategy :: FileSearch -> (Eff es (f (Path Abs File)))
+  { unFileSearchStrategy :: FileSearch -> Eff es (f (Path Abs File))
   }
 
 makeFieldLabelsNoPrefix ''FileSearchStrategy
@@ -143,7 +143,7 @@ resolveFilePath ::
   Eff es (f (Path Abs File))
 resolveFilePath desc fileNames strategies =
   addNamespace "resolveFilePath" $ addNamespace desc $ do
-    ((fold strategies) ^. #unFileSearchStrategy) fileNames
+    (fold strategies ^. #unFileSearchStrategy) fileNames
 
 -- | General exception for when a file at an expected path does not exist.
 -- We would normally use IOException for this, except we want a custom type
@@ -174,7 +174,7 @@ findCurrentDirectoryPath ::
 findCurrentDirectoryPath =
   MkFileSearchStrategy $ \fileNames -> addNamespace "findCurrentDirectoryPath" $ do
     dir <- getCachedCurrentDirectory
-    ((findDirectoryPath (Just $ toOsPath dir)) ^. #unFileSearchStrategy) fileNames
+    (findDirectoryPath (Just $ toOsPath dir) ^. #unFileSearchStrategy) fileNames
 
 -- | If the parameter is not empty, parses to an absolute file(s). Ignores
 -- the parameter to searchFiles.

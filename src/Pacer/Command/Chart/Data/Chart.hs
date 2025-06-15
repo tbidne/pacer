@@ -67,9 +67,8 @@ makeFieldLabelsNoPrefix ''Charts
 instance ToJSON Charts where
   toJSON c =
     Json.object
-      $ [ "charts" .= (c ^. #charts)
-        ]
-      ++ Json.encodeMaybe ("theme", c ^. #theme)
+      $ ("charts" .= (c ^. #charts))
+      : Json.encodeMaybe ("theme", c ^. #theme)
 
 -- | Given activities and chart requests, generates a series of charts, or the
 mkCharts ::
@@ -89,13 +88,15 @@ mkCharts ::
   ChartRequests a ->
   Eff es (Result CreateChartE Charts)
 mkCharts mConfig activities requests =
-  (>>= toCharts)
-    . traverse (mkChart (requests ^. #filters) activities)
-    . (view #chartRequests)
-    $ requests
+  ( toCharts
+      <=< ( traverse (mkChart (requests ^. #filters) activities)
+              . view #chartRequests
+          )
+  )
+    requests
   where
     toCharts ::
-      (NESeq (Result CreateChartE Chart)) ->
+      NESeq (Result CreateChartE Chart) ->
       Eff es (Result CreateChartE Charts)
     toCharts xs = do
       themeConfig <- case (configChartThemeCfg, requestsChartThemeCfg) of

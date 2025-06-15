@@ -16,6 +16,9 @@ module Pacer.Prelude
     -- * Functions
     identity,
 
+    -- * Tuples
+    uncurry3,
+
     -- * ByteString
     -- ** Lazy
     LazyByteString,
@@ -225,7 +228,7 @@ import Data.Text.Lazy.Builder qualified as TLB
 import Data.Time.Calendar as X (Day)
 import Data.Time.LocalTime as X (LocalTime, ZonedTime)
 import Data.Traversable as X (Traversable (sequenceA, traverse), for)
-import Data.Tuple as X (fst, snd)
+import Data.Tuple as X (fst, snd, uncurry)
 import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
@@ -687,3 +690,6 @@ posixWindowsStr =
 
 identity :: a -> a
 identity x = x
+
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 f (a, b, c) = f a b c

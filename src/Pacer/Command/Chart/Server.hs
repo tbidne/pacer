@@ -29,7 +29,7 @@ import Servant
     Raw,
     (:<|>) ((:<|>)),
   )
-import Servant qualified as Servant
+import Servant qualified
 import System.IO (FilePath)
 
 -- To avoid effectful clash.

@@ -110,7 +110,7 @@ instance FromJSON ChartSmoothType where
     "window" -> pure ChartSmoothWindow
     other ->
       let msg = "Expected one of (rolling|windows), received: " <> other
-       in fail $ unpackText $ msg
+       in fail $ unpackText msg
 
 data ChartSmooth = MkChartSmooth
   { smoothPeriod :: PWord8,

@@ -96,7 +96,7 @@ import System.OsString qualified as OsString
 import Test.Tasty.HUnit (assertEqual)
 import Unit.Prelude
 
-data CoreEnv = MkCoreEnv
+newtype CoreEnv = MkCoreEnv
   { cachedPaths :: CachedPaths
   }
 
@@ -260,7 +260,7 @@ runFileWriterMock ::
   Eff es a
 runFileWriterMock = interpret_ $ \case
   WriteBinaryFile _ _ -> incIORef (view (#refsEnv % #numFileWriterCalls))
-  other -> error $ "runFileWriterMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runFileWriterMock: unimplemented: " ++ showEffectCons other
 
 runPathReaderMock ::
   (IOE :> es, IORefE :> es, Reader ChartEnv :> es) =>
@@ -336,8 +336,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
             [osp|chart_requests.json|],
             [osp|chart_requests.jsonc|]
           ]
-  FindExecutable p -> case p of
-    _ -> error $ "findExecutable: unexpected: " ++ show p
+  FindExecutable p -> error $ "findExecutable: unexpected: " ++ show p
   GetCurrentDirectory -> pure [osp|cwd|]
   GetXdgDirectory xdg p -> case xdg of
     XdgCache ->
@@ -359,7 +358,7 @@ runPathReaderMock = reinterpret_ PRS.runPathReader $ \case
     where
       dirName = L.last $ OsPath.splitDirectories p
   PathIsSymbolicLink _ -> pure False
-  other -> error $ "runPathReaderMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runPathReaderMock: unimplemented: " ++ showEffectCons other
 
 runPathWriterMock ::
   ( IORefE :> es,
@@ -372,17 +371,17 @@ runPathWriterMock = interpret_ $ \case
   CreateDirectoryIfMissing _ _ -> pure ()
   RemovePathForcibly _ -> incIORef (view (#refsEnv % #numRemoveDirectoryCalls))
   SetCurrentDirectory _ -> pure ()
-  other -> error $ "runPathWriterMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runPathWriterMock: unimplemented: " ++ showEffectCons other
 
 runLoggerMock :: Eff (Logger : es) a -> Eff es a
 runLoggerMock = interpret_ $ \case
-  LoggerLog _ _ _ _ -> pure ()
+  LoggerLog {} -> pure ()
 
 runTerminalMock :: Eff (Terminal : es) a -> Eff es a
 runTerminalMock = interpret_ $ \case
   PutStr _ -> pure ()
   PutStrLn _ -> pure ()
-  other -> error $ "runTerminalMock: unimplemented: " ++ (showEffectCons other)
+  other -> error $ "runTerminalMock: unimplemented: " ++ showEffectCons other
 
 incIORef ::
   ( IORefE :> es,
@@ -409,7 +408,7 @@ type TestEffects =
   ]
 
 runTestEff :: ChartEnv -> Eff TestEffects a -> IO a
-runTestEff env m =
+runTestEff env =
   runEff
     . evalState (env ^. #coreEnv % #cachedPaths)
     . runReader logEnv
@@ -423,7 +422,6 @@ runTestEff env m =
     . runPathReaderMock
     . runFileWriterMock
     . runFileReaderMock
-    $ m
   where
     logEnv =
       MkLogEnv
@@ -539,7 +537,7 @@ testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
             paths <- mkPaths
             result <-
               fmap (view #chartData)
-                . (view #charts)
+                . view #charts
                 <$> runCreateChartSeqEff paths
             pure $ toStrictBS $ Json.encodePretty result
         }
@@ -560,10 +558,10 @@ testCreateChartSeqHelper testDesc testSuffix = testGoldenParams params
 
       activities <- Path.parseRelFile $ dataDir </> [ospPathSep|Activities.csv|]
       pure
-        $ ( cwd <</>> chartRequests,
-            (cwd <</>>) <$> labels,
-            (cwd <</>> activities) :<|| []
-          )
+        ( cwd <</>> chartRequests,
+          (cwd <</>>) <$> labels,
+          (cwd <</>> activities) :<|| []
+        )
 
     dataDir = [ospPathSep|test/unit/data|]
 
@@ -597,9 +595,9 @@ testUpdateLabels = testCase "Updates labels from map" $ do
           ( fmap (view #unSomeActivityKey)
               . NE.toList
               . NESet.toList
-              . (view #unSomeActivities)
+              . view #unSomeActivities
           )
-          $ (Chart.updateLabels labelMap activities)
+          (Chart.updateLabels labelMap activities)
 
   -- Need to compare SomeActivities NOT SomeActivityKey as the latter compares via
   -- timestamp only.

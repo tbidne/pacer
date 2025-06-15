@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Provides Json utilities. Because consistency is tricky when we are using
 -- mixing manual decoding with FromJSON instances, this module should be
 -- preferred over aeson, as we attempt to provide consistent functions here
@@ -208,7 +205,7 @@ decodeJsonP p bs = do
 -- | Runs the parser on the value, lifting the result to Either. Uses
 -- aeson's error formatter i.e. error locations are included, so this
 -- should be preferred to direct aeson usage.
-parseResult :: (Asn.Value -> AsnT.Parser a) -> Asn.Value -> (ResultDefault a)
+parseResult :: (Asn.Value -> AsnT.Parser a) -> Asn.Value -> ResultDefault a
 parseResult p = review #eitherIso . AsnT.parseEither p
 
 -- | Decodes a json list into an 'IsList'. Like '(.:?)', omitted keys are fine
