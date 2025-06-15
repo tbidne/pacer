@@ -4,6 +4,7 @@ module Pacer.Class.FromAlt
     asum1M,
     alt1M,
     (<+<|>+>),
+    asum1,
   )
 where
 
@@ -57,6 +58,18 @@ instance FromAlt Seq where
   toAlt1 (x :<| xs) = Just (x :<|| xs)
 
   listToAlt = Seq.fromList
+
+-- | Combines an Alternative monoidally without empty. Ideally we would just
+-- re-export the definition from semigroupoids (a transitive dep anyway),
+-- which is written in terms of its Alt superclass for Alternative. Alas, we
+-- currently use this with cassava's Parser, which does not have an Alt
+-- instance.
+--
+-- Hence using this is the path of least resistance for now. It would be
+-- nice to come up with a more holistic treatment here e.g. use semigroupoids'
+-- Alt, and possibly rewrite some of the functions.
+asum1 :: forall t f a. (Alternative f, Foldable1 t) => t (f a) -> f a
+asum1 = F.foldr1 (<|>)
 
 asum1M :: forall t m f a. (Foldable t, FromAlt f, Monad m) => t (m (f a)) -> m (f a)
 asum1M = foldr alt1M (pure empty)

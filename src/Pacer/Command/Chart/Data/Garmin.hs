@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -25,6 +26,7 @@ import Data.Time.Format qualified as Format
 import Effectful.Logger.Dynamic qualified as Logger
 import FileSystem.OsPath (decodeLenient)
 import FileSystem.UTF8 (decodeUtf8Lenient)
+import Pacer.Class.FromAlt (asum1)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Activity
   ( Activity (MkActivity),
@@ -91,10 +93,9 @@ parseGarminRow globalFilters r = do
     distance <- parseX =<< r .: "Distance"
 
     -- Prefer moving time, but fall back to others as needed.
+    let timeFields = ["Moving Time", "Elapsed Time", "Time"]
     duration <-
-      (parseDuration =<< r .: "Moving Time")
-        <|> (parseDuration =<< r .: "Elapsed Time")
-        <|> (parseDuration =<< r .: "Time")
+      asum1 @NonEmpty $ (\f -> parseDuration =<< r .: f) <$> timeFields
 
     ts <- TS.fromLocalTime datetime
 
