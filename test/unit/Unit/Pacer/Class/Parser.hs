@@ -98,6 +98,8 @@ testStripCommentBlockCases = testProp1 "testStripCommentBlockCases" desc $ do
   happyParse "basic  example" "basic /*should be removed*/ example"
   happyParse "more /  stuff/  here" "more / /**/ stuff/ /*that//blah*/ here"
   happyParse "blah  */ here" "blah /* foo */ */ here"
+  happyParse "foo" "/***/foo"
+  happyParse "bar" "/**sometext**/bar"
   unhappyParse "unterminated /* //\n blah"
   where
     desc = "Block comment cases"

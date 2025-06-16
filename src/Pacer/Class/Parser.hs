@@ -343,6 +343,9 @@ stripCommentsBS bs =
             Just (_starChar, starNext, mPostCommentStart)
               -- Found an ending slash, we have successfully ended the comment.
               | starNext == fslashW8 -> Ok mPostCommentStart
+              -- The next char is another star. Need to add it back in, in
+              -- case it is part of the ending */ e.g. we have /***/.
+              | starNext == starW8 -> skipBlockComment (BS.cons starW8 mPostCommentStart)
               -- starNext is something else. Search the rest of the string.
               | otherwise -> skipBlockComment mPostCommentStart
 
@@ -352,6 +355,15 @@ uncons2 bs = case BS.uncons bs of
   Just (c1, rest1) -> case BS.uncons rest1 of
     Nothing -> Nothing
     Just (c2, rest2) -> Just (c1, c2, rest2)
+
+-- NOTE: The megaparsec comment strippers seem to have a similar problem
+-- to one fixed in the bytestring parser, namely, /***/ is not handled
+-- correctly. Curiously, the megaparsec bug is not _quite_ as bad as the
+-- bytestring bug failed two tests, whereas the megaparsec parsers only
+-- fail one.
+--
+-- It would be nice to fix this, but as the megaparsec parsers are only used
+-- for benchmarking, it is not a top priority.
 
 -- | Strips comment using megaparsec's built-in comment utilities.
 stripCommentsMpAuto :: ByteString -> ResultDefault ByteString

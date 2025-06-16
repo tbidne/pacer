@@ -16,11 +16,30 @@ tests :: TestTree
 tests =
   testGroup
     "Pacer.Utils"
-    [ testJsoncDecode
+    [ testJsoncDecodeSpecs,
+      testJsoncDecode
     ]
 
+testJsoncDecodeSpecs :: TestTree
+testJsoncDecodeSpecs = testProp1 "testJsoncDecodeSpecs" desc $ do
+  for_ vals assertSuccess
+  where
+    desc = "Decodes json specs"
+
+    assertSuccess j = case Json.decodeJson @Value j of
+      Ok _ -> pure ()
+      Err err -> do
+        annotate $ displayException err
+        annotate $ show j
+        failure
+
+    vals =
+      [ "/***/[{}, {\"a\": {\"a\": {\"a\": {},\"a\": \"a\"}},\"a\": {},\"a\": [{\"a\": \"a\",\"a\": \"a\"}, {\"a\": \"a\",\"a\": \"a\"}]}, {\"a\": \"a\",\"a\": \"a\",\"a\": \"a\"}]",
+        "/***/[{\"a\": [{\"a\": \"a\",\"a\": [{}, {}]}]}]"
+      ]
+
 testJsoncDecode :: TestTree
-testJsoncDecode = testPropMaxN 100_000 "testJsoncDecode" "Decodes jsonc" $ do
+testJsoncDecode = testPropMaxN 100_000 "testJsoncDecode" desc $ do
   (json, jsonc) <- forAll genJsonAndJsonc
 
   case review #eitherIso (Asn.eitherDecodeStrict @Value json) of
@@ -37,6 +56,8 @@ testJsoncDecode = testPropMaxN 100_000 "testJsoncDecode" "Decodes jsonc" $ do
         Ok utilsResult -> do
           annotate "Jsonc decoded but differed from json decoding"
           asnResult === utilsResult
+  where
+    desc = "Decodes generated jsonc"
 
 genJsonAndJsonc :: Gen (Tuple2 ByteString ByteString)
 genJsonAndJsonc = do
