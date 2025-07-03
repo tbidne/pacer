@@ -91,7 +91,7 @@ import Pacer.Command.Chart.Data.Time.Year (Year)
 import Text.Read qualified as TR
 import Unit.Prelude
 
-testEqLaws :: (Eq a, Show a) => a -> a -> a -> PropertyT IO ()
+testEqLaws :: (Eq a, Show a) => a -> a -> a -> PropertyT IO Unit
 testEqLaws x y z = do
   -- reflexivity
   x === x
@@ -105,7 +105,7 @@ testEqLaws x y z = do
   -- negation
   (x /= y) === not (x == y)
 
-testOrdLaws :: (Ord a) => a -> a -> a -> PropertyT IO ()
+testOrdLaws :: (Ord a) => a -> a -> a -> PropertyT IO Unit
 testOrdLaws x y z = do
   -- comparability
   let xLteY = x <= y
@@ -137,7 +137,7 @@ testOrdLaws x y z = do
   assert $ min x y == if x <= y then x else y
   assert $ max x y == if x >= y then x else y
 
-testIEqLaws :: (IEq a, Show a) => a -> a -> PropertyT IO ()
+testIEqLaws :: (IEq a, Show a) => a -> a -> PropertyT IO Unit
 testIEqLaws x y = do
   -- reflexivity
   x ~~~ x
@@ -148,7 +148,7 @@ testIEqLaws x y = do
   -- negation
   (x /~ y) === not (x ~~ y)
 
-testIOrdLaws :: (IOrd a) => a -> a -> PropertyT IO ()
+testIOrdLaws :: (IOrd a) => a -> a -> PropertyT IO Unit
 testIOrdLaws x y = do
   -- comparability
   let xLteY = x <~ y

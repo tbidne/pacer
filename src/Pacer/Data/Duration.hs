@@ -168,7 +168,7 @@ toTimeString d =
 -- simply trade our 'round' usages for 'floor', and that would probably avoid
 -- having non-normalized values. But round is more precise, hence we
 -- prefer it.
-normalizeTime :: (Word32, Word32, Word32) -> (Word32, Word32, Word32)
+normalizeTime :: Tuple3 Word32 Word32 Word32 -> Tuple3 Word32 Word32 Word32
 normalizeTime (h, m, s) = (h_final, m_final, s_final)
   where
     (m_temp, s_final) =

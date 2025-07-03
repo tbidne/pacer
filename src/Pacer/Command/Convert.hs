@@ -26,7 +26,7 @@ handle ::
     Toℚ a
   ) =>
   ConvertParamsFinal a ->
-  Eff es ()
+  Eff es Unit
 handle params = case params ^. #quantity of
   Left dist ->
     case toSing unit of

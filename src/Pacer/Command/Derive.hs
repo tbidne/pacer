@@ -57,7 +57,7 @@ handle ::
     Toℚ a
   ) =>
   DeriveParamsFinal a ->
-  Eff es ()
+  Eff es Unit
 handle params = case params ^. #quantity of
   DeriveDistance duration pace -> do
     let dist = deriveSomeDistance duration pace

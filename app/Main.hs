@@ -14,7 +14,7 @@ import System.IO (IO)
 -- | Executable entry-point.
 --
 -- @since 0.1
-main :: IO ()
+main :: IO Unit
 main = do
   setIgnoreKnownCallStackHandler Driver.knownExceptions
 

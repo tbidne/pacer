@@ -154,15 +154,15 @@ testHrMinSecCasesTxt = testPropertyNamed name desc $ withTests 1 $ property $ do
     name = "testHrMinSecCasesTxt"
     desc = "testHrMinSec text examples"
 
-    vals :: [((Word32, Word32, Word32), Text)]
+    vals :: List (Tuple2 (Tuple3 Word32 Word32 Word32) Text)
     vals =
       [ ((5, 1, 0), "5h1m"),
         ((1000, 0, 0), "1000h")
       ]
 
     go ::
-      ((Word32, Word32, Word32), Text) ->
-      PropertyT IO ()
+      Tuple2 (Tuple3 Word32 Word32 Word32) Text ->
+      PropertyT IO Unit
     go (e, txt) = do
       d <- parseOrDieM @(Duration Double) txt
 
@@ -179,14 +179,14 @@ testHrMinSecCasesData = testPropertyNamed name desc $ withTests 1 $ property $ d
     name = "testHrMinSecCases"
     desc = "testHrMinSec data examples"
 
-    vals :: [((Word32, Word32, Word32), Duration Double)]
+    vals :: List (Tuple2 (Tuple3 Word32 Word32 Word32) (Duration Double))
     vals =
       [ ((6, 0, 0), MkDuration $ unsafePositive 21599.5)
       ]
 
     go ::
-      ((Word32, Word32, Word32), Duration Double) ->
-      PropertyT IO ()
+      Tuple2 (Tuple3 Word32 Word32 Word32) (Duration Double) ->
+      PropertyT IO Unit
     go (e, sd) = do
       annotateShow sd
 

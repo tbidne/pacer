@@ -38,8 +38,8 @@ type k ::> a = k Servant.:> a
 
 -- | Endpoints used by the frontend.
 type Api =
-  "health" ::> Get '[JSON] Text
-    :<|> "charts" ::> Get '[JSON] Charts
+  "health" ::> Get [JSON] Text
+    :<|> "charts" ::> Get [JSON] Charts
 
 -- | Total API, including the raw static assets.
 type WebApi = "api" ::> Api :<|> Raw
@@ -66,7 +66,7 @@ launchServer ::
   Word16 ->
   Path Abs Dir ->
   Charts ->
-  Eff es ()
+  Eff es Unit
 launchServer port webDistPath charts = addNamespace "launchServer" $ do
   $(Logger.logInfo) msg
   webDistStr <- decodeThrowM (toOsPath webDistPath)
@@ -82,7 +82,7 @@ launchServer port webDistPath charts = addNamespace "launchServer" $ do
     portInt = fromIntegral @Word16 @Int port
 
 data ServerEff :: Effect where
-  Run :: Port -> Application -> ServerEff m ()
+  Run :: Port -> Application -> ServerEff m Unit
 
 type instance DispatchOf ServerEff = Dynamic
 
@@ -94,5 +94,5 @@ runServerEffMock :: Eff (ServerEff : es) a -> Eff es a
 runServerEffMock = interpret_ $ \case
   Run _ _ -> pure ()
 
-run :: (HasCallStack, ServerEff :> es) => Port -> Application -> Eff es ()
+run :: (HasCallStack, ServerEff :> es) => Port -> Application -> Eff es Unit
 run p = send . Run p

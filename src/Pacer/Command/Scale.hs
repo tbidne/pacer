@@ -27,7 +27,7 @@ handle ::
     Toℚ a
   ) =>
   ScaleParamsFinal a ->
-  Eff es ()
+  Eff es Unit
 handle params = case params ^. #quantity of
   ScaleDistance dist -> do
     let distScaled = dist .* params ^. #factor
@@ -65,5 +65,5 @@ handle params = case params ^. #quantity of
 
         handleDisplay $ duration .* params ^. #factor
   where
-    handleDisplay :: forall x. (Display x) => x -> Eff es ()
+    handleDisplay :: forall x. (Display x) => x -> Eff es Unit
     handleDisplay = putTextLn . display

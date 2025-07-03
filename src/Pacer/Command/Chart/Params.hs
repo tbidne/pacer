@@ -86,7 +86,7 @@ type PathF :: ConfigPhase -> Type -> Type
 type family PathF p t where
   PathF ConfigPhaseArgs _ = Maybe OsPath
   PathF ConfigPhaseFinal File = Path Abs File
-  PathF ConfigPhaseFinal Dir = ()
+  PathF ConfigPhaseFinal Dir = Unit
   PathF ConfigPhaseFinal t =
     TypeError
       ( TE.Text "Type '"
@@ -98,7 +98,7 @@ type MPathF :: ConfigPhase -> Type -> Type
 type family MPathF p t where
   MPathF ConfigPhaseArgs _ = Maybe OsPath
   MPathF ConfigPhaseFinal File = Maybe (Path Abs File)
-  MPathF ConfigPhaseFinal Dir = ()
+  MPathF ConfigPhaseFinal Dir = Unit
   MPathF ConfigPhaseFinal t =
     TypeError
       ( TE.Text "Type '"
@@ -495,7 +495,7 @@ handleUnknownPath mToEx parentDir absParser relParser otherPath = do
 
   pure p
 
-assertExists :: (HasCallStack, PathReader :> es) => Path b t -> Eff es ()
+assertExists :: (HasCallStack, PathReader :> es) => Path b t -> Eff es Unit
 assertExists p = do
   let p' = toOsPath p
   exists <- PR.doesFileExist p'

@@ -17,7 +17,7 @@ import System.IO qualified as IO
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@=?))
 
-main :: IO ()
+main :: IO Unit
 main =
   guardOrElse' "RUN_E2E" ExpectEnvSet runTests dontRun
   where
@@ -51,7 +51,7 @@ testChartHealth = testCase desc $ do
     desc = "Tests chart server healthcheck"
     run = runEff . runConcurrent
 
-testServer :: (Concurrent :> es) => Eff es ()
+testServer :: (Concurrent :> es) => Eff es Unit
 testServer = CC.threadDelay 5_000_000
 
 testServerHealthCheck :: (Concurrent :> es, IOE :> es) => Eff es ByteString
@@ -86,7 +86,7 @@ runServer ::
     HasCallStack,
     IOE :> es
   ) =>
-  Eff es ()
+  Eff es Unit
 runServer = run $ Env.withArgs args Driver.runApp
   where
     args =

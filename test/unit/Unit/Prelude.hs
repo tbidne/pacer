@@ -98,12 +98,12 @@ data GoldenParams = MkGoldenParams
 makeFieldLabelsNoPrefix ''GoldenParams
 
 -- | Concise alias for @testPropertyNamed . property@
-testProp :: TestName -> PropertyName -> PropertyT IO () -> TestTree
+testProp :: TestName -> PropertyName -> PropertyT IO Unit -> TestTree
 testProp name desc = testPropertyNamed name desc . property
 
 -- | 'testProp' that only runs a single test. Used for when we'd really want
 -- HUnit's testCase, but with a better diff.
-testProp1 :: TestName -> PropertyName -> PropertyT IO () -> TestTree
+testProp1 :: TestName -> PropertyName -> PropertyT IO Unit -> TestTree
 testProp1 name desc = testPropN 1 name desc
 
 -- | If a limit option exists (i.e. either cli --hedgehog-tests or manually
@@ -120,7 +120,7 @@ testPropMaxN ::
   TestLimit ->
   TestName ->
   PropertyName ->
-  PropertyT IO () ->
+  PropertyT IO Unit ->
   TestTree
 testPropMaxN maxLimit name desc p =
   askOption $ \(HedgehogTestLimit mLimit) ->
@@ -131,14 +131,14 @@ testPropMaxN maxLimit name desc p =
       Just cliLimit -> testPropN (min cliLimit maxLimit) name desc p
 
 -- | 'testProp' that runs for specified N times.
-testPropN :: TestLimit -> TestName -> PropertyName -> PropertyT IO () -> TestTree
+testPropN :: TestLimit -> TestName -> PropertyName -> PropertyT IO Unit -> TestTree
 testPropN numTests name desc =
   -- NOTE: Have to use localOption here as it overrides withTests. That is,
   -- hedgehog's withTests has NO effect here, so don't use it!
   localOption (HedgehogTestLimit (Just numTests))
     . testProp name desc
 
-annotateUnpack :: Text -> PropertyT IO ()
+annotateUnpack :: Text -> PropertyT IO Unit
 annotateUnpack = annotate . unpackText
 
 assertDiff ::
@@ -149,23 +149,23 @@ assertDiff ::
   Text ->
   (a -> a -> Bool) ->
   Text ->
-  PropertyT IO ()
+  PropertyT IO Unit
 assertDiff @a i x op y = do
   annotateShow i
   hdiff (parseOrDie @a x) op (parseOrDie y)
 
 -- | Specialization of (===), for lower operator precedence.
-(<=>) :: Bool -> Bool -> PropertyT IO ()
+(<=>) :: Bool -> Bool -> PropertyT IO Unit
 (<=>) = (===)
 
 infix 1 <=>
 
-(~~~) :: (IEq a, Show a) => a -> a -> PropertyT IO ()
+(~~~) :: (IEq a, Show a) => a -> a -> PropertyT IO Unit
 x ~~~ y = H.diff x (~~) y
 
 infix 4 ~~~
 
-(/~~) :: (IEq a, Show a) => a -> a -> PropertyT IO ()
+(/~~) :: (IEq a, Show a) => a -> a -> PropertyT IO Unit
 x /~~ y = H.diff x (/~) y
 
 infix 4 /~~
@@ -203,10 +203,10 @@ parseOrDieM t = do
     Ok r -> pure r
     Err err -> fail err
 
-parseOrDieM_ :: forall a m. (MonadFail m, Parser a) => Text -> m ()
+parseOrDieM_ :: forall a m. (MonadFail m, Parser a) => Text -> m Unit
 parseOrDieM_ = void . parseOrDieM @a
 
-hdiff :: (Show a, Show b) => a -> (a -> b -> Bool) -> b -> PropertyT IO ()
+hdiff :: (Show a, Show b) => a -> (a -> b -> Bool) -> b -> PropertyT IO Unit
 hdiff = H.diff
 
 mkDistanceD :: forall t. Double -> Distance t Double
@@ -246,7 +246,7 @@ testGoldenParams goldenParams =
 
     exToBs = encodeUtf8 . displayExceptiont
 
-    writeActualFile :: ByteString -> IO ()
+    writeActualFile :: ByteString -> IO Unit
     writeActualFile =
       writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
         . (<> "\n")
@@ -265,7 +265,7 @@ pShowBS = encodeUtf8 . toStrictText . Pretty.pShowOpt opts
         }
 
 -- See NOTE: [Golden test diffing]
-goldenDiff :: TestName -> FilePath -> FilePath -> IO () -> TestTree
+goldenDiff :: TestName -> FilePath -> FilePath -> IO Unit -> TestTree
 goldenDiff x = goldenVsFileDiff x diffArgs
   where
     diffArgs ref new =

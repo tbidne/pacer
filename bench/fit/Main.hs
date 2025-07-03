@@ -13,7 +13,7 @@ import Test.Tasty.Bench.Fit qualified as Fit
 import Test.Tasty.HUnit (testCase)
 import Prelude (IO)
 
-main :: IO ()
+main :: IO Unit
 main =
   guardOrElse' "RUN_BENCH_FIT" ExpectEnvSet runTests dontRun
   where

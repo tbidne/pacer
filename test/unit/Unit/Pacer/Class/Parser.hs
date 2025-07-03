@@ -147,7 +147,7 @@ testStripAllCommentProps = testStripProps name desc $ do
 -- does not cry. Arguably, it'd be nice to have this conditional on being
 -- run on CI i.e. CI can handle more than 1000 tests, but running them as
 -- a user is less fun. We'd have to add a "--ci" flag to tasty, however.
-testStripProps :: TestName -> PropertyName -> PropertyT IO () -> TestTree
+testStripProps :: TestName -> PropertyName -> PropertyT IO Unit -> TestTree
 testStripProps = testPropMaxN 1_000
 
 hasLineCommentStart :: ByteString -> Bool
@@ -156,7 +156,7 @@ hasLineCommentStart = L.isInfixOf (s2W8List "//") . BS.unpack
 hasBlockCommentStart :: ByteString -> Bool
 hasBlockCommentStart = L.isInfixOf (s2W8List "/*") . BS.unpack
 
-happyParse :: ByteString -> ByteString -> PropertyT IO ()
+happyParse :: ByteString -> ByteString -> PropertyT IO Unit
 happyParse expected txt =
   runStripComments txt $ \case
     Err e -> do
@@ -164,7 +164,7 @@ happyParse expected txt =
       failure
     Ok r -> expected === r
 
-unhappyParse :: ByteString -> PropertyT IO ()
+unhappyParse :: ByteString -> PropertyT IO Unit
 unhappyParse txt =
   runStripComments txt $ \case
     -- It would be nice to verify that we get the nice megaparsec errors,
@@ -176,8 +176,8 @@ unhappyParse txt =
 
 runStripComments ::
   ByteString ->
-  (ResultDefault ByteString -> PropertyT IO ()) ->
-  PropertyT IO ()
+  (ResultDefault ByteString -> PropertyT IO Unit) ->
+  PropertyT IO Unit
 runStripComments bs m = do
   for_ stripCommentsFns $ \(a, p) -> do
     annotateShow bs

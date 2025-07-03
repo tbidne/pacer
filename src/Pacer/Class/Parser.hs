@@ -349,7 +349,7 @@ stripCommentsBS bs =
               -- starNext is something else. Search the rest of the string.
               | otherwise -> skipBlockComment mPostCommentStart
 
-uncons2 :: ByteString -> Maybe (Word8, Word8, ByteString)
+uncons2 :: ByteString -> Maybe (Tuple3 Word8 Word8 ByteString)
 uncons2 bs = case BS.uncons bs of
   Nothing -> Nothing
   Just (c1, rest1) -> case BS.uncons rest1 of
@@ -407,7 +407,7 @@ stripCommentsMpManual = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
           MPB.char newlineW8
           pure ""
 
-        parseLineCommentStart :: Parsec Void ByteString ()
+        parseLineCommentStart :: Parsec Void ByteString Unit
         parseLineCommentStart = void $ MPC.string "//"
 
         parseBlockComment :: Parsec Void ByteString ByteString
@@ -417,7 +417,7 @@ stripCommentsMpManual = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
           parseEndBlock
           pure ""
 
-        takeUntilEndBlock :: Parsec Void ByteString ()
+        takeUntilEndBlock :: Parsec Void ByteString Unit
         takeUntilEndBlock = void $ do
           many
             $ asum
@@ -425,21 +425,21 @@ stripCommentsMpManual = fmap mconcat . parseWith (blexeme bsParser <* MP.eof)
                 parseOneStar
               ]
 
-        parseNonStar :: Parsec Void ByteString ()
+        parseNonStar :: Parsec Void ByteString Unit
         parseNonStar = void $ MP.takeWhile1P (Just "text") (/= starW8)
 
         -- We need to backtrack (hence try) in case the first star
         -- succeeds but the followedBy fails.
-        parseOneStar :: Parsec Void ByteString ()
+        parseOneStar :: Parsec Void ByteString Unit
         parseOneStar = MP.try $ do
           _ <- MPB.char starW8
           MP.notFollowedBy $ MPB.char fslashW8
           pure ()
 
-        parseStartBlock :: Parsec Void ByteString ()
+        parseStartBlock :: Parsec Void ByteString Unit
         parseStartBlock = void $ MPC.string "/*"
 
-        parseEndBlock :: Parsec Void ByteString ()
+        parseEndBlock :: Parsec Void ByteString Unit
         parseEndBlock = void $ MPC.string "*/"
 
 parseOneFSlash :: Parsec Void ByteString ByteString

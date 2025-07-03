@@ -66,7 +66,7 @@ handle ::
   ) =>
   Maybe ChartConfig ->
   ChartParamsFinal ->
-  Eff es ()
+  Eff es Unit
 handle mChartConfig params = do
   charts <- createCharts mChartConfig params
 
@@ -130,7 +130,7 @@ createChartsJsonFile ::
   ) =>
   Charts ->
   Path Abs File ->
-  Eff es ()
+  Eff es Unit
 createChartsJsonFile charts outJson =
   addNamespace "createChartsJsonFile" $ do
     let bs = Json.encodePretty charts

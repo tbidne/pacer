@@ -23,7 +23,7 @@ data TestParams = MkTestParams
 
 makeFieldLabelsNoPrefix ''TestParams
 
-main :: IO ()
+main :: IO Unit
 main =
   defaultMain
     [ benchMkSomeRuns,

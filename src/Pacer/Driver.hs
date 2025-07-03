@@ -82,7 +82,7 @@ runApp ::
     Terminal :> es,
     Time :> es
   ) =>
-  Eff es ()
+  Eff es Unit
 runApp = withEnv runCommand
 
 runCommand ::
@@ -97,7 +97,7 @@ runCommand ::
     Time :> es
   ) =>
   Env ->
-  Eff es ()
+  Eff es Unit
 runCommand (cmd, mConfig, cachedPaths, logEnv) = runner $ logAndRethrow $ do
   command <- Command.evolvePhase cmd mConfig
   case command of

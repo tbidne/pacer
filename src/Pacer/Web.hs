@@ -27,7 +27,7 @@ ensureWebDirExists ::
   -- take it as a parameter to save a function call.
   Path Abs Dir ->
   Bool ->
-  Eff es ()
+  Eff es Unit
 ensureWebDirExists webPath cleanInstall = addNamespace "ensureWebDirExists" $ do
   let webOsPath = toOsPath webPath
 
@@ -63,7 +63,7 @@ writeWebDir ::
     PathWriter :> es
   ) =>
   Path Abs Dir ->
-  Eff es ()
+  Eff es Unit
 writeWebDir webPath = do
   let webOsPath = toOsPath webPath
 

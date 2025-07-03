@@ -77,7 +77,7 @@ import Pacer.Utils qualified as U
 import Pacer.Utils.Json (JsonValue, ToJSON (toJSON), (.=))
 import Pacer.Utils.Json qualified as Json
 
-mkYJson :: DistanceUnit -> [Double] -> YAxisType -> Text -> JsonValue
+mkYJson :: DistanceUnit -> List Double -> YAxisType -> Text -> JsonValue
 mkYJson dunit yVal yType yId =
   Json.object
     [ "data" .= yVal,

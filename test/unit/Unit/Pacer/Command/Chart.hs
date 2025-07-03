@@ -207,7 +207,7 @@ testClean = testCase "With --clean" $ do
         { cachedPaths = mempty
         }
 
-assertEnvRefs :: RefsEnv -> List Word8 -> IO ()
+assertEnvRefs :: RefsEnv -> List Word8 -> IO Unit
 assertEnvRefs refsEnv expecteds = do
   length expecteds @=? length refs
   assertRefs vals
@@ -221,7 +221,7 @@ assertEnvRefs refsEnv expecteds = do
         ("numXdgConfigCalls", refsEnv ^. #numXdgConfigCalls)
       ]
 
-assertRefs :: (Eq a, Show a) => List (Tuple3 String (IORef a) a) -> IO ()
+assertRefs :: (Eq a, Show a) => List (Tuple3 String (IORef a) a) -> IO Unit
 assertRefs xs = for_ xs $ \(desc, ref, expected) -> do
   result <- Ref.readIORef ref
   let msg =
@@ -388,7 +388,7 @@ incIORef ::
     Reader ChartEnv :> es
   ) =>
   (ChartEnv -> IORef Word8) ->
-  Eff es ()
+  Eff es Unit
 incIORef toRef = asks toRef >>= \r -> modifyIORef' r (+ 1)
 
 type TestEffects =

@@ -161,7 +161,7 @@ failUnknownFields ::
   List Key ->
   -- | Actual keys.
   KeyMap Asn.Value ->
-  AsnT.Parser ()
+  AsnT.Parser Unit
 failUnknownFields name knownKeys kmap = do
   case HSet.toList unknownKeys of
     [] -> pure ()

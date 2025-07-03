@@ -281,7 +281,7 @@ runTerminalMock = interpret_ $ \case
     modifyIORef' logsRef (<> UTF8.decodeUtf8Lenient bs)
   other -> error $ "runTerminalMock: unimplemented: " ++ showEffectCons other
 
-runMultiArgs :: (a -> List String) -> List (Word8, (a, Text)) -> IO ()
+runMultiArgs :: (a -> List String) -> List (Tuple2 Word8 (Tuple2 a Text)) -> IO Unit
 runMultiArgs mkArgs vals =
   for_ vals $ \(idx, (a, e)) -> do
     let args = mkArgs a
@@ -289,7 +289,7 @@ runMultiArgs mkArgs vals =
 
 -- | Runs pacer with the arguments and compares the log output against the
 -- expected text.
-runArgs :: Maybe Word8 -> List String -> Text -> IO ()
+runArgs :: Maybe Word8 -> List String -> Text -> IO Unit
 runArgs mIdx args expected = do
   funcEnv <- runAppArgs args
   result <- Ref.readIORef (funcEnv ^. #logsRef)
@@ -424,7 +424,7 @@ testGoldenParams getTestDir goldenParams =
 
     exToBs = encodeUtf8 . packText . displayInnerMatchKnown
 
-    writeActualFile :: ByteString -> IO ()
+    writeActualFile :: ByteString -> IO Unit
     writeActualFile =
       writeBinaryFileIO (FS.OsPath.unsafeEncode actualPath)
         . (<> "\n")
@@ -464,7 +464,7 @@ incIORef ::
     Reader FuncEnv :> es
   ) =>
   (FuncEnv -> IORef Word8) ->
-  Eff es ()
+  Eff es Unit
 incIORef toRef = asks toRef >>= \r -> modifyIORef' r (+ 1)
 
 -- NOTE: [Golden test diffing]
@@ -479,7 +479,7 @@ incIORef toRef = asks toRef >>= \r -> modifyIORef' r (+ 1)
 -- diff locally.
 --
 -- This way is much simpler, and only requires git.
-goldenDiff :: TestName -> FilePath -> FilePath -> IO () -> TestTree
+goldenDiff :: TestName -> FilePath -> FilePath -> IO Unit -> TestTree
 goldenDiff x = goldenVsFileDiff x diffArgs
   where
     -- Apparently, the 'diff' program exists for windows and unix on CI. Thus

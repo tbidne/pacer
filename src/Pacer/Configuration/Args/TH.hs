@@ -23,7 +23,7 @@ import Pacer.Prelude
 import System.OsString qualified as OsString
 import Text.Read qualified as TR
 
-gitData :: Code Q (OsString, OsString, OsString)
+gitData :: Code Q (Tuple3 OsString OsString OsString)
 gitData = toCode qs
   where
     toCode = GRT.qToCode . GRT.projectError
@@ -36,7 +36,7 @@ gitData = toCode qs
         ]
 
 -- | Normal process, get info from git.
-gitDataFromGitQ :: Q (Either GitError (OsString, OsString, OsString))
+gitDataFromGitQ :: Q (Either GitError (Tuple3 OsString OsString OsString))
 gitDataFromGitQ = do
   -- We use custom runGit rather than normal gitCommitDateQ because the
   -- latter uses --format=%cd e.g.
@@ -69,7 +69,7 @@ gitDataFromGitQ = do
 --
 -- We have to convert the unix time into the intended format
 -- YYYY-MM-DD.
-gitDataFromEnvQ :: Q (Either GitRevError (OsString, OsString, OsString))
+gitDataFromEnvQ :: Q (Either GitRevError (Tuple3 OsString OsString OsString))
 gitDataFromEnvQ = do
   let dateVar = [osstr|PACER_MODIFIED|]
   d <- GRT.embedEnvError $ fmap (>>= displayUnixTime dateVar) (GRT.envValQ dateVar)

@@ -25,4 +25,4 @@ type family ConfigPhaseF p a where
 type ConfigOnlyF :: ConfigPhase -> Type -> Type
 type family ConfigOnlyF p a where
   ConfigOnlyF ConfigPhaseArgs a = Maybe a
-  ConfigOnlyF ConfigPhaseFinal _ = ()
+  ConfigOnlyF ConfigPhaseFinal _ = Unit

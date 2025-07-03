@@ -18,7 +18,7 @@ import System.Environment.Guard
 import Test.Tasty (defaultMain, localOption, withResource)
 import Test.Tasty.Golden (DeleteOutputFile (OnPass))
 
-main :: IO ()
+main :: IO Unit
 main =
   defaultMain
     $ localOption OnPass
@@ -46,7 +46,7 @@ setup = runSetup $ do
   where
     tmpName = [osp|test|] </> [osp|functional|]
 
-teardown :: OsPath -> IO ()
+teardown :: OsPath -> IO Unit
 teardown tmpDir = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
   where
     cleanup = runSetup $ do

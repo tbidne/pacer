@@ -140,7 +140,7 @@ instance
   ConvertDistance (Activity dist a)
   where
   type ConvertedDistance (Activity dist a) e = Activity e a
-  type ToConstraints (Activity dist a) _ = ()
+  type ToConstraints (Activity dist a) _ = CUnit
 
   convertDistance_ r =
     MkActivity
@@ -372,7 +372,7 @@ instance
   ConvertDistance (SomeActivity a)
   where
   type ConvertedDistance (SomeActivity a) e = Activity e a
-  type ToConstraints (SomeActivity a) _ = ()
+  type ToConstraints (SomeActivity a) _ = CUnit
 
   convertDistance_ (MkSomeActivity s x) = withSingI s convertDistance_ x
 

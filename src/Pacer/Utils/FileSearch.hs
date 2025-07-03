@@ -486,7 +486,7 @@ satisfiesPattern compFn exts pat p
 -- @
 --   pathToNameExts /path/to/foo.tar.gz === (foo, .gz, .tar.gz)
 -- @
-osPathToNameExts :: OsPath -> (OsPath, OsString, OsString)
+osPathToNameExts :: OsPath -> Tuple3 OsPath OsString OsString
 osPathToNameExts p = (name, ext, exts)
   where
     name = toBaseFileName p

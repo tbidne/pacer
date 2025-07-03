@@ -133,7 +133,7 @@ instance
   ConvertDistance (Distance d a)
   where
   type ConvertedDistance (Distance d a) e = Distance e a
-  type ToConstraints (Distance d a) _ = ()
+  type ToConstraints (Distance d a) _ = CUnit
 
   convertDistance_ :: forall e. (SingI e) => Distance d a -> Distance e a
   convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . view #unDistance
@@ -296,7 +296,7 @@ instance
   ConvertDistance (SomeDistance a)
   where
   type ConvertedDistance (SomeDistance a) e = Distance e a
-  type ToConstraints (SomeDistance a) _ = ()
+  type ToConstraints (SomeDistance a) _ = CUnit
 
   convertDistance_ :: (SingI e) => SomeDistance a -> Distance e a
   convertDistance_ (MkSomeDistance s x) = withSingI s convertDistance_ x

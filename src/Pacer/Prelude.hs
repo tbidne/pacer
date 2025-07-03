@@ -229,7 +229,7 @@ import Data.Time.Calendar as X (Day)
 import Data.Time.LocalTime as X (LocalTime, ZonedTime)
 import Data.Traversable as X (Traversable (sequenceA, traverse), for)
 import Data.Tuple as X (fst, snd, uncurry)
-import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4)
+import Data.Tuple.Experimental as X (Tuple2, Tuple3, Tuple4, Unit, CUnit)
 import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word, Word16, Word32, Word8)
@@ -542,7 +542,7 @@ traceFileBS path bs x = writeFn `seq` x
     writeFn = unsafePerformIO io
 
 -- | Traces to a file in an Applicative.
-traceFileA :: (Applicative f) => FilePath -> Text -> f ()
+traceFileA :: (Applicative f) => FilePath -> Text -> f Unit
 traceFileA f t = traceFile f t (pure ())
 
 -- | Traces to a file with newline.
@@ -550,7 +550,7 @@ traceFileLine :: FilePath -> Text -> a -> a
 traceFileLine path txt = traceFile path (txt <> "\n")
 
 -- | Traces to a file with newline in an Applicative.
-traceFileLineA :: (Applicative f) => FilePath -> Text -> f ()
+traceFileLineA :: (Applicative f) => FilePath -> Text -> f Unit
 traceFileLineA p t = traceFileLine p t (pure ())
 
 -- | Positive Double.
@@ -691,5 +691,5 @@ posixWindowsStr =
 identity :: a -> a
 identity x = x
 
-uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 :: (a -> b -> c -> d) -> Tuple3 a b c -> d
 uncurry3 f (a, b, c) = f a b c

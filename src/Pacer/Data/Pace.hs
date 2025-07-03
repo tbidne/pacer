@@ -91,8 +91,8 @@ instance
 type PaceDistF :: DistanceUnit -> Constraint
 type family PaceDistF d where
   PaceDistF Meter = Unsatisfiable (TE.Text Utils.PaceMetersErrMsg)
-  PaceDistF Kilometer = ()
-  PaceDistF Mile = ()
+  PaceDistF Kilometer = CUnit
+  PaceDistF Mile = CUnit
 
 instance
   ( Eq a,

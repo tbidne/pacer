@@ -24,7 +24,7 @@ import Unit.Pacer.Utils.FileSearch qualified
 import Unit.Pacer.Utils.Show qualified
 import Unit.Prelude
 
-main :: IO ()
+main :: IO Unit
 main =
   defaultMain
     $ localOption OnPass
