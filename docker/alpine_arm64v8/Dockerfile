@@ -56,8 +56,6 @@ npm install --save
 echo "*** Building frontend ***"
 npm run build
 
-ghcup install cabal $CABAL_VERS --set
-
 echo "*** Building pacer ***"
 
 cd /opt/pacer
