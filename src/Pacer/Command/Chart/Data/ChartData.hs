@@ -283,7 +283,7 @@ handleChartType @es @a mChartType someActivities = case mChartType of
           -- unnecessarily decode the json to text, unless we are actually
           -- going to use it.
           logEnv <- ask @LogEnv
-          case (logEnv ^. #logLevel, logEnv ^. #logVerbosity) of
+          case (logEnv ^. #level, logEnv ^. #verbosity) of
             (Just LevelDebug, LogV1) -> do
               let json = toStrictBS $ Json.encodePretty xs
               jsonTxt <- decodeUtf8ThrowM json
@@ -483,7 +483,7 @@ sumActivities @a timestampMod acts@(MkSomeActivity sy y :<|| ys) =
   where
     -- Either take the first timestamp or combine all in some fashion,
     -- per tsAddAll.
-    finalTs dt = tsAddAll dt ((view #datetime) <$> acts)
+    finalTs dt = tsAddAll dt (view #datetime <$> acts)
 
     tsRound :: Timestamp -> Timestamp
     tsAddAll :: Timestamp -> NESeq Timestamp -> Timestamp
@@ -546,7 +546,7 @@ filterActivities ::
   List (FilterExpr a) ->
   Seq (SomeActivity a)
 filterActivities @a rs filters =
-  (view #unSomeActivityKey) <$> NESeq.filter filterActivity rs
+  view #unSomeActivityKey <$> NESeq.filter filterActivity rs
   where
     filterActivity :: SomeActivityKey a -> Bool
     filterActivity r = all (eval (applyFilter r)) filters
@@ -568,7 +568,7 @@ filterActivities @a rs filters =
         Nothing -> False
 
     applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
-    applyDate (MkSomeActivity _ r) op m = Ord.toIFun op activityMoment m
+    applyDate (MkSomeActivity _ r) op = Ord.toIFun op activityMoment
       where
         activityMoment = MomentTimestamp $ r ^. #datetime
 

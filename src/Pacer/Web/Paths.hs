@@ -42,7 +42,7 @@ readWebDirIO = runner $ do
                 "Run 'npm install --save && npm run build' from the web/ ",
                 "directory."
               ]
-      throwText msg
+      throwString $ unpackText msg
 
     c <- readBinaryFile (toOsPath path)
     pure (fileName, c)

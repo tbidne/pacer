@@ -5,6 +5,7 @@ module Pacer.Command.Chart.Args
 where
 
 import Data.Sequence qualified as Seq
+import Effectful.Optparse.Completer qualified as EOC
 import Options.Applicative (Parser)
 import Options.Applicative qualified as OA
 import Pacer.Command.Chart.Params
@@ -110,6 +111,7 @@ osPathParser mShort long metavar helpTxt = do
     ( mconcat
         $ [ OA.long long,
             OA.metavar metavar,
+            OA.completer EOC.compgenCwdPathsCompleter,
             Utils.mkHelp helpTxt
           ]
         ++ shortXs

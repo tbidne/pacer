@@ -14,10 +14,11 @@ on: # yamllint disable-line rule:truthy rule:comments
   workflow_dispatch:
 
 env:
-  CABAL_VERS: "3.12"
-  GHC_VERS: "9.10.1"
-  CABAL_PROJ: "cabal.ghc9101.project"
+  CABAL_VERS: "3.16"
+  GHC_VERS: "9.12.2"
+  CABAL_PROJ: "cabal.ghc9122.project"
   PACER_VERS: "0.1"
+  NODE_VERS: "22.x"
 
 jobs:
   cabal:
@@ -25,10 +26,10 @@ jobs:
       fail-fast: false
       matrix:
         ghc:
-          - vers: "9.10.1"
-            proj_file: "--project-file cabal.ghc9101.project"
-          - vers: "9.12.1"
+          - vers: "9.10.2"
             proj_file: ""
+          - vers: "9.12.2"
+            proj_file: "--project-file cabal.ghc9122.project"
         os:
           - "macos-latest"
           - "ubuntu-latest"
@@ -45,7 +46,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: ${{ env.NODE_VERS }}
 
       - name: Build frontend
         run: |
@@ -122,7 +123,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: ${{ env.NODE_VERS }}
 
       - name: Build frontend
         run: |
@@ -249,8 +250,9 @@ jobs:
 
       - name: Setup node
         uses: actions/setup-node@v4
+        if: ${{ matrix.platform.name != 'alpine_amd64' && matrix.platform.name != 'alpine_arm64v8' }}
         with:
-          node-version: 22.x
+          node-version: ${{ env.NODE_VERS }}
 
       - name: Build frontend
         if: ${{ matrix.platform.name != 'alpine_amd64' && matrix.platform.name != 'alpine_arm64v8' }}

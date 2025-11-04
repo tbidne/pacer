@@ -16,6 +16,7 @@ import Pacer.Command.Chart.Data.Garmin qualified as Garmin
 import Pacer.Command.Chart.Params
   ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
   )
+import Pacer.Configuration.Env.Types (runReaderLogEnvMock)
 import Pacer.Utils.Show qualified as Utils.Show
 import Unit.Prelude
 
@@ -84,7 +85,7 @@ runGetActivitiesType activitiesFile = do
     runner ref =
       runEff
         . runIORef
-        . runLoggerNS mempty
+        . runReaderLogEnvMock
         . runLoggerCapture ref
 
 runLoggerCapture ::

@@ -120,9 +120,9 @@ testParseDistanceCases = testCase "Parses Distance" $ do
         (21_097.5, Meter, "half-marathon"),
         (21.0975, Kilometer, "half-marathon"),
         (13.1094, Mile, "half-marathon"),
-        (21_097.5, Meter, "hmarathon"),
-        (21.0975, Kilometer, "hmarathon"),
-        (13.1094, Mile, "hmarathon")
+        (21_097.5, Meter, "half"),
+        (21.0975, Kilometer, "half"),
+        (13.1094, Mile, "half")
       ]
 
 testParseSomeDistanceCases :: TestTree
@@ -156,7 +156,7 @@ testParseSomeDistanceCases = testCase "Parses SomeDistance" $ do
     hvals =
       [ (Kilometer, 42.195, "marathon"),
         (Kilometer, 21.0975, "half-marathon"),
-        (Kilometer, 21.0975, "hmarathon")
+        (Kilometer, 21.0975, "half")
       ]
 
 testParseDistanceFailureCases :: TestTree
@@ -263,7 +263,7 @@ genDistanceText =
     [ Utils.genTextDoublePos,
       pure "marathon",
       pure "half-marathon",
-      pure "hmarathon"
+      pure "half"
     ]
 
 genSomeDistanceText :: Gen Text
@@ -282,5 +282,5 @@ genSomeDistanceText = do
             ],
       pure "marathon",
       pure "half-marathon",
-      pure "hmarathon"
+      pure "half"
     ]

@@ -1,5 +1,5 @@
 ---
-resolver: nightly-2025-02-18
+resolver: nightly-2025-11-04
 packages:
   - .
 ghc-options:
@@ -20,38 +20,37 @@ ghc-options:
     -Wno-missing-import-lists
     -Wno-unticked-promoted-constructors
 extra-deps:
-  - cassava-0.5.4.0@sha256:01774b12f4d255a9722ce515a4465ba1a860b2065330a72aad95e56cfe439c47,4954
   - env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
+  - ghc-experimental-9.1201.0@sha256:1cc6bafaa261e3eb262ab4bbb15e3d9127d6c810dbf619dfe43b59644dc00a61,1572
   - gitrev-typed-0.1@sha256:905b696dec9c52486290cfef2d3156420de83f5b21bfb0821a37822f40ee1568,3783
+  - random-1.2.1.3@sha256:117541ba0a177397a3333f94870f789ef050dca31b0688a19824b2bc401b8823,6237
   - regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319
-  - tasty-bench-fit-0.1.1@sha256:f9f231d793590d5a1a3b1c455004712c7468b6c6953aa129c4961e38dd8a2f9a,1810
-  - text-display-1.0.0.0@sha256:17d5a404f51ce40ba22327bdc6688fd239f66d0aa056b8d5cb83974d1dc706e5,2772
+  - tasty-bench-fit-0.1.1@sha256:aa300865236c5d6ef65bef09033a92484f0a91c3902bc29d0e6d02aa3626c4bd,1894
   - git: https://github.com/tbidne/algebra-simple.git
     commit: 37ec7127fbd0f591d4539e4bf72a0badd7569181
   - git: https://github.com/tbidne/bounds.git
     commit: b7ca541cfdd8564bcebe5d38456fe7abf77885b8
   - git: https://github.com/tbidne/effectful-libs.git
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     subdirs:
       - lib/concurrent-effectful
       - lib/effectful-utils
       - lib/fs-effectful
       - lib/ioref-effectful
       - lib/logger-effectful
-      - lib/logger-ns-effectful
       - lib/optparse-effectful
       - lib/terminal-effectful
       - lib/time-effectful
       - lib/typed-process-dynamic-effectful
   - git: https://github.com/tbidne/exception-utils.git
-    commit: e28b28ae3bc90a0336abf69eff28369b790f4e13
+    commit: 61a9e06a26adcca70d565105a1508a16022435a2
   - git: https://github.com/tbidne/fs-utils.git
-    commit: 2389f7dbe5b94f65bd22088f4e5a5f6644caaade
+    commit: 26136275027fd827574c5004ebd11b659d7abdab
   - git: https://github.com/tbidne/relative-time.git
-    commit: b8d4703fe4d60a0cb1904cb3a0946f89a1324c7b
+    commit: be79249b8909dba64d3b301025d4d684f46ec2a1
   - git: https://github.com/tbidne/smart-math.git
-    commit: acc3d79b82830397979f4be7b45266f5fc056cfb
+    commit: 4e10a4134f825ba825113955bb97be7f7e28ad6e
 allow-newer: true
 allow-newer-deps:
-  - path
+  - ghc-experimental
   - regression-simple

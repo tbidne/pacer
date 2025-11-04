@@ -171,6 +171,7 @@ distanceUnitParser =
         [ OA.short 'u',
           OA.long "unit",
           OA.metavar "UNIT",
+          OA.completeWith ["km", "kilometers", "m", "meters", "mi", "miles"],
           mkHelp helpTxt
         ]
     )
@@ -210,6 +211,7 @@ someDistanceParser =
     ( mconcat
         [ OA.long "distance",
           OA.metavar "DIST_STR",
+          OA.completeWith ["marathon", "half-marathon", "half"],
           mkHelp "A distance with units e.g. '4 km'."
         ]
     )

@@ -1,4 +1,6 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NoScopedTypeVariables #-}
 
 module Pacer.Command
   ( -- * Type
@@ -79,9 +81,9 @@ deriving stock instance
 
 -- | Evolve phase.
 evolvePhase ::
+  forall env a k es.
   ( HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     State CachedPaths :> es
@@ -89,8 +91,8 @@ evolvePhase ::
   CommandPhaseArgs a ->
   Maybe ConfigWithPath ->
   Eff es (CommandPhaseFinal a)
-evolvePhase cmd mConfig = case cmd of
-  Chart params -> Chart <$> Chart.evolvePhase params mConfig
+evolvePhase @env cmd mConfig = case cmd of
+  Chart params -> Chart <$> Chart.evolvePhase @env params mConfig
   Convert params -> Convert <$> Convert.evolvePhase params
   Derive params -> Derive <$> Derive.evolvePhase params
   Scale params -> Scale <$> Scale.evolvePhase params

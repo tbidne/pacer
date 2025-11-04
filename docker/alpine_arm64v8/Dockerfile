@@ -34,7 +34,18 @@ apk add --no-cache \
   zlib-dev \
   zlib-static
 
+# see NOTE: [Alpine and nodejs]
+
+echo "*** Installing node ***"
 apk add --update nodejs npm
+
+node_version=$(node --version)
+if [[ $node_version =~ ^"v22" ]]; then
+  echo "*** Installed node: $node_version ***"
+else
+  echo "*** Wanted node 22, installed $node_version ***"
+  exit 1
+fi
 
 echo "*** Installing ghcup ***"
 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_MINIMAL=1 sh

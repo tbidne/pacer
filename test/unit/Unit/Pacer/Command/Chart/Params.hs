@@ -20,7 +20,6 @@ import Effectful.FileSystem.PathReader.Dynamic
         ListDirectory
       ),
   )
-import Effectful.Logger.Dynamic (Logger (LoggerLog))
 import Pacer.Command.Chart.Params
   ( ChartParams
       ( MkChartParams,
@@ -39,7 +38,7 @@ import Pacer.Configuration.Config
     Config,
     ConfigWithPath (MkConfigWithPath, config, dirPath),
   )
-import Pacer.Configuration.Env.Types (CachedPaths, LogEnv (MkLogEnv))
+import Pacer.Configuration.Env.Types (CachedPaths, LogEnv (MkLogEnv), runLoggerMock, runReaderLogEnvMock)
 import Pacer.Driver (displayInnerMatchKnown)
 import Pacer.Utils (SomeSetter (MkSomeSetter))
 import Pacer.Utils qualified as Utils
@@ -793,10 +792,6 @@ testEvolvePhaseMissingEx =
 
     mockEnv = baseMockEnv {knownDirectories}
 
-runLoggerMock :: Eff (Logger : es) a -> Eff es a
-runLoggerMock = interpret_ $ \case
-  LoggerLog {} -> pure ()
-
 runPathReaderMock ::
   (Reader MockEnv :> es) =>
   Eff (PathReader : es) a ->
@@ -846,7 +841,7 @@ goldenRunner ::
   Maybe ConfigWithPath ->
   IO ByteString
 goldenRunner mockEnv params mConfigPath = do
-  trySync (runner $ Params.evolvePhase params mConfigPath) <&> \case
+  trySync (runner $ Params.evolvePhase @LogEnv params mConfigPath) <&> \case
     Right x -> pShowBS x
     -- displayInner over displayException since we do not want unstable
     -- callstacks in output.
@@ -858,7 +853,7 @@ goldenRunner mockEnv params mConfigPath = do
         . runReader @MockEnv mockEnv
         . runPathReaderMock
         . runLoggerMock
-        . runLoggerNS ""
+        . runReaderLogEnvMock
         . runReader logEnv
 
     logEnv = MkLogEnv Nothing mempty mempty

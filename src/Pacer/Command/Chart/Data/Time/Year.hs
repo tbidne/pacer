@@ -54,8 +54,8 @@ yearToTime = toℤ . view (#unYear % #unInterval)
 -- | Creates a 'Year' in the expected range or fails.
 mkYear :: (MonadFail m, Show a, Toℤ a) => a -> m Year
 mkYear i = case f i of
-  Nothing ->
+  Left _ ->
     fail $ "Expected a year in 1950 - 2099, received: " ++ show i
-  Just x -> pure $ MkYear x
+  Right x -> pure $ MkYear x
   where
     f = Interval.mkInterval . fromℤ . toℤ

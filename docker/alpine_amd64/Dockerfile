@@ -34,7 +34,28 @@ apk add --no-cache \
   zlib-dev \
   zlib-static
 
+# NOTE: [Alpine and nodejs]
+#
+# Alpine provides two nodejs packages:
+#
+#   nodejs:         LTS release    (currently 22)
+#   nodejs-current: Latest release (currently 24)
+#
+# https://pkgs.alpinelinux.org/packages?name=nodejs&branch=v3.21&arch=
+#
+# The best way to ensure node consistency (assuming it matters...) seems to be
+# to assert the version after the fact, which is what we do here.
+
+echo "*** Installing node ***"
 apk add --update nodejs npm
+
+node_version=$(node --version)
+if [[ $node_version =~ ^"v22" ]]; then
+  echo "*** Installed node: $node_version ***"
+else
+  echo "*** Wanted node 22, installed $node_version ***"
+  exit 1
+fi
 
 echo "*** Installing ghcup ***"
 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_MINIMAL=1 sh

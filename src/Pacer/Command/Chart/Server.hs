@@ -1,6 +1,8 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoScopedTypeVariables #-}
 
 -- | Chart functionality.
 module Pacer.Command.Chart.Server
@@ -58,28 +60,32 @@ mkApp staticDir charts = Servant.serve webApi server
     webApi = Proxy
 
 launchServer ::
+  forall env k es.
   ( HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     ServerEff :> es
   ) =>
   Word16 ->
   Path Abs Dir ->
   Charts ->
   Eff es Unit
-launchServer port webDistPath charts = addNamespace "launchServer" $ do
-  $(Logger.logInfo) msg
-  webDistStr <- decodeThrowM (toOsPath webDistPath)
+launchServer
+  @env
+  port
+  webDistPath
+  charts = addNamespace @env "launchServer" $ do
+    $(Logger.logInfo) msg
+    webDistStr <- decodeThrowM (toOsPath webDistPath)
 
-  run portInt (mkApp webDistStr charts)
-  where
-    msg =
-      mconcat
-        [ "Pacer is running in your browser on http://localhost:",
-          showt portInt,
-          " :-)"
-        ]
-    portInt = fromIntegral @Word16 @Int port
+    run portInt (mkApp webDistStr charts)
+    where
+      msg =
+        mconcat
+          [ "Pacer is running in your browser on http://localhost:",
+            showt portInt,
+            " :-)"
+          ]
+      portInt = fromIntegral @Word16 @Int port
 
 data ServerEff :: Effect where
   Run :: Port -> Application -> ServerEff m Unit

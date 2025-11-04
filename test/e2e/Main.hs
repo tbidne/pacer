@@ -91,7 +91,7 @@ runServer = run $ Env.withArgs args Driver.runApp
   where
     args =
       [ "--log-level",
-        "none",
+        "off",
         "chart",
         "-d",
         "examples"

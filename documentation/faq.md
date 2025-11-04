@@ -25,8 +25,8 @@ Pacer defines several quantities that require the user to specify the units. We 
 
 - **distance:** `meters`, `kilometers`, and `miles`. Short versions can also be specified: `m`, `km`, and `mi`. There are also several built-in values:
 
-  - `marathon`
-  - `half-marathon` or `hmarathon`
+  - `marathon`.
+  - `half-marathon` or simply `half`.
 
   Note that these do not take in a unit. The unit will be based on the context, and if it is ambiguous, defaults to `kilometers`.
 

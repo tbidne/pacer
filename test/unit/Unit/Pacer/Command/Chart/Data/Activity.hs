@@ -17,7 +17,7 @@ import Pacer.Command.Chart.Data.Activity.ActivityType
   ( ActivityType (MkActivityType),
   )
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
-import Pacer.Configuration.Env.Types (runLoggerMock)
+import Pacer.Configuration.Env.Types (LogEnv, runLoggerMock, runReaderLogEnvMock)
 import Pacer.Data.Distance
   ( Distance (MkDistance),
     DistanceUnit (Kilometer, Meter, Mile),
@@ -54,7 +54,7 @@ testParseExampleActivitiesJson = testGoldenParams params
             -- relax it to allow relative paths.
             cwd <- runnerEff getCurrentDirectory
 
-            results <- runnerEff (Activity.readActivitiesJson [] $ cwd <</>> path)
+            results <- runnerEff (Activity.readActivitiesJson @LogEnv [] $ cwd <</>> path)
             pure $ pShowBS results
         }
     path = [relfilePathSep|examples/activities.jsonc|]
@@ -86,12 +86,12 @@ testParseBadDateError = testCase desc $ do
         )
         . Json.decodeJsonP (Activity.parseSomeActivityListJson @Double [])
 
-runnerEff :: Eff [PathReader, LoggerNS, Logger, FileReader, IOE] a -> IO a
+runnerEff :: Eff [PathReader, Reader LogEnv, Logger, FileReader, IOE] a -> IO a
 runnerEff =
   runEff
     . runFileReader
     . runLoggerMock
-    . runLoggerNS "unit"
+    . runReaderLogEnvMock
     . runPathReader
 
 testParseSomeActivityRoundtrip :: TestTree

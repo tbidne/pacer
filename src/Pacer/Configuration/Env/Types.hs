@@ -93,9 +93,9 @@ getCachedPath retrieveCache updateCache getPath = do
 
 -- | Logging environment.
 data LogEnv = MkLogEnv
-  { logLevel :: Maybe LogLevel,
-    logNamespace :: Namespace,
-    logVerbosity :: LogVerbosity
+  { level :: Maybe LogLevel,
+    namespace :: Namespace,
+    verbosity :: LogVerbosity
   }
   deriving stock (Eq, Show)
 
@@ -109,7 +109,7 @@ runReaderLogEnvMock :: Eff (Reader LogEnv : es) a -> Eff es a
 runReaderLogEnvMock =
   runReader
     $ MkLogEnv
-      { logLevel = Nothing,
-        logNamespace = mempty,
-        logVerbosity = LogV0
+      { level = Nothing,
+        namespace = mempty,
+        verbosity = LogV0
       }

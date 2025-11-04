@@ -10,6 +10,7 @@ where
 import Data.List qualified as L
 import Data.String (IsString (fromString))
 import Data.Version (showVersion)
+import Effectful.Optparse.Completer qualified as EOC
 import FileSystem.OsString qualified as OsString
 import Options.Applicative
   ( Parser,
@@ -122,6 +123,7 @@ configParser =
       [ OA.short 'c',
         OA.long "config",
         OA.metavar "PATH",
+        OA.completer EOC.compgenCwdPathsCompleter,
         Utils.mkHelp "Path to optional json config. Only affects 'chart' command."
       ]
 

@@ -81,9 +81,9 @@ import Pacer.Configuration.Env.Types
   ( CachedPaths,
     LogEnv
       ( MkLogEnv,
-        logLevel,
-        logNamespace,
-        logVerbosity
+        level,
+        namespace,
+        verbosity
       ),
   )
 import Pacer.Data.Distance (Distance (MkDistance), DistanceUnit (Kilometer))
@@ -399,7 +399,6 @@ type TestEffects =
     ServerEff,
     Terminal,
     Logger,
-    LoggerNS,
     IORefE,
     Reader ChartEnv,
     Reader LogEnv,
@@ -414,7 +413,6 @@ runTestEff env =
     . runReader logEnv
     . runReader env
     . runIORef
-    . runLoggerNS mempty
     . runLoggerMock
     . runTerminalMock
     . runServerEffMock
@@ -425,9 +423,9 @@ runTestEff env =
   where
     logEnv =
       MkLogEnv
-        { logLevel = Nothing,
-          logNamespace = mempty,
-          logVerbosity = mempty
+        { level = Nothing,
+          namespace = mempty,
+          verbosity = mempty
         }
 
 runMockChartIO ::
@@ -458,10 +456,10 @@ runMockChartIO coreEnv m = do
 
 runCreateCharts :: CoreEnv -> ChartParamsArgs -> IO RefsEnv
 runCreateCharts coreEnv params = runMockChartIO coreEnv $ do
-  params' <- ChartParams.evolvePhase params Nothing
+  params' <- ChartParams.evolvePhase @LogEnv params Nothing
   -- call handle since that is the actual entry point. createCharts
   -- merely creates the Charts, for later file writing or serving.
-  Chart.handle Nothing params'
+  Chart.handle @LogEnv Nothing params'
 
 -- NOTE: The Activities.csv file currently warns due to an activity (cycling)
 -- w/ distance 0.0. Previously this did nothing since we were throwing away
@@ -569,16 +567,15 @@ runCreateChartSeqEff :: ChartPaths -> IO Charts
 runCreateChartSeqEff paths =
   runEff
     . runReader logEnv
-    . runLoggerNS mempty
     . runLoggerMock
     . runFileReader
-    $ Chart.createChartSeq Nothing paths
+    $ Chart.createChartSeq @LogEnv Nothing paths
   where
     logEnv =
       MkLogEnv
-        { logLevel = Nothing,
-          logNamespace = mempty,
-          logVerbosity = mempty
+        { level = Nothing,
+          namespace = mempty,
+          verbosity = mempty
         }
 
 updateLabelTests :: TestTree

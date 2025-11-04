@@ -61,5 +61,6 @@ setMany' ::
 setMany' ls s = foldl' (\s' (MkSomeSetter l x) -> set' l x s') s ls
 
 -- | Detects if an error concerns non-positivity. Crude, but it works.
+-- Note that this message comes from smart-math.
 isNonPosError :: Text -> Bool
-isNonPosError = T.isInfixOf "non-positive"
+isNonPosError = T.isInfixOf "Received value <= zero"

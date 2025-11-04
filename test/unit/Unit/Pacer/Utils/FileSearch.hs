@@ -14,7 +14,7 @@ import FileSystem.OsPath (unsafeEncode)
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Pacer.Class.FromAlt (FromAlt)
-import Pacer.Configuration.Env.Types (LogEnv (MkLogEnv))
+import Pacer.Configuration.Env.Types (LogEnv (MkLogEnv), runReaderLogEnvMock)
 import Pacer.Utils.FileSearch
   ( FileAliases (MkFileAliases),
     FileSearch (SearchFileAliases, SearchFileInfix),
@@ -471,16 +471,18 @@ runFileSearch fileSearch = do
   results <-
     run
       $ FileSearch.resolveFilePath
+        @_
+        @LogEnv
         "runFileSearch_test"
         fileSearch
-        [FileSearch.findDirectoryPath $ Just fileSearchDir]
+        [FileSearch.findDirectoryPath @_ @LogEnv $ Just fileSearchDir]
 
   pure $ k <$> results
   where
     run =
       runEff
         . runLoggerMock
-        . runLoggerNS ""
+        . runReaderLogEnvMock
         . runPathReader
         . runReader logEnv
 

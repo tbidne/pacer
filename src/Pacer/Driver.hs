@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -25,7 +26,7 @@ import Control.Exception.Annotation.Utils qualified as Ex.Ann.Utils
 import Data.Set qualified as Set
 import Effectful.Logger.Dynamic (LogLevel (LevelInfo), Logger (LoggerLog))
 import Effectful.Logger.Dynamic qualified as Logger
-import Effectful.LoggerNS.Static
+import Effectful.Logger.Namespace
   ( LocStrategy (LocNone, LocPartial),
     LogFormatter
       ( MkLogFormatter,
@@ -35,7 +36,7 @@ import Effectful.LoggerNS.Static
         timezone
       ),
   )
-import Effectful.LoggerNS.Static qualified as LoggerNS
+import Effectful.Logger.Namespace qualified as LoggerNS
 import Effectful.Terminal.Dynamic (putBinary)
 import FileSystem.Path qualified as Path
 import Pacer.Command
@@ -54,7 +55,7 @@ import Pacer.Configuration.Config (ConfigWithPath (MkConfigWithPath))
 import Pacer.Configuration.Env qualified as Env
 import Pacer.Configuration.Env.Types
   ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
-    LogEnv (MkLogEnv, logLevel, logNamespace, logVerbosity),
+    LogEnv (MkLogEnv, level, namespace, verbosity),
   )
 import Pacer.Configuration.Logging
   ( LogLevelParam (LogNone, LogSome),
@@ -99,11 +100,11 @@ runCommand ::
   Env ->
   Eff es Unit
 runCommand (cmd, mConfig, cachedPaths, logEnv) = runner $ logAndRethrow $ do
-  command <- Command.evolvePhase cmd mConfig
+  command <- Command.evolvePhase @LogEnv cmd mConfig
   case command of
     Chart params -> do
       let mChartConfig = preview (_Just % #config % #chartConfig % _Just) mConfig
-      Chart.handle mChartConfig params
+      Chart.handle @LogEnv mChartConfig params
     Convert params -> Convert.handle params
     Derive params -> Derive.handle params
     Scale params -> Scale.handle params
@@ -111,7 +112,6 @@ runCommand (cmd, mConfig, cachedPaths, logEnv) = runner $ logAndRethrow $ do
     runner =
       evalState cachedPaths
         . runReader logEnv
-        . runLoggerNS "main"
         . runLogger
 
     logAndRethrow m =
@@ -249,6 +249,7 @@ getEnv = do
         runState cachedPaths
           $ Utils.FileSearch.resolveFilePath
             @Maybe
+            @LogEnv
             "config"
             configSearchFiles
             [ -- Unlike the other files, we do _not_ search the data directory,
@@ -257,8 +258,8 @@ getEnv = do
               -- should be wholly independent of the chart command's arguments,
               -- hence it cannot rely on data directory.
               Utils.FileSearch.findFilePath (args ^. #configPath),
-              Utils.FileSearch.findCurrentDirectoryPath,
-              Utils.FileSearch.findXdgPath
+              Utils.FileSearch.findCurrentDirectoryPath @_ @LogEnv,
+              Utils.FileSearch.findXdgPath @_ @LogEnv
             ]
 
       mConfigWithPath <- case mPath of
@@ -274,20 +275,21 @@ getEnv = do
     -- 2. Non-chart command, skip config.
     _ -> pure (mempty, Nothing)
 
-  let logEnv = Env.mkLogEnv args (mConfig <&> view #config)
+  let logEnv =
+        set' #namespace "main"
+          $ Env.mkLogEnv args (mConfig <&> view #config)
 
   pure (args ^. #command, mConfig, cachedPaths, logEnv)
   where
-    configRunner cfgLogLvl logVerbosity =
-      runReader (configLogEnv cfgLogLvl logVerbosity)
-        . runLoggerNS "config"
+    configRunner cfgLogLvl verbosity =
+      runReader (configLogEnv cfgLogLvl verbosity)
         . runLogger
 
-    configLogEnv logLevel logVerbosity =
+    configLogEnv level verbosity =
       MkLogEnv
-        { logLevel,
-          logNamespace = mempty,
-          logVerbosity
+        { level,
+          namespace = "config",
+          verbosity
         }
 
     configSearchFiles = SearchFileAliases configAliases
@@ -304,7 +306,6 @@ getEnv = do
 runLogger ::
   ( HasCallStack,
     Concurrent :> es,
-    LoggerNS :> es,
     Reader LogEnv :> es,
     Terminal :> es,
     Time :> es
@@ -314,16 +315,16 @@ runLogger ::
 runLogger = interpret_ $ \case
   LoggerLog loc _logSrc lvl msg -> do
     logEnv <- ask @LogEnv
-    mLogLevel <- asks @LogEnv (view #logLevel)
+    mLogLevel <- asks @LogEnv (view #level)
     case mLogLevel of
       Nothing -> pure ()
-      Just logLevel -> do
-        Logger.guardLevel logLevel lvl $ do
-          let locStrategy = case logEnv ^. #logVerbosity of
+      Just level -> do
+        Logger.guardLevel level lvl $ do
+          let locStrategy = case logEnv ^. #verbosity of
                 LogV0 -> LocNone
                 LogV1 -> LocPartial loc
 
-          formatted <- LoggerNS.formatLog (fmt locStrategy) lvl msg
+          formatted <- LoggerNS.formatLog @LogEnv (fmt locStrategy) lvl msg
           putBinary $ LoggerNS.logStrToBs formatted
     where
       fmt locStrategy =

@@ -104,7 +104,7 @@ testProp name desc = testPropertyNamed name desc . property
 -- | 'testProp' that only runs a single test. Used for when we'd really want
 -- HUnit's testCase, but with a better diff.
 testProp1 :: TestName -> PropertyName -> PropertyT IO Unit -> TestTree
-testProp1 name desc = testPropN 1 name desc
+testProp1 = testPropN 1
 
 -- | If a limit option exists (i.e. either cli --hedgehog-tests or manually
 -- setting HedgehogTestLimit), then we take the minimum of limit and the

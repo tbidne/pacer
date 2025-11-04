@@ -95,8 +95,8 @@ instance (AMonoid a, Ord a, Parser a, Show a) => Parser (Positive a) where
   parser = do
     d <- parser
     case mkPositive d of
-      Nothing -> fail $ "Parsed non-positive: " ++ show d
-      Just x -> pure x
+      Left err -> fail err
+      Right x -> pure x
 
 instance Parser Day where
   parser = do

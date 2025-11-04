@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -533,16 +534,15 @@ type ParseAcc =
 -- 3. Other individual activity errors are a non-fatal error.
 -- 2. Overlaps are a fatal error.
 readActivitiesJson ::
-  forall es.
+  forall env k es.
   ( HasCallStack,
     FileReader :> es,
-    Logger :> es,
-    LoggerNS :> es
+    LoggerNS env k es
   ) =>
   List (FilterExpr Double) ->
   Path Abs File ->
   Eff es (SomeActivities Double)
-readActivitiesJson globalFilters activitiesPath = addNamespace ns $ do
+readActivitiesJson globalFilters activitiesPath = addNamespace @env ns $ do
   someActivitesList <-
     Json.readDecodeJsonP
       (parseSomeActivityListJson globalFilters)

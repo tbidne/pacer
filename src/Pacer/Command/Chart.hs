@@ -1,6 +1,8 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoScopedTypeVariables #-}
 
 -- | Chart functionality.
 module Pacer.Command.Chart
@@ -54,11 +56,11 @@ import System.OsPath qualified as OsPath
 
 -- | Handles chart command.
 handle ::
+  forall env k es.
   ( HasCallStack,
     FileReader :> es,
     FileWriter :> es,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     PathWriter :> es,
     Reader LogEnv :> es,
@@ -67,8 +69,8 @@ handle ::
   Maybe ChartConfig ->
   ChartParamsFinal ->
   Eff es Unit
-handle mChartConfig params = do
-  charts <- createCharts mChartConfig params
+handle @env mChartConfig params = do
+  charts <- createCharts @env mChartConfig params
 
   if params ^. #json
     then do
@@ -78,27 +80,28 @@ handle mChartConfig params = do
 
       -- params.json is active, so stop after json generation
       let jsonPath = params ^. #buildDir <</>> jsonName
-      createChartsJsonFile charts jsonPath
+      createChartsJsonFile @env charts jsonPath
     else do
       webDir <- WPaths.getWebPath
-      Web.ensureWebDirExists webDir (params ^. #cleanInstall)
+      Web.ensureWebDirExists @env webDir (params ^. #cleanInstall)
 
       Server.launchServer
+        @env
         (params ^. #port)
         (webDir <</>> [reldir|dist|])
         charts
 
 createCharts ::
+  forall env k es.
   ( HasCallStack,
     FileReader :> es,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     Reader LogEnv :> es
   ) =>
   Maybe ChartConfig ->
   ChartParamsFinal ->
   Eff es Charts
-createCharts mChartConfig params = addNamespace "createCharts" $ do
+createCharts @env mChartConfig params = addNamespace @env "createCharts" $ do
   $(Logger.logInfo)
     $ "Using chart-requests: "
     <> Utils.Show.showtPath (params ^. #chartRequestsPath)
@@ -110,7 +113,7 @@ createCharts mChartConfig params = addNamespace "createCharts" $ do
     Just p ->
       $(Logger.logInfo) $ "Using activity-labels: " <> Utils.Show.showtPath p
 
-  createChartSeq mChartConfig chartPaths
+  createChartSeq @env mChartConfig chartPaths
   where
     chartPaths =
       ( params ^. #chartRequestsPath,
@@ -121,18 +124,17 @@ createCharts mChartConfig params = addNamespace "createCharts" $ do
 -- | Given 'ChartParamsFinal', generates a json-encoded array of charts, and
 -- writes the file to the given location.
 createChartsJsonFile ::
-  forall es.
+  forall env k es.
   ( HasCallStack,
     FileWriter :> es,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathWriter :> es
   ) =>
   Charts ->
   Path Abs File ->
   Eff es Unit
-createChartsJsonFile charts outJson =
-  addNamespace "createChartsJsonFile" $ do
+createChartsJsonFile @env charts outJson =
+  addNamespace @env "createChartsJsonFile" $ do
     let bs = Json.encodePretty charts
         (dir, _) = OsPath.splitFileName outJsonOsPath
 
@@ -148,31 +150,29 @@ createChartsJsonFile charts outJson =
 -- | Given file paths to activities and chart requests, generates a sequence of
 -- charts.
 createChartSeq ::
-  forall es.
+  forall env k es.
   ( HasCallStack,
     FileReader :> es,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     Reader LogEnv :> es
   ) =>
   Maybe ChartConfig ->
   ChartPaths ->
   Eff es Charts
-createChartSeq mChartConfig chartPaths = do
-  (chartRequests, activitiesWithLabels) <- readChartInputs chartPaths
+createChartSeq @env mChartConfig chartPaths = do
+  (chartRequests, activitiesWithLabels) <- readChartInputs @env chartPaths
   throwErr =<< Chart.mkCharts mChartConfig activitiesWithLabels chartRequests
 
 -- | Given file paths to activities and chart requests, reads the inputs.
 readChartInputs ::
-  forall es.
+  forall env k es.
   ( HasCallStack,
     FileReader :> es,
-    Logger :> es,
-    LoggerNS :> es
+    LoggerNS env k es
   ) =>
   ChartPaths ->
   Eff es (Tuple2 (ChartRequests Double) (SomeActivities Double))
-readChartInputs chartPaths = addNamespace "readChartInputs" $ do
+readChartInputs @env @_ @es chartPaths = addNamespace @env "readChartInputs" $ do
   chartRequests <-
     Json.readDecodeJson
       @(ChartRequests Double)
@@ -235,14 +235,14 @@ readChartInputs chartPaths = addNamespace "readChartInputs" $ do
       Path Abs File ->
       Eff es (SomeActivities Double)
     readActivities mInputDistUnit globalFilters activitiesPath =
-      Garmin.getActivitiesType activitiesPath >>= \case
+      Garmin.getActivitiesType @es activitiesPath >>= \case
         ActivitiesDefault ->
-          Activity.readActivitiesJson globalFilters activitiesPath
+          Activity.readActivitiesJson @env globalFilters activitiesPath
         ActivitiesGarmin -> do
           inputDistUnit <- case mInputDistUnit of
             Nothing -> throwM GarminUnitRequired
             Just du -> pure du
-          Garmin.readActivitiesCsv inputDistUnit globalFilters activitiesPath
+          Garmin.readActivitiesCsv @env inputDistUnit globalFilters activitiesPath
 
 type ChartPaths =
   Tuple3

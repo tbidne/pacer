@@ -352,7 +352,7 @@ distanceParser = do
   asum
     [ MPC.string "marathon" $> DistParseMarathon,
       MPC.string "half-marathon" $> DistParseHalfMarathon,
-      MPC.string "hmarathon" $> DistParseHalfMarathon,
+      MPC.string "half" $> DistParseHalfMarathon,
       DistParseNumeric <$> parser <?> "digits_unit"
     ]
 

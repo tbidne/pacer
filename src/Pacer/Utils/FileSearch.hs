@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -129,10 +130,9 @@ makeFieldLabelsNoPrefix ''MatchResult
 -- search strategies. The strategies are tried in order, returning the
 -- first non-empty, per 'FromAlt'.
 resolveFilePath ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
-    HasCallStack,
-    LoggerNS :> es
+    LoggerNS env k es
   ) =>
   -- | Text description of what we are trying to find. Used for logging.
   Text ->
@@ -142,7 +142,7 @@ resolveFilePath ::
   List (FileSearchStrategy f es) ->
   Eff es (f (Path Abs File))
 resolveFilePath desc fileNames strategies =
-  addNamespace "resolveFilePath" $ addNamespace desc $ do
+  addNamespace @env "resolveFilePath" $ addNamespace @env desc $ do
     (fold strategies ^. #unFileSearchStrategy) fileNames
 
 -- | General exception for when a file at an expected path does not exist.
@@ -161,20 +161,19 @@ instance Exception FileNotFoundE where
 
 -- | 'findDirectoryPath' specialized to the current directory.
 findCurrentDirectoryPath ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     State CachedPaths :> es
   ) =>
   FileSearchStrategy f es
 findCurrentDirectoryPath =
-  MkFileSearchStrategy $ \fileNames -> addNamespace "findCurrentDirectoryPath" $ do
+  MkFileSearchStrategy $ \fileNames -> addNamespace @env "findCurrentDirectoryPath" $ do
     dir <- getCachedCurrentDirectory
-    (findDirectoryPath (Just $ toOsPath dir) ^. #unFileSearchStrategy) fileNames
+    (findDirectoryPath @_ @env (Just $ toOsPath dir) ^. #unFileSearchStrategy) fileNames
 
 -- | If the parameter is not empty, parses to an absolute file(s). Ignores
 -- the parameter to searchFiles.
@@ -202,11 +201,10 @@ findFilePath mFiles = MkFileSearchStrategy $ \_ -> for mFiles $ \f -> do
 
 -- | Searches for the files in the given directory. Otherwise returns empty.
 findDirectoryPath ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es
   ) =>
@@ -214,27 +212,27 @@ findDirectoryPath ::
   Maybe OsPath ->
   FileSearchStrategy f es
 findDirectoryPath Nothing = MkFileSearchStrategy $ \_ -> pure empty
-findDirectoryPath (Just dir) = MkFileSearchStrategy $ \fileNames -> addNamespace "findDirectoryPath" $ do
+findDirectoryPath (Just dir) = MkFileSearchStrategy $ \fileNames -> addNamespace @env "findDirectoryPath" $ do
   $(Logger.logDebug) $ "Searching directory: " <> Show.showtOsPath dir
-  parseCanonicalAbsDir dir >>= directorySearch fileNames DirNotExistsFail
+  parseCanonicalAbsDir dir >>= directorySearch @_ @env fileNames DirNotExistsFail
 
 -- | Searches for the given file in the xdg directory.
 findXdgPath ::
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     State CachedPaths :> es
   ) =>
   FileSearchStrategy f es
-findXdgPath = MkFileSearchStrategy $ \fileNames -> addNamespace "findXdgPath" $ do
+findXdgPath = MkFileSearchStrategy $ \fileNames -> addNamespace @env "findXdgPath" $ do
   -- 3. Fallback to xdg
   xdgDir <- getCachedXdgConfigPath
   $(Logger.logDebug) $ "Searching xdg: " <> Show.showtPath xdgDir
 
-  directorySearch fileNames DirNotExistsOk xdgDir
+  directorySearch @_ @env fileNames DirNotExistsOk xdgDir
 
 -- | Exception for a directory not existing.
 newtype DirNotFoundE = MkDirNotFoundE OsPath
@@ -261,11 +259,10 @@ data DirNotExistsStrategy
 -- In other words, depending on choice of type variable @f@, can return
 -- multiple results ('List') or a single result ('Maybe').
 directorySearch ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es
   ) =>
@@ -290,8 +287,8 @@ directorySearch fileNames dner dataDir = do
     dataDirOsPath = toOsPath dataDir
 
     go :: (HasCallStack) => FileSearch -> Eff es (f (Path Abs File))
-    go (SearchFileAliases aliases) = searchFileAliases dataDir aliases
-    go (SearchFileInfix p exts) = searchFileInfix dataDir p exts
+    go (SearchFileAliases aliases) = searchFileAliases @_ @env dataDir aliases
+    go (SearchFileInfix p exts) = searchFileInfix @_ @env dataDir p exts
 
     msg =
       mconcat
@@ -313,10 +310,9 @@ directorySearch fileNames dner dataDir = do
     (fileNamesList, fileExts) = searchFilesToList fileNames
 
 searchFileInfix ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     HasCallStack,
     PathReader :> es,
     Reader LogEnv :> es
@@ -325,18 +321,17 @@ searchFileInfix ::
   Path Rel File ->
   Set OsPath ->
   Eff es (f (Path Abs File))
-searchFileInfix dataDir pat exts = addNamespace "searchFileInfix" $ do
-  runSearch T.isInfixOf dataDir pat exts
+searchFileInfix dataDir pat exts = addNamespace @env "searchFileInfix" $ do
+  runSearch @_ @env T.isInfixOf dataDir pat exts
 
 -- | Searches for a single file with potentially multiple aliases. Returns
 -- at most one result.
 --
 -- The search is case-insensitive.
 searchFileAliases ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     HasCallStack,
     PathReader :> es,
     Reader LogEnv :> es
@@ -344,21 +339,20 @@ searchFileAliases ::
   Path Abs Dir ->
   FileAliases ->
   Eff es (f (Path Abs File))
-searchFileAliases dataDir (MkFileAliases aliases exts) = addNamespace "searchFileAliases" $ do
+searchFileAliases dataDir (MkFileAliases aliases exts) = addNamespace @env "searchFileAliases" $ do
   go $ toList aliases
   where
     go :: (HasCallStack) => List (Path Rel File) -> Eff es (f (Path Abs File))
     go [] = pure empty
     go (a : as) = (<|>) <$> runSearch' a <*> go as
 
-    runSearch' a = runSearch (==) dataDir a exts
+    runSearch' a = runSearch @_ @env (==) dataDir a exts
 
 runSearch ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es
   ) =>
@@ -373,7 +367,7 @@ runSearch ::
   -- | Extensions to consider.
   Set OsPath ->
   Eff es (f (Path Abs File))
-runSearch compFn dataDir pat exts = addNamespace "runSearch" $ do
+runSearch compFn dataDir pat exts = addNamespace @env "runSearch" $ do
   allFiles <- PR.listDirectory dataDirOsPath
 
   let filesTxt = Show.showMapListInline Show.showtOsPath allFiles
@@ -401,7 +395,7 @@ runSearch compFn dataDir pat exts = addNamespace "runSearch" $ do
       let matchResult = satisfiesPattern' p
 
       logEnv <- ask @LogEnv
-      case (logEnv ^. #logLevel, logEnv ^. #logVerbosity) of
+      case (logEnv ^. #level, logEnv ^. #verbosity) of
         (Just LevelDebug, LogV1) -> do
           $(Logger.logDebug) (matchResult ^. #patternLog)
           $(Logger.logDebug) (matchResult ^. #extensionLog)

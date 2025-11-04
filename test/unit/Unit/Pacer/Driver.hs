@@ -37,7 +37,7 @@ import Pacer.Command.Chart.Params
 import Pacer.Configuration.Config
 import Pacer.Configuration.Env.Types
   ( CachedPaths (MkCachedPaths, currentDirectory, xdgConfigPath),
-    LogEnv (MkLogEnv, logLevel, logNamespace, logVerbosity),
+    LogEnv (MkLogEnv, level, namespace, verbosity),
   )
 import Pacer.Configuration.Phase
 import Pacer.Driver (Env)
@@ -186,9 +186,9 @@ baseChartParams =
 baseLogEnv :: LogEnv
 baseLogEnv =
   MkLogEnv
-    { logLevel = Just LevelInfo,
-      logNamespace = mempty,
-      logVerbosity = mempty
+    { level = Just LevelInfo,
+      namespace = "main",
+      verbosity = mempty
     }
 
 xdgConfigOsPath :: OsPath

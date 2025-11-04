@@ -123,7 +123,12 @@ import Control.Exception as X
   ( Exception (displayException, fromException, toException),
     SomeException,
   )
-import Control.Exception.Utils as X (TextException, throwText, trySync)
+import Control.Exception.Utils as X
+  ( StringException,
+    throwString,
+    throwText,
+    trySync,
+  )
 import Control.Monad as X
   ( Monad ((>>=)),
     forever,
@@ -241,6 +246,7 @@ import Effectful as X
     IOE,
     raise,
     runEff,
+    runPureEff,
     type (:>),
   )
 import Effectful.Concurrent as X (Concurrent, runConcurrent)
@@ -289,11 +295,11 @@ import Effectful.IORef.Static as X
     writeIORef,
   )
 import Effectful.Logger.Dynamic as X (Logger)
-import Effectful.LoggerNS.Static as X
-  ( LoggerNS,
+import Effectful.Logger.Namespace as X
+  ( HasNamespace,
+    LoggerNS,
     Namespace,
     addNamespace,
-    runLoggerNS,
   )
 import Effectful.Optparse.Static as X (Optparse, execParser, runOptparse)
 import Effectful.Reader.Static as X (Reader, ask, asks, local, runReader)
@@ -576,8 +582,8 @@ mkPositiveFail ::
   a ->
   m (Positive a)
 mkPositiveFail x = case mkPositive x of
-  Just y -> pure y
-  Nothing -> fail $ "Received non-positive: " ++ show x
+  Right y -> pure y
+  Left err -> fail err
 
 -- | Convenience function for retrieving the demoted value from a type
 -- parameter.

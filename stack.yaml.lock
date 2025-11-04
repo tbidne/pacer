@@ -5,19 +5,19 @@
 
 packages:
 - completed:
-    hackage: cassava-0.5.4.0@sha256:01774b12f4d255a9722ce515a4465ba1a860b2065330a72aad95e56cfe439c47,4954
-    pantry-tree:
-      sha256: 3dde64d703805b517ef51dd6100066a3cb76053069326548f050c99c4a1016ed
-      size: 1614
-  original:
-    hackage: cassava-0.5.4.0@sha256:01774b12f4d255a9722ce515a4465ba1a860b2065330a72aad95e56cfe439c47,4954
-- completed:
     hackage: env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
     pantry-tree:
       sha256: 8775e6e349155fefc70b1d81394657dd1f2b85865125f7cf8d235c93dd8add89
       size: 419
   original:
     hackage: env-guard-0.2@sha256:4251503bde7549e267bd307f4b293c8c0ac48c6585968108e3e3fc5a3cfbb179,1312
+- completed:
+    hackage: ghc-experimental-9.1201.0@sha256:1cc6bafaa261e3eb262ab4bbb15e3d9127d6c810dbf619dfe43b59644dc00a61,1572
+    pantry-tree:
+      sha256: eba23cd432180f367f9b1a881fc3d2c2ede400ce17926fdc9a5b2722d122c9bd
+      size: 702
+  original:
+    hackage: ghc-experimental-9.1201.0@sha256:1cc6bafaa261e3eb262ab4bbb15e3d9127d6c810dbf619dfe43b59644dc00a61,1572
 - completed:
     hackage: gitrev-typed-0.1@sha256:905b696dec9c52486290cfef2d3156420de83f5b21bfb0821a37822f40ee1568,3783
     pantry-tree:
@@ -26,6 +26,13 @@ packages:
   original:
     hackage: gitrev-typed-0.1@sha256:905b696dec9c52486290cfef2d3156420de83f5b21bfb0821a37822f40ee1568,3783
 - completed:
+    hackage: random-1.2.1.3@sha256:117541ba0a177397a3333f94870f789ef050dca31b0688a19824b2bc401b8823,6237
+    pantry-tree:
+      sha256: 79fdbb95ca2d108acb7b01903dbe288008cecbdc558105b7fdc095bfff7f3e09
+      size: 1528
+  original:
+    hackage: random-1.2.1.3@sha256:117541ba0a177397a3333f94870f789ef050dca31b0688a19824b2bc401b8823,6237
+- completed:
     hackage: regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319
     pantry-tree:
       sha256: f8db3e7edcbd7069d353c90b5f6aea0e880e9ff7c499686de20ceef0c3114374
@@ -33,19 +40,12 @@ packages:
   original:
     hackage: regression-simple-0.2.1@sha256:a6338a5a048db419cde21fb403df9f4df3508145f939350a15b3e0b9d8ee39d7,2319
 - completed:
-    hackage: tasty-bench-fit-0.1.1@sha256:f9f231d793590d5a1a3b1c455004712c7468b6c6953aa129c4961e38dd8a2f9a,1810
+    hackage: tasty-bench-fit-0.1.1@sha256:aa300865236c5d6ef65bef09033a92484f0a91c3902bc29d0e6d02aa3626c4bd,1894
     pantry-tree:
-      sha256: 66ed3b49a663400b7badcf9a3b06bbfaa30313dbc45d5293bc0987de79281de6
+      sha256: 0979ab1d79ed52d9abceab966907b100f19cde91f3976a9d308464c6adcb2379
       size: 559
   original:
-    hackage: tasty-bench-fit-0.1.1@sha256:f9f231d793590d5a1a3b1c455004712c7468b6c6953aa129c4961e38dd8a2f9a,1810
-- completed:
-    hackage: text-display-1.0.0.0@sha256:17d5a404f51ce40ba22327bdc6688fd239f66d0aa056b8d5cb83974d1dc706e5,2772
-    pantry-tree:
-      sha256: d2d3020dabe306b2ddc8a19d3b200d506567870d7614c39c38c2485141425339
-      size: 3364
-  original:
-    hackage: text-display-1.0.0.0@sha256:17d5a404f51ce40ba22327bdc6688fd239f66d0aa056b8d5cb83974d1dc706e5,2772
+    hackage: tasty-bench-fit-0.1.1@sha256:aa300865236c5d6ef65bef09033a92484f0a91c3902bc29d0e6d02aa3626c4bd,1894
 - completed:
     commit: 37ec7127fbd0f591d4539e4bf72a0badd7569181
     git: https://github.com/tbidne/algebra-simple.git
@@ -69,182 +69,169 @@ packages:
     commit: b7ca541cfdd8564bcebe5d38456fe7abf77885b8
     git: https://github.com/tbidne/bounds.git
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: concurrent-effectful
     pantry-tree:
-      sha256: a549bce6ccbe8f9dae501b238d2776ec36f9ca1d9ac9c64ca6bc5437f8808b98
+      sha256: 9a7e92aa1be937fef38894654b26789d75d5ae2aad16960f8cc9a01b64d9d11e
       size: 245
     subdir: lib/concurrent-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/concurrent-effectful
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: effectful-utils
     pantry-tree:
-      sha256: 1b641c74f4d7df3062dd193d6182169e1c408c97206bcf4ce7ba243fd91d3213
+      sha256: 2196859b3784a1f0688ea99ee310f7e91412fe296d93958f01471af96d23639f
       size: 236
     subdir: lib/effectful-utils
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/effectful-utils
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: fs-effectful
     pantry-tree:
-      sha256: 54db17382b9b928ec86e9f9d50dbce48435753a3fb554892b579bb2210405e85
+      sha256: e055dcdc5c7134c74b08220618458f9f9af004d3954ff362ece63ffca12e88d5
       size: 1718
     subdir: lib/fs-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/fs-effectful
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: ioref-effectful
     pantry-tree:
-      sha256: 57036d174f13fb98c5b0ec36332c966d2d51d11799126b6ab82d5a2a85fccee5
+      sha256: e20e4513fa9aea629da9280f7abe133e544e190b79ecebc77ccc90d681e024c6
       size: 235
     subdir: lib/ioref-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/ioref-effectful
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: logger-effectful
     pantry-tree:
-      sha256: 9638224c92770032d0d9bb08f42b028f47922d73546ae61bd5358f988de7f609
-      size: 297
+      sha256: eb3ac899831e16ce07a5d3ac7dd78d5460a3db1bbeeab48ad770eda816079743
+      size: 675
     subdir: lib/logger-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/logger-effectful
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
-    git: https://github.com/tbidne/effectful-libs.git
-    name: logger-ns-effectful
-    pantry-tree:
-      sha256: 2d54e4ec10c38fc5cf85824c65569d633ce19c0e59fe6acab334981a448c0c16
-      size: 446
-    subdir: lib/logger-ns-effectful
-    version: '0.1'
-  original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
-    git: https://github.com/tbidne/effectful-libs.git
-    subdir: lib/logger-ns-effectful
-- completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: optparse-effectful
     pantry-tree:
-      sha256: de75adf6ea69234f3bf78a222ae490e4aa952479210c03cdb49c0adfe586f8cb
-      size: 386
+      sha256: 62752e735cf6d6f4119cc0df08e2f4ab36704b9c2e01ec808e5b6ff5ece3bdcc
+      size: 462
     subdir: lib/optparse-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/optparse-effectful
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: terminal-effectful
     pantry-tree:
-      sha256: 1e7c6ac69addd54468cd2f710803127822b5af1e1cbf91c5539aa087864f0a68
+      sha256: efc6bec8fe913e14c244f33c88452f8736bf822210722024760b45bd9f2d1e09
       size: 315
     subdir: lib/terminal-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/terminal-effectful
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: time-effectful
     pantry-tree:
-      sha256: e5d37176ba06c2315f251541a7adbd1066b6a886716e0482daab86cb1c7d944c
+      sha256: 3049c3f16a62fdc441157f52981c2768ebe55a00d595632f59781d393d3f99f9
       size: 501
     subdir: lib/time-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/time-effectful
 - completed:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     name: typed-process-dynamic-effectful
     pantry-tree:
-      sha256: bf69b8dcd3475b9731bc1e5a256b4b64963266b5324a979c3b8f6bca974219a0
+      sha256: 91258bf928a6f72a3f5b2bfee7956b037f81e6923fb3f0a381d9069fc92cc528
       size: 261
     subdir: lib/typed-process-dynamic-effectful
     version: '0.1'
   original:
-    commit: 0905d55e20da3fc926fa2a8b6c4b5cb120194b2a
+    commit: 326ee75e7705ccaf010941ae698f1c43355d4c1b
     git: https://github.com/tbidne/effectful-libs.git
     subdir: lib/typed-process-dynamic-effectful
 - completed:
-    commit: e28b28ae3bc90a0336abf69eff28369b790f4e13
+    commit: 61a9e06a26adcca70d565105a1508a16022435a2
     git: https://github.com/tbidne/exception-utils.git
     name: exception-utils
     pantry-tree:
-      sha256: 7f2b5295921647e923acf2a01756b3e37b5aef3e0ae4c265f6c2815cde0e76cb
+      sha256: cce91e13bdcc949c46876cd1cd88d7493a1a6bac1228a7bea753b050f52feb43
       size: 1032
     version: '0.1'
   original:
-    commit: e28b28ae3bc90a0336abf69eff28369b790f4e13
+    commit: 61a9e06a26adcca70d565105a1508a16022435a2
     git: https://github.com/tbidne/exception-utils.git
 - completed:
-    commit: 2389f7dbe5b94f65bd22088f4e5a5f6644caaade
+    commit: 26136275027fd827574c5004ebd11b659d7abdab
     git: https://github.com/tbidne/fs-utils.git
     name: fs-utils
     pantry-tree:
-      sha256: b2bec0dc8035648da5118a1619c6b50bb8e903b0f8876e3526a5adcbb702fb38
-      size: 1314
+      sha256: 493e755e1e9ffea4e744b647d1f003809f9d123171ef0583507c99a56b4861d1
+      size: 1316
     version: '0.1'
   original:
-    commit: 2389f7dbe5b94f65bd22088f4e5a5f6644caaade
+    commit: 26136275027fd827574c5004ebd11b659d7abdab
     git: https://github.com/tbidne/fs-utils.git
 - completed:
-    commit: b8d4703fe4d60a0cb1904cb3a0946f89a1324c7b
+    commit: be79249b8909dba64d3b301025d4d684f46ec2a1
     git: https://github.com/tbidne/relative-time.git
     name: relative-time
     pantry-tree:
-      sha256: d9bd7b294dfd36427f506d37205a748da61729fb8dd799eb14b92b9bb28eefad
+      sha256: 04e4e50511bdb6401c80f880702243d2277574fa8abc7ffbaf1bbfd8de78bf29
       size: 783
     version: '0.1'
   original:
-    commit: b8d4703fe4d60a0cb1904cb3a0946f89a1324c7b
+    commit: be79249b8909dba64d3b301025d4d684f46ec2a1
     git: https://github.com/tbidne/relative-time.git
 - completed:
-    commit: acc3d79b82830397979f4be7b45266f5fc056cfb
+    commit: 4e10a4134f825ba825113955bb97be7f7e28ad6e
     git: https://github.com/tbidne/smart-math.git
     name: smart-math
     pantry-tree:
-      sha256: e85c1a0aeb416add116551f6f55965e8f4964a9ddb73df042a3185137e0773ef
-      size: 4882
+      sha256: 1888908c5a0bea7f509727f184ca55ef52ac63850cec0feb9616e15fa0bf88f8
+      size: 4884
     version: '0.1'
   original:
-    commit: acc3d79b82830397979f4be7b45266f5fc056cfb
+    commit: 4e10a4134f825ba825113955bb97be7f7e28ad6e
     git: https://github.com/tbidne/smart-math.git
 snapshots:
 - completed:
-    sha256: f845a23b2f5cf4b08151dea86225506ad057444422830a1b7bc282a73722c06a
-    size: 654474
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/2/18.yaml
-  original: nightly-2025-02-18
+    sha256: aed20a74b586cf692559f427c3b81275ae15accd022f9ed8d237aa821ba767ba
+    size: 705113
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/11/4.yaml
+  original: nightly-2025-11-04

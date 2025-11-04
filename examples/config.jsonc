@@ -2,8 +2,8 @@
 {
   // Optional logging config.
   "log": {
-    // Log level. Can be one of: none, debug, info, warn, error
-    "level": "none",
+    // Log level. Can be one of: debug, info, warn, error, off.
+    "level": "off",
     // Verbosity. Can be 0 or 1.
     "verbosity": "0"
   },

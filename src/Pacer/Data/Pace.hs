@@ -74,8 +74,8 @@ instance (NFData a) => NFData (Pace d a) where
 -- only require elimination.
 instance
   ( k ~ A_Getter,
-    x ~ (Duration a),
-    y ~ (Duration a)
+    x ~ Duration a,
+    y ~ Duration a
   ) =>
   LabelOptic "unPace" k (Pace d a) (Pace d a) x y
   where
@@ -176,7 +176,7 @@ instance
   convertDistance_ :: (PaceDistF e, SingI e) => Pace d a -> Pace e a
   -- Note this is backwards from distance (.% fromBase) . (.* toBase) because
   -- our units are a divisor, not a multiplier (i.e. 4 /km vs. 4 km).
-  convertDistance_ @e = MkPace . (.* fromBase) . (.% toBase) . (view #unPace)
+  convertDistance_ @e = MkPace . (.* fromBase) . (.% toBase) . view #unPace
     where
       toBase = singFactor @_ @d
       fromBase = singFactor @_ @e

@@ -1,7 +1,9 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NoScopedTypeVariables #-}
 
 module Pacer.Command.Chart.Data.Garmin
   ( -- * Types
@@ -84,7 +86,7 @@ parseGarminRow ::
   List (FilterExpr a) ->
   NamedRecord ->
   Parser (Maybe (GarminAct d a))
-parseGarminRow globalFilters r = do
+parseGarminRow @a globalFilters r = do
   activityType <- MkActivityType <$> r .: "Activity Type"
 
   Expr.guardActivityType globalFilters activityType $ do
@@ -95,7 +97,7 @@ parseGarminRow globalFilters r = do
     -- Prefer moving time, but fall back to others as needed.
     let timeFields = ["Moving Time", "Elapsed Time", "Time"]
     duration <-
-      asum1 @NonEmpty $ (\f -> parseDuration =<< r .: f) <$> timeFields
+      asum1 @NonEmpty $ (parseDuration <=< (.:) r) <$> timeFields
 
     ts <- TS.fromLocalTime datetime
 
@@ -137,16 +139,16 @@ parseGarminRow globalFilters r = do
     timeFmt = "%Y-%m-%d %H:%M:%S"
 
 readActivitiesCsv ::
+  forall env k es.
   ( HasCallStack,
     FileReader :> es,
-    Logger :> es,
-    LoggerNS :> es
+    LoggerNS env k es
   ) =>
   DistanceUnit ->
   List (FilterExpr Double) ->
   Path Abs File ->
   Eff es (SomeActivities Double)
-readActivitiesCsv @es inputDistUnit globalFilters csvPath = addNamespace ns $ do
+readActivitiesCsv @env @_ @es inputDistUnit globalFilters csvPath = addNamespace @env ns $ do
   -- 1. Read csv into bytestring.
   bs <- readBinaryFile csvOsPath
 
@@ -204,7 +206,7 @@ readActivitiesCsv @es inputDistUnit globalFilters csvPath = addNamespace ns $ do
       GarminAcc ->
       Records (Maybe (GarminAct d Double)) ->
       Eff es GarminAcc
-    foldGarmin (!idx, posErrs, activitiesList) = \case
+    foldGarmin @d (!idx, posErrs, activitiesList) = \case
       (Nil mErr leftover) -> do
         -- log leftover data
         unless (BSL.null leftover)
@@ -212,7 +214,7 @@ readActivitiesCsv @es inputDistUnit globalFilters csvPath = addNamespace ns $ do
           $ "Csv bytes leftover on line "
           <> showt idx
           <> ": "
-          <> (bsToTxt $ leftover)
+          <> bsToTxt leftover
 
         posErrs' <- case mErr of
           Just err -> handleErr posErrs idx err

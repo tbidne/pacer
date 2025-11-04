@@ -36,12 +36,13 @@ parser =
     $ mconcat
       [ OA.long "log-level",
         OA.metavar logLvlStr,
+        OA.completeWith ["debug", "info", "warn", "error", "off"],
         Utils.mkHelp "Optional log level. Defaults to 'info'."
       ]
 
 parseLogLevel :: (MonadFail m) => Text -> m LogLevelParam
 parseLogLevel = \case
-  "none" -> pure LogNone
+  "off" -> pure LogNone
   "debug" -> pure $ LogSome LevelDebug
   "info" -> pure $ LogSome LevelInfo
   "warn" -> pure $ LogSome LevelWarn
@@ -57,7 +58,7 @@ parseLogLevel = \case
         ]
 
 logLvlStr :: (IsString a) => a
-logLvlStr = "(none | debug | info | warn | error)"
+logLvlStr = "(debug | info | warn | error | off)"
 
 data LogVerbosity
   = LogV0

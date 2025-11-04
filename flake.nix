@@ -80,37 +80,19 @@
         { pkgs, ... }:
         let
           hlib = pkgs.haskell.lib;
-          ghc-version = "ghc9101";
+          ghc-version = "ghc9122";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides =
               final: prev:
               {
+                Cabal-syntax_3_10_3_0 = hlib.doJailbreak prev.Cabal-syntax_3_10_3_0;
+
                 # These tests are flaky.
                 auto-update = hlib.dontCheck prev.auto-update;
                 effectful = hlib.dontCheck prev.effectful;
                 statistics = hlib.dontCheck prev.statistics;
                 tasty-bench-fit = hlib.dontCheck prev.tasty-bench-fit;
                 warp = hlib.dontCheck prev.warp;
-
-                megaparsec = prev.megaparsec_9_7_0;
-                path = hlib.dontCheck prev.path_0_9_6;
-                regression-simple = hlib.doJailbreak prev.regression-simple;
-
-                cassava = (
-                  final.callHackageDirect {
-                    pkg = "cassava";
-                    ver = "0.5.4.0";
-                    sha256 = "sha256-Bmd2NZ59nTX91vP5+MCAmN9YFGgwc33V837pQIetp0w=";
-                  } { }
-                );
-
-                gitrev-typed = (
-                  final.callHackageDirect {
-                    pkg = "gitrev-typed";
-                    ver = "0.1";
-                    sha256 = "sha256-s7LEekR7NLe3CNhD/8uChnh50eGfaArrrtc5hoCtJ1A=";
-                  } { }
-                );
               }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
@@ -126,7 +108,6 @@
                 "fs-effectful"
                 "ioref-effectful"
                 "logger-effectful"
-                "logger-ns-effectful"
                 "optparse-effectful"
                 "terminal-effectful"
                 "time-effectful"
@@ -139,6 +120,10 @@
             inherit pkgs;
             mkDrv = false;
           };
+
+          # Set in ci.yaml and Dockerfiles. To ensure consistency, we should
+          # choose whatever version is in our docker image's repo.
+          # See NOTE: [Alpine and nodejs].
           node = pkgs.nodejs_22;
 
           # Overriding buildNpmPackage just so we can explicitly set the
@@ -182,13 +167,7 @@
                   ];
                 });
 
-              # TODO: Once hlint is back to working with our GHC we can
-              # use nix-hs-utils.mkDevTools ++ webDeps.
-              devTools = [
-                (hlib.dontCheck compiler.cabal-fmt)
-                (hlib.dontCheck compiler.haskell-language-server)
-                pkgs.nixfmt-rfc-style
-              ] ++ webDeps;
+              devTools = nix-hs-utils.mkDevTools compilerPkgs ++ webDeps;
             };
 
           stack-wrapped = pkgs.symlinkJoin {
@@ -241,16 +220,11 @@
 
             lint = nix-hs-utils.mergeApps {
               apps = [
-                # TODO: We require GHC 9.10+ since we need filepath >= 1.5,
-                # but hlint is sadly not compatible yet. Hence it is disabled
-                # for now.
-                #
-                #(nix-hs-utils.lint (compilerPkgs // pkgsMkDrv))
+                (nix-hs-utils.lint (compilerPkgs // pkgsMkDrv))
                 (nix-hs-utils.lint-yaml pkgsMkDrv)
               ];
             };
-
-            #lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
+            lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
           };
         };
       systems = [

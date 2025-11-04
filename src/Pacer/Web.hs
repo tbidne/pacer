@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
@@ -16,10 +17,10 @@ import Pacer.Web.Paths qualified as WPaths
 
 -- | Writes the web directory if it does not exist.
 ensureWebDirExists ::
+  forall env k es.
   ( HasCallStack,
     FileWriter :> es,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     PathWriter :> es
   ) =>
@@ -28,7 +29,7 @@ ensureWebDirExists ::
   Path Abs Dir ->
   Bool ->
   Eff es Unit
-ensureWebDirExists webPath cleanInstall = addNamespace "ensureWebDirExists" $ do
+ensureWebDirExists webPath cleanInstall = addNamespace @env "ensureWebDirExists" $ do
   let webOsPath = toOsPath webPath
 
   exists <- webDirExists webPath

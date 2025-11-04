@@ -9,9 +9,9 @@ import Pacer.Configuration.Config (Config)
 import Pacer.Configuration.Env.Types
   ( LogEnv
       ( MkLogEnv,
-        logLevel,
-        logNamespace,
-        logVerbosity
+        level,
+        namespace,
+        verbosity
       ),
   )
 import Pacer.Configuration.Logging (LogLevelParam (LogNone, LogSome), LogVerbosity)
@@ -20,12 +20,12 @@ import Pacer.Prelude
 mkLogEnv :: Args a -> Maybe Config -> LogEnv
 mkLogEnv args mConfig =
   MkLogEnv
-    { logLevel,
-      logNamespace = mempty,
-      logVerbosity
+    { level,
+      namespace = mempty,
+      verbosity
     }
   where
-    logLevel = case args ^. #logLevel <|> preview logLevelAT mConfig of
+    level = case args ^. #logLevel <|> preview logLevelAT mConfig of
       Nothing -> Just LevelInfo
       Just LogNone -> Nothing
       Just (LogSome l) -> Just l
@@ -33,7 +33,7 @@ mkLogEnv args mConfig =
     logLevelAT :: AffineTraversal' (Maybe Config) LogLevelParam
     logLevelAT = _Just % #logConfig %? #level % _Just
 
-    logVerbosity =
+    verbosity =
       fromMaybe mempty
         $ args
         ^. #logVerbosity

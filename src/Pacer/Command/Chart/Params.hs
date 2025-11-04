@@ -1,7 +1,9 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NoScopedTypeVariables #-}
 
 -- | Chart parameters.
 module Pacer.Command.Chart.Params
@@ -161,9 +163,9 @@ deriving stock instance
 
 -- | Evolve chart params' phase.
 evolvePhase ::
+  forall env k es.
   ( HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     State CachedPaths :> es
@@ -171,9 +173,9 @@ evolvePhase ::
   ChartParamsArgs ->
   Maybe ConfigWithPath ->
   Eff es ChartParamsFinal
-evolvePhase @es params mConfigWithPath = do
+evolvePhase @env @_ @es params mConfigWithPath = do
   (chartRequestsPath, activityLabelsPath, activityPaths) <-
-    getChartInputs params mConfigWithPath
+    getChartInputs @env params mConfigWithPath
 
   -- This is _mostly_ unnecessary, as most logic verifies file existence.
   -- The json config doesn't in all cases though, and we should probably
@@ -218,14 +220,13 @@ evolvePhase @es params mConfigWithPath = do
       pure $ cwdPath <</>> [reldir|build|]
 
     customBuildDir :: Path Abs Dir -> OsPath -> Eff es (Path Abs Dir)
-    customBuildDir absDir unknownDir =
+    customBuildDir absDir =
       handleUnknownPath
         @DirNotFoundE
         Nothing
         absDir
         Path.parseAbsDir
         Path.parseRelDir
-        unknownDir
 
 type ChartInputs =
   Tuple3
@@ -237,10 +238,9 @@ type ChartInputs =
     (NESeq (Path Abs File))
 
 getChartInputs ::
-  forall es.
+  forall env k es.
   ( HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     State CachedPaths :> es
@@ -248,10 +248,11 @@ getChartInputs ::
   ChartParamsArgs ->
   Maybe ConfigWithPath ->
   Eff es ChartInputs
-getChartInputs params mConfigWithPath = do
+getChartInputs @env params mConfigWithPath = do
   Identity chartRequestsPath <-
     resolveRequiredChartInput
       @Maybe
+      @env
       params
       mConfigWithPath
       "chart-requests"
@@ -262,6 +263,7 @@ getChartInputs params mConfigWithPath = do
   activityPaths <-
     resolveRequiredChartInput
       @Seq
+      @env
       params
       mConfigWithPath
       "activities"
@@ -272,6 +274,7 @@ getChartInputs params mConfigWithPath = do
   activityLabelsPath <-
     resolveChartInput
       @Maybe
+      @env
       params
       mConfigWithPath
       "activity-labels"
@@ -284,11 +287,10 @@ getChartInputs params mConfigWithPath = do
 -- | Like 'resolveChartInput', except throws an exception if that path
 -- is not determined. Similarly, does not check actual file existence.
 resolveRequiredChartInput ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     State CachedPaths :> es,
@@ -306,11 +308,11 @@ resolveRequiredChartInput ::
   AffineTraversal' Config (f OsPath) ->
   -- Returned path.
   Eff es (Alt1 f (Path Abs File))
-resolveRequiredChartInput params mConfigWithPath desc fileNames mInputOsPath = do
+resolveRequiredChartInput @_ @env params mConfigWithPath desc fileNames mInputOsPath = do
   resolveChartInput' >=> throwIfMissing'
   where
     resolveChartInput' =
-      resolveChartInput params mConfigWithPath desc fileNames mInputOsPath
+      resolveChartInput @_ @env params mConfigWithPath desc fileNames mInputOsPath
     throwIfMissing' = throwIfMissing params mConfigWithPath fileNames
 
 -- | Uses CLI, (possible) Config, and XDG to resolve a chart input path. Note
@@ -328,11 +330,10 @@ resolveRequiredChartInput params mConfigWithPath desc fileNames mInputOsPath = d
 -- Returns 'empty' (per 'Alternative') if no explicit paths were given and
 -- we do not find any "expected" paths as a fallback.
 resolveChartInput ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     State CachedPaths :> es,
@@ -350,7 +351,7 @@ resolveChartInput ::
   AffineTraversal' Config (f OsPath) ->
   -- Path, if we were given one or found an expected one.
   Eff es (f (Path Abs File))
-resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel = do
+resolveChartInput @_ @env params mConfigWithPath desc fileNames mInputOsPath configSel = do
   -- When resolving a particular chart path, we try, in order:
   --
   -- 1. Cli file paths e.g. --chart-requests.
@@ -359,21 +360,22 @@ resolveChartInput params mConfigWithPath desc fileNames mInputOsPath configSel =
   -- 4. Current directory.
   -- 5. Xdg dir.
   Utils.FileSearch.resolveFilePath
+    @_
+    @env
     desc
     fileNames
     [ Utils.FileSearch.findFilePath mInputOsPath,
-      Utils.FileSearch.findDirectoryPath $ params ^. #dataDir,
-      findConfigPath configSel mConfigWithPath,
-      Utils.FileSearch.findCurrentDirectoryPath,
-      Utils.FileSearch.findXdgPath
+      Utils.FileSearch.findDirectoryPath @_ @env $ params ^. #dataDir,
+      findConfigPath @_ @env configSel mConfigWithPath,
+      Utils.FileSearch.findCurrentDirectoryPath @_ @env,
+      Utils.FileSearch.findXdgPath @_ @env
     ]
 
 findConfigPath ::
-  forall f es.
+  forall f env k es.
   ( FromAlt f,
     HasCallStack,
-    Logger :> es,
-    LoggerNS :> es,
+    LoggerNS env k es,
     PathReader :> es,
     Reader LogEnv :> es,
     Traversable f
@@ -386,8 +388,8 @@ findConfigPath ::
 -- 1. Config does not exist. Nothing to do, just return empty.
 findConfigPath _ Nothing = mempty
 -- 2. Config exists, check it.
-findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNames ->
-  addNamespace "findConfigPath" $ do
+findConfigPath @f @env @_ @es configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNames ->
+  addNamespace @env "findConfigPath" $ do
     case preview (#config % configSel) configWithPath of
       -- 2. Config.paths field exists.
       Just mPath ->
@@ -418,7 +420,7 @@ findConfigPath configSel (Just configWithPath) = MkFileSearchStrategy $ \fileNam
             Path.parseAbsDir
             Path.parseRelDir
             dataDir
-        Utils.FileSearch.directorySearch fileNames DirNotExistsFail configDataDirPath
+        Utils.FileSearch.directorySearch @_ @env fileNames DirNotExistsFail configDataDirPath
       Nothing -> pure empty
 
 chartRequestsSearch :: FileSearch
@@ -432,9 +434,9 @@ chartRequestsSearch =
       ]
     exts =
       Set.fromList
-        $ [ [osp|.json|],
-            [osp|.jsonc|]
-          ]
+        [ [osp|.json|],
+          [osp|.jsonc|]
+        ]
 
 activitiesSearch :: FileSearch
 activitiesSearch = SearchFileInfix [relfile|activities|] exts
@@ -454,9 +456,9 @@ activityLabelsSearch = SearchFileAliases $ MkFileAliases aliases exts
       ]
     exts =
       Set.fromList
-        $ [ [osp|.json|],
-            [osp|.jsonc|]
-          ]
+        [ [osp|.json|],
+          [osp|.jsonc|]
+        ]
 
 -- Handles an unknown (wrt. absolute/relative) path, resolving any
 -- relative paths. Polymorphic over file/dir path.
@@ -468,7 +470,7 @@ handleUnknownPath ::
   -- | Lifts to an exception. If Nothing, we do not test for existence e.g.
   -- the build dir does not have to already exist. For other parts, though,
   -- the paths must exist, hence we throw the exception.
-  (Maybe (Tuple2 (OsPath -> e) (OsPath -> Eff es Bool))) ->
+  Maybe (Tuple2 (OsPath -> e) (OsPath -> Eff es Bool)) ->
   -- Containing dir for relative paths.
   Path Abs Dir ->
   -- Absolute parser.
