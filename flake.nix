@@ -93,6 +93,15 @@
                 statistics = hlib.dontCheck prev.statistics;
                 tasty-bench-fit = hlib.dontCheck prev.tasty-bench-fit;
                 warp = hlib.dontCheck prev.warp;
+
+                # TODO: Would be great to be able to remove this (when it's
+                # the default in nixpkgs) as overriding forces a rebuild of
+                # many packages, hence makes the dev shell slow.
+                fourmolu = hlib.doJailbreak prev.fourmolu;
+                hspec-golden = hlib.doJailbreak prev.hspec-golden;
+                ormolu = hlib.doJailbreak prev.ormolu;
+                optparse-applicative = prev.optparse-applicative_0_19_0_0;
+                stylish-haskell = hlib.doJailbreak prev.stylish-haskell;
               }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"

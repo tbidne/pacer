@@ -28,14 +28,16 @@ import Pacer.Prelude
 -- | Parse chart args.
 parser :: Parser ChartParamsArgs
 parser = do
-  activityLabelsPath <- mActivityLabelsParser
-  activityPaths <- mActivitiesParser
-  buildDir <- mBuildDirPath
-  chartRequestsPath <- mChartRequestsParser
-  cleanInstall <- cleanInstallParser
-  dataDir <- dataDirParser
-  json <- jsonParser
-  port <- portParser
+  ~( activityLabelsPath,
+     activityPaths,
+     chartRequestsPath,
+     dataDir
+     ) <-
+    chartInputsParser
+
+  ~(buildDir, cleanInstall, json) <- miscParser
+
+  port <- serverParser
 
   pure
     $ MkChartParams
@@ -48,6 +50,24 @@ parser = do
         activityPaths,
         port
       }
+  where
+    chartInputsParser =
+      OA.parserOptionGroup "Chart input options:"
+        $ (,,,)
+        <$> mActivityLabelsParser
+        <*> mActivitiesParser
+        <*> mChartRequestsParser
+        <*> dataDirParser
+
+    miscParser =
+      OA.parserOptionGroup "Miscellaneous options:"
+        $ (,,)
+        <$> mBuildDirPath
+        <*> cleanInstallParser
+        <*> jsonParser
+
+    serverParser =
+      OA.parserOptionGroup "Server options:" portParser
 
 mBuildDirPath :: Parser (Maybe OsPath)
 mBuildDirPath =
@@ -81,7 +101,7 @@ mActivitiesParser =
         ]
 
 dataDirParser :: Parser (Maybe OsPath)
-dataDirParser = mOsPathParser (Just 'd') "data" "PATH" helpTxt
+dataDirParser = mOsPathParserNoLine (Just 'd') "data" "PATH" helpTxt
   where
     helpTxt =
       mconcat
@@ -99,20 +119,47 @@ mOsPathParser ::
 mOsPathParser mShort long metavar =
   OA.optional . osPathParser mShort long metavar
 
+mOsPathParserNoLine ::
+  Maybe Char ->
+  String ->
+  String ->
+  String ->
+  Parser (Maybe OsPath)
+mOsPathParserNoLine mShort long metavar =
+  OA.optional . osPathParserNoLine mShort long metavar
+
 osPathParser ::
   Maybe Char ->
   String ->
   String ->
   String ->
   Parser OsPath
-osPathParser mShort long metavar helpTxt = do
+osPathParser mShort long metavar helpTxt =
+  osPathParserHelp mShort long metavar (Utils.mkHelp helpTxt)
+
+osPathParserNoLine ::
+  Maybe Char ->
+  String ->
+  String ->
+  String ->
+  Parser OsPath
+osPathParserNoLine mShort long metavar helpTxt =
+  osPathParserHelp mShort long metavar (Utils.mkHelpNoLine helpTxt)
+
+osPathParserHelp ::
+  Maybe Char ->
+  String ->
+  String ->
+  OA.Mod OA.OptionFields OsPath ->
+  Parser OsPath
+osPathParserHelp mShort long metavar helpOpts = do
   OA.option
     Utils.readOsPath
     ( mconcat
         $ [ OA.long long,
             OA.metavar metavar,
             OA.completer EOC.compgenCwdPathsCompleter,
-            Utils.mkHelp helpTxt
+            helpOpts
           ]
         ++ shortXs
     )
@@ -125,7 +172,7 @@ jsonParser =
     ( mconcat
         [ OA.short 'j',
           OA.long "json",
-          Utils.mkHelp
+          Utils.mkHelpNoLine
             $ mconcat
               [ "If active, stops after generating the intermediate json ",
                 "file. Primarily used for testing."
@@ -151,6 +198,6 @@ portParser =
       ( mconcat
           [ OA.short 'p',
             OA.long "port",
-            Utils.mkHelp "Port upon which the server runs. Defaults to 3000."
+            Utils.mkHelpNoLine "Port upon which the server runs. Defaults to 3000."
           ]
       )

@@ -27,6 +27,7 @@ module Pacer.Configuration.Utils
 
     -- * Misc
     mkHelp,
+    mkHelpNoLine,
     mkMultiHelp,
   )
 where
@@ -270,10 +271,20 @@ mkCommand cmdTxt parser helpTxt = OA.command cmdTxt (OA.info parser helpTxt)
 mkHelp :: String -> Mod f a
 mkHelp s = mkMultiHelp [s]
 
+mkHelpNoLine :: String -> Mod f a
+mkHelpNoLine s = mkMultiHelpNoLine [s]
+
 mkMultiHelp :: List String -> Mod f a
 mkMultiHelp =
   OA.helpDoc
     . fmap (<> Pretty.hardline)
+    . Chunk.unChunk
+    . Chunk.vsepChunks
+    . fmap Chunk.paragraph
+
+mkMultiHelpNoLine :: List String -> Mod f a
+mkMultiHelpNoLine =
+  OA.helpDoc
     . Chunk.unChunk
     . Chunk.vsepChunks
     . fmap Chunk.paragraph
