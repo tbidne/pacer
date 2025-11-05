@@ -5,6 +5,7 @@ LABEL stage=build-stage
 ARG CABAL_PROJ
 ARG CABAL_VERS
 ARG GHC_VERS
+ARG NODE_VERS
 
 RUN mkdir -p /opt/pacer
 ADD . /opt/pacer
@@ -40,7 +41,7 @@ echo "*** Installing node ***"
 apk add --update nodejs npm
 
 node_version=$(node --version)
-if [[ $node_version =~ ^"v22" ]]; then
+if [[ $node_version =~ ^"$NODE_VERS" ]]; then
   echo "*** Installed node: $node_version ***"
 else
   echo "*** Wanted node 22, installed $node_version ***"

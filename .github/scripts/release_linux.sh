@@ -10,6 +10,16 @@ mkdir -p bin
 
 suffix="$PACER_VERS-$arch-linux"
 
+# Maps a string like '22.x' from ci.yaml's env.NODE_VERS to 'v22'
+node_vers=""
+node_rx="([0-9]+).x"
+if [[ $NODE_VERS =~ $node_rx ]]; then
+  node_vers="v${BASH_REMATCH[1]}"
+else
+  echo "Failed parsing node version: $NODE_VERS"
+  exit 1
+fi
+
 docker build \
   -t pacer_build:latest \
   -f "docker/$dir/Dockerfile" \
@@ -17,6 +27,7 @@ docker build \
   --build-arg CABAL_VERS=$CABAL_VERS \
   --build-arg CABAL_PROJ=$CABAL_PROJ \
   --build-arg GHC_VERS=$GHC_VERS \
+  --build-arg NODE_VERS=$node_vers \
   .
 
 cp docker_out/pacer bin/
