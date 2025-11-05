@@ -30,4 +30,4 @@ singFactor ::
   forall k (a :: k) b.
   (Fromℤ b, Units (Demote k), SingI a, SingKind k) =>
   b
-singFactor = baseFactor $ fromSing (sing @a)
+singFactor @_ @a = baseFactor $ fromSing (sing @a)

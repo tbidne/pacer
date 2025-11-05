@@ -64,7 +64,7 @@ handle params = case params ^. #quantity of
     case params ^. #unit of
       Nothing -> putTextLn $ display dist
       Just unit -> case toSing unit of
-        SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
+        SomeSing @_ @e s -> withSingI s $ do
           let dist' = DistU.convertDistance e dist
           putTextLn $ display dist'
   DeriveDuration paceOptUnits dist -> do
@@ -172,7 +172,7 @@ deriveDistance ::
   Pace d a ->
   -- | Distance.
   Distance d a
-deriveDistance duration (MkPace (MkDuration paceDuration)) =
+deriveDistance @_ @a duration (MkPace (MkDuration paceDuration)) =
   MkDistance $ scaleDuration duration
   where
     -- monomorphic on Second so that we have to use toSeconds

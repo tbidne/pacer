@@ -127,7 +127,7 @@ toHrMinSec (MkDuration d) = normalizeTime (h_init, m_init, s_init)
 
     -- h_init := non-normalized hours
     -- frac_h := the decimal remainder, fraction of an hour
-    (h_init :: Word32, frac_h :: Double) = properFraction $ total_seconds / k_hr
+    (h_init, frac_h) = properFraction @Double $ total_seconds / k_hr
 
     -- rem_seconds := total number of seconds from the frac_h remainder,
     -- after multiplying by the hour/second factor.

@@ -164,7 +164,7 @@ displaySummarizedSequences = showFn . summarizeSequences
 -- λ. summarizeSequences [1,2,3,5,8,10,11,14,15,16]
 -- ["1-3","5","8","10-11","14-16"]
 summarizeSequences :: forall a. (Eq a, Num a, Show a) => List a -> List Text
-summarizeSequences = fmap showGroup . groupSequential
+summarizeSequences @a = fmap showGroup . groupSequential
   where
     showGroup :: List a -> Text
     showGroup [] = ""

@@ -117,7 +117,8 @@ instance
   x <= y = x ^. #unPace <= y ^. #unPace
 
 instance (Show a, SingI d) => Show (Pace d a) where
-  showsPrec i (MkPace p) =
+  showsPrec :: forall e. (SingI e) => Int -> Pace e a -> String -> String
+  showsPrec @e i (MkPace p) =
     showParen
       (i >= 11)
       ( showString "MkPace "
@@ -126,7 +127,7 @@ instance (Show a, SingI d) => Show (Pace d a) where
           . showsPrec 11 d
       )
     where
-      d = fromSingI @_ @d
+      d = fromSingI @_ @e
 
 instance
   ( Display a,
@@ -137,14 +138,15 @@ instance
   ) =>
   Display (Pace d a)
   where
-  displayBuilder (MkPace x) =
+  displayBuilder :: forall e. (SingI e) => Pace e a -> TextBuilderLinear
+  displayBuilder @e (MkPace x) =
     mconcat
       [ displayBuilder x,
         " /",
         displayBuilder d
       ]
     where
-      d = fromSingI @_ @d
+      d = fromSingI @_ @e
 
 -------------------------------------------------------------------------------
 --                                   Algebra                                 --
@@ -173,23 +175,25 @@ instance
   type ConvertedDistance (Pace d a) e = Pace e a
   type ToConstraints (Pace d a) e = PaceDistF e
 
-  convertDistance_ :: (PaceDistF e, SingI e) => Pace d a -> Pace e a
+  convertDistance_ :: forall d1 d2. (PaceDistF d2, SingI d1, SingI d2) => Pace d1 a -> Pace d2 a
   -- Note this is backwards from distance (.% fromBase) . (.* toBase) because
   -- our units are a divisor, not a multiplier (i.e. 4 /km vs. 4 km).
-  convertDistance_ @e = MkPace . (.* fromBase) . (.% toBase) . view #unPace
+  convertDistance_ @d1 @d2 = MkPace . (.* fromBase) . (.% toBase) . view #unPace
     where
-      toBase = singFactor @_ @d
-      fromBase = singFactor @_ @e
+      toBase = singFactor @_ @d1
+      fromBase = singFactor @_ @d2
 
 instance (MMonoid a, PaceDistF d, SingI d) => HasDistance (Pace d a) where
   type DistanceVal (Pace d a) = Distance d a
   type HideDistance (Pace d a) = SomePace a
 
-  distanceUnitOf _ = fromSingI @_ @d
+  distanceUnitOf :: (SingI e) => Pace e a -> DistanceUnit
+  distanceUnitOf @e _ = fromSingI @_ @e
 
   distanceOf _ = MkDistance one
 
-  hideDistance = MkSomePace (sing @d)
+  hideDistance :: forall e. (PaceDistF e, SingI e) => Pace e a -> SomePace a
+  hideDistance @e = MkSomePace (sing @e)
 
 -------------------------------------------------------------------------------
 --                                   Parsing                                 --
@@ -341,8 +345,9 @@ instance
   (AMonoid a, Fromℤ a, Ord a, Show a) =>
   Parser (SomePace a)
   where
-  parser = do
-    MkDuration x <- parser @(Duration a)
+  parser :: forall b. (AMonoid b, Fromℤ b, Ord b, Show b) => P.MParser (SomePace b)
+  parser @b = do
+    MkDuration x <- parser @(Duration b)
     MPC.space
     MPC.char '/'
 
@@ -377,7 +382,7 @@ unSomePace (MkSomePace _ (MkPace x)) = x
 
 -- | Hides the distance.
 mkSomePace :: forall d a. (PaceDistF d, SingI d) => Pace d a -> SomePace a
-mkSomePace = MkSomePace (sing @d)
+mkSomePace @d = MkSomePace (sing @d)
 
 applySomePace2 ::
   (Fromℤ a, Ord a, Semifield a, Show a) =>

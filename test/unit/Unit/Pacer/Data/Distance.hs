@@ -222,7 +222,7 @@ testEqualityCases = testCase "Tests expected equality cases" $ do
   notEq @Mile
   where
     notEq :: forall (d :: DistanceUnit). (SingI d) => Assertion
-    notEq = do
+    notEq @d = do
       mkDistanceD @d 10_000 @/=? mkDistanceD 10_000.9
       mkDistanceD @d 10_000 @/=? mkDistanceD 10_001.1
       mkDistanceD @d 10_000 @/=? mkDistanceD 9_999.1

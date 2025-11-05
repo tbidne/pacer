@@ -29,7 +29,7 @@ ensureWebDirExists ::
   Path Abs Dir ->
   Bool ->
   Eff es Unit
-ensureWebDirExists webPath cleanInstall = addNamespace @env "ensureWebDirExists" $ do
+ensureWebDirExists @env webPath cleanInstall = addNamespace @env "ensureWebDirExists" $ do
   let webOsPath = toOsPath webPath
 
   exists <- webDirExists webPath

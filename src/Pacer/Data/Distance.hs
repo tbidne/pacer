@@ -71,15 +71,17 @@ makeFieldLabelsNoPrefix ''Distance
 -------------------------------------------------------------------------------
 
 instance (MetricSpace a, SingI d) => Eq (Distance d a) where
-  x == y = ɛEq ɛ x y
+  (==) :: forall e. (SingI e) => Distance e a -> Distance e a -> Bool
+  (==) @e = ɛEq ɛ
     where
-      ɛ = 1 / singFactor @_ @d
+      ɛ = 1 / singFactor @_ @e
 
 instance (MetricSpace a, Ord a, SingI d) => Ord (Distance d a) where
   dx@(MkDistance x) <= dy@(MkDistance y) = dx == dy || x < y
 
 instance (Show a, SingI d) => Show (Distance d a) where
-  showsPrec i (MkDistance x) =
+  showsPrec :: forall e. (SingI e) => Int -> Distance e a -> String -> String
+  showsPrec @e i (MkDistance x) =
     showParen
       (i >= 11)
       ( showString "MkDistance "
@@ -88,17 +90,18 @@ instance (Show a, SingI d) => Show (Distance d a) where
           . showsPrec 11 d
       )
     where
-      d = fromSingI @_ @d
+      d = fromSingI @_ @e
 
 instance (Display a, SingI d, Toℝ a) => Display (Distance d a) where
-  displayBuilder (MkDistance x) =
+  displayBuilder :: forall e. (SingI e) => Distance e a -> TextBuilderLinear
+  displayBuilder @e (MkDistance x) =
     mconcat
       [ x',
         " ",
         displayBuilder d
       ]
     where
-      d = fromSingI @_ @d
+      d = fromSingI @_ @e
 
       xDouble = toℝ x
       x' = case d of
@@ -135,21 +138,23 @@ instance
   type ConvertedDistance (Distance d a) e = Distance e a
   type ToConstraints (Distance d a) _ = CUnit
 
-  convertDistance_ :: forall e. (SingI e) => Distance d a -> Distance e a
-  convertDistance_ = MkDistance . (.%. fromBase) . (.*. toBase) . view #unDistance
+  convertDistance_ :: forall d1 d2. (SingI d1, SingI d2) => Distance d1 a -> Distance d2 a
+  convertDistance_ @d1 @d2 = MkDistance . (.%. fromBase) . (.*. toBase) . view #unDistance
     where
-      toBase = singFactor @_ @d
-      fromBase = singFactor @_ @e
+      toBase = singFactor @_ @d1
+      fromBase = singFactor @_ @d2
 
 instance (SingI d) => HasDistance (Distance d a) where
   type DistanceVal (Distance d a) = Distance d a
   type HideDistance (Distance d a) = SomeDistance a
 
-  distanceUnitOf _ = fromSingI @_ @d
+  distanceUnitOf :: forall e. (SingI e) => Distance e a -> DistanceUnit
+  distanceUnitOf @e _ = fromSingI @_ @e
 
   distanceOf = id
 
-  hideDistance = MkSomeDistance (sing @d)
+  hideDistance :: forall e. (SingI e) => Distance e a -> SomeDistance a
+  hideDistance @e = MkSomeDistance (sing @e)
 
 -------------------------------------------------------------------------------
 --                                   Parsing                                 --
@@ -205,7 +210,7 @@ liftDistLeft2 ::
   Distance d1 a ->
   Distance d2 a ->
   Distance d1 a
-liftDistLeft2 f x = f x . convertDistance_ @_ @d1
+liftDistLeft2 @d1 f x = f x . convertDistance_ @_ @d1
 
 -------------------------------------------------------------------------------
 --                                SomeDistance                               --
@@ -403,28 +408,28 @@ liftSomeDistLeft2 f (MkSomeDistance sx x) (MkSomeDistance sy y) =
 
 -- | Marathon.
 marathon :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
-marathon = case sing @d of
+marathon @d = case sing @d of
   SMeter -> MkDistance $ fromℚ 42_195
   SKilometer -> MkDistance $ fromℚ 42.195
   SMile -> MkDistance $ fromℚ 26.2188
 
 -- | Half marathon.
 halfMarathon :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
-halfMarathon = case sing @d of
+halfMarathon @d = case sing @d of
   SMeter -> MkDistance $ fromℚ 21_097.5
   SKilometer -> MkDistance $ fromℚ 21.0975
   SMile -> MkDistance $ fromℚ 13.1094
 
 -- | 10 km.
 k_10 :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
-k_10 = case sing @d of
+k_10 @d = case sing @d of
   SMeter -> MkDistance $ fromℚ 10_000
   SKilometer -> MkDistance $ fromℚ 10
   SMile -> MkDistance $ fromℚ 6.21371
 
 -- | 5 km.
 k_5 :: forall d a. (AMonoid a, Fromℚ a, Ord a, Show a, SingI d) => Distance d a
-k_5 = case sing @d of
+k_5 @d = case sing @d of
   SMeter -> MkDistance $ fromℚ 5_000
   SKilometer -> MkDistance $ fromℚ 5
   SMile -> MkDistance $ fromℚ 3.10686

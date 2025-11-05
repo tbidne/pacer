@@ -7,7 +7,6 @@ where
 import Pacer.Command.Scale.Params
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
-    SDistanceUnit,
   )
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Data.Duration qualified as Dur
@@ -28,13 +27,13 @@ handle ::
   ) =>
   ScaleParamsFinal a ->
   Eff es Unit
-handle params = case params ^. #quantity of
+handle @es params = case params ^. #quantity of
   ScaleDistance dist -> do
     let distScaled = dist .* params ^. #factor
     case params ^. #unit of
       Nothing -> putTextLn $ display distScaled
       Just unit -> case toSing unit of
-        SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
+        SomeSing @_ @e s -> withSingI s $ do
           let distScaled' = DistU.convertDistance e distScaled
           putTextLn $ display distScaled'
   ScaleDuration duration -> do

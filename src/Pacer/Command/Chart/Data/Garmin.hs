@@ -3,7 +3,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE NoScopedTypeVariables #-}
 
 module Pacer.Command.Chart.Data.Garmin
   ( -- * Types

@@ -43,6 +43,9 @@ module Pacer.Prelude
     TextBuilder,
     builderToLazyText,
 
+    -- * Text Linear
+    TextBuilderLinear,
+
 #if !MIN_VERSION_base(4, 21, 0)
 
     -- * Bitraversable
@@ -226,6 +229,7 @@ import Data.Singletons as X
 import Data.String as X (IsString, String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
+import Data.Text.Builder.Linear qualified as TBL
 import Data.Text.Display as X (Display (displayBuilder), display)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Lazy qualified as TL
@@ -531,6 +535,8 @@ type TextBuilder = TLB.Builder
 builderToLazyText :: TextBuilder -> TL.Text
 builderToLazyText = TLB.toLazyText
 
+type TextBuilderLinear = TBL.Builder
+
 -- | Placeholder for unwritten code.
 todo :: forall {r :: RuntimeRep} (a :: TYPE r). (HasCallStack) => a
 todo = raise# (errorCallWithCallStackException "Prelude.todo: not yet implemented" ?callStack)
@@ -588,7 +594,7 @@ mkPositiveFail x = case mkPositive x of
 -- | Convenience function for retrieving the demoted value from a type
 -- parameter.
 fromSingI :: forall k (a :: k). (SingI a, SingKind k) => Demote k
-fromSingI = fromSing @k (sing @a)
+fromSingI @k @a = fromSing @k (sing @a)
 
 displayExceptiont :: (Exception e) => e -> Text
 displayExceptiont = packText . displayException

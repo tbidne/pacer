@@ -75,7 +75,7 @@ paceOptUnitsParserHelp ::
   ) =>
   String ->
   Parser (PaceOptUnits a)
-paceOptUnitsParserHelp helpTxt =
+paceOptUnitsParserHelp @a helpTxt =
   OA.option
     read
     ( mconcat

@@ -2,7 +2,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoScopedTypeVariables #-}
 
 -- | Chart functionality.
 module Pacer.Command.Chart

@@ -7,7 +7,6 @@ where
 import Pacer.Command.Convert.Params
 import Pacer.Data.Distance.Units
   ( DistanceUnit (Kilometer, Meter, Mile),
-    SDistanceUnit,
   )
 import Pacer.Data.Distance.Units qualified as DistU
 import Pacer.Exception qualified as PEx
@@ -30,7 +29,7 @@ handle ::
 handle params = case params ^. #quantity of
   Left dist ->
     case toSing unit of
-      SomeSing (s :: SDistanceUnit e) -> withSingI s $ do
+      SomeSing @_ @e s -> withSingI s $ do
         let dist' = DistU.convertDistance e dist
         putTextLn $ display dist'
   Right pace -> case unit of

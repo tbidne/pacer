@@ -71,7 +71,8 @@ data FilterElem p a
   deriving anyclass (NFData)
 
 instance (Display a, Eq a, KnownSymbol s) => Display (FilterElem s a) where
-  displayBuilder = \case
+  displayBuilder :: forall t. (KnownSymbol t) => FilterElem t a -> TextBuilderLinear
+  displayBuilder @t = \case
     FilterElemEq op t ->
       mconcat
         [ symStr,
@@ -89,16 +90,17 @@ instance (Display a, Eq a, KnownSymbol s) => Display (FilterElem s a) where
           displaySet set
         ]
     where
-      symStr = displayBuilder $ symbolVal (Proxy :: Proxy s)
+      symStr = displayBuilder $ symbolVal (Proxy :: Proxy t)
 
 -------------------------------------------------------------------------------
 --                                  Parsing                                  --
 -------------------------------------------------------------------------------
 
 instance (KnownSymbol s, Ord a, Parser a) => Parser (FilterElem s a) where
-  parser = parseFilterElem symStr <?> symStr
+  parser :: forall t. (KnownSymbol t) => MParser (FilterElem t a)
+  parser @t = parseFilterElem symStr <?> symStr
     where
-      symStr = symbolVal (Proxy :: Proxy s)
+      symStr = symbolVal (Proxy :: Proxy t)
 
 parseFilterElem :: (Ord a, Parser a) => String -> MParser (FilterElem s a)
 parseFilterElem symStr = do
@@ -223,7 +225,8 @@ data FilterSet p a
   deriving anyclass (NFData)
 
 instance (Display a, Eq a, KnownSymbol s) => Display (FilterSet s a) where
-  displayBuilder = \case
+  displayBuilder :: forall t. (KnownSymbol t) => FilterSet t a -> Builder
+  displayBuilder @t = \case
     FilterSetHasElem op t ->
       mconcat
         [ symsStrSpc,
@@ -239,7 +242,7 @@ instance (Display a, Eq a, KnownSymbol s) => Display (FilterSet s a) where
           displaySet set
         ]
     where
-      symStr = displayBuilder $ symbolVal (Proxy :: Proxy s)
+      symStr = displayBuilder $ symbolVal (Proxy :: Proxy t)
       symsStrSpc = symStr <> "s "
 
 -------------------------------------------------------------------------------
@@ -247,9 +250,10 @@ instance (Display a, Eq a, KnownSymbol s) => Display (FilterSet s a) where
 -------------------------------------------------------------------------------
 
 instance (KnownSymbol s, Ord a, Parser a) => Parser (FilterSet s a) where
-  parser = parseFilterSet symsStr <?> symsStr
+  parser :: (KnownSymbol t) => MParser (FilterSet t a)
+  parser @t = parseFilterSet symsStr <?> symsStr
     where
-      symStr = symbolVal (Proxy :: Proxy s)
+      symStr = symbolVal (Proxy :: Proxy t)
       symsStr = symStr <> "s"
 
 parseFilterSet :: (Ord a, Parser a) => String -> MParser (FilterSet s a)

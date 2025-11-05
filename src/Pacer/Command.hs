@@ -1,6 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE NoScopedTypeVariables #-}
 
 module Pacer.Command
   ( -- * Type

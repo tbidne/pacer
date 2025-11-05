@@ -157,11 +157,13 @@ instance (SingI dist) => HasDistance (Activity dist a) where
   type DistanceVal (Activity dist a) = Distance dist a
   type HideDistance (Activity dist a) = SomeActivity a
 
-  distanceUnitOf _ = fromSingI @_ @dist
+  distanceUnitOf :: forall e. (SingI e) => Activity e a -> DistanceUnit
+  distanceUnitOf @e _ = fromSingI @_ @e
 
   distanceOf = view #distance
 
-  hideDistance = MkSomeActivity (sing @dist)
+  hideDistance :: (SingI e) => Activity e a -> SomeActivity a
+  hideDistance @e = MkSomeActivity (sing @e)
 
 -------------------------------------------------------------------------------
 --                                    Misc                                   --
@@ -494,7 +496,7 @@ parseSomeActivityListJson ::
   -- | Json value to decode.
   JsonValue ->
   JsonParser (List (ResultDefault (SomeActivity a)))
-parseSomeActivityListJson globalFilters = Json.withObject "SomeActivities" $ \v -> do
+parseSomeActivityListJson @a globalFilters = Json.withObject "SomeActivities" $ \v -> do
   actMErrs <- Json.explicitParseField parseActs v "activities"
 
   let actErrs = foldl' elimNothing [] actMErrs
@@ -542,7 +544,7 @@ readActivitiesJson ::
   List (FilterExpr Double) ->
   Path Abs File ->
   Eff es (SomeActivities Double)
-readActivitiesJson globalFilters activitiesPath = addNamespace @env ns $ do
+readActivitiesJson @env @_ @es globalFilters activitiesPath = addNamespace @env ns $ do
   someActivitesList <-
     Json.readDecodeJsonP
       (parseSomeActivityListJson globalFilters)
@@ -882,7 +884,7 @@ mapAccumSomeActivities ::
   (forall d. Activity d a1 -> Tuple2 (Activity d a2) b) ->
   SomeActivities a1 ->
   Tuple2 (SomeActivities a2) b
-mapAccumSomeActivities f (MkSomeActivities s) = (MkSomeActivities newActivities, result)
+mapAccumSomeActivities @a1 @a2 @b f (MkSomeActivities s) = (MkSomeActivities newActivities, result)
   where
     (newActivities, result) = Set.foldl' g init rest
 

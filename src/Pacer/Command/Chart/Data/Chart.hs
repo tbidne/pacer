@@ -87,7 +87,7 @@ mkCharts ::
   SomeActivities a ->
   ChartRequests a ->
   Eff es (Result CreateChartE Charts)
-mkCharts mConfig activities requests =
+mkCharts @es mConfig activities requests =
   ( toCharts
       <=< ( traverse (mkChart (requests ^. #filters) activities)
               . view #chartRequests

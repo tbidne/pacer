@@ -3,7 +3,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE NoScopedTypeVariables #-}
 
 -- | Chart parameters.
 module Pacer.Command.Chart.Params

@@ -313,7 +313,7 @@ runArgs mIdx args expected = do
   assertBool (unpackText msg) (expected == result)
 
 runException :: forall e. (Exception e) => TestName -> Text -> List String -> TestTree
-runException desc expected args = testCase desc $ do
+runException @e desc expected args = testCase desc $ do
   eFuncEnv <- try @_ @e $ withArgs args $ runFuncIO runApp
   eResult <- secondA (\x -> Ref.readIORef (x ^. #logsRef)) eFuncEnv
 

@@ -145,7 +145,7 @@ data ChartType
 
 instance FromJSON ChartType where
   parseJSON = Json.withObject "ChartType" $ \v -> do
-    n :: Text <- v .: "name"
+    n <- v .: "name"
     case n of
       "default" -> do
         Json.failUnknownFields "ChartType" ["name"] v

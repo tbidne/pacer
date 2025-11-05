@@ -1,6 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE NoScopedTypeVariables #-}
 
 module Pacer.Command.Chart.Data.ChartData
   ( -- * Primary

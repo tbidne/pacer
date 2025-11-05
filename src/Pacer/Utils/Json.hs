@@ -144,7 +144,7 @@ readDecodeJsonP ::
   (Asn.Value -> AsnT.Parser a) ->
   Path Abs File ->
   Eff es a
-readDecodeJsonP p path = do
+readDecodeJsonP @a p path = do
   contents <- readBinaryFile osPath
   throwErr
     $ first toAesonPathE

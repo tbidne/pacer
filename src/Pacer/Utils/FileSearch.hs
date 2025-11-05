@@ -141,7 +141,7 @@ resolveFilePath ::
   -- | Search strategies.
   List (FileSearchStrategy f es) ->
   Eff es (f (Path Abs File))
-resolveFilePath desc fileNames strategies =
+resolveFilePath @_ @env desc fileNames strategies =
   addNamespace @env "resolveFilePath" $ addNamespace @env desc $ do
     (fold strategies ^. #unFileSearchStrategy) fileNames
 
@@ -170,7 +170,7 @@ findCurrentDirectoryPath ::
     State CachedPaths :> es
   ) =>
   FileSearchStrategy f es
-findCurrentDirectoryPath =
+findCurrentDirectoryPath @_ @env =
   MkFileSearchStrategy $ \fileNames -> addNamespace @env "findCurrentDirectoryPath" $ do
     dir <- getCachedCurrentDirectory
     (findDirectoryPath @_ @env (Just $ toOsPath dir) ^. #unFileSearchStrategy) fileNames
@@ -212,7 +212,7 @@ findDirectoryPath ::
   Maybe OsPath ->
   FileSearchStrategy f es
 findDirectoryPath Nothing = MkFileSearchStrategy $ \_ -> pure empty
-findDirectoryPath (Just dir) = MkFileSearchStrategy $ \fileNames -> addNamespace @env "findDirectoryPath" $ do
+findDirectoryPath @_ @env (Just dir) = MkFileSearchStrategy $ \fileNames -> addNamespace @env "findDirectoryPath" $ do
   $(Logger.logDebug) $ "Searching directory: " <> Show.showtOsPath dir
   parseCanonicalAbsDir dir >>= directorySearch @_ @env fileNames DirNotExistsFail
 
@@ -227,7 +227,7 @@ findXdgPath ::
     State CachedPaths :> es
   ) =>
   FileSearchStrategy f es
-findXdgPath = MkFileSearchStrategy $ \fileNames -> addNamespace @env "findXdgPath" $ do
+findXdgPath @_ @env = MkFileSearchStrategy $ \fileNames -> addNamespace @env "findXdgPath" $ do
   -- 3. Fallback to xdg
   xdgDir <- getCachedXdgConfigPath
   $(Logger.logDebug) $ "Searching xdg: " <> Show.showtPath xdgDir
@@ -273,7 +273,7 @@ directorySearch ::
   -- | Data dir to search.
   Path Abs Dir ->
   Eff es (f (Path Abs File))
-directorySearch fileNames dner dataDir = do
+directorySearch @f @env @_ @es fileNames dner dataDir = do
   $(Logger.logDebug) msg
 
   dExists <- PR.doesDirectoryExist dataDirOsPath
@@ -321,7 +321,7 @@ searchFileInfix ::
   Path Rel File ->
   Set OsPath ->
   Eff es (f (Path Abs File))
-searchFileInfix dataDir pat exts = addNamespace @env "searchFileInfix" $ do
+searchFileInfix @_ @env dataDir pat exts = addNamespace @env "searchFileInfix" $ do
   runSearch @_ @env T.isInfixOf dataDir pat exts
 
 -- | Searches for a single file with potentially multiple aliases. Returns
@@ -339,7 +339,7 @@ searchFileAliases ::
   Path Abs Dir ->
   FileAliases ->
   Eff es (f (Path Abs File))
-searchFileAliases dataDir (MkFileAliases aliases exts) = addNamespace @env "searchFileAliases" $ do
+searchFileAliases @f @env @_ @es dataDir (MkFileAliases aliases exts) = addNamespace @env "searchFileAliases" $ do
   go $ toList aliases
   where
     go :: (HasCallStack) => List (Path Rel File) -> Eff es (f (Path Abs File))
@@ -367,7 +367,7 @@ runSearch ::
   -- | Extensions to consider.
   Set OsPath ->
   Eff es (f (Path Abs File))
-runSearch compFn dataDir pat exts = addNamespace @env "runSearch" $ do
+runSearch @_ @env @_ @es compFn dataDir pat exts = addNamespace @env "runSearch" $ do
   allFiles <- PR.listDirectory dataDirOsPath
 
   let filesTxt = Show.showMapListInline Show.showtOsPath allFiles

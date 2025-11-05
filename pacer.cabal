@@ -47,6 +47,7 @@ common common-lang
     NoFieldSelectors
     NoImplicitPrelude
     NoListTuplePuns
+    NoScopedTypeVariables
     OverloadedLabels
     OverloadedStrings
     PatternSynonyms

@@ -204,7 +204,7 @@ parseOrDieM t = do
     Err err -> fail err
 
 parseOrDieM_ :: forall a m. (MonadFail m, Parser a) => Text -> m Unit
-parseOrDieM_ = void . parseOrDieM @a
+parseOrDieM_ @a = void . parseOrDieM @a
 
 hdiff :: (Show a, Show b) => a -> (a -> b -> Bool) -> b -> PropertyT IO Unit
 hdiff = H.diff

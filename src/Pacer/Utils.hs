@@ -21,7 +21,7 @@ import Pacer.Prelude
 type PaceMetersErrMsg = "Meters are disallowed in Pace; use km or mi."
 
 seqGroupBy :: forall a. (a -> a -> Bool) -> Seq a -> Seq (NESeq a)
-seqGroupBy p = go
+seqGroupBy @a p = go
   where
     go :: Seq a -> Seq (NESeq a)
     go Seq.Empty = Seq.Empty
@@ -30,7 +30,7 @@ seqGroupBy p = go
         (ys, zs) = Seq.spanl (p x) xs
 
 neSeqGroupBy :: forall a. (a -> a -> Bool) -> NESeq a -> NESeq (NESeq a)
-neSeqGroupBy p = go
+neSeqGroupBy @a p = go
   where
     go :: NESeq a -> NESeq (NESeq a)
     go (x :<|| xs) = fstGrp :<|| rest
