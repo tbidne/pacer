@@ -89,8 +89,10 @@ library
     Pacer.Command.Chart.Data.Expr
     Pacer.Command.Chart.Data.Expr.Eq
     Pacer.Command.Chart.Data.Expr.Filter
+    Pacer.Command.Chart.Data.Expr.Filter.Elem
+    Pacer.Command.Chart.Data.Expr.Filter.Set
+    Pacer.Command.Chart.Data.Expr.Filter.Utils
     Pacer.Command.Chart.Data.Expr.Ord
-    Pacer.Command.Chart.Data.Expr.Set
     Pacer.Command.Chart.Data.Garmin
     Pacer.Command.Chart.Data.Time.Moment
     Pacer.Command.Chart.Data.Time.Month

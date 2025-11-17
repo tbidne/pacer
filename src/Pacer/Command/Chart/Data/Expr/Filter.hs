@@ -1,14 +1,20 @@
 -- | Provides filter.
 module Pacer.Command.Chart.Data.Expr.Filter
-  ( FilterType (..),
+  ( -- * Types
+    FilterType (..),
+
+    -- * Filters
+    Elem.applyFilterElem,
+    Set.applyFilterSet,
   )
 where
 
 import Pacer.Class.Parser (Parser (parser))
 import Pacer.Command.Chart.Data.Activity.ActivityLabel (Label)
 import Pacer.Command.Chart.Data.Activity.ActivityType (ActivityType)
+import Pacer.Command.Chart.Data.Expr.Filter.Elem qualified as Elem
+import Pacer.Command.Chart.Data.Expr.Filter.Set qualified as Set
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
-import Pacer.Command.Chart.Data.Expr.Set qualified as Set
 import Pacer.Command.Chart.Data.Time.Moment (Moment)
 import Pacer.Data.Distance (SomeDistance)
 import Pacer.Data.Duration (Duration)
@@ -34,7 +40,7 @@ data FilterType a
   | -- | Filter based on pace.
     FilterPace FilterOpOrd (SomePace a)
   | -- | Filter based on type.
-    FilterType (Set.FilterElem "type" ActivityType)
+    FilterType (Elem.FilterElem "type" ActivityType)
   deriving stock (Eq, Generic, Show)
   deriving anyclass (NFData)
 

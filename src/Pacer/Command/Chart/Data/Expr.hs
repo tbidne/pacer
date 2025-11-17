@@ -26,7 +26,7 @@ import Pacer.Class.Parser (MParser, Parser)
 import Pacer.Class.Parser qualified as P
 import Pacer.Command.Chart.Data.Activity.ActivityType (ActivityType)
 import Pacer.Command.Chart.Data.Expr.Filter (FilterType (FilterType))
-import Pacer.Command.Chart.Data.Expr.Set qualified as Set
+import Pacer.Command.Chart.Data.Expr.Filter qualified as Filter
 import Pacer.Prelude
 import Pacer.Utils.Json (FromJSON (parseJSON))
 import Pacer.Utils.Json qualified as Json
@@ -314,7 +314,7 @@ guardMActivityType globalFilters mAType m = do
   where
     filterType (FilterType fe) = case mAType of
       Nothing -> False
-      Just atype -> Set.applyFilterElem atype fe
+      Just atype -> Filter.applyFilterElem atype fe
     filterType _ = True
 
 -- | Runs the given action iff the type is not filtered out.

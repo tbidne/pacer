@@ -54,9 +54,9 @@ import Pacer.Command.Chart.Data.Expr.Filter
         FilterType
       ),
   )
+import Pacer.Command.Chart.Data.Expr.Filter qualified as Filter
 import Pacer.Command.Chart.Data.Expr.Ord (FilterOpOrd)
 import Pacer.Command.Chart.Data.Expr.Ord qualified as Ord
-import Pacer.Command.Chart.Data.Expr.Set qualified as ESet
 import Pacer.Command.Chart.Data.Time.Moment (Moment (MomentTimestamp))
 import Pacer.Command.Chart.Data.Time.Timestamp (Timestamp)
 import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
@@ -552,7 +552,7 @@ filterActivities @a rs filters =
 
     applyFilter :: SomeActivityKey a -> FilterType a -> Bool
     applyFilter srk (FilterLabel lblSet) =
-      ESet.applyFilterSet (srk ^. (#unSomeActivityKey % #labels)) lblSet
+      Filter.applyFilterSet (srk ^. (#unSomeActivityKey % #labels)) lblSet
     applyFilter srk (FilterDate op m) =
       applyDate (srk ^. #unSomeActivityKey) op m
     applyFilter srk (FilterDistance op d) =
@@ -563,7 +563,7 @@ filterActivities @a rs filters =
       applyPace (srk ^. #unSomeActivityKey) op p
     applyFilter srk (FilterType fe) = case srk ^. #unSomeActivityKey of
       MkSomeActivity _ r -> case r ^. #atype of
-        Just atype -> ESet.applyFilterElem atype fe
+        Just atype -> Filter.applyFilterElem atype fe
         Nothing -> False
 
     applyDate :: SomeActivity a -> FilterOpOrd -> Moment -> Bool
