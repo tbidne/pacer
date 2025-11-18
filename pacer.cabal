@@ -153,6 +153,7 @@ library
     , ghc-experimental      >=0.1.0.0   && <9.1203
     , gitrev-typed          ^>=0.1
     , hashable              >=1.4.7.0   && <1.6
+    , http-types            ^>=0.12
     , ioref-effectful       ^>=0.1
     , logger-effectful      ^>=0.1
     , megaparsec            ^>=9.7.0
@@ -176,6 +177,7 @@ library
     , time                  >=1.9.3     && <1.16
     , time-effectful        ^>=0.1
     , unordered-containers  ^>=0.2.20
+    , wai                   ^>=3.2.0
     , warp                  ^>=3.4.0
 
   hs-source-dirs:  src

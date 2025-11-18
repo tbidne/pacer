@@ -104,6 +104,6 @@ runServer = run $ Env.withArgs args Driver.runApp
         . runOptparse
         . runPathReader
         . runPathWriter
-        . Server.runServerEff
+        . Server.runServer
         . runTerminal
         . runTime

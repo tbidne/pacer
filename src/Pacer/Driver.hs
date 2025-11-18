@@ -46,7 +46,7 @@ import Pacer.Command
 import Pacer.Command qualified as Command
 import Pacer.Command.Chart qualified as Chart
 import Pacer.Command.Chart.Data.Activity (ActivityDatetimeOverlapE)
-import Pacer.Command.Chart.Server (ServerEff)
+import Pacer.Command.Chart.Server (Server)
 import Pacer.Command.Convert qualified as Convert
 import Pacer.Command.Derive qualified as Derive
 import Pacer.Command.Scale qualified as Scale
@@ -79,7 +79,7 @@ runApp ::
     Optparse :> es,
     PathReader :> es,
     PathWriter :> es,
-    ServerEff :> es,
+    Server :> es,
     Terminal :> es,
     Time :> es
   ) =>
@@ -93,7 +93,7 @@ runCommand ::
     FileWriter :> es,
     PathReader :> es,
     PathWriter :> es,
-    ServerEff :> es,
+    Server :> es,
     Terminal :> es,
     Time :> es
   ) =>

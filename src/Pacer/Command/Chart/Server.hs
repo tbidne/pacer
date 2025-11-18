@@ -8,26 +8,38 @@ module Pacer.Command.Chart.Server
   ( launchServer,
 
     -- * Effect
-    ServerEff (..),
+    Server (..),
     run,
 
     -- ** Handlers
-    runServerEff,
-    runServerEffMock,
+    runServer,
+    runServerMock,
   )
 where
 
+import Effectful
+  ( Limit (Unlimited),
+    Persistence (Ephemeral),
+    UnliftStrategy (ConcUnlift),
+  )
+import Effectful.Dispatch.Dynamic (localSeqUnlift, localSeqUnliftIO, localUnliftIO)
+import Effectful.Dispatch.Static (unsafeEff_)
 import Effectful.Logger.Dynamic qualified as Logger
 import FileSystem.OsPath (decodeThrowM)
+import Network.HTTP.Types.Status qualified as HTTP.Status
+import Network.Wai (Request, Response, ResponseReceived)
+import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp (Port)
 import Network.Wai.Handler.Warp qualified as Warp
 import Pacer.Command.Chart.Data.Chart (Charts)
 import Pacer.Prelude
 import Servant
-  ( Application,
-    Get,
+  ( Get,
+    Handler,
+    HasServer,
     JSON,
     Raw,
+    ServerT,
     (:<|>) ((:<|>)),
   )
 import Servant qualified
@@ -48,12 +60,21 @@ type WebApi = "api" ::> Api :<|> Raw
 -- | staticDir should be an absolute path to the xdg_cache/web/dist directory.
 -- Morally it is @Path Abs Dir@, though we resort to FilePath since that's
 -- what serveDirectoryFileServer uses, and we don't want to deserialize here.
-mkApp :: FilePath -> Charts -> Application
-mkApp staticDir charts = Servant.serve webApi server
+mkApp ::
+  ( HasCallStack,
+    Server :> es
+  ) =>
+  FilePath ->
+  Charts ->
+  Request ->
+  (Response -> Eff es ResponseReceived) ->
+  Eff es ResponseReceived
+mkApp staticDir charts = serve webApi serveApi
   where
-    server = serveApi :<|> Servant.serveDirectoryFileServer staticDir
-
-    serveApi = pure "Pacer is up!" :<|> pure charts
+    serveApi :: ServerT WebApi (Eff es)
+    serveApi =
+      (pure "Pacer is up!" :<|> pure charts)
+        :<|> Servant.serveDirectoryFileServer staticDir
 
     webApi :: Proxy WebApi
     webApi = Proxy
@@ -62,7 +83,7 @@ launchServer ::
   forall env k es.
   ( HasCallStack,
     LoggerNS env k es,
-    ServerEff :> es
+    Server :> es
   ) =>
   Word16 ->
   Path Abs Dir ->
@@ -86,18 +107,102 @@ launchServer
           ]
       portInt = fromIntegral @Word16 @Int port
 
-data ServerEff :: Effect where
-  Run :: Port -> Application -> ServerEff m Unit
+-- | Effect for Servant. The type:
+--
+-- @
+--   Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived)
+-- @
+--
+-- is known as 'Application' in Servant, but we expand the alias here
+-- for clarify, and lift to Eff.
+data Server :: Effect where
+  Run ::
+    Port ->
+    ( Request ->
+      (Response -> m ResponseReceived) ->
+      m ResponseReceived
+    ) ->
+    Server m Unit
+  Serve ::
+    (HasServer api []) =>
+    Proxy api ->
+    ServerT api m ->
+    Request ->
+    (Response -> m ResponseReceived) ->
+    Server m ResponseReceived
 
-type instance DispatchOf ServerEff = Dynamic
+type instance DispatchOf Server = Dynamic
 
-runServerEff :: (IOE :> es) => Eff (ServerEff : es) a -> Eff es a
-runServerEff = interpret_ $ \case
-  Run p a -> liftIO $ Warp.run p a
+-- | Runs the 'Server' effect in IO.
+runServer :: (IOE :> es) => Eff (Server : es) a -> Eff es a
+runServer = interpret $ \env -> \case
+  Run p app -> localUnliftIO env strategy $ \unlift ->
+    Warp.run p (\req onResp -> unlift $ app req (unsafeEff_ . onResp))
+  Serve p api req onResp -> localSeqUnliftIO env $ \unlift -> do
+    let handlerApi = Servant.hoistServer p (liftIO @Handler . unlift) api
+    Servant.serve p handlerApi req (unlift . onResp)
+  where
+    -- We need ConcUnlift because Warp.run spawns thread(s). Otherwise we
+    -- receive a runtime error:
+    --
+    --   If you want to use the unlifting function to run Eff computations in
+    --   multiple threads, have a look at UnliftStrategy (ConcUnlift).
+    --
+    -- Servant.serve seems fine to use the synchronous strategy.
+    --
+    -- It is less clear what ConcUnlift args to use.
+    --
+    -- With the Ephemeral strategy, each page refesh counts as an unlift
+    -- usage, so once our refreshes exceedes the limit, the server will die.
+    -- Hence we would need Unlimited.
+    --
+    -- With Persistent, Limited 1 appears to work.
+    --
+    -- The docs explain that Persistent "Persists the environment between calls
+    -- to the unlifting function within a particular thread.", whereas
+    -- Ephemeral does not.
+    --
+    -- Further, the Ephemeral Limit limits the number of times the unlift
+    -- function can be called in "threads distinct from its creator" to N.
+    -- It is not entirely clear whether this N is shared between all threads,
+    -- or each thread can call unlift N times.
+    --
+    -- The Persistent Limit, OTOH, limits the number of threads that can call
+    -- unlift, but each thread can call it N times.
+    --
+    -- I _think_ this means we only need the Persistent strategy when our
+    -- unlifted actions actually modify the environment, and we want that
+    -- persisted (e.g. State effect). But since we do not, Ephemeral with
+    -- Unlimited should be okay.
+    --
+    -- https://hackage-content.haskell.org/package/effectful-core-2.6.1.0/docs/Effectful.html#t:UnliftStrategy
+    strategy = ConcUnlift Ephemeral Unlimited
 
-runServerEffMock :: Eff (ServerEff : es) a -> Eff es a
-runServerEffMock = interpret_ $ \case
-  Run _ _ -> pure ()
+-- | Mock 'Server' effect.
+runServerMock :: Eff (Server : es) a -> Eff es a
+runServerMock = interpret $ \env -> \case
+  Run {} -> pure ()
+  Serve _ _ _ onResp -> localSeqUnlift env $ \unlift -> do
+    let req = Wai.responseBuilder HTTP.Status.status200 [] mempty
+    unlift $ onResp req
 
-run :: (HasCallStack, ServerEff :> es) => Port -> Application -> Eff es Unit
+run ::
+  ( HasCallStack,
+    Server :> es
+  ) =>
+  Port ->
+  (Request -> (Response -> Eff es ResponseReceived) -> Eff es ResponseReceived) ->
+  Eff es Unit
 run p = send . Run p
+
+serve ::
+  ( HasCallStack,
+    HasServer api [],
+    Server :> es
+  ) =>
+  Proxy api ->
+  ServerT api (Eff es) ->
+  Request ->
+  (Response -> Eff es ResponseReceived) ->
+  Eff es ResponseReceived
+serve p api req = send . Serve p api req

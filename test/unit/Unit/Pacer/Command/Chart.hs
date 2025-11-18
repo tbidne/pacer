@@ -76,7 +76,7 @@ import Pacer.Command.Chart.Params
     ChartParamsArgs,
   )
 import Pacer.Command.Chart.Params qualified as ChartParams
-import Pacer.Command.Chart.Server (ServerEff, runServerEffMock)
+import Pacer.Command.Chart.Server (Server, runServerMock)
 import Pacer.Configuration.Env.Types
   ( CachedPaths,
     LogEnv
@@ -396,7 +396,7 @@ type TestEffects =
     FileWriter,
     PathReader,
     PathWriter,
-    ServerEff,
+    Server,
     Terminal,
     Logger,
     IORefE,
@@ -415,7 +415,7 @@ runTestEff env =
     . runIORef
     . runLoggerMock
     . runTerminalMock
-    . runServerEffMock
+    . runServerMock
     . runPathWriterMock
     . runPathReaderMock
     . runFileWriterMock

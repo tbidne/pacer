@@ -76,7 +76,7 @@ import Hedgehog as X
     (/==),
     (===),
   )
-import Pacer.Command.Chart.Server (ServerEff, runServerEffMock)
+import Pacer.Command.Chart.Server (Server, runServerMock)
 import Pacer.Driver (displayInnerMatchKnown, runApp)
 import Pacer.Prelude as X hiding (IO)
 import Pacer.Utils.Json (AesonE (MkAesonE))
@@ -165,7 +165,7 @@ type TestEffects =
     Optparse,
     PathReader,
     PathWriter,
-    ServerEff,
+    Server,
     Terminal,
     IORefE,
     Time,
@@ -182,7 +182,7 @@ runTestEff env m = do
     . runTimeMock
     . runIORef
     . runTerminalMock
-    . runServerEffMock
+    . runServerMock
     . runPathWriter
     . runPathReaderMock
     . runOptparse

@@ -40,7 +40,7 @@ import Pacer.Command.Chart.Params
   ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
     ChartParamsFinal,
   )
-import Pacer.Command.Chart.Server (ServerEff)
+import Pacer.Command.Chart.Server (Server)
 import Pacer.Command.Chart.Server qualified as Server
 import Pacer.Configuration.Config (ChartConfig)
 import Pacer.Configuration.Env.Types (LogEnv)
@@ -63,7 +63,7 @@ handle ::
     PathReader :> es,
     PathWriter :> es,
     Reader LogEnv :> es,
-    ServerEff :> es
+    Server :> es
   ) =>
   Maybe ChartConfig ->
   ChartParamsFinal ->
