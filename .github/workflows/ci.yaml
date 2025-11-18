@@ -36,7 +36,7 @@ jobs:
           - "windows-latest"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup haskell
         uses: haskell-actions/setup@v2
@@ -44,7 +44,7 @@ jobs:
           ghc-version: ${{ matrix.ghc.vers }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERS }}
 
@@ -94,7 +94,7 @@ jobs:
             --fail-if-slower 50
             --fail-if-faster 50'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Bench upload
         if: ${{ failure() && steps.bench.conclusion == 'failure' }}
         with:
@@ -113,7 +113,7 @@ jobs:
           - "windows-latest"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup haskell
         uses: haskell-actions/setup@v2
@@ -121,7 +121,7 @@ jobs:
           enable-stack: true
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERS }}
 
@@ -155,10 +155,10 @@ jobs:
           - "ubuntu-latest"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup nix
-        uses: cachix/install-nix-action@v30
+        uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           nix_path: nixpkgs=channel:nixos-unstable
@@ -169,10 +169,10 @@ jobs:
   lint:
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup nix
-        uses: cachix/install-nix-action@v30
+        uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           nix_path: nixpkgs=channel:nixos-unstable
@@ -229,7 +229,7 @@ jobs:
 
     runs-on: ${{ matrix.platform.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Verify env vars
         run: .github/scripts/verify_env.sh
@@ -249,7 +249,7 @@ jobs:
           cabal-version: ${{ env.CABAL_VERS }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         if: ${{ matrix.platform.name != 'alpine_amd64' && matrix.platform.name != 'alpine_arm64v8' }}
         with:
           node-version: ${{ env.NODE_VERS }}
@@ -269,7 +269,7 @@ jobs:
           ${{ matrix.platform.script }} ${{ matrix.platform.script_args }}
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: release-artifacts-${{ matrix.platform.name }}
           path: pacer*.zip
@@ -280,7 +280,7 @@ jobs:
     needs: release
     steps:
       - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v5
         with:
           name: release-artifacts
           pattern: release-artifacts-*
