@@ -79,6 +79,7 @@ library
     Pacer.Command
     Pacer.Command.Chart
     Pacer.Command.Chart.Args
+    Pacer.Command.Chart.Create
     Pacer.Command.Chart.Data.Activity
     Pacer.Command.Chart.Data.Activity.ActivityLabel
     Pacer.Command.Chart.Data.Activity.ActivityType

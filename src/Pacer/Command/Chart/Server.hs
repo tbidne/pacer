@@ -5,11 +5,13 @@
 
 -- | Chart functionality.
 module Pacer.Command.Chart.Server
-  ( launchServer,
+  ( -- * Entry point
+    launchServer,
 
     -- * Effect
     Server (..),
     run,
+    serve,
 
     -- ** Handlers
     runServer,
@@ -31,7 +33,11 @@ import Network.Wai (Request, Response, ResponseReceived)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp (Port)
 import Network.Wai.Handler.Warp qualified as Warp
+import Pacer.Command.Chart.Create qualified as Create
 import Pacer.Command.Chart.Data.Chart (Charts)
+import Pacer.Command.Chart.Params (ChartParamsFinal)
+import Pacer.Configuration.Config (ChartConfig)
+import Pacer.Configuration.Env.Types (LogEnv)
 import Pacer.Prelude
 import Servant
   ( Get,
@@ -61,19 +67,24 @@ type WebApi = "api" ::> Api :<|> Raw
 -- Morally it is @Path Abs Dir@, though we resort to FilePath since that's
 -- what serveDirectoryFileServer uses, and we don't want to deserialize here.
 mkApp ::
-  ( HasCallStack,
+  forall env k es.
+  ( FileReader :> es,
+    HasCallStack,
+    LoggerNS env k es,
+    Reader LogEnv :> es,
     Server :> es
   ) =>
+  Maybe ChartConfig ->
+  ChartParamsFinal ->
   FilePath ->
-  Charts ->
   Request ->
   (Response -> Eff es ResponseReceived) ->
   Eff es ResponseReceived
-mkApp staticDir charts = serve webApi serveApi
+mkApp @env @_ @es mChartConfig params staticDir = serve webApi serveApi
   where
     serveApi :: ServerT WebApi (Eff es)
     serveApi =
-      (pure "Pacer is up!" :<|> pure charts)
+      (pure "Pacer is up!" :<|> Create.createCharts @env mChartConfig params)
         :<|> Servant.serveDirectoryFileServer staticDir
 
     webApi :: Proxy WebApi
@@ -81,23 +92,27 @@ mkApp staticDir charts = serve webApi serveApi
 
 launchServer ::
   forall env k es.
-  ( HasCallStack,
+  ( FileReader :> es,
+    HasCallStack,
     LoggerNS env k es,
+    Reader LogEnv :> es,
     Server :> es
   ) =>
+  Maybe ChartConfig ->
+  ChartParamsFinal ->
   Word16 ->
   Path Abs Dir ->
-  Charts ->
   Eff es Unit
 launchServer
   @env
+  mChartConfig
+  params
   port
-  webDistPath
-  charts = addNamespace @env "launchServer" $ do
+  webDistPath = addNamespace @env "launchServer" $ do
     $(Logger.logInfo) msg
     webDistStr <- decodeThrowM (toOsPath webDistPath)
 
-    run portInt (mkApp webDistStr charts)
+    run portInt (mkApp @env mChartConfig params webDistStr)
     where
       msg =
         mconcat
