@@ -154,7 +154,7 @@ versionInfo :: VersionInfo
 versionInfo =
   MkVersionInfo
     { gitCommitDate = d,
-      ghc = showVersion Info.compilerVersion,
+      ghc = showVersion Info.fullCompilerVersion,
       gitHash = h,
       gitShortHash = sh
     }
