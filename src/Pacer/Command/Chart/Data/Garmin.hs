@@ -45,9 +45,10 @@ import Pacer.Command.Chart.Data.Time.Timestamp qualified as TS
 import Pacer.Command.Chart.Params
   ( ActivitiesType (ActivitiesDefault, ActivitiesGarmin),
   )
-import Pacer.Data.Distance (Distance)
+import Pacer.Data.Distance (Distance (MkDistance))
 import Pacer.Data.Distance qualified as Distance
 import Pacer.Data.Distance.Units (DistanceUnit (Kilometer, Meter, Mile))
+import Pacer.Data.Distance.Units qualified as DistanceU
 import Pacer.Data.Duration (Duration)
 import Pacer.Exception (GarminE (GarminDecode, GarminMeters, GarminOther))
 import Pacer.Prelude
@@ -75,10 +76,10 @@ makeFieldLabelsNoPrefix ''GarminAct
 
 parseGarminRow ::
   forall a d.
-  ( AMonoid a,
-    Fromℚ a,
+  ( Fromℚ a,
     Ord a,
     P.Parser a,
+    Semifield a,
     Show a,
     SingI d
   ) =>
@@ -91,10 +92,29 @@ parseGarminRow @a globalFilters r = do
   Expr.guardActivityType globalFilters activityType $ do
     title <- r .: "Title"
     datetime <- parseDatetime =<< r .: "Date"
-    distance <- parseX =<< r .: "Distance"
+    distance <- parseDistance activityType r
 
-    -- Prefer moving time, but fall back to others as needed.
-    let timeFields = ["Moving Time", "Elapsed Time", "Time"]
+    -- NOTE: [Garmin Time]
+    --
+    -- First, note that the "Time" field has been renamed "Total Time"
+    -- (henceforth referenced by the latter), some time around 2026.
+    --
+    -- Prefer "Moving Time", but fall back to others as needed. We used to
+    -- prioritize "Elapsed Time" over "Total Time", however, this ended up
+    -- being a problem for some data. For instance, I have some
+    -- "Trail Running" and "Track Running" events with e.g.
+    --
+    --   - Moving Time: "No"
+    --   - Total Time: "00:57:56"
+    --   - Elapsed Time: "00:00:29.3"
+    --
+    -- So "Moving Time" is invalid, and "Elapsed Time" is way off. Hence
+    -- "Total Time" is the better fallback. Note that the actual activities
+    -- have normal looking values in the watch itself, so I'm not sure why
+    -- the exported data is weird.
+    --
+    -- In any case, this is what we want to do when things go wrong.
+    let timeFields = ["Moving Time", "Total Time", "Time", "Elapsed Time"]
     duration <-
       asum1 @NonEmpty $ (parseDuration <=< (.:) r) <$> timeFields
 
@@ -131,9 +151,6 @@ parseGarminRow @a globalFilters r = do
       let sTxt = showt $ round @_ @Int s
 
       failErr $ P.parseAll (h <> "h" <> m <> "m" <> sTxt <> "s")
-
-    parseX :: forall x. (P.Parser x) => Text -> Parser x
-    parseX = P.parseAll >>> failErr
 
     timeFmt = "%Y-%m-%d %H:%M:%S"
 
@@ -285,3 +302,32 @@ getActivitiesType activitiesPath = do
     activitiesBaseName = OsPath.takeBaseName activitiesOsPath
     activitiesBaseNameTxt = T.toCaseFold $ packText $ decodeLenient activitiesBaseName
     activitiesExt = OsPath.takeExtension activitiesOsPath
+
+-- | Parses the distance. Non-trivial as the units can aparently vary with
+-- the activity type (ugh).
+parseDistance ::
+  forall a d.
+  ( Fromℤ a,
+    Ord a,
+    P.Parser a,
+    Semifield a,
+    Show a,
+    SingI d
+  ) =>
+  ActivityType ->
+  NamedRecord ->
+  Parser (Distance d a)
+parseDistance @a @d actTy r = do
+  distance <- parseX @(Positive a) =<< r .: "Distance"
+  pure $ case actTy of
+    -- "Track Running" appears to be in meters. Online research indicates this
+    -- can be a function of a setting on the device (perhaps miles could be
+    -- yards?), but there are complaints that it is meters for "miles users"
+    -- too. Setting this to meters until we can figure out something
+    -- smarter (optional setting in config?).
+    "Track Running" ->
+      DistanceU.convertDistance d $ MkDistance @Meter distance
+    _ -> MkDistance distance
+  where
+    parseX :: forall x. (P.Parser x) => Text -> Parser x
+    parseX = P.parseAll >>> failErr

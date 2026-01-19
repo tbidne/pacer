@@ -181,22 +181,31 @@ parseTime :: (ParseTime a) => String -> String -> ResultDefault a
 parseTime = Format.parseTimeM False Format.defaultTimeLocale
 
 -- | Parser combinator for digits with a 'Read' instance.
-parseDigits :: (Read n) => Parsec Void Text n
+parseDigits :: (Read n) => MParser n
 parseDigits = parseDigitText >>= readDigits
 
 -- | Parser combinator for digits with a 'Read' instance.
-parseIntegral :: (Read n) => Parsec Void Text n
+parseIntegral :: (Read n) => MParser n
 parseIntegral = parseIntegralText >>= readDigits
 
 -- | Parser combinator for digits.
-parseDigitText :: Parsec Void Text Text
-parseDigitText =
-  MP.takeWhile1P (Just "digits") (\c -> Ch.isDigit c || c == '.')
+parseDigitText :: MParser Text
+parseDigitText = parseStripCommas (\c -> isNumChar c || c == '.')
 
 -- | Parser combinator for digits.
-parseIntegralText :: Parsec Void Text Text
-parseIntegralText =
-  MP.takeWhile1P (Just "digits") Ch.isDigit
+parseIntegralText :: MParser Text
+parseIntegralText = parseStripCommas isNumChar
+
+parseStripCommas :: (Char -> Bool) -> MParser Text
+parseStripCommas p = do
+  txt <- MP.takeWhile1P (Just "digits") p
+  pure $ T.filter (not . isComma) txt
+
+isNumChar :: Char -> Bool
+isNumChar c = Ch.isDigit c || isComma c
+
+isComma :: Char -> Bool
+isComma = (==) ','
 
 -- | Read text like "1d2h3m4s", parse w/ relative time into positive seconds.
 parsePosTimeString ::
@@ -222,7 +231,7 @@ parsePosTimeString = do
   where
     chars = "hmds"
 
-readDigits :: (Read n) => Text -> Parsec Void Text n
+readDigits :: (Read n) => Text -> MParser n
 readDigits b =
   case TR.readMaybe (T.unpack b) of
     Nothing -> fail $ "Could not read digits: " <> T.unpack b

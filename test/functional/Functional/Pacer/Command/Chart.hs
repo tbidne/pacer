@@ -32,6 +32,7 @@ basicTests getTestDir =
       testFilterTypeEarly getTestDir,
       testDuplicateDateError getTestDir,
       testGarminChart getTestDir,
+      testGarminChartTotalTime getTestDir,
       testDefaultAndGarminExamples getTestDir,
       testDefaultAndGarmin getTestDir,
       testDefaultAndGarminSameCase getTestDir,
@@ -165,6 +166,13 @@ testGarminChart :: IO OsPath -> TestTree
 testGarminChart = testChart desc [osp|testGarminChart|]
   where
     desc = "Generates garmin example"
+
+-- This test is exactly the same as testGarminChart (i.e. should produce same
+-- output), except the garmin 'Time' field is named 'Total Time'.
+testGarminChartTotalTime :: IO OsPath -> TestTree
+testGarminChartTotalTime = testChart desc [osp|testGarminChartTotalTime|]
+  where
+    desc = "Generates garmin example with 'Time' -> 'Total Time' field"
 
 testDefaultAndGarminExamples :: IO OsPath -> TestTree
 testDefaultAndGarminExamples getTestDir = testGoldenParams getTestDir params
