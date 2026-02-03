@@ -104,13 +104,8 @@ mkCharts @es mConfig activities requests =
         (Just cCfg, Nothing) -> pure $ Just cCfg
         (Nothing, Just rCfg) -> pure $ Just rCfg
         (Just cCfg, Just rCfg) -> do
-          -- 1. Get the default theme.
-          defaultTheme <- case rCfg ^. #defaultTheme of
-            -- 1.1. Requests defaultTheme takes priority.
-            Just rDefault -> pure $ Just rDefault
-            -- 1.2. Requests defaultTheme does not exist; Take the chart config,
-            --      if it exists.
-            _ -> pure $ cCfg ^. #defaultTheme
+          let -- Requests' defaultTheme takes the priority.
+              defaultTheme = rCfg ^. #defaultTheme <|> cCfg ^. #defaultTheme
 
           -- Combine duplicates; warn about duplicates.
           let dupes = (cCfg ^. #themes) `Set.intersection` (rCfg ^. #themes)

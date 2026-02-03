@@ -47,11 +47,7 @@ getCachedXdgConfigPath ::
     State CachedPaths :> es
   ) =>
   Eff es (Path Abs Dir)
-getCachedXdgConfigPath =
-  getCachedPath
-    (view #xdgConfigPath)
-    (set' #xdgConfigPath . Just)
-    getXdgConfigPath
+getCachedXdgConfigPath = getCachedPathOptic #xdgConfigPath getXdgConfigPath
 
 -- | Retrieves the current directory, updating the cache if necessary.
 -- As the current directory may change, this is intended to be the _initial_
@@ -63,11 +59,22 @@ getCachedCurrentDirectory ::
     State CachedPaths :> es
   ) =>
   Eff es (Path Abs Dir)
-getCachedCurrentDirectory =
-  getCachedPath
-    (view #currentDirectory)
-    (set' #currentDirectory . Just)
-    getCurrentDirectory
+getCachedCurrentDirectory = getCachedPathOptic #currentDirectory getCurrentDirectory
+
+-- | 'getCachedPath' that uses the optic accessor.
+getCachedPathOptic ::
+  forall k is es.
+  ( HasCallStack,
+    Is k A_Getter,
+    Is k A_Setter,
+    State CachedPaths :> es
+  ) =>
+  -- | Optic accessor (probably a lens).
+  Optic' k is CachedPaths (Maybe (Path Abs Dir)) ->
+  -- | Effectful function to retrieve directory.
+  Eff es (Path Abs Dir) ->
+  Eff es (Path Abs Dir)
+getCachedPathOptic o = getCachedPath (view o) (set' o . Just)
 
 -- | Retrieves the cached path, updating the cache if necessary.
 getCachedPath ::

@@ -109,7 +109,7 @@ instance FromJSON ChartSmoothType where
     "rolling" -> pure ChartSmoothRolling
     "window" -> pure ChartSmoothWindow
     other ->
-      let msg = "Expected one of (rolling|windows), received: " <> other
+      let msg = "Expected one of (rolling|window), received: " <> other
        in fail $ unpackText msg
 
 data ChartSmooth = MkChartSmooth

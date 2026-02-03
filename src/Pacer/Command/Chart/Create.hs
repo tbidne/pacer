@@ -106,12 +106,12 @@ readChartInputs @env @_ @es chartPaths = addNamespace @env "readChartInputs" $ d
       @(ChartRequests Double)
       chartRequestsPath
 
-  activitiesNE <- for activitiesPaths $ \rp -> do
-    let mDistUnit =
-          preview (#garminSettings %? #distanceUnit % _Just) chartRequests
+  let mDistUnit =
+        preview (#garminSettings %? #distanceUnit % _Just) chartRequests
 
-        globalFilters = chartRequests ^. #filters
-    readActivities mDistUnit globalFilters rp
+      globalFilters = chartRequests ^. #filters
+
+  activitiesNE <- for activitiesPaths (readActivities mDistUnit globalFilters)
 
   let combineActivities acc rs = acc >>= Activity.unionSomeActivities rs
 
