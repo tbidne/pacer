@@ -355,8 +355,8 @@ resolveChartInput @_ @env params mConfigWithPath desc fileNames mInputOsPath con
   --
   -- 1. Cli file paths e.g. --chart-requests.
   -- 2. Cli dir e.g. --data
-  -- 3. Config path.
-  -- 4. Current directory.
+  -- 3. Current directory.
+  -- 4. Config path.
   -- 5. Xdg dir.
   Utils.FileSearch.resolveFilePath
     @_
@@ -365,8 +365,8 @@ resolveChartInput @_ @env params mConfigWithPath desc fileNames mInputOsPath con
     fileNames
     [ Utils.FileSearch.findFilePath mInputOsPath,
       Utils.FileSearch.findDirectoryPath @_ @env $ params ^. #dataDir,
-      findConfigPath @_ @env configSel mConfigWithPath,
       Utils.FileSearch.findCurrentDirectoryPath @_ @env,
+      findConfigPath @_ @env configSel mConfigWithPath,
       Utils.FileSearch.findXdgPath @_ @env
     ]
 

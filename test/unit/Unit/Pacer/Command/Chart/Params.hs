@@ -524,9 +524,18 @@ testEvolvePhaseCwd =
     $ MkGoldenParams
       { testDesc = "Uses current directory",
         testName = [osp|testEvolvePhaseCwd|],
-        runner = goldenRunner mockEnv baseChartParams Nothing
+        runner = goldenRunner mockEnv baseChartParams (Just config)
       }
   where
+    -- Config exists to prove that current directory overrides config. If it
+    -- didn't (i.e. findConfigPath was first), we'd receive an error since
+    -- the config-data/ dir is not properly mocked (hence does not exist).
+    config =
+      set'
+        (#config % #chartConfig %? #dataDir)
+        (Just [osp|./|])
+        baseConfigWithPath
+
     knownDirectories = Map.fromList [goodDir]
 
     goodDir =
