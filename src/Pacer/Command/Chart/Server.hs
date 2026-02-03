@@ -38,6 +38,7 @@ import Pacer.Command.Chart.Data.Chart (Charts)
 import Pacer.Command.Chart.Params (ChartParamsFinal)
 import Pacer.Configuration.Config (ChartConfig)
 import Pacer.Configuration.Env.Types (LogEnv)
+import Pacer.Exception (ShowException (MkShowException))
 import Pacer.Prelude
 import Servant
   ( Get,
@@ -152,7 +153,13 @@ type instance DispatchOf Server = Dynamic
 runServer :: (IOE :> es) => Eff (Server : es) a -> Eff es a
 runServer = interpret $ \env -> \case
   Run p app -> localUnliftIO env strategy $ \unlift ->
-    Warp.run p (\req onResp -> unlift $ app req (unsafeEff_ . onResp))
+    Warp.run p $ \req onResp -> unlift $ do
+      -- Rethrow exceptions as ShowExceptions since servant uses show instead
+      -- of displayException. We have a custom type rather than use
+      -- StringException so the constructor does not show up.
+      trySync (app req (unsafeEff_ . onResp)) >>= \case
+        Left ex -> throwM $ MkShowException (displayException ex)
+        Right x -> pure x
   Serve p api req onResp -> localSeqUnliftIO env $ \unlift -> do
     let handlerApi = Servant.hoistServer p (liftIO @Handler . unlift) api
     Servant.serve p handlerApi req (unlift . onResp)

@@ -11,6 +11,9 @@ module Pacer.Exception
     CommandConvertE (..),
     CommandDeriveE (..),
     CommandScaleE (..),
+
+    -- * Misc
+    ShowException (..),
   )
 where
 
@@ -197,3 +200,14 @@ instance Exception GarminE where
         [ "The 'garmin.unit' setting is required in chart-requests json ",
           "when used with a garmin activities file."
         ]
+
+-- | Morally equivalent to StringException, except its Show instance
+-- ignores the constructor, which is then derived for displayException.
+--
+-- Used for when some library unfortunately renders exceptions via
+-- show instance of displayException (servant).
+newtype ShowException = MkShowException String
+  deriving anyclass (Exception)
+
+instance Show ShowException where
+  show (MkShowException s) = s

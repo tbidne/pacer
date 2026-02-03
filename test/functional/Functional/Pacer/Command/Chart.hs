@@ -33,6 +33,7 @@ basicTests getTestDir =
       testDuplicateDateError getTestDir,
       testGarminChart getTestDir,
       testGarminChartTotalTime getTestDir,
+      testGarminChartUnitError getTestDir,
       testDefaultAndGarminExamples getTestDir,
       testDefaultAndGarmin getTestDir,
       testDefaultAndGarminSameCase getTestDir,
@@ -173,6 +174,11 @@ testGarminChartTotalTime :: IO OsPath -> TestTree
 testGarminChartTotalTime = testChart desc [osp|testGarminChartTotalTime|]
   where
     desc = "Generates garmin example with 'Time' -> 'Total Time' field"
+
+testGarminChartUnitError :: IO OsPath -> TestTree
+testGarminChartUnitError = testChart desc [osp|testGarminChartUnitError|]
+  where
+    desc = "Tests garmin unit error"
 
 testDefaultAndGarminExamples :: IO OsPath -> TestTree
 testDefaultAndGarminExamples getTestDir = testGoldenParams getTestDir params
