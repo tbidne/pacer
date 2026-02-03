@@ -169,6 +169,11 @@ type AccY = NESeq (Tuple2 Timestamp Double)
 -- | Accumulator for chart with two Y axes.
 type AccY1 = NESeq (Tuple3 Timestamp Double Double)
 
+hasPace :: ChartData -> Bool
+hasPace (ChartDataY y) = y ^. #yType == YAxisPace
+hasPace (ChartDataY1 y) =
+  (y ^. #yType == YAxisPace) || (y ^. #y1Type == YAxisPace)
+
 -- | Turns a sequence of activities and a chart request into a chart.
 mkChartData ::
   forall es a.
@@ -197,7 +202,7 @@ mkChartData finalDistUnit globalFilters as request = do
     Empty -> pure $ Err $ CreateChartFilterEmpty $ request ^. #title
     r :<| rs -> do
       activities <- handleChartType (request ^. #chartType) (r :<|| rs)
-      pure $ Ok $ mkChartDataSets finalDistUnit request activities
+      Ok <$> mkChartDataSets finalDistUnit request activities
   where
     (MkSomeActivities (SetToSeqNE someActivities)) = as
     filteredActivities =
@@ -295,8 +300,9 @@ handleChartType @es @a mChartType someActivities = case mChartType of
     toDatetime = view #datetime
 
 mkChartDataSets ::
-  forall a.
+  forall a es.
   ( Fromℤ a,
+    Logger :> es,
     Ord a,
     Semifield a,
     Show a,
@@ -305,17 +311,29 @@ mkChartDataSets ::
   DistanceUnit ->
   ChartRequest a ->
   NESeq (SomeActivity a) ->
-  ChartData
-mkChartDataSets @a finalDistUnit request activities@(MkSomeActivity sd _ :<|| _) =
-  case request ^. #y1Axis of
-    Nothing ->
-      let vals = withSingI sd $ foldMap1 toAccY activities
-          yType = request ^. #yAxis
-       in ChartDataY (MkChartY vals yType finalDistUnit)
-    Just y1Type ->
-      let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) activities
-          yType = request ^. #yAxis
-       in ChartDataY1 (MkChartY1 vals yType y1Type finalDistUnit)
+  Eff es ChartData
+mkChartDataSets @a finalDistUnit request activities@(MkSomeActivity sd _ :<|| _) = do
+  let chartData = case request ^. #y1Axis of
+        Nothing ->
+          let vals = withSingI sd $ foldMap1 toAccY activities
+              yType = request ^. #yAxis
+           in ChartDataY (MkChartY vals yType finalDistUnit)
+        Just y1Type ->
+          let vals = withSingI sd $ foldMap1 (toAccY1 y1Type) activities
+              yType = request ^. #yAxis
+           in ChartDataY1 (MkChartY1 vals yType y1Type finalDistUnit)
+
+  -- Log a message if meters and pace were requested.
+  when (hasPace chartData && finalDistUnit == Meter) $ do
+    let msg =
+          mconcat
+            [ "Requested meters for chart '",
+              request ^. #title,
+              "', converting pace to km."
+            ]
+    $(Logger.logInfo) msg
+
+  pure chartData
   where
     toAccY :: SomeActivity a -> AccY
     toAccY sr@(MkSomeActivity _ r) = NESeq.singleton (r ^. #datetime, toY sr)
@@ -331,18 +349,14 @@ mkChartDataSets @a finalDistUnit request activities@(MkSomeActivity sd _ :<|| _)
     toYHelper axisType (MkSomeActivity s r) = case axisType of
       YAxisDistance ->
         withSingI s $ case finalDistUnit of
-          -- REVIEW: Should this be (DistU.convertDistance Meter)? Or do we
-          -- only allow km/mi in charts?
-          Meter -> toDistRaw (DistU.convertToKilometers r)
+          -- See NOTE: [Chart Units]
+          Meter -> toDistRaw (DistU.convertDistance Meter r)
           Kilometer -> toDistRaw (DistU.convertToKilometers r)
           Mile -> toDistRaw (DistU.convertDistance Mile r)
       YAxisDuration -> toDurRaw r
       YAxisPace ->
         withSingI s $ case finalDistUnit of
-          -- REVIEW: Ideally this would error, not convert. But probably we
-          -- already throw errors somewhere, and the Meters are only here
-          -- because we haven't proven to GHC that it is impossible. It would
-          -- be nice to come up with something more robust.
+          -- See NOTE: [Chart Units]
           Meter -> toPaceRaw (DistU.convertToKilometers r)
           Kilometer -> toPaceRaw (DistU.convertToKilometers r)
           Mile -> toPaceRaw (DistU.convertDistance Mile r)
@@ -355,6 +369,39 @@ mkChartDataSets @a finalDistUnit request activities@(MkSomeActivity sd _ :<|| _)
 
     toDurRaw :: Activity d a -> Double
     toDurRaw = toℝ . view (#duration % #unDuration)
+
+-- NOTE: [Chart Units]
+--
+-- In general, the frontend supports all units as the y-axis:
+--
+--   distance: m, km, mi
+--   duration: <time>
+--   pace: m, km, mi
+--
+-- However, we explicitly do not allow pace to be used with meters, so the
+-- question of what to do if the user specifies 'meters' in a chart request
+-- (charts[i].unit = "m") arises.
+--
+-- Previously, we converted both YAxisDistance and YAxisPace to km, so no
+-- warnings/errors, but only km was allowed. We now decide to let distance
+-- respect meters, though pace is still converted. We do this for several
+-- reasons:
+--
+-- - In general, we should respect the user's choice when we can, and meters
+--   are perfectly sensible for some distances (e.g. track events).
+--
+-- - We should allow graphing distance by meters and pace by km, but there is
+--   only one distance unit in chart-requests at the moment, so pace cannot
+--   then error.
+--
+-- - If we ever add something like elevation, meters makes sense there as
+--   well.
+--
+-- Hence we log a message for conversions, but otherwise respect the choice.
+-- This raises the possibility of specifying multiple units e.g.
+-- distance_unit and pace_unit, because as of now we cannot have
+-- distance in meters and pace in miles, which is also reasonable. But that
+-- is a low priority.
 
 -- | A moving window has the group representative be the median element.
 smoothWindow ::

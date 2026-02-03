@@ -1,0 +1,18 @@
+{
+  "charts": [
+    {
+      "title": "Runs in km",
+      "y-axis": "distance",
+      "y1-axis": "pace",
+      "description": "Simple charts 1"
+    },
+    {
+      "title": "Runs in m",
+      "y-axis": "distance",
+      "y1-axis": "pace",
+      "description": "Simple charts 2",
+      "unit": "m"
+    }
+  ]
+}
+

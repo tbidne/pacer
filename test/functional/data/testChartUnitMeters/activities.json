@@ -1,0 +1,32 @@
+{
+  "activities": [
+    {
+      "datetime": "2024-10-15",
+      "distance": "5 km",
+      "duration": "20m30s",
+      "type": "Running"
+    },
+    {
+      "datetime": "2024-10-20T14:30:00",
+      "distance": "20 miles",
+      "duration": "2h40m54s",
+      "labels": [],
+      "type": "Running"
+    },
+    {
+      "datetime": "2024-10-25T12:00:00-08:00",
+      "distance": "marathon",
+      "duration": "3h20m",
+      "labels": ["official", "marathon"],
+      "type": "Running"
+    },
+    {
+      "datetime": "2024-10-26",
+      "distance": "half-marathon",
+      "duration": "1h40m",
+      "labels": ["official", "half-marathon"],
+      "title": "Some half marathon",
+      "type": "Running"
+    }
+  ]
+}

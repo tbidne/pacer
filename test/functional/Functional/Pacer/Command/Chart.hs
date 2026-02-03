@@ -22,6 +22,7 @@ basicTests getTestDir =
     [ testExampleChart getTestDir,
       testSimple getTestDir,
       testSimpleBuildDir getTestDir,
+      testChartUnitMeters getTestDir,
       testFilter getTestDir,
       testFilterPreds getTestDir,
       testFilterDates getTestDir,
@@ -95,6 +96,35 @@ testSimpleBuildDir getTestDir = testGoldenParams getTestDir params
     buildDir p = unsafeDecode $ p </> [osp|another-build|]
     dataDir =
       unsafeDecode [ospPathSep|test/functional/data/testSimpleBuildDir|]
+
+testChartUnitMeters :: IO OsPath -> TestTree
+testChartUnitMeters getTestDir = testGoldenParams getTestDir params
+  where
+    params =
+      MkGoldenParams
+        { mkArgs = \p ->
+            [ "--log-level",
+              "info",
+              "chart",
+              "--json",
+              "--data",
+              dataDir,
+              "--build-dir",
+              buildDir p
+            ],
+          outFileName =
+            GoldenOutputFileAssertLogs
+              [ospPathSep|build/charts.json|]
+              checkLog,
+          testDesc = "Chart unit meters",
+          testName = [osp|testChartUnitMeters|]
+        }
+    buildDir p = unsafeDecode $ p </> [osp|build|]
+    dataDir = unsafeDecode [ospPathSep|test/functional/data/testChartUnitMeters|]
+
+    checkLog =
+      T.isInfixOf
+        "Requested meters for chart 'Runs in m', converting pace to km."
 
 testFilter :: IO OsPath -> TestTree
 testFilter = testChart "Filter example" [osp|testFilter|]

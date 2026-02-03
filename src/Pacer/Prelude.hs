@@ -19,6 +19,10 @@ module Pacer.Prelude
     -- * Tuples
     uncurry3,
 
+    -- * Foldable
+    foldMapA,
+    foldMapA1,
+
     -- * ByteString
     -- ** Lazy
     LazyByteString,
@@ -204,7 +208,7 @@ import Data.Maybe as X
     isJust,
     maybe,
   )
-import Data.Monoid as X (Monoid (mconcat, mempty))
+import Data.Monoid as X (Ap (Ap, getAp), Monoid (mconcat, mempty))
 import Data.Ord as X
   ( Ord (compare, (<), (<=), (>), (>=)),
     Ordering (EQ, GT, LT),
@@ -705,3 +709,9 @@ identity x = x
 
 uncurry3 :: (a -> b -> c -> d) -> Tuple3 a b c -> d
 uncurry3 f (a, b, c) = f a b c
+
+foldMapA :: (Applicative m, Foldable t, Monoid b) => (a -> m b) -> t a -> m b
+foldMapA f = getAp <$> foldMap (Ap . f)
+
+foldMapA1 :: (Applicative m, Foldable1 t, Semigroup b) => (a -> m b) -> t a -> m b
+foldMapA1 f = getAp <$> foldMap1 (Ap . f)

@@ -1,0 +1,83 @@
+build/charts.json
+
+{
+  "charts": [
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5,
+              32.18,
+              42.195,
+              21.0975
+            ],
+            "id": "y",
+            "label": "km",
+            "type": "distance"
+          },
+          "y1": {
+            "data": [
+              246,
+              300,
+              284.3938855314611,
+              284.3938855314611
+            ],
+            "id": "y1",
+            "label": "pace /km",
+            "type": "pace"
+          }
+        }
+      },
+      "extra": {
+        "description": "Simple charts 1"
+      },
+      "title": "Runs in km"
+    },
+    {
+      "datasets": {
+        "xAxis": [
+          "2024-10-15",
+          "2024-10-20T14:30:00",
+          "2024-10-25T12:00:00-08:00",
+          "2024-10-26"
+        ],
+        "yAxes": {
+          "y": {
+            "data": [
+              5000,
+              32180,
+              42195,
+              21097.5
+            ],
+            "id": "y",
+            "label": "m",
+            "type": "distance"
+          },
+          "y1": {
+            "data": [
+              246,
+              300,
+              284.3938855314611,
+              284.3938855314611
+            ],
+            "id": "y1",
+            "label": "pace /m",
+            "type": "pace"
+          }
+        }
+      },
+      "extra": {
+        "description": "Simple charts 2"
+      },
+      "title": "Runs in m"
+    }
+  ]
+}
+
