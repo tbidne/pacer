@@ -212,6 +212,19 @@ getEnv = do
   -- errors inline. So it could be a very long line, but at least it's just
   -- one. If this gets more annoying, we could add config to ignore this
   -- specific error.
+  --
+  -- Finally, our numeric type should have instances for:
+  --
+  --   - Display, Fromℚ, MetricSpace, Ord, Semifield, Show, Toℚ
+  --
+  -- We could create an alias for this e.g.
+  --
+  --    type NumC a = CTuple7 (Display a) (Fromℚ a) ...
+  --
+  -- This would simplify some type signatures and make it clearer what is
+  -- actually required, though there is tension between harmless and harmful
+  -- redundant constraints. Hence we play it by safe by not using an alias,
+  -- and keeping constraints minimal.
   args <- execParser (parserInfo @Double)
 
   -- Normally, we combine the Args' LogLevel with the json Config's LogLevel
