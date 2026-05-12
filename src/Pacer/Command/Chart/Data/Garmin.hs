@@ -16,6 +16,7 @@ module Pacer.Command.Chart.Data.Garmin
   )
 where
 
+import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
 import Data.Csv (NamedRecord, Parser, (.:))
 import Data.Csv qualified as Csv
@@ -166,7 +167,7 @@ readActivitiesCsv ::
   Eff es (SomeActivities Double)
 readActivitiesCsv @env @_ @es inputDistUnit globalFilters csvPath = addNamespace @env ns $ do
   -- 1. Read csv into bytestring.
-  bs <- readBinaryFile csvOsPath
+  bs <- readCsv csvOsPath
 
   someActivitiesList <- case inputDistUnit of
     Meter -> throwM GarminMeters
@@ -331,3 +332,63 @@ parseDistance @a @d actTy r = do
   where
     parseX :: forall x. (P.Parser x) => Text -> Parser x
     parseX = P.parseAll >>> failErr
+
+readCsv ::
+  (FileReader :> es) =>
+  OsPath ->
+  Eff es ByteString
+readCsv = fmap massageBs . readBinaryFile
+  where
+    -- Csv spec: https://datatracker.ietf.org/doc/html/rfc4180
+    massageBs :: ByteString -> ByteString
+    massageBs =
+      BS.intercalate ","
+        . fmap escapeDQuotes
+        . BS.split commaW8
+
+    -- According the spec, if double quotes appear in a field then the
+    -- field should be surrounded in double quotes and the internal quotes
+    -- should be doubled e.g.
+    --
+    --            "aaa","b""bb","ccc"
+    --
+    -- Garmin does not do this (classic), so we have to, or parsing will fail.
+    escapeDQuotes :: ByteString -> ByteString
+    escapeDQuotes bs = fromMaybe bs (mEscapeDQuotes bs)
+
+    -- If a field starts and ends w/ dquotes, find/replace all internal
+    -- dquotes with 2x dquotes.
+    mEscapeDQuotes :: ByteString -> Maybe ByteString
+    mEscapeDQuotes bs = do
+      (cStart, r1) <- BS.uncons bs
+      guard $ cStart == dquoteW8
+
+      (inner, cEnd) <- BS.unsnoc r1
+      guard $ cEnd == dquoteW8
+
+      let escaped = replaceBs "\"" "\"\"" inner
+      pure
+        . BS.cons dquoteW8
+        $ BS.snoc escaped dquoteW8
+
+    commaW8 :: Word8
+    commaW8 = 44
+
+    dquoteW8 :: Word8
+    dquoteW8 = 34
+
+replaceBs :: ByteString -> ByteString -> ByteString -> ByteString
+replaceBs needle replacement haystack =
+  BS.intercalate replacement (splitOn needle haystack)
+
+splitOn :: ByteString -> ByteString -> List ByteString
+splitOn needle = go
+  where
+    l = BS.length needle
+    breaker = BS.breakSubstring needle
+    go s =
+      let (pre, post) = breaker s
+       in pre
+            : if BS.null post
+              then []
+              else go (BS.drop l post)

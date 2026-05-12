@@ -139,6 +139,7 @@ import Control.Exception.Utils as X
 import Control.Monad as X
   ( Monad ((>>=)),
     forever,
+    guard,
     join,
     unless,
     void,

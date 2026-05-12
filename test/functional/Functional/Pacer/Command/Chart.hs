@@ -33,6 +33,7 @@ basicTests getTestDir =
       testFilterTypeEarly getTestDir,
       testDuplicateDateError getTestDir,
       testGarminChart getTestDir,
+      testGarminChartParse getTestDir,
       testGarminChartTotalTime getTestDir,
       testGarminChartUnitError getTestDir,
       testDefaultAndGarminExamples getTestDir,
@@ -197,6 +198,13 @@ testGarminChart :: IO OsPath -> TestTree
 testGarminChart = testChart desc [osp|testGarminChart|]
   where
     desc = "Generates garmin example"
+
+-- Tests various syntactic quirks in garmin files e.g. descriptions w/
+-- quotes. Data should be the same as testGarminChart, modulo quirks.
+testGarminChartParse :: IO OsPath -> TestTree
+testGarminChartParse = testChart desc [osp|testGarminChartParse|]
+  where
+    desc = "Generates garmin example with complex parsing"
 
 -- This test is exactly the same as testGarminChart (i.e. should produce same
 -- output), except the garmin 'Time' field is named 'Total Time'.
