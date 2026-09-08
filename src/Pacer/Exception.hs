@@ -87,6 +87,8 @@ data CommandScaleE
     CommandScaleArgs3
   | -- | Output units are not used with scale duration.
     CommandScaleDurationUnit
+  | -- | Factor is required.
+    CommandScaleFactorRequired
   | -- | Error for scaling pace with out unit in meters, not allowed.
     CommandScalePaceMeters
   | -- | Error for scaling pace with out unit when original unit not given,
@@ -101,6 +103,7 @@ instance Exception CommandScaleE where
     CommandScaleArgs2 -> argsErr "2"
     CommandScaleArgs3 -> argsErr "3"
     CommandScaleDurationUnit -> "--unit is not used when scaling duration."
+    CommandScaleFactorRequired -> "--factor is required for --distance and --duration."
     CommandScalePaceMeters -> symbolVal (Proxy @Utils.PaceMetersErrMsg)
     CommandScalePaceUnitNoUnit example ->
       mconcat

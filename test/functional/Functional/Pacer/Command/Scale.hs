@@ -1,5 +1,6 @@
 module Functional.Pacer.Command.Scale (tests) where
 
+import Data.Text qualified as T
 import Functional.Prelude
 import Pacer.Exception (CommandScaleE)
 
@@ -80,7 +81,10 @@ scalePaceTests =
     "Pace"
     [ testScalePace,
       testScalePaceUnit,
-      testScalePaceUnitError
+      testScalePaceUnitError,
+      testScalePaceNoFactor,
+      testScalePaceNoFactorConvert,
+      testScalePaceNoFactorUnitError
     ]
 
 testScalePace :: TestTree
@@ -120,6 +124,53 @@ testScalePaceUnitError = runException @CommandScaleE desc expected args
           "given e.g. --pace '4m15s /km'."
         ]
 
+testScalePaceNoFactor :: TestTree
+testScalePaceNoFactor = testCase "Scales distance without factor" $ do
+  runArgs Nothing args expected
+  where
+    args = ["scale", "--pace", "4m"]
+    expected =
+      T.intercalate
+        "\n"
+        [ "0.85: 3'24\"",
+          "0.90: 3'36\"",
+          "0.95: 3'48\"",
+          "1.00: 4'00\"",
+          "1.05: 4'12\"",
+          "1.10: 4'24\"",
+          "1.15: 4'36\"",
+          "1.20: 4'48\""
+        ]
+
+testScalePaceNoFactorConvert :: TestTree
+testScalePaceNoFactorConvert = testCase "Scales distance without factor with unit and convert" $ do
+  runArgs Nothing args expected
+  where
+    args = ["scale", "--pace", "4m/km", "-u", "mi"]
+    expected =
+      T.intercalate
+        "\n"
+        [ "0.85: 5'28\" /mi",
+          "0.90: 5'48\" /mi",
+          "0.95: 6'07\" /mi",
+          "1.00: 6'26\" /mi",
+          "1.05: 6'45\" /mi",
+          "1.10: 7'05\" /mi",
+          "1.15: 7'24\" /mi",
+          "1.20: 7'43\" /mi"
+        ]
+
+testScalePaceNoFactorUnitError :: TestTree
+testScalePaceNoFactorUnitError = runException @CommandScaleE desc expected args
+  where
+    desc = "Scale pace error with no unit and --unit"
+    args = ["scale", "--pace", "4m15s", "-u", "km"]
+    expected =
+      mconcat
+        [ "Scaling pace with --unit requires that the original units are ",
+          "given e.g. --pace '4m15s /km'."
+        ]
+
 argsErrorTests :: TestTree
 argsErrorTests =
   testGroup
@@ -128,6 +179,14 @@ argsErrorTests =
         "Empty quantity error"
         "Scale requires exactly 1 quantity, received 0."
         [],
+      testScaleErrorNoFactor
+        "Distance no factor"
+        "--factor is required for --distance and --duration."
+        ["--distance", "5 km"],
+      testScaleErrorNoFactor
+        "Duration no factor"
+        "--factor is required for --distance and --duration."
+        ["--duration", "8h"],
       testScaleError
         "Distance and Duration"
         "Scale requires exactly 1 quantity, received 2."
@@ -147,6 +206,9 @@ argsErrorTests =
     ]
   where
     testScaleError desc expected args =
+      testScaleErrorNoFactor desc expected ("-k" : "2" : args)
+
+    testScaleErrorNoFactor desc expected args =
       runException @CommandScaleE desc expected args'
       where
-        args' = "scale" : "-k" : "2" : args
+        args' = "scale" : args

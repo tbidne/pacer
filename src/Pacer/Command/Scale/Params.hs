@@ -44,7 +44,7 @@ type family ScaleQuantityF p a where
 type ScaleParams :: ConfigPhase -> Type -> Type
 data ScaleParams p a = MkScaleParams
   { -- | Scale factor.
-    factor :: Positive a,
+    factor :: Maybe (Positive a),
     -- | Quantity to scale.
     quantity :: ScaleQuantityF p a,
     -- | Possible output unit.

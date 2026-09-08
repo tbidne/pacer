@@ -128,6 +128,17 @@ $ pacer scale --pace '4m15s /km' -k 1.1
 # pace units are optional
 $ pacer scale --pace 4m15s -k 1.1
 4'40"
+
+# Pace can be used without a factor, showing some default values.
+$ pacer scale --pace 4m
+0.85: 3'24"
+0.90: 3'36"
+0.95: 3'48"
+1.00: 4'00"
+1.05: 4'12"
+1.10: 4'24"
+1.15: 4'36"
+1.20: 4'48"
 ```
 
 > [!WARNING]

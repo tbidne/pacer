@@ -39,14 +39,15 @@ factorParser ::
     P.Parser a,
     Show a
   ) =>
-  Parser (Positive a)
+  Parser (Maybe (Positive a))
 factorParser =
-  OA.option
-    Utils.readParseable
-    ( mconcat
-        [ OA.short 'k',
-          OA.long "factor",
-          OA.metavar "POS_INT",
-          Utils.mkHelp "The scaling factor."
-        ]
-    )
+  OA.optional
+    $ OA.option
+      Utils.readParseable
+      ( mconcat
+          [ OA.short 'k',
+            OA.long "factor",
+            OA.metavar "POS_INT",
+            Utils.mkHelp "The scaling factor."
+          ]
+      )
