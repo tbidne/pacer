@@ -35,11 +35,11 @@ handle @es @a params = case params ^. #quantity of
     factor <- requireFactor $ params ^. #factor
     let distScaled = dist .* factor
     case params ^. #unit of
-      Nothing -> putTextLn $ display distScaled
+      Nothing -> handleDisplay distScaled
       Just unit -> case toSing unit of
         SomeSing @_ @e s -> withSingI s $ do
           let distScaled' = DistU.convertDistance e distScaled
-          putTextLn $ display distScaled'
+          handleDisplay distScaled'
   ScaleDuration duration -> do
     when (is (#unit % _Just) params)
       $ throwM PEx.CommandScaleDurationUnit
@@ -50,17 +50,16 @@ handle @es @a params = case params ^. #quantity of
   ScalePace paceOptUnits ->
     case paceOptUnits of
       Left pace -> do
-        let convFunction :: SomePace a -> Eff es (SomePace a)
-            convFunction = case params ^. #unit of
-              Nothing -> pure
-              Just unit -> case unit of
-                Meter -> const (throwM PEx.CommandScalePaceMeters)
-                Kilometer -> pure . Dist.hideDistance . DistU.convertDistance Kilometer
-                Mile -> pure . Dist.hideDistance . DistU.convertDistance Mile
+        convFunction <- case params ^. #unit of
+          Nothing -> pure $ id @(SomePace a)
+          Just unit -> case unit of
+            Meter -> throwM PEx.CommandScalePaceMeters
+            Kilometer -> pure $ Dist.hideDistance . DistU.convertDistance Kilometer
+            Mile -> pure $ Dist.hideDistance . DistU.convertDistance Mile
 
         case scaleFactor pace of
-          Left paceScaled -> handleDisplay =<< convFunction paceScaled
-          Right ps -> handleDisplayPaces =<< traverse (traverse convFunction) ps
+          Left p -> handleDisplay $ convFunction p
+          Right ps -> handleDisplayPaces $ fmap (second convFunction) ps
       Right duration -> do
         when (is (#unit % _Just) params) $ do
           let example = Dur.toTimeString duration <> " /km"
