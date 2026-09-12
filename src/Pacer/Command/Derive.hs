@@ -58,38 +58,50 @@ handle ::
   ) =>
   DeriveParamsFinal a ->
   Eff es Unit
-handle params = case params ^. #quantity of
-  DeriveDistance duration pace -> do
-    let dist = deriveSomeDistance duration pace
-    case params ^. #unit of
-      Nothing -> putTextLn $ display dist
-      Just unit -> case toSing unit of
-        SomeSing @_ @e s -> withSingI s $ do
-          let dist' = DistU.convertDistance e dist
-          putTextLn $ display dist'
-  DeriveDuration paceOptUnits dist -> do
-    when (is (#unit % _Just) params)
-      $ throwM PEx.CommandDeriveDurationUnit
+handle @es @a params = case params ^. #quantity of
+  DeriveDistance duration pace -> handleDistance duration pace
+  DeriveDuration paceOptUnits dist -> handleDuration paceOptUnits dist
+  DerivePace duration dist -> handlePace duration dist
+  where
+    handleDistance :: Duration a -> SomePace a -> Eff es Unit
+    handleDistance duration pace = do
+      let dist = deriveSomeDistance duration pace
+      case params ^. #unit of
+        Nothing -> handleDisplay dist
+        Just unit -> case toSing unit of
+          SomeSing @_ @e s -> withSingI s $ do
+            let dist' = DistU.convertDistance e dist
+            handleDisplay dist'
 
-    let duration = case paceOptUnits of
-          Left pace -> deriveSomeDuration dist pace
-          Right paceDuration -> case dist of
-            MkSomeDistance sdist distx ->
-              case sdist of
-                SMeter ->
-                  let disty = DistU.convertDistance Kilometer distx
-                   in deriveDuration disty (MkPace @Kilometer paceDuration)
-                SKilometer -> deriveDuration distx (MkPace paceDuration)
-                SMile -> deriveDuration distx (MkPace paceDuration)
-    putTextLn $ display duration
-  DerivePace duration dist -> do
-    let pace = deriveSomePace dist duration
-    case params ^. #unit of
-      Nothing -> putTextLn $ display pace
-      Just unit -> case unit of
-        Meter -> throwM PEx.CommandDerivePaceMeters
-        Kilometer -> putTextLn $ display $ DistU.convertDistance Kilometer pace
-        Mile -> putTextLn $ display $ DistU.convertDistance Mile pace
+    handleDuration :: Either (SomePace a) (Duration a) -> SomeDistance a -> Eff es Unit
+    handleDuration paceOptUnits dist = do
+      when (is (#unit % _Just) params)
+        $ throwM PEx.CommandDeriveDurationUnit
+
+      let duration = case paceOptUnits of
+            Left pace -> deriveSomeDuration dist pace
+            Right paceDuration -> case dist of
+              MkSomeDistance sdist distx ->
+                case sdist of
+                  SMeter ->
+                    let disty = DistU.convertDistance Kilometer distx
+                     in deriveDuration disty (MkPace @Kilometer paceDuration)
+                  SKilometer -> deriveDuration distx (MkPace paceDuration)
+                  SMile -> deriveDuration distx (MkPace paceDuration)
+      handleDisplay duration
+
+    handlePace :: Duration a -> SomeDistance a -> Eff es Unit
+    handlePace duration dist = do
+      let pace = deriveSomePace dist duration
+      case params ^. #unit of
+        Nothing -> handleDisplay pace
+        Just unit -> case unit of
+          Meter -> throwM PEx.CommandDerivePaceMeters
+          Kilometer -> handleDisplay $ DistU.convertDistance Kilometer pace
+          Mile -> handleDisplay $ DistU.convertDistance Mile pace
+
+    handleDisplay :: forall x. (Display x) => x -> Eff es Unit
+    handleDisplay = putTextLn . display
 
 -- | Given a distance and a duration, derives the pace.
 derivePace ::
