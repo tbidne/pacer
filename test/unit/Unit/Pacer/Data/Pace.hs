@@ -134,6 +134,7 @@ displayTests =
 
 testDisplayCases :: TestTree
 testDisplayCases = testCase "Displays expected" $ do
+  "3'09\" /km" @=? display (MkPace @Kilometer @Double (MkDuration $ fromℤ 189))
   "5'20\" /km" @=? display (MkPace @Kilometer @Double (MkDuration $ fromℤ 320))
   "5'20\" /mi" @=? display (MkPace @Mile @Double (MkDuration $ fromℤ 320))
   "5'20\" /km" @=? display (MkSomePace @_ @Double SKilometer (MkPace $ MkDuration $ fromℤ 320))

@@ -124,6 +124,7 @@ testDisplayCases = testCase "Displays expected" $ do
   "0'07\"" @=? display (mkDurationD 7)
   "0'32\"" @=? display (mkDurationD 32)
   "1'04\"" @=? display (mkDurationD 64)
+  "1'09\"" @=? display (mkDurationD 69)
   "1h 28'45\"" @=? display (mkDurationD 5_325)
 
 conversionTests :: TestTree
