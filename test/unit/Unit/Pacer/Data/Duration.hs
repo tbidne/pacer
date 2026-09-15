@@ -11,6 +11,8 @@ module Unit.Pacer.Data.Duration
 where
 
 import Data.List (take)
+import Data.Text qualified as T
+import Hedgehog qualified as H
 import Hedgehog.Gen qualified as G
 import Hedgehog.Range qualified as R
 import Pacer.Class.Parser qualified as Parser
@@ -116,7 +118,8 @@ displayTests :: TestTree
 displayTests =
   testGroup
     "Display"
-    [ testDisplayCases
+    [ testDisplayCases,
+      testDisplay
     ]
 
 testDisplayCases :: TestTree
@@ -126,6 +129,28 @@ testDisplayCases = testCase "Displays expected" $ do
   "1'04\"" @=? display (mkDurationD 64)
   "1'09\"" @=? display (mkDurationD 69)
   "1h 28'45\"" @=? display (mkDurationD 5_325)
+
+testDisplay :: TestTree
+testDisplay = testProp desc "testDisplay" $ do
+  dRaw <- forAll genDurationNum
+  let d = MkDuration dRaw
+      dInt = round @_ @Int $ dRaw ^. #unPositive
+
+  let t = display d
+      tLen = T.length t
+
+  annotate $ unpackText t
+
+  -- Use dInt over d for comparisons due to epsilon check.
+  if
+    -- 0'30"
+    | dInt < 600 -> 5 === tLen
+    -- 12'02"
+    | dInt < 3600 -> 6 === tLen
+    -- 1h 4'02"
+    | otherwise -> H.diff 8 (<=) tLen
+  where
+    desc = "Display properties"
 
 conversionTests :: TestTree
 conversionTests =
@@ -196,7 +221,10 @@ testHrMinSecCasesData = testPropertyNamed name desc $ withTests 1 $ property $ d
       e === r
 
 genDuration :: Gen (Duration Double)
-genDuration = MkDuration <$> Utils.genDoublePos
+genDuration = MkDuration <$> genDurationNum
+
+genDurationNum :: Gen PDouble
+genDurationNum = Utils.genDoublePos
 
 genDurationGtN :: Double -> Gen (Duration Double)
 genDurationGtN x = MkDuration . (.+. unsafePositive x) <$> Utils.genDoublePos
