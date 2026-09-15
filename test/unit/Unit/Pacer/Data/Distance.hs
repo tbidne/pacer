@@ -49,19 +49,14 @@ parseTests =
     ]
 
 testParseDistanceGenText :: TestTree
-testParseDistanceGenText =
-  testPropertyNamed
-    "testParseDistanceGenText"
-    desc
-    $ property
-    $ do
-      d <- forAll genDistanceText
-      parseOrDieM_ @(Meters Double) d
-      parseOrDieM_ @(Kilometers Double) d
-      parseOrDieM_ @(Miles Double) d
+testParseDistanceGenText = testProp desc "testParseDistanceGenText" $ do
+  d <- forAll genDistanceText
+  parseOrDieM_ @(Meters Double) d
+  parseOrDieM_ @(Kilometers Double) d
+  parseOrDieM_ @(Miles Double) d
 
-      sd <- forAll genSomeDistanceText
-      parseOrDieM_ @(SomeDistance Double) sd
+  sd <- forAll genSomeDistanceText
+  parseOrDieM_ @(SomeDistance Double) sd
   where
     desc = "Parses text to (Some)Distance"
 
@@ -75,7 +70,7 @@ testParseDistanceGenText =
 --     units.
 
 testParseDisplayRoundtrip :: TestTree
-testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
+testParseDisplayRoundtrip = testProp desc name $ do
   -- NOTE: Distance is __not__ a round trip because the display includes the
   -- units, but we don't parse units.
   r <- forAll genSomeDistance
@@ -190,7 +185,7 @@ equalityTests =
     ]
 
 testEquivClass :: TestTree
-testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
+testEquivClass = testProp desc "testEquivClass" $ do
   t <- forAll (genSomeDistanceGtN 1.1)
 
   let tgt = t .+. mkSomeDistanceD SMeter 1.1

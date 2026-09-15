@@ -99,7 +99,7 @@ makeFieldLabelsNoPrefix ''GoldenParams
 
 -- | Concise alias for @testPropertyNamed . property@
 testProp :: TestName -> PropertyName -> PropertyT IO Unit -> TestTree
-testProp name desc = testPropertyNamed name desc . property
+testProp desc name = testPropertyNamed desc name . property
 
 -- | 'testProp' that only runs a single test. Used for when we'd really want
 -- HUnit's testCase, but with a better diff.
@@ -122,21 +122,21 @@ testPropMaxN ::
   PropertyName ->
   PropertyT IO Unit ->
   TestTree
-testPropMaxN maxLimit name desc p =
+testPropMaxN maxLimit desc name p =
   askOption $ \(HedgehogTestLimit mLimit) ->
     case mLimit of
       -- If no CLI arg is passed, use the default limit.
-      Nothing -> testProp name desc p
+      Nothing -> testProp desc name p
       -- If a CLI arg is passed, take the min.
-      Just cliLimit -> testPropN (min cliLimit maxLimit) name desc p
+      Just cliLimit -> testPropN (min cliLimit maxLimit) desc name p
 
 -- | 'testProp' that runs for specified N times.
 testPropN :: TestLimit -> TestName -> PropertyName -> PropertyT IO Unit -> TestTree
-testPropN numTests name desc =
+testPropN numTests desc name =
   -- NOTE: Have to use localOption here as it overrides withTests. That is,
   -- hedgehog's withTests has NO effect here, so don't use it!
   localOption (HedgehogTestLimit (Just numTests))
-    . testProp name desc
+    . testProp desc name
 
 annotateUnpack :: Text -> PropertyT IO Unit
 annotateUnpack = annotate . unpackText

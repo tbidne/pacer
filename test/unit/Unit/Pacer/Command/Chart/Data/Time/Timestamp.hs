@@ -20,7 +20,7 @@ tests =
     ]
 
 testParseTimestampProp :: TestTree
-testParseTimestampProp = testPropertyNamed name desc $ property $ do
+testParseTimestampProp = testProp desc name $ do
   txt <- forAll TUtils.genTimestampTxt
   case P.parse @Timestamp txt of
     Ok _ -> pure ()
@@ -63,7 +63,7 @@ testParseTimestampCases = testCase "Parses cases" $ do
         assertFailure $ "Expected zoned, received: " ++ show bad
 
 testTimestampEqLaws :: TestTree
-testTimestampEqLaws = testPropertyNamed name desc $ property $ do
+testTimestampEqLaws = testProp desc name $ do
   x <- forAll TUtils.genTimestamp
   y <- forAll TUtils.genTimestamp
   z <- forAll TUtils.genTimestamp
@@ -74,7 +74,7 @@ testTimestampEqLaws = testPropertyNamed name desc $ property $ do
     desc = "Eq laws"
 
 testTimestampOrdLaws :: TestTree
-testTimestampOrdLaws = testPropertyNamed name desc $ property $ do
+testTimestampOrdLaws = testProp desc name $ do
   x <- forAll TUtils.genTimestamp
   y <- forAll TUtils.genTimestamp
   z <- forAll TUtils.genTimestamp
@@ -85,7 +85,7 @@ testTimestampOrdLaws = testPropertyNamed name desc $ property $ do
     desc = "Ord laws"
 
 testTimestampOrdCases :: TestTree
-testTimestampOrdCases = testProp1 "testTimestampOrdCases" desc $ do
+testTimestampOrdCases = testProp1 desc "testTimestampOrdCases" $ do
   go
     [ ("2099-12-31T02:00:00+0800", (<=), "2099-12-31T00:00:00+0000"),
       ("2013-08-12T14:30:00", (>), "2013-08-12")
@@ -97,7 +97,7 @@ testTimestampOrdCases = testProp1 "testTimestampOrdCases" desc $ do
       assertDiff @Timestamp i x op y
 
 testTimestampIEqLaws :: TestTree
-testTimestampIEqLaws = testPropertyNamed name desc $ property $ do
+testTimestampIEqLaws = testProp desc name $ do
   x <- forAll TUtils.genTimestamp
   y <- forAll TUtils.genTimestamp
 

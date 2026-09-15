@@ -187,7 +187,7 @@ testAllGroupsSpecs = testCase desc $ do
           ]
 
 testAllGroupsProps :: TestTree
-testAllGroupsProps = testProp "testAllGroupsProps" desc $ do
+testAllGroupsProps = testProp desc "testAllGroupsProps" $ do
   seq <- forAll genNESeq
   k <- forAll genPWord8
 

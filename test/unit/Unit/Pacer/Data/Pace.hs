@@ -37,7 +37,7 @@ parsingTests =
     ]
 
 testParsePaceGenText :: TestTree
-testParsePaceGenText = testPropertyNamed "testParsePaceGenText" desc $ property $ do
+testParsePaceGenText = testProp desc "testParsePaceGenText" $ do
   t <- forAll genPaceText
 
   parseOrDieM_ @(Pace Kilometer Double) t
@@ -46,7 +46,7 @@ testParsePaceGenText = testPropertyNamed "testParsePaceGenText" desc $ property 
     desc = "Parses text to Pace"
 
 testParseSomePaceGenText :: TestTree
-testParseSomePaceGenText = testPropertyNamed "testParseSomePaceGenText" desc $ property $ do
+testParseSomePaceGenText = testProp desc "testParseSomePaceGenText" $ do
   t <- forAll genSomePaceText
 
   parseOrDieM_ @(SomePace Double) t

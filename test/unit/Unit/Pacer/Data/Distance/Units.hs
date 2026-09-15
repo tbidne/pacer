@@ -37,7 +37,7 @@ parseTests =
     ]
 
 testParseText :: TestTree
-testParseText = testPropertyNamed "testParseText" desc $ property $ do
+testParseText = testProp desc "testParseText" $ do
   t <- forAll genDistanceUnitText
 
   parseOrDieM_ @DistanceUnit t
@@ -45,7 +45,7 @@ testParseText = testPropertyNamed "testParseText" desc $ property $ do
     desc = "Parses text to units"
 
 testParseInjectiveShort :: TestTree
-testParseInjectiveShort = testPropertyNamed name desc $ property $ do
+testParseInjectiveShort = testProp desc name $ do
   t1 <- forAll $ G.element shortDistanceUnitText
   t2 <- forAll $ G.element shortDistanceUnitText
 
@@ -61,7 +61,7 @@ testParseInjectiveShort = testPropertyNamed name desc $ property $ do
     desc = "Parsing short units is injective"
 
 testParseInjectiveLong :: TestTree
-testParseInjectiveLong = testPropertyNamed name desc $ property $ do
+testParseInjectiveLong = testProp desc name $ do
   t1 <- forAll $ G.element longDistanceUnitText
   t2 <- forAll $ G.element longDistanceUnitText
 
@@ -77,7 +77,7 @@ testParseInjectiveLong = testPropertyNamed name desc $ property $ do
     desc = "Parsing long units is injective"
 
 testDisplayParseRoundtrip :: TestTree
-testDisplayParseRoundtrip = testPropertyNamed name desc $ property $ do
+testDisplayParseRoundtrip = testProp desc name $ do
   t <- forAll $ G.element shortDistanceUnitText
 
   r <- parseOrDieM @DistanceUnit t
@@ -89,7 +89,7 @@ testDisplayParseRoundtrip = testPropertyNamed name desc $ property $ do
     desc = "display . parse (short) is a round trip"
 
 testParseDisplayRoundtrip :: TestTree
-testParseDisplayRoundtrip = testPropertyNamed name desc $ property $ do
+testParseDisplayRoundtrip = testProp desc name $ do
   r <- forAll genDistanceUnit
 
   let t = display r

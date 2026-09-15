@@ -60,22 +60,6 @@ import FileSystem.IO (writeBinaryFileIO)
 import FileSystem.OsPath (decodeLenient, unsafeDecode, unsafeEncode)
 import FileSystem.OsPath qualified as FS.OsPath
 import FileSystem.UTF8 qualified as UTF8
-import Hedgehog as X
-  ( Gen,
-    Property,
-    PropertyName,
-    PropertyT,
-    Range,
-    annotate,
-    annotateShow,
-    assert,
-    failure,
-    forAll,
-    property,
-    withTests,
-    (/==),
-    (===),
-  )
 import Pacer.Command.Chart.Server (Server, runServerMock)
 import Pacer.Driver (displayInnerMatchKnown, runApp)
 import Pacer.Prelude as X hiding (IO)
@@ -93,7 +77,6 @@ import Test.Tasty.HUnit as X
     testCase,
     (@=?),
   )
-import Test.Tasty.Hedgehog as X (testPropertyNamed)
 
 -- | Golden test output.
 data GoldenOutput

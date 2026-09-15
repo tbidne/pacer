@@ -267,11 +267,9 @@ test-suite functional
     , filepath
     , fs-effectful
     , fs-utils
-    , hedgehog
     , pacer
     , tasty
     , tasty-golden
-    , tasty-hedgehog
     , tasty-hunit
     , terminal-effectful
     , text

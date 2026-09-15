@@ -95,7 +95,7 @@ runnerEff =
     . runPathReader
 
 testParseSomeActivityRoundtrip :: TestTree
-testParseSomeActivityRoundtrip = testPropertyNamed name desc $ property $ do
+testParseSomeActivityRoundtrip = testProp desc name $ do
   sr <- forAll genSomeActivity
 
   let encoded = Json.encodePretty sr

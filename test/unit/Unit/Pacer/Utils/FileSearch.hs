@@ -690,7 +690,7 @@ testOsPathToNameExtsSpecs = testCase desc $ do
     e = mempty
 
 testOsPathToNameExtsProps :: TestTree
-testOsPathToNameExtsProps = testProp "testOsPathToNameExtsProps" desc $ do
+testOsPathToNameExtsProps = testProp desc "testOsPathToNameExtsProps" $ do
   pd <- forAll genPathData
   let fullPath = toPath pd
       result@(name, ext, exts) = FileSearch.osPathToNameExts fullPath

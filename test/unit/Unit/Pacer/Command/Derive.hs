@@ -169,7 +169,7 @@ quantities =
   ]
 
 testDeriveDistanceInvariance :: TestTree
-testDeriveDistanceInvariance = testPropertyNamed name desc $ property $ do
+testDeriveDistanceInvariance = testProp desc name $ do
   -- Setup
   duration <- forAll Unit.Duration.genDuration
   pace <- forAll Unit.Pace.genSomePace
@@ -189,7 +189,7 @@ testDeriveDistanceInvariance = testPropertyNamed name desc $ property $ do
     desc = "Tests derived distance invariants"
 
 testDeriveDurationInvariance :: TestTree
-testDeriveDurationInvariance = testPropertyNamed name desc $ property $ do
+testDeriveDurationInvariance = testProp desc name $ do
   -- Setup
   dist <- forAll Unit.Distance.genSomeDistance
   pace <- forAll Unit.Pace.genSomePace
@@ -210,7 +210,7 @@ testDeriveDurationInvariance = testPropertyNamed name desc $ property $ do
     desc = "Tests derived distance invariants"
 
 testDerivePaceInvariance :: TestTree
-testDerivePaceInvariance = testPropertyNamed name desc $ property $ do
+testDerivePaceInvariance = testProp desc name $ do
   -- Setup
   dist <- forAll Unit.Distance.genSomeDistance
   duration <- forAll Unit.Duration.genDuration

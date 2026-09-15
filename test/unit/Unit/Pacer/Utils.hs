@@ -21,7 +21,7 @@ tests =
     ]
 
 testJsoncDecodeSpecs :: TestTree
-testJsoncDecodeSpecs = testProp1 "testJsoncDecodeSpecs" desc $ do
+testJsoncDecodeSpecs = testProp1 desc "testJsoncDecodeSpecs" $ do
   for_ vals assertSuccess
   where
     desc = "Decodes json specs"
@@ -39,7 +39,7 @@ testJsoncDecodeSpecs = testProp1 "testJsoncDecodeSpecs" desc $ do
       ]
 
 testJsoncDecode :: TestTree
-testJsoncDecode = testPropMaxN 100_000 "testJsoncDecode" desc $ do
+testJsoncDecode = testPropMaxN 100_000 desc "testJsoncDecode" $ do
   (json, jsonc) <- forAll genJsonAndJsonc
 
   case review #eitherIso (Asn.eitherDecodeStrict @Value json) of

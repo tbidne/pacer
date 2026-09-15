@@ -88,7 +88,7 @@ equalityTests =
     ]
 
 testEquivClass :: TestTree
-testEquivClass = testPropertyNamed "testEquivClass" desc $ property $ do
+testEquivClass = testProp desc "testEquivClass" $ do
   -- 1.1 Needed so that below subtraction does not cause an error.
   t <- forAll (genDurationGtN 1.1)
 
@@ -162,7 +162,7 @@ conversionTests =
     ]
 
 testHrMinSecNormalized :: TestTree
-testHrMinSecNormalized = testPropertyNamed "testHrMinSecNormalized" desc $ property $ do
+testHrMinSecNormalized = testProp desc "testHrMinSecNormalized" $ do
   d <- forAll genDuration
 
   let (_, m, s) = Duration.toHrMinSec d
@@ -173,7 +173,7 @@ testHrMinSecNormalized = testPropertyNamed "testHrMinSecNormalized" desc $ prope
     desc = "testHrMinSec is normalized"
 
 testHrMinSecCasesTxt :: TestTree
-testHrMinSecCasesTxt = testPropertyNamed name desc $ withTests 1 $ property $ do
+testHrMinSecCasesTxt = testProp1 desc name $ do
   for_ vals $ \(e, v) -> do
     go (e, v)
   where
@@ -199,7 +199,7 @@ testHrMinSecCasesTxt = testPropertyNamed name desc $ withTests 1 $ property $ do
       e === r
 
 testHrMinSecCasesData :: TestTree
-testHrMinSecCasesData = testPropertyNamed name desc $ withTests 1 $ property $ do
+testHrMinSecCasesData = testProp1 desc name $ do
   for_ vals go
   where
     name = "testHrMinSecCases"

@@ -91,7 +91,7 @@ displaySummarizedSequencesSpec = testCase "Summarizes list" $ do
       ]
 
 displaySummarizedSequencesProps :: TestTree
-displaySummarizedSequencesProps = testProp "displaySummarizedSequences" desc $ do
+displaySummarizedSequencesProps = testProp desc "displaySummarizedSequences" $ do
   nats <- forAll genList
 
   let resultTxt = Show.displaySummarizedSequences nats

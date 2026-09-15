@@ -23,7 +23,7 @@ tests =
     ]
 
 testParseMomentProp :: TestTree
-testParseMomentProp = testPropertyNamed name desc $ property $ do
+testParseMomentProp = testProp desc name $ do
   txt <- forAll TUtils.genMomentTxt
   case P.parse @Moment txt of
     Ok _ -> pure ()
@@ -67,7 +67,7 @@ testMomentParseCases = testCase desc $ do
         assertFailure $ "Unexpected parse failure: " ++ err
 
 testMomentEqLaws :: TestTree
-testMomentEqLaws = testPropertyNamed name desc $ property $ do
+testMomentEqLaws = testProp desc name $ do
   x <- forAll genMoment
   y <- forAll genMoment
   z <- forAll genMoment
@@ -81,7 +81,7 @@ testMomentEqLaws = testPropertyNamed name desc $ property $ do
     desc = "Eq laws"
 
 testMomentIEqLaws :: TestTree
-testMomentIEqLaws = testPropertyNamed name desc $ property $ do
+testMomentIEqLaws = testProp desc name $ do
   x <- forAll genMoment
   y <- forAll genMoment
 
@@ -91,7 +91,7 @@ testMomentIEqLaws = testPropertyNamed name desc $ property $ do
     desc = "IEq laws"
 
 testMomentIEqCases :: TestTree
-testMomentIEqCases = testProp1 "testMomentIEqCases" desc $ do
+testMomentIEqCases = testProp1 desc "testMomentIEqCases" $ do
   go
     [ -- Year / Year
       ("2023", (/~), "2022"),
@@ -137,7 +137,7 @@ testMomentIEqCases = testProp1 "testMomentIEqCases" desc $ do
       assertDiff @Moment i x op y
 
 testMomentIOrdLaws :: TestTree
-testMomentIOrdLaws = testPropertyNamed name desc $ property $ do
+testMomentIOrdLaws = testProp desc name $ do
   x <- forAll genMoment
   y <- forAll genMoment
 
@@ -147,7 +147,7 @@ testMomentIOrdLaws = testPropertyNamed name desc $ property $ do
     desc = "IOrd laws"
 
 testMomentIOrdCases :: TestTree
-testMomentIOrdCases = testProp1 "testMomentIOrdCases" desc $ do
+testMomentIOrdCases = testProp1 desc "testMomentIOrdCases" $ do
   go
     [ ("2023", (<~), "2023"),
       ("2023", (<~), "2024"),

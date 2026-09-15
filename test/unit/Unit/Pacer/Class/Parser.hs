@@ -33,14 +33,14 @@ noCommentTests =
     ]
 
 testStripCommentNoneCases :: TestTree
-testStripCommentNoneCases = testProp1 "testStripCommentNoneCases" desc $ do
+testStripCommentNoneCases = testProp1 desc "testStripCommentNoneCases" $ do
   happyParse "" ""
   happyParse "some text" "some text"
   where
     desc = "Unmodified cases"
 
 testStripCommentNoneProps :: TestTree
-testStripCommentNoneProps = testStripProps name desc $ do
+testStripCommentNoneProps = testStripProps desc name $ do
   bs <- forAll TestUtils.genNonComment
   runStripComments bs $ \case
     Err e -> do
@@ -60,7 +60,7 @@ lineCommentTests =
     ]
 
 testStripCommentLineCases :: TestTree
-testStripCommentLineCases = testProp1 "testStripCommentLineCases" desc $ do
+testStripCommentLineCases = testProp1 desc "testStripCommentLineCases" $ do
   happyParse "basicexample" "basic// should be removed\nexample"
   happyParse "basic  example" "basic // should be removed\n example"
   happyParse "more  stuff/ that here" "more //\n stuff/ that//blah\n here"
@@ -70,7 +70,7 @@ testStripCommentLineCases = testProp1 "testStripCommentLineCases" desc $ do
     desc = "Line comment cases"
 
 testStripLineCommentProps :: TestTree
-testStripLineCommentProps = testStripProps name desc $ do
+testStripLineCommentProps = testStripProps desc name $ do
   bs <- forAll TestUtils.genWithLineComments
   case P.stripComments bs of
     Err e -> annotate e *> failure
@@ -93,7 +93,7 @@ blockCommentTests =
     ]
 
 testStripCommentBlockCases :: TestTree
-testStripCommentBlockCases = testProp1 "testStripCommentBlockCases" desc $ do
+testStripCommentBlockCases = testProp1 desc "testStripCommentBlockCases" $ do
   happyParse "basicexample" "basic/*should be removed*/example"
   happyParse "basic  example" "basic /*should be removed*/ example"
   happyParse "more /  stuff/  here" "more / /**/ stuff/ /*that//blah*/ here"
@@ -105,7 +105,7 @@ testStripCommentBlockCases = testProp1 "testStripCommentBlockCases" desc $ do
     desc = "Block comment cases"
 
 testStripBlockCommentProps :: TestTree
-testStripBlockCommentProps = testStripProps name desc $ do
+testStripBlockCommentProps = testStripProps desc name $ do
   bs <- forAll TestUtils.genWithBlockComments
   case P.stripComments bs of
     Err e -> annotate e *> failure
@@ -125,14 +125,14 @@ allCommentTests =
     ]
 
 testStripAllCommentCases :: TestTree
-testStripAllCommentCases = testProp1 "testStripAllCommentCases" desc $ do
+testStripAllCommentCases = testProp1 desc "testStripAllCommentCases" $ do
   happyParse "basicexample" "basic/*should // be removed*/example"
   happyParse "basicexample" "basic//should // /* be /* */ removed\nexample"
   where
     desc = "All comment cases"
 
 testStripAllCommentProps :: TestTree
-testStripAllCommentProps = testStripProps name desc $ do
+testStripAllCommentProps = testStripProps desc name $ do
   bs <- forAll TestUtils.genWithAllComments
   runStripComments bs $ \case
     Err e -> annotate e *> failure
